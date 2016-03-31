@@ -19,8 +19,9 @@ public class NGSCMD {
     public static void main(String[] args) {
         // TODO code application logic here
         
-       ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
-       System.out.println(ref.toString());
+//       ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
+//       System.out.println(ref.toString());
+         SequenceUtil.extractReferenceSequence(args[1], args[3]);
        
     }
     
