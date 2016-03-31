@@ -5,6 +5,8 @@
  */
 package biotec.bsi.ngs.vardetect.cmd;
 import biotec.bsi.ngs.vardetect.core.*;
+import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
+import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 /**
  *
  * @author soup
@@ -16,8 +18,10 @@ public class NGSCMD {
      */
     public static void main(String[] args) {
         // TODO code application logic here
-        Helloworld.main(args);
         
+       ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
+       System.out.println(ref.toString());
+       
     }
     
 }
