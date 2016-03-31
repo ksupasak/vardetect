@@ -7,6 +7,8 @@ package biotec.bsi.ngs.vardetect.cmd;
 import biotec.bsi.ngs.vardetect.core.*;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
+import java.util.Enumeration;
+import java.util.Vector;
 /**
  *
  * @author soup
@@ -19,9 +21,26 @@ public class NGSCMD {
     public static void main(String[] args) {
         // TODO code application logic here
         
-//       ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
-//       System.out.println(ref.toString());
-         SequenceUtil.extractReferenceSequence(args[1], args[3]);
+       ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
+       
+       Vector<ChromosomeSequence> chrs = ref.getChromosomes();
+       
+       Enumeration<ChromosomeSequence> e = chrs.elements();
+       
+       while(e.hasMoreElements()){
+           
+           ChromosomeSequence chr = e.nextElement();
+           
+           System.out.println(chr.getName());
+            
+           EncodedSequence encode = SequenceUtil.encodeChromosomeSequence(chr);
+           
+       
+       }
+       
+       
+       
+//         SequenceUtil.extractReferenceSequence(args[1], args[3]);
        
     }
     
