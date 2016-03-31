@@ -9,6 +9,6 @@ package biotec.bsi.ngs.vardetect.training.team;
  *
  * @author Worawich
  */
-public class Aon_test {
+public class AonTest {
     
 }
