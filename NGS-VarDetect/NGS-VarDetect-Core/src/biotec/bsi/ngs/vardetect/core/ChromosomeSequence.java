@@ -4,6 +4,7 @@
  * and open the template in the editor.
  */
 package biotec.bsi.ngs.vardetect.core;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintStream;
 /**
@@ -11,9 +12,16 @@ import java.io.PrintStream;
  * @author soup
  */
 public class ChromosomeSequence {
+    
+    
+    ReferenceSequence ref;
+    
     String name;
     StringBuffer seq;
-    public ChromosomeSequence(String name, StringBuffer seq){
+    
+    
+    public ChromosomeSequence(ReferenceSequence ref, String name, StringBuffer seq){
+        this.ref = ref;
         this.name = name;
         this.seq = seq;
     }
@@ -26,12 +34,22 @@ public class ChromosomeSequence {
 
     }
     
+    
     public String getName(){
         return name;
     }
 
     public StringBuffer getSequence() {
         return seq;
+    }
+
+    public String getFilePath() {
+        return ref.getPath()+File.separator+name;
+    }
+
+    public void writeToFile(String fa) throws FileNotFoundException {
+        String path = getFilePath();
+        writeToPath(path, fa);
     }
     
 }

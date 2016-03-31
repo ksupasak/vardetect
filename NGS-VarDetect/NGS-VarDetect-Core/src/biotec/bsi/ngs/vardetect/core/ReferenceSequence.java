@@ -5,7 +5,11 @@
  */
 package biotec.bsi.ngs.vardetect.core;
 
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Vector;
 
 /**
@@ -41,7 +45,15 @@ public class ReferenceSequence {
     }
     
    
-    
+    public String getPath(){
+//        String[] p = filename.split(File.pathSeparator);
+//        String path = String.join(File.pathSeparator, p);
+//        
+        Path p = Paths.get(filename);
+        Path folder = p.getParent();
+        return folder.toString();
+        
+    }
     
     public String toString(){
         StringBuffer sb = new StringBuffer();
