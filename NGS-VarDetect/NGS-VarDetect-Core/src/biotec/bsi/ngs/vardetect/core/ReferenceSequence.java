@@ -5,6 +5,7 @@
  */
 package biotec.bsi.ngs.vardetect.core;
 
+import java.util.Enumeration;
 import java.util.Vector;
 
 /**
@@ -30,9 +31,33 @@ public class ReferenceSequence {
         chrs.add(chr);
     }
     
+    public ChromosomeSequence getChromosomeSequenceByName(String name){
+        return null;
+    }
+    
+    
+    public Vector<ChromosomeSequence> getChromosomes(){
+        return chrs;
+    }
+    
+   
+    
     
     public String toString(){
-        return "REF : "+this.filename+" CHR : "+chrs.size();
+        StringBuffer sb = new StringBuffer();
+        
+        sb.append("REF : "+this.filename+" # CHR : "+chrs.size()+"\n");
+        
+        Enumeration<ChromosomeSequence> e = chrs.elements();
+        
+        while(e.hasMoreElements()){
+            ChromosomeSequence chr = e.nextElement();
+            sb.append(chr.name+" : "+chr.seq.length()+"\n");
+        }
+        
+        
+        
+        return sb.toString();
     }
     
     

@@ -26,4 +26,12 @@ public class ChromosomeSequence {
 
     }
     
+    public String getName(){
+        return name;
+    }
+
+    public StringBuffer getSequence() {
+        return seq;
+    }
+    
 }
