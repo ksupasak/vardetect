@@ -5,6 +5,8 @@
  */
 package biotec.bsi.ngs.vardetect.core;
 
+import java.util.Vector;
+
 /**
  *
  * @author soup
@@ -12,6 +14,11 @@ package biotec.bsi.ngs.vardetect.core;
 public class ReferenceSequence {
 
     String filename;
+    Vector<ChromosomeSequence> chrs;
+    
+    public ReferenceSequence(){
+        chrs = new Vector<ChromosomeSequence>();
+    }
     
     public void setFilename(String filename) {
 
@@ -19,9 +26,15 @@ public class ReferenceSequence {
         
     }
     
+    public void addChromosomeSequence(ChromosomeSequence chr){
+        chrs.add(chr);
+    }
+    
     
     public String toString(){
-        return "REF : "+this.filename;
+        return "REF : "+this.filename+" CHR : "+chrs.size();
     }
+    
+    
     
 }
