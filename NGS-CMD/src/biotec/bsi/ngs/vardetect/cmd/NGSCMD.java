@@ -22,11 +22,11 @@ public class NGSCMD {
     public static void main(String[] args) throws FileNotFoundException {
         // TODO code application logic here
         
-       ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
-      //aonReferenceSequence refA = SequenceUtil.readReferenceSequence(args[1]);
-      //aonReferenceSequence refB = SequenceUtil.readReferenceSequence(args[2]);
+       //ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
+      ReferenceSequence refA = SequenceUtil.readReferenceSequence(args[1]);
+      ReferenceSequence refB = SequenceUtil.readReferenceSequence(args[2]);
        
-      Vector<ChromosomeSequence> chrs = ref.getChromosomes();
+      Vector<ChromosomeSequence> chrs = refB.getChromosomes();
        
       Enumeration<ChromosomeSequence> e = chrs.elements();
       
