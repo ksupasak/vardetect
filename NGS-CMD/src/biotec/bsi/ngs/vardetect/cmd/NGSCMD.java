@@ -23,22 +23,28 @@ public class NGSCMD {
         // TODO code application logic here
         
        ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
+      //aonReferenceSequence refA = SequenceUtil.readReferenceSequence(args[1]);
+      //aonReferenceSequence refB = SequenceUtil.readReferenceSequence(args[2]);
        
-       Vector<ChromosomeSequence> chrs = ref.getChromosomes();
+      Vector<ChromosomeSequence> chrs = ref.getChromosomes();
        
-       Enumeration<ChromosomeSequence> e = chrs.elements();
-       
-       while(e.hasMoreElements()){
+      Enumeration<ChromosomeSequence> e = chrs.elements();
+      
+      //aonSystem.out.println(e.nextElement().getSequence().length());
+     
+      
+      while(e.hasMoreElements()){
+          
+          ChromosomeSequence chr = e.nextElement();
            
-           ChromosomeSequence chr = e.nextElement();
-           
-           System.out.println(chr.getName());
+          System.out.println(chr.getName());
+          
             
            
 //           EncodedSequence encode = SequenceUtil.encodeSerialChromosomeSequence(chr);
 //           encode.writeToPath("/Users/soup/Desktop/hg19/"+chr.getName()+".map", "map");
            
-           EncodedSequence encode = SequenceUtil.getEncodeSequence(chr);
+          //EncodedSequence encode = SequenceUtil.getEncodeSequence(chr);
            
            
 
