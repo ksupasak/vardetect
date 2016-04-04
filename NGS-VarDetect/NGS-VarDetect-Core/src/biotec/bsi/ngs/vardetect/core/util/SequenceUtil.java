@@ -16,6 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Hashtable;
+import java.util.Random;
+
 
 /**
  *
@@ -23,7 +25,7 @@ import java.util.Hashtable;
  */
 public class SequenceUtil {
    
-   public static ReferenceSequence  readReferenceSequence(String filename){
+    public static ReferenceSequence  readReferenceSequence(String filename){
      
        
        
@@ -94,7 +96,7 @@ public class SequenceUtil {
 
 
 
- public static void extractReferenceSequence(String filename){
+    public static void extractReferenceSequence(String filename){
      
        
        
@@ -162,7 +164,7 @@ public class SequenceUtil {
    }
 
  
- public static EncodedSequence encodeSerialChromosomeSequence(ChromosomeSequence chr){
+    public static EncodedSequence encodeSerialChromosomeSequence(ChromosomeSequence chr){
        
        EncodedSequence seq = new EncodedSequence();
        
@@ -285,7 +287,7 @@ public class SequenceUtil {
  
  
  
-   public static EncodedSequence encodeChromosomeSequence(ChromosomeSequence chr){
+    public static EncodedSequence encodeChromosomeSequence(ChromosomeSequence chr){
        
        EncodedSequence seq = new EncodedSequence();
        
@@ -331,9 +333,9 @@ public class SequenceUtil {
        
        return seq;
    }
+    
    
-   
-   public static long encodeMer(String seq_input, int kmer){
+    public static long encodeMer(String seq_input, int kmer){
        
 //       cctgtagtacagtttgaagt
        long mer = 0 ;
@@ -407,4 +409,25 @@ public class SequenceUtil {
     }
  
 
+    public static ChromosomeSequence concatenateChromosome(ChromosomeSequence chrA,ChromosomeSequence chrB, long cutLengthA, long cutLengthB){
+        //chrA.getsequence
+        int check = 1;
+        int lengthA = chrA.getSequence().length();
+        int lengthB = chrB.getSequence().length();
+        int rangeA = lengthA - 0 ;
+        int rangeB = lengthB - 0 ;
+        
+        Random r = new Random();
+        
+        while(check == 1){
+            
+            int iniA = r.nextInt(rangeA);
+            int iniB = r.nextInt(rangeB);
+            
+            // not finish
+        }
+        
+        
+        return chrA;
+    }
 }

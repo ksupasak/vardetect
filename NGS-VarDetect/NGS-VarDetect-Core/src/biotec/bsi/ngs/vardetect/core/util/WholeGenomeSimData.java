@@ -23,6 +23,7 @@ public class WholeGenomeSimData {
     public WholeGenomeSimData(ReferenceSequence refA, ReferenceSequence refB, long startA , long stopA , long startB , long stopB){
     
         
+        
     
 }
     
