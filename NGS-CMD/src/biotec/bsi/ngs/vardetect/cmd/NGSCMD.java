@@ -36,9 +36,12 @@ public class NGSCMD {
       while(e.hasMoreElements()){
           
           ChromosomeSequence chr = e.nextElement();
+          //ChromosomeSequence chr = e.nextElement();
+          
+          CharSequence test = SequenceUtil.concatenateChromosome(chr, chr, 100, 100);
            
           System.out.println(chr.getName());
-          
+          System.out.println("Whole genome sim Data ="+test);
             
            
 //           EncodedSequence encode = SequenceUtil.encodeSerialChromosomeSequence(chr);
