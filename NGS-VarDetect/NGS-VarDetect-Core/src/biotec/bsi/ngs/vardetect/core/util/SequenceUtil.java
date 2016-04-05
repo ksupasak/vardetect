@@ -409,25 +409,53 @@ public class SequenceUtil {
     }
  
 
-    public static ChromosomeSequence concatenateChromosome(ChromosomeSequence chrA,ChromosomeSequence chrB, long cutLengthA, long cutLengthB){
+    public static CharSequence concatenateChromosome(ChromosomeSequence chrA,ChromosomeSequence chrB, int cutLengthA, int cutLengthB){
         //chrA.getsequence
-        int check = 1;
+        int check,checkA = 1,checkB = 1;
+        CharSequence cutA,cutB,concatenateCut;
+        CharSequence checkN = "N";
+        
         int lengthA = chrA.getSequence().length();
         int lengthB = chrB.getSequence().length();
         int rangeA = lengthA - 0 ;
         int rangeB = lengthB - 0 ;
         
         Random r = new Random();
+        int iniA = r.nextInt(rangeA);
+        int iniB = r.nextInt(rangeB);
+        cutA = chrA.getSequence().subSequence(iniA, iniA+cutLengthA);
+        cutB = chrB.getSequence().subSequence(iniB, iniB+cutLengthB);
         
-        while(check == 1){
-            
-            int iniA = r.nextInt(rangeA);
-            int iniB = r.nextInt(rangeB);
+        
+        while(checkA == 1 || checkB == 1){
+            //System.out.println(rangeA);
+            //System.out.println(rangeB);
+            //System.out.println(lengthA);
+            //System.out.println(lengthB);
+
+            System.out.println(cutA.toString().contains("N"));
+            System.out.println(cutB.toString().contains("N"));
+                                
+            if(cutA.toString().contains("N") || cutA.toString().equals(cutA.toString().toLowerCase())){
+                iniA = r.nextInt(rangeA);
+                cutA = chrA.getSequence().subSequence(iniA, iniA+cutLengthA);                
+            }else checkA = 0;                        
+        
+            if(cutB.toString().contains("N") || cutB.toString().equals(cutB.toString().toLowerCase())){
+                iniB = r.nextInt(rangeB);
+                cutB = chrB.getSequence().subSequence(iniB, iniB+cutLengthB);
+            }else checkB = 0;
+        }
+            concatenateCut = cutA.toString()+cutB.toString();
+ 
+            System.out.println(cutA);
+            System.out.println(cutB);
+            System.out.println(concatenateCut);
             
             // not finish
-        }
+        //}
         
         
-        return chrA;
+        return concatenateCut;
     }
 }

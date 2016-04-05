@@ -3,15 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package biotec.bsi.ngs.vardetect.core.util;
-
-import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
+package biotec.bsi.ngs.vardetect.core;
 
 /**
  *
  * @author worawich
  */
-public class WholeGenomeSimData {
+public class WholeGenomeSimData extends ReferenceSequence {
     
     private long startA;
     private long stopA;
