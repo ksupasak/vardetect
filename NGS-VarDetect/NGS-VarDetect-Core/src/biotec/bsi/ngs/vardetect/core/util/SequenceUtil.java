@@ -15,6 +15,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Random;
 
@@ -279,6 +280,7 @@ public class SequenceUtil {
        
        return seq;
    }
+    
     
     public static EncodedSequence encodeSerialChromosomeSequence(CharSequence chr){
        
@@ -572,5 +574,25 @@ public class SequenceUtil {
         
         
         return concatenateCut;
+    }
+    
+    
+    public static Hashtable mapGenome(EncodedSequence chr, EncodedSequence read){
+        Enumeration e = read.getEncodeMap().keys();
+        
+        while(e.hasMoreElements()){
+            
+        
+        //for (int i=0 ;i<read.getEncodeMap().size();i++){
+            
+            //System.out.println(e.nextElement());
+            //System.out.println(chr.getEncodeMap().containsKey(e.nextElement()));
+            if (chr.getEncodeMap().containsKey(e.nextElement())){
+                System.out.println("Key " + e.nextElement()+": Match at position " +chr.getEncodeMap().get(e.nextElement()));
+            }else{
+                System.out.println("Key " + e.nextElement()+ ": Not match");
+            }
+        }
+        return chr.getEncodeMap();
     }
 }
