@@ -48,8 +48,9 @@ public class NGSCMD {
 //           encode.writeToPath("/Users/soup/Desktop/hg19/"+chr.getName()+".map", "map");
            
           EncodedSequence encode = SequenceUtil.getEncodeSequence(chr);
-           
-          System.out.println(encode.getEncodeMap());
+          EncodedSequence encodeSim = SequenceUtil.encodeSerialChromosomeSequence(test);
+          
+          System.out.println(encodeSim.getEncodeMap());
 
        
        }
