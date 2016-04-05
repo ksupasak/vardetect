@@ -9,6 +9,7 @@ import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import java.io.FileNotFoundException;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Vector;
 /**
  *
@@ -51,9 +52,15 @@ public class NGSCMD {
           EncodedSequence encodeSim = SequenceUtil.encodeSerialChromosomeSequence(test);
           
           System.out.println(encodeSim.getEncodeMap());
-
-       
+          
+          //Hashtable genome = encode.getEncodeMap();
+          Hashtable read = encodeSim.getEncodeMap();
+          
+          SequenceUtil.mapGenome(encode, encodeSim);
+          
+          // Can match hashtable but still have some confusion (Is their any way to sorted the Key ?)
        }
+       
        
        
 //        1111 = 15
