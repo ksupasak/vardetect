@@ -27,6 +27,9 @@ public class EncodedSequence {
         this.map = map;
     }
     
+    public Hashtable getEncodeMap(){
+        return this.map;
+    }
     public void readFromPath(String file_path, String fa) throws FileNotFoundException {
         
         map = new Hashtable<Long,Long>();

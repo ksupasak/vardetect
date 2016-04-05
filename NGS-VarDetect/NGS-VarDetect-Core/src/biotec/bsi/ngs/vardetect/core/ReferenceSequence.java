@@ -27,8 +27,7 @@ public class ReferenceSequence {
     
     public void setFilename(String filename) {
 
-        this.filename = filename;
-        
+        this.filename = filename;        
     }
     
     public void addChromosomeSequence(ChromosomeSequence chr){
@@ -39,20 +38,17 @@ public class ReferenceSequence {
         return null;
     }
     
-    
-    public Vector<ChromosomeSequence> getChromosomes(){
+        public Vector<ChromosomeSequence> getChromosomes(){
         return chrs;
     }
-    
-   
+       
     public String getPath(){
 //        String[] p = filename.split(File.pathSeparator);
 //        String path = String.join(File.pathSeparator, p);
 //        
         Path p = Paths.get(filename);
         Path folder = p.getParent();
-        return folder.toString();
-        
+        return folder.toString();        
     }
     
     public String toString(){
@@ -65,13 +61,9 @@ public class ReferenceSequence {
         while(e.hasMoreElements()){
             ChromosomeSequence chr = e.nextElement();
             sb.append(chr.name+" : "+chr.seq.length()+"\n");
-        }
-        
-        
-        
+        }                  
         return sb.toString();
     }
-    
-    
+      
     
 }

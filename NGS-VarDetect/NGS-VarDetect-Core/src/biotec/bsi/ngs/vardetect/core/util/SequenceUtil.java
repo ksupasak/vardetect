@@ -24,6 +24,7 @@ import java.util.Random;
  * @author soup
  */
 public class SequenceUtil {
+    
    
     public static ReferenceSequence  readReferenceSequence(String filename){
      
@@ -91,10 +92,6 @@ public class SequenceUtil {
        return ref;
    }
     
-
-
-
-
 
     public static void extractReferenceSequence(String filename){
      
@@ -230,9 +227,7 @@ public class SequenceUtil {
             if(t>=0){
                 
 //                String s2 = sb.substring((i-1)*sliding,(i-1)*sliding+kmer);
-//                long omer = cmer;
-                
-                
+//                long omer = cmer;               
                 cmer *= 4;
                 cmer &= mask;
                 cmer += t;
@@ -284,8 +279,127 @@ public class SequenceUtil {
        
        return seq;
    }
- 
- 
+    
+    public static EncodedSequence encodeSerialChromosomeSequence(CharSequence chr){
+       
+       EncodedSequence seq = new EncodedSequence();
+       
+       int kmer = 20;
+       int sliding = 1;
+       int repeat = 0;
+       
+       Hashtable<Long,Long> map =new Hashtable<Long,Long>();
+       
+       StringBuffer sb = new StringBuffer(chr);
+       //StringBuffer sb = chr.getSequence();
+       String smallb = sb.toString().toLowerCase();
+       
+       
+       
+       int n = (sb.length()-kmer)/sliding;
+       
+       long cmer = -1;
+       
+       
+       long mask = 0; 
+       
+       for(int i =0;i<kmer;i++)mask=mask*4+3;
+       
+       
+       System.out.println(mask);
+       
+       
+       for(int i =0;i<n;i++){
+           
+
+          String s = sb.substring(i*sliding,i*sliding+kmer);
+          String s2 = smallb.substring(i*sliding, i*sliding+kmer);
+          
+          long pos = i*sliding;
+          
+          if(s.charAt(0)!='N'&&s.compareTo(s2)!=0){
+              
+//          System.out.println(s+" "+s2);
+          if(cmer==-1){
+            cmer = encodeMer(s,kmer);
+          }else{
+            
+            char a = smallb.charAt(i*sliding+kmer-1);
+            int t =-1;
+            switch(a){
+                case 'a':
+                    t=0; // 00
+                    break;
+                case 't': 
+                    t=3; // 11
+                    break;
+                case 'c':
+                    t=1; // 01 
+                    break;
+                case 'g':
+                    t=2; // 10 
+                    break;
+                default : 
+                    t=-1;
+                break;
+               
+            }
+            if(t>=0){
+                
+//                String s2 = sb.substring((i-1)*sliding,(i-1)*sliding+kmer);
+//                long omer = cmer;               
+                cmer *= 4;
+                cmer &= mask;
+                cmer += t;
+            
+                    
+//                System.out.println(""+s+" "+cmer+"\t"+s2+" "+omer+" "+t);
+                
+            }else{
+                System.out.println(a);
+                cmer = -1;
+                i+=kmer;
+                
+                
+            }
+            
+              
+              
+          }
+           
+          
+          
+           
+           if(i%10000==0)System.out.println("Loop "+i*sliding+" "+repeat);
+           
+           if(cmer>=0){
+               
+               if(map.containsKey(cmer)){
+                 
+                  repeat ++;
+                 
+//                   System.out.println(s+"\t"+mer+" at "+pos+" with "+map.get(mer)); 
+               }else{
+                  map.put(cmer, pos);
+               }
+               
+           }
+           
+           
+           }
+       }
+       
+       seq.setMap(map);
+       
+       
+       System.out.println("Total mer :" +n);
+       System.out.println("Total uniq mer :" +map.size());
+       System.out.println("Total rep :" +repeat);
+       
+       
+       return seq;
+   }
+  
  
     public static EncodedSequence encodeChromosomeSequence(ChromosomeSequence chr){
        
@@ -379,6 +493,7 @@ public class SequenceUtil {
        return mer;
    }
 
+    
     public static EncodedSequence getEncodeSequence(ChromosomeSequence chr) {
 
         EncodedSequence encode = null;

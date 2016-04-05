@@ -5,6 +5,9 @@
  */
 package biotec.bsi.ngs.vardetect.core;
 
+import static biotec.bsi.ngs.vardetect.core.util.SequenceUtil.encodeMer;
+import java.util.Hashtable;
+
 /**
  *
  * @author worawich
@@ -20,7 +23,6 @@ public class WholeGenomeSimData extends ReferenceSequence {
     
     public WholeGenomeSimData(ReferenceSequence refA, ReferenceSequence refB, long startA , long stopA , long startB , long stopB){
     
-        
         
     
 }
