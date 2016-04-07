@@ -593,10 +593,16 @@ public class SequenceUtil {
         
         //TreeMap<Long,Long> ref = new TreeMap(chr.getEncodeMap());
         //TreeMap<Long,Long> test = new TreeMap(read.getEncodeMap());
-        SortedSet<Long> keys = new TreeSet(chr.getEncodeMap().keySet()) ;
-        for (Long key : keys){
-            System.out.println(key);
+        SortedSet<Long> vals = new TreeSet(read.getEncodeMap().values()) ;
+        for (Long val : vals){
+            //System.out.println(key);
             
+            System.out.println("the value is " + val + " Key is " + getKeyFromValue(read.getEncodeMap(),val));
+            if (chr.getEncodeMap().containsKey(getKeyFromValue(read.getEncodeMap(),val))){
+                System.out.println("Key " + getKeyFromValue(read.getEncodeMap(),val) +": Match at position " + chr.getEncodeMap().get(getKeyFromValue(read.getEncodeMap(),val)));
+            }else{
+                System.out.println("Key " + getKeyFromValue(read.getEncodeMap(),val) + ": Not match");
+            }   
             
         }
         //TreeMap<Long> ref = new TreeMap(chr.);
@@ -633,4 +639,15 @@ public class SequenceUtil {
         }*/
         return chr.getEncodeMap();
     }
+
+    private static Object getKeyFromValue(Map hm, Object value) {
+        for (Object o : hm.keySet()) {
+          if (hm.get(o).equals(value)) {
+            return o;
+          }
+        }
+        return null;    
+    }
+    
+    
 }
