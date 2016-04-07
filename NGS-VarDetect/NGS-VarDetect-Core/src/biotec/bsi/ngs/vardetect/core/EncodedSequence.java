@@ -13,7 +13,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  *
@@ -21,18 +24,20 @@ import java.util.Hashtable;
  */
 public class EncodedSequence {
 
-    Hashtable<Long,Long> map;
+    //Hashtable<Long,Long> map;
+    //TreeMap<Long,Long> map;
+    Map<Long,Long> map;
     
-    public void setMap(Hashtable<Long, Long> map) {
+    public void setMap(Map<Long, Long> map) {
         this.map = map;
     }
     
-    public Hashtable getEncodeMap(){
+    public Map getEncodeMap(){
         return this.map;
     }
     public void readFromPath(String file_path, String fa) throws FileNotFoundException {
         
-        map = new Hashtable<Long,Long>();
+        map = new HashMap<Long,Long>();
         
         
         Charset charset = Charset.forName("US-ASCII");
@@ -76,14 +81,23 @@ public class EncodedSequence {
        
        PrintStream ps = new PrintStream(path+"."+fa);
        
-       Enumeration<Long> e = map.keys();
+       //Enumeration<Long> e = map.keys();
        
-       while(e.hasMoreElements()){
+       for (Map.Entry<Long,Long> entry : map.entrySet()){
+           Long mer = entry.getKey();
+           
+           
+           Long pos = map.get(mer);
+           ps.println(mer+"\t"+pos);
+           
+        }
+       
+       /*while(e.hasMoreElements()){
            Long mer = e.nextElement();
            Long pos = map.get(mer);
            ps.println(mer+"\t"+pos);
          
-       }
+       }*/
                
                
 

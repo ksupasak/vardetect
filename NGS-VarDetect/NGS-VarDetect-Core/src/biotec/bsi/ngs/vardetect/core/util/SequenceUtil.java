@@ -16,11 +16,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Random;
+import java.util.SortedSet;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 
 /**
@@ -173,7 +176,9 @@ public class SequenceUtil {
        int sliding = 1;
        int repeat = 0;
        
-       Hashtable<Long,Long> map =new Hashtable<Long,Long>();
+       //Hashtable<Long,Long> map =new Hashtable<Long,Long>();
+       //TreeMap<Long,Long> map = new TreeMap();
+       Map<Long,Long> map = new HashMap();
        
        StringBuffer sb = chr.getSequence();
        String smallb = sb.toString().toLowerCase();
@@ -293,7 +298,9 @@ public class SequenceUtil {
        int sliding = 1;
        int repeat = 0;
        
-       Hashtable<Long,Long> map =new Hashtable<Long,Long>();
+       //Hashtable<Long,Long> map =new Hashtable<Long,Long>();
+       //TreeMap<Long,Long> map = new TreeMap();
+       Map<Long,Long> map = new HashMap();
        
        StringBuffer sb = new StringBuffer(chr);
        //StringBuffer sb = chr.getSequence();
@@ -414,7 +421,9 @@ public class SequenceUtil {
        int sliding = 1;
        int repeat = 0;
        
-       Hashtable<Long,Long> map =new Hashtable<Long,Long>();
+       //Hashtable<Long,Long> map =new Hashtable<Long,Long>();
+       //TreeMap<Long,Long> map = new TreeMap();
+       Map<Long,Long> map = new HashMap();
        
        StringBuffer sb = chr.getSequence();
        
@@ -580,25 +589,31 @@ public class SequenceUtil {
     }
     
     
-    public static Hashtable mapGenome(EncodedSequence chr, EncodedSequence read){
+    public static Map mapGenome(EncodedSequence chr, EncodedSequence read){
         
-        TreeMap<Long,Long> ref = new TreeMap(chr.getEncodeMap());
-        TreeMap<Long,Long> test = new TreeMap(read.getEncodeMap());
-        
+        //TreeMap<Long,Long> ref = new TreeMap(chr.getEncodeMap());
+        //TreeMap<Long,Long> test = new TreeMap(read.getEncodeMap());
+        SortedSet<Long> keys = new TreeSet(chr.getEncodeMap().keySet()) ;
+        for (Long key : keys){
+            System.out.println(key);
+            
+            
+        }
+        //TreeMap<Long> ref = new TreeMap(chr.);
+        //System.out.println(test);
         //Enumeration e = read.getEncodeMap().keys();
         
         //Iterator e = test.;
         
-        for (Map.Entry<Long,Long> entry : test.entrySet()){
+        /*for (Map.Entry<Long,Long> entry : test.entrySet()){
             Long key = entry.getKey();
             
             if (ref.containsKey(key)){
                 System.out.println("Key " + key +": Match at position " + ref.get(key));
             }else{
                 System.out.println("Key " + key + ": Not match");
-            }
-            
-        }
+            }   
+        }*/
             
             
             
