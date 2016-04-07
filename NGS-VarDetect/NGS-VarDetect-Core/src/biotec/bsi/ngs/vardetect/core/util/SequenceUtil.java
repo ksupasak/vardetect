@@ -17,7 +17,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
+import java.util.TreeMap;
 
 
 /**
@@ -282,7 +285,7 @@ public class SequenceUtil {
    }
     
     
-    public static EncodedSequence encodeSerialChromosomeSequence(CharSequence chr){
+    public static EncodedSequence encodeSerialReadSequence(CharSequence chr){
        
        EncodedSequence seq = new EncodedSequence();
        
@@ -578,9 +581,29 @@ public class SequenceUtil {
     
     
     public static Hashtable mapGenome(EncodedSequence chr, EncodedSequence read){
-        Enumeration e = read.getEncodeMap().keys();
         
-        while(e.hasMoreElements()){
+        TreeMap<Long,Long> ref = new TreeMap(chr.getEncodeMap());
+        TreeMap<Long,Long> test = new TreeMap(read.getEncodeMap());
+        
+        //Enumeration e = read.getEncodeMap().keys();
+        
+        //Iterator e = test.;
+        
+        for (Map.Entry<Long,Long> entry : test.entrySet()){
+            Long key = entry.getKey();
+            
+            if (ref.containsKey(key)){
+                System.out.println("Key " + key +": Match at position " + ref.get(key));
+            }else{
+                System.out.println("Key " + key + ": Not match");
+            }
+            
+        }
+            
+            
+            
+       
+        /*while(e.hasMoreElements()){
             
         
         //for (int i=0 ;i<read.getEncodeMap().size();i++){
@@ -592,7 +615,7 @@ public class SequenceUtil {
             }else{
                 System.out.println("Key " + e.nextElement()+ ": Not match");
             }
-        }
+        }*/
         return chr.getEncodeMap();
     }
 }
