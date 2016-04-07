@@ -10,6 +10,8 @@ import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import java.io.FileNotFoundException;
 import java.util.Enumeration;
 import java.util.Hashtable;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.Vector;
 /**
  *
@@ -49,12 +51,15 @@ public class NGSCMD {
 //           encode.writeToPath("/Users/soup/Desktop/hg19/"+chr.getName()+".map", "map");
            
           EncodedSequence encode = SequenceUtil.getEncodeSequence(chr);
-          EncodedSequence encodeSim = SequenceUtil.encodeSerialChromosomeSequence(test);
+          EncodedSequence encodeSim = SequenceUtil.encodeSerialReadSequence(test);
           
           System.out.println(encodeSim.getEncodeMap());
           
           //Hashtable genome = encode.getEncodeMap();
-          Hashtable read = encodeSim.getEncodeMap();
+          //Hashtable read = encodeSim.getEncodeMap();
+          //TreeMap read = encodeSim.getEncodeMap();
+          Map read = encodeSim.getEncodeMap();
+          
           
           SequenceUtil.mapGenome(encode, encodeSim);
           
