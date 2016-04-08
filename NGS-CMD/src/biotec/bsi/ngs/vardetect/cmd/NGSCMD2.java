@@ -5,6 +5,8 @@
  */
 package biotec.bsi.ngs.vardetect.cmd;
 
+import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
+import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
@@ -18,20 +20,8 @@ import java.io.IOException;
  */
 public class NGSCMD2 {
     public static void main(String args[]) throws FileNotFoundException, IOException{
-        long i = 1231223123;
-        DataOutputStream os = new DataOutputStream(new FileOutputStream("binout.dat"));
-        os.writeLong(i);
-        i++;
-        os.writeLong(i);
         
-        os.close();
-        
-        DataInputStream is = new DataInputStream(new FileInputStream("binout.dat"));
-        long j = is.readLong();
-        j = is.readLong();
-        is.close();
-        System.out.println(j);
-        
-        
+        //eferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
+        SequenceUtil.extractReferenceSequence(args[1]);
     }
 }
