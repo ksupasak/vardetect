@@ -588,6 +588,7 @@ public class SequenceUtil {
     
     public static Map mapGenome(EncodedSequence chr, EncodedSequence read){
         
+        
         //TreeMap<Long,Long> ref = new TreeMap(chr.getEncodeMap());
         //TreeMap<Long,Long> test = new TreeMap(read.getEncodeMap());
         SortedSet<Long> vals = new TreeSet(read.getEncodeMap().values()) ;
