@@ -6,7 +6,12 @@
 package biotec.bsi.ngs.vardetect.core;
 
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.PrintStream;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -35,10 +40,12 @@ public class EncodedSequence {
     public Map getEncodeMap(){
         return this.map;
     }
-    public void readFromPath(String file_path, String fa) throws FileNotFoundException {
+    public void readFromPath(String file_path, String fa) throws FileNotFoundException, IOException {
         
         map = new HashMap<Long,Long>();
         
+        
+        if(fa.compareTo("map")==0){
         
         Charset charset = Charset.forName("US-ASCII");
     
@@ -72,25 +79,66 @@ public class EncodedSequence {
            
        }
         
+        }else
+        if(fa.compareTo("bmap")==0){
+            int count = 0 ;
+            
+            DataInputStream is = new DataInputStream(new FileInputStream(file_path+"."+fa));
+            int size = is.readInt();
+            System.out.println("Totalxx bmer : "+size);
+
+            for(int i=0;i<size;i++){
+               
+                long mer = is.readLong();
+                long pos = is.readLong();
+                 map.put(mer, pos);
+            
+            if(count%1000000==0)System.out.println("Read binary Mer "+count);
+                count ++;
+            }
+            System.out.println("Total bmer : "+size);
+
+            is.close();
+        }
+        
         
     }
     
     
-    public void writeToPath(String path, String fa) throws FileNotFoundException {
+    public void writeToPath(String path, String fa) throws FileNotFoundException, IOException {
 
        
-       PrintStream ps = new PrintStream(path+"."+fa);
        
        //Enumeration<Long> e = map.keys();
-       
+       if(fa.compareTo("map")==0){
+       PrintStream ps = new PrintStream(path+"."+fa);
        for (Map.Entry<Long,Long> entry : map.entrySet()){
            Long mer = entry.getKey();
-           
-           
            Long pos = map.get(mer);
            ps.println(mer+"\t"+pos);
            
-        }
+       }}
+       else
+       if(fa.compareTo("bmap")==0){
+           
+       DataOutputStream os = new DataOutputStream(new FileOutputStream(path+"."+fa));
+       System.out.println("Total bmer : "+map.keySet().size());
+
+       os.writeInt(map.keySet().size());
+       for (Map.Entry<Long,Long> entry : map.entrySet()){
+           Long mer = entry.getKey();
+           Long pos = map.get(mer);
+           os.writeLong(mer);
+           os.writeLong(pos);
+       }
+       os.close();    
+     
+       } 
+           
+           
+    }
+       
+       
        
        /*while(e.hasMoreElements()){
            Long mer = e.nextElement();
@@ -101,6 +149,4 @@ public class EncodedSequence {
                
                
 
-    }
-    
 }

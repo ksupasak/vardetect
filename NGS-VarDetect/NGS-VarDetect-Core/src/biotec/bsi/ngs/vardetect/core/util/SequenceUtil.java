@@ -403,7 +403,7 @@ public class SequenceUtil {
        
        seq.setMap(map);
        
-       
+        
        System.out.println("Total mer :" +n);
        System.out.println("Total uniq mer :" +map.size());
        System.out.println("Total rep :" +repeat);
@@ -512,20 +512,17 @@ public class SequenceUtil {
 
         EncodedSequence encode = null;
 //        System.out.println(chr.getFilePath());
-        Path fp = Paths.get(chr.getFilePath()+".map");
+        Path fp = Paths.get(chr.getFilePath()+".bmap");
         File f = fp.toFile();
         try{
 
         if(f.exists()){
-       
-            
             encode = new EncodedSequence();
-            encode.readFromPath(chr.getFilePath(), "map");
-            
-            
+            encode.readFromPath(chr.getFilePath(), "bmap");
         }else{
             encode = SequenceUtil.encodeSerialChromosomeSequence(chr);
-            encode.writeToPath(chr.getFilePath(), "map");
+//            encode.writeToPath(chr.getFilePath(), "map");
+            encode.writeToPath(chr.getFilePath(), "bmap");
         }
         
         }catch(Exception e){
@@ -597,11 +594,11 @@ public class SequenceUtil {
         for (Long val : vals){
             //System.out.println(key);
             
-            System.out.println("the value is " + val + " Key is " + getKeyFromValue(read.getEncodeMap(),val));
+//            System.out.println("the value is " + val + " Key is " + getKeyFromValue(read.getEncodeMap(),val));
             if (chr.getEncodeMap().containsKey(getKeyFromValue(read.getEncodeMap(),val))){
                 System.out.println("Key " + getKeyFromValue(read.getEncodeMap(),val) +": Match at position " + chr.getEncodeMap().get(getKeyFromValue(read.getEncodeMap(),val)));
             }else{
-                System.out.println("Key " + getKeyFromValue(read.getEncodeMap(),val) + ": Not match");
+                System.out.println(" Key " + getKeyFromValue(read.getEncodeMap(),val) + ": Not match");
             }   
             
         }
