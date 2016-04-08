@@ -31,7 +31,7 @@ public class NGSCMD {
       
       
       ChromosomeSequence chr = ref.getChromosomes().elementAt(0);
-      EncodedSequence encode = SequenceUtil.encodeSerialChromosomeSequence(chr);
+      EncodedSequence encode = SequenceUtil.getEncodeSequence(chr);
       
       InputSequence is = SimulatorUtil.simulateIndel(chr, 5, 100);
       
