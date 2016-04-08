@@ -403,7 +403,7 @@ public class SequenceUtil {
        
        seq.setMap(map);
        
-       
+        
        System.out.println("Total mer :" +n);
        System.out.println("Total uniq mer :" +map.size());
        System.out.println("Total rep :" +repeat);
