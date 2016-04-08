@@ -1,0 +1,6 @@
+Manifest-Version: 1.0
+AutoUpdate-Show-In-Client: true
+OpenIDE-Module: biotec.bsi.ngs.vardetect.gui
+OpenIDE-Module-Localizing-Bundle: biotec/bsi/ngs/vardetect/gui/Bundle.properties
+OpenIDE-Module-Specification-Version: 1.0
+
