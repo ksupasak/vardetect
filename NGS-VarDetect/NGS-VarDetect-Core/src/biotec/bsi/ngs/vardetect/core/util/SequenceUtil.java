@@ -291,7 +291,7 @@ public class SequenceUtil {
     
     
     public static EncodedSequence encodeSerialReadSequence(CharSequence chr){
-       
+       // Output is CharSequence
        EncodedSequence seq = new EncodedSequence();
        
        int kmer = 20;
