@@ -26,7 +26,7 @@ public class NGSCMD2 {
         ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
         InputSequence is = new InputSequence();  
         
-        is = SimulatorUtil_aon.simulateWholeGene(ref, 5, 100);
+        //is = SimulatorUtil_aon.simulateWholeGene(ref, 5, 100);
         
         //SequenceUtil.extractReferenceSequence(args[1]);
     }

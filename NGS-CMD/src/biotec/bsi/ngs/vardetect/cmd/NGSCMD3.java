@@ -12,6 +12,8 @@ import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil;
+import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_aon.*;
+import static biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_aon.simulateWholeGene;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
@@ -29,7 +31,8 @@ public class NGSCMD3 {
       //ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
       ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
       
-      
+      InputSequence is = simulateWholeGene(ref,5,100,20,21);
+      /*
       ChromosomeSequence chr = ref.getChromosomes().elementAt(0);
       EncodedSequence encode = SequenceUtil.encodeSerialChromosomeSequence(chr);
       
@@ -46,7 +49,7 @@ public class NGSCMD3 {
           SequenceUtil.mapGenome(encode, encodeSim);
           
           
-      }
+      }*/
         
     }
     
