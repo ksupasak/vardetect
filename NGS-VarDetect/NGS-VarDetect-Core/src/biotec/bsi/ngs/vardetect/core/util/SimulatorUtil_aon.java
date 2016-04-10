@@ -19,6 +19,7 @@ import java.util.Vector;
 public class SimulatorUtil_aon {
     
     public static InputSequence simulateWholeGene(ReferenceSequence ref, int num_read, int ln_read, int numberchrA,int numberchrB){
+        System.out.println("Begin Simulate");
         String namechrA = "chr"+numberchrA;
         String namechrB = "chr"+numberchrB;
         ChromosomeSequence chrA = null,chrB = null;
@@ -27,7 +28,7 @@ public class SimulatorUtil_aon {
         
         Vector<ChromosomeSequence> chrs = ref.getChromosomes();
         System.out.println(chrs.size());
-       
+        System.out.println("Chromosome loop");
         for(int chrNum=0;chrNum<chrs.size();chrNum++){
         
             System.out.println("chr number" + chrNum);
@@ -41,7 +42,7 @@ public class SimulatorUtil_aon {
                 chrB = chr;
             }   
         }
-        
+        System.out.println("boncatenate");
         CharSequence iniTemplate = SequenceUtil.concatenateChromosome(chrA, chrB, ln_read-1, ln_read-1);
         
         String read;
