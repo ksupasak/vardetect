@@ -30,11 +30,11 @@ public class NGSCMD3 {
         
       //ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
       ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
-      
+      System.out.println("Read Done");
       InputSequence is = simulateWholeGene(ref,5,100,20,21);
       
       
-      Enumeration<ShortgunSequence> e = is.seqs.elements();
+      //Enumeration<ShortgunSequence> e = is.seqs.elements();
       
       
       /*
