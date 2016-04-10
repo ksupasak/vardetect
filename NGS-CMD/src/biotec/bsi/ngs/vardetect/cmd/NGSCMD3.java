@@ -32,6 +32,11 @@ public class NGSCMD3 {
       ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
       
       InputSequence is = simulateWholeGene(ref,5,100,20,21);
+      
+      
+      Enumeration<ShortgunSequence> e = is.seqs.elements();
+      
+      
       /*
       ChromosomeSequence chr = ref.getChromosomes().elementAt(0);
       EncodedSequence encode = SequenceUtil.encodeSerialChromosomeSequence(chr);
