@@ -669,12 +669,59 @@ public class SequenceUtil {
 
         try (BufferedReader reader = new BufferedReader(new FileReader(filename));) {
         String line = null;
-
+        String setA[] = null;
+        String setB[] = null;
+        String chrName = null;
+        String geneName = null;
+        long startPos = 0;
+        long stopPos = 0;
+        int direction = 0;
+        
         while ((line = reader.readLine()) != null) {
-
+            
+            int count = 0;
+            setA = line.split("\\s+");
+            setB = line.split(";");
             System.out.println(line);
-            System.out.println(line.split(""));
-            System.out.println(line.split(""));
+            System.out.println(setA.length);
+            
+            for (String part : setA) {
+                count++;
+                if (count == 1){
+                    chrName = part;
+                }
+                else if(count == 4){
+                    startPos = Long.parseLong(part);
+                    System.out.println(startPos);
+                }
+                else if (count == 5){
+                    stopPos = Long.parseLong(part);
+                }
+                else if (count ==6){
+                    direction = Integer.parseInt(part);
+                }
+                
+                System.out.println(part);
+            }
+            
+            count = 0;
+            for (String part : setB) {
+                count++;
+                if (count ==3){
+                    geneName = part;
+                }
+                System.out.println(part);
+            }
+            
+            System.out.println("Get :" + chrName+ "  "  + geneName+ "  " + startPos+ "  " + stopPos+ "  " + direction);
+            
+
+
+
+
+
+
+//System.out.println(line.split(";"));
             /*if(line.charAt(0)=='>'){
 
                 if(chr!=null){
