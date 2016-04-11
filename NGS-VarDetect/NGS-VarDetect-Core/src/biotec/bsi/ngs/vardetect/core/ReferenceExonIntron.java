@@ -5,6 +5,7 @@
  */
 package biotec.bsi.ngs.vardetect.core;
 
+import java.util.Collections;
 import java.util.Vector;
 
 /**
@@ -22,7 +23,9 @@ public class ReferenceExonIntron {
     public void addData(ExonIntron in){
         data.add(in);
     }
-    
+    public void reverseorder(){
+        Collections.reverse(data);
+    }
      public Vector<ExonIntron> getdata(){
         return data;
     }

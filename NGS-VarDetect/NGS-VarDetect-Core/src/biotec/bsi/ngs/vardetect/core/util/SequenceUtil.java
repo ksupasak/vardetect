@@ -19,6 +19,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -28,6 +29,7 @@ import java.util.Random;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.Vector;
 
 
 /**
@@ -758,6 +760,71 @@ public class SequenceUtil {
 
         return ref;
     }
+    
+    
+    public static ReferenceExonIntron randomExonIntron(ReferenceExonIntron ref){
+        ReferenceExonIntron output = new ReferenceExonIntron();
+        Vector<ExonIntron> data = ref.getdata();
+        Random rand = new Random();
+        //Vector<ExonIntron> output;
+        int r = rand.nextInt(data.size());
+        System.out.println("Vector size" + data.size());
+        
+        //int r = 500;
+        System.out.print("Pick" + data.elementAt(r).getdirection());
+        int iniguess = Math.abs(data.elementAt(r).getdirection());
+        int iniguesscheck = Math.abs(data.elementAt(r).getdirection());
+        System.out.println("iniGuesscheck" + iniguess);
+        int mainPoint = 0;
+        int axonNum = 0;
+        int rguess = r;
+        
+        while(true){
+            rguess++;
+            System.out.println("num of r : "+rguess);
+            int newguess = Math.abs(data.elementAt(rguess).getdirection());
+            System.out.println("num of guess : "+newguess);
+            if(newguess<iniguess||newguess==iniguess){
+                mainPoint = rguess-1;
+                axonNum = iniguess;
+                break;
+            }
+            else{
+                iniguess = newguess;
+            }
+        }
+        System.out.println("mainPoint : "+ mainPoint);
+        System.out.println("axonNum : "+ axonNum);
+        
+        String name = data.elementAt(mainPoint).getGeneName();
+        //output = new Vector<ExonIntron>();
+        while(axonNum>0){
+            
+            
+            if (data.elementAt(mainPoint).getGeneName().equalsIgnoreCase(name)){
+                // check in case that direction of exon is more than 2 but have just one exon EX. around element 1000
+                System.out.println("At Point : " + mainPoint);
+                System.out.println("Final Pick " + data.elementAt(mainPoint).getGeneName()+" Direction" + data.elementAt(mainPoint).getdirection());
+                //output.add(data.elementAt(mainPoint));
+                output.addData(data.elementAt(mainPoint));
+                axonNum--;
+                mainPoint--;
+            }else break;
+            
+            //axonNum--;
+            //mainPoint--;
+            //r++;
+        }
+        
+        //System.out.println("New vector size : "+output.getdata().size());
+        output.reverseorder();
+        
+        //System.out.println("New vector size : "+output.getdata().elementAt(0).getdirection());
+        //System.out.println("New vector size : "+output.getdata().elementAt(1).getdirection());
+        
+        return output;
+    }
+
     
     
 }
