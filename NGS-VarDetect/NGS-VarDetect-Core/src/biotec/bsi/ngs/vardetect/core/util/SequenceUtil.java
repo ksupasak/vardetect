@@ -8,9 +8,12 @@ package biotec.bsi.ngs.vardetect.core.util;
 import biotec.bsi.ngs.vardetect.core.ChromosomeSequence;
 import biotec.bsi.ngs.vardetect.core.EncodedSequence;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
+import biotec.bsi.ngs.vardetect.core.ExonIntron;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -638,6 +641,7 @@ public class SequenceUtil {
         return chr.getEncodeMap();
     }
 
+    
     private static Object getKeyFromValue(Map hm, Object value) {
         for (Object o : hm.keySet()) {
           if (hm.get(o).equals(value)) {
@@ -645,6 +649,74 @@ public class SequenceUtil {
           }
         }
         return null;    
+    }
+    
+    
+    public static ExonIntron readExonIntron(String filename){
+        
+        //ReferenceSequence ref = new ReferenceSequence();
+        //ref.setFilename(filename);
+
+
+
+        //Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(filename);
+        String chr = null;
+    //    String seq = "";
+
+        StringBuffer seq = new StringBuffer();
+        
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(filename));) {
+        String line = null;
+
+        while ((line = reader.readLine()) != null) {
+
+            System.out.println(line);
+            System.out.println(line.split(""));
+            System.out.println(line.split(""));
+            /*if(line.charAt(0)=='>'){
+
+                if(chr!=null){
+
+                    System.out.println("CHR : "+chr+" Size : "+seq.length());
+
+                    ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+
+                    ref.addChromosomeSequence(c);
+
+                }
+                seq = new StringBuffer();
+                chr = line.substring(1,line.length());
+
+            }else{
+
+                seq.append(line.trim());
+
+
+            }*/
+
+        }
+
+        /*if(seq.length()>0){
+
+    //        System.out.println("CHR : "+chr+" Size : "+seq.length());
+
+            ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+
+            ref.addChromosomeSequence(c);
+
+        }*/
+
+
+
+
+        } catch (IOException x) {
+            System.err.format("IOException: %s%n", x);
+        }    
+
+
+        return null;
     }
     
     
