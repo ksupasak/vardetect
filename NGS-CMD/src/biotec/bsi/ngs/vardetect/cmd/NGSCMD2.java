@@ -5,6 +5,7 @@
  */
 package biotec.bsi.ngs.vardetect.cmd;
 
+import biotec.bsi.ngs.vardetect.core.ExonIntron;
 import biotec.bsi.ngs.vardetect.core.InputSequence;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
@@ -21,10 +22,13 @@ import java.io.IOException;
  * @author soup
  */
 public class NGSCMD2 {
+    
     public static void main(String args[]) throws FileNotFoundException, IOException{
         
-        ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
-        InputSequence is = new InputSequence();  
+        ExonIntron ee = SequenceUtil.readExonIntron(args[3]);
+        
+        //ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
+        //InputSequence is = new InputSequence();  
         
         //is = SimulatorUtil_aon.simulateWholeGene(ref, 5, 100);
         

@@ -29,7 +29,7 @@ public class NGSCMD3 {
     public static void main(String[] args){
         
       //ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
-      ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
+      ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[0]);
       System.out.println("Read Done");
       InputSequence is = simulateWholeGene(ref,5,100,20,21);
       
