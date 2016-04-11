@@ -9,6 +9,7 @@ import biotec.bsi.ngs.vardetect.core.ChromosomeSequence;
 import biotec.bsi.ngs.vardetect.core.EncodedSequence;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.ExonIntron;
+import biotec.bsi.ngs.vardetect.core.ReferenceExonIntron;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -652,21 +653,16 @@ public class SequenceUtil {
     }
     
     
-    public static ExonIntron readExonIntron(String filename){
+    public static ReferenceExonIntron readExonIntron(String filename){
         
-        //ReferenceSequence ref = new ReferenceSequence();
+        ReferenceExonIntron ref = new ReferenceExonIntron();
         //ref.setFilename(filename);
-
-
-
         //Charset charset = Charset.forName("US-ASCII");
         Path path = Paths.get(filename);
         String chr = null;
     //    String seq = "";
-
         StringBuffer seq = new StringBuffer();
         
-
         try (BufferedReader reader = new BufferedReader(new FileReader(filename));) {
         String line = null;
         String setA[] = null;
@@ -682,8 +678,8 @@ public class SequenceUtil {
             int count = 0;
             setA = line.split("\\s+");
             setB = line.split(";");
-            System.out.println(line);
-            System.out.println(setA.length);
+            //System.out.println(line);
+            //System.out.println(setA.length);
             
             for (String part : setA) {
                 count++;
@@ -692,7 +688,7 @@ public class SequenceUtil {
                 }
                 else if(count == 4){
                     startPos = Long.parseLong(part);
-                    System.out.println(startPos);
+                    //System.out.println(startPos);
                 }
                 else if (count == 5){
                     stopPos = Long.parseLong(part);
@@ -701,7 +697,7 @@ public class SequenceUtil {
                     direction = Integer.parseInt(part);
                 }
                 
-                System.out.println(part);
+                //System.out.println(part);
             }
             
             count = 0;
@@ -710,17 +706,14 @@ public class SequenceUtil {
                 if (count ==3){
                     geneName = part;
                 }
-                System.out.println(part);
+                //System.out.println(part);
             }
             
             System.out.println("Get :" + chrName+ "  "  + geneName+ "  " + startPos+ "  " + stopPos+ "  " + direction);
             
-
-
-
-
-
-
+            ExonIntron data = new ExonIntron(chrName,geneName,startPos,stopPos,direction);
+            ref.addData(data);
+            
 //System.out.println(line.split(";"));
             /*if(line.charAt(0)=='>'){
 
@@ -763,7 +756,7 @@ public class SequenceUtil {
         }    
 
 
-        return null;
+        return ref;
     }
     
     
