@@ -27,19 +27,8 @@ import java.util.Vector;
 public class NGSCMD2 {
     
     public static void main(String args[]) throws FileNotFoundException, IOException{
-        
+        ReferenceExonIntron output = new ReferenceExonIntron();
         ReferenceExonIntron ee = SequenceUtil.readExonIntron(args[3]);
-        Vector<ExonIntron> data = ee.getdata();
-        System.out.println("Vector size" + data.size());
-        System.out.print("Pick" + data.elementAt(500).getdirection());
-        int iniguess = Math.abs(data.elementAt(500).getdirection());
-        //for (int i == data.elementAt(500).getdirection())
-        
-        //ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
-        //InputSequence is = new InputSequence();  
-        
-        //is = SimulatorUtil_aon.simulateWholeGene(ref, 5, 100);
-        
-        //SequenceUtil.extractReferenceSequence(args[1]);
+        output = SequenceUtil.randomExonIntron(ee);
     }
 }
