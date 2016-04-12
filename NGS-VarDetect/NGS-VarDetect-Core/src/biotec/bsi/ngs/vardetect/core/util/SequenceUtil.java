@@ -598,9 +598,10 @@ public class SequenceUtil {
         //TreeMap<Long,Long> ref = new TreeMap(chr.getEncodeMap());
         //TreeMap<Long,Long> test = new TreeMap(read.getEncodeMap());
         SortedSet<Long> vals = new TreeSet(read.getEncodeMap().values()) ;
+        int count = 0;
         for (Long val : vals){
             //System.out.println(key);
-            
+            System.out.println("Number of mapping iteration : " + count++);
 //            System.out.println("the value is " + val + " Key is " + getKeyFromValue(read.getEncodeMap(),val));
             if (chr.getEncodeMap().containsKey(getKeyFromValue(read.getEncodeMap(),val))){
                 System.out.println("Key " + getKeyFromValue(read.getEncodeMap(),val) +": Match at position " + chr.getEncodeMap().get(getKeyFromValue(read.getEncodeMap(),val)));
