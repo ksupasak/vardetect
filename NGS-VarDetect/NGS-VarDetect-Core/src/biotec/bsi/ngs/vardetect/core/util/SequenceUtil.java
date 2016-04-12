@@ -598,18 +598,42 @@ public class SequenceUtil {
         //TreeMap<Long,Long> ref = new TreeMap(chr.getEncodeMap());
         //TreeMap<Long,Long> test = new TreeMap(read.getEncodeMap());
         SortedSet<Long> vals = new TreeSet(read.getEncodeMap().values()) ;
-        int count = 0;
+        Map<Long,Long> outputMap = new HashMap();
+        Map<Long,Long> chrMap = chr.getEncodeMap();
+        Map<Long,Long> readMap = read.getEncodeMap();
+        
+        int count = 1;
+        long index = 0;
+        long roundMatch = 1;
+        long roundNMatch = 1;
+        //Obiect readKey = 0;
         for (Long val : vals){
+            //readKey = getKeyFromValue(readMap,val);
             //System.out.println(key);
             System.out.println("Number of mapping iteration : " + count++);
 //            System.out.println("the value is " + val + " Key is " + getKeyFromValue(read.getEncodeMap(),val));
-            if (chr.getEncodeMap().containsKey(getKeyFromValue(read.getEncodeMap(),val))){
-                System.out.println("Key " + getKeyFromValue(read.getEncodeMap(),val) +": Match at position " + chr.getEncodeMap().get(getKeyFromValue(read.getEncodeMap(),val)));
+            if (chrMap.containsKey(getKeyFromValue(readMap,val))){
+                
+                //System.out.println("Key " + getKeyFromValue(read.getEncodeMap(),val) +": Match at position " + chr.getEncodeMap().get(getKeyFromValue(read.getEncodeMap(),val)));
+                System.out.println("Key " + getKeyFromValue(chrMap,val) +": Match at position " + chrMap.get(getKeyFromValue(readMap,val)));
+                index = chrMap.get(getKeyFromValue(readMap,val)) - val;
+                System.out.println("Align at : " + index );
+                //if (checkMap == 0){
+                    //count++;
+                //}
+                outputMap.put(index,roundMatch++);
+                
+                
             }else{
-                System.out.println(" Key " + getKeyFromValue(read.getEncodeMap(),val) + ": Not match");
+                System.out.println(" Key " + getKeyFromValue(readMap,val) + ": Not match");
+                //index = val;
+                roundMatch = 1;  // reset round
+                //System.out.println("");
             }   
             
         }
+        
+        System.out.println("Key : "+index+ "Has : "+outputMap.get(index));
         //TreeMap<Long> ref = new TreeMap(chr.);
         //System.out.println(test);
         //Enumeration e = read.getEncodeMap().keys();
@@ -642,7 +666,7 @@ public class SequenceUtil {
                 System.out.println("Key " + e.nextElement()+ ": Not match");
             }
         }*/
-        return chr.getEncodeMap();
+        return outputMap;
     }
 
     
