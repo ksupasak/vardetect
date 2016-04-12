@@ -29,11 +29,34 @@ public class NGSCMD3 {
     public static void main(String[] args){
         
       //ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
-      ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[0]);
+      ReferenceSequence ref_read = SequenceUtil.readReferenceSequence(args[0]);
       System.out.println("Read Done");
-      InputSequence is = simulateWholeGene(ref,5,100,20,21);
       
       
+      
+      ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
+      ChromosomeSequence chr = ref.getChromosomes().elementAt(0);
+      System.out.println("Name of Pick chromosome : " + chr.getName());
+      
+      
+      EncodedSequence encode = SequenceUtil.getEncodeSequence(chr);
+      System.out.println("Size of encode referecce : " + encode.getEncodeMap().size());
+      
+      
+      InputSequence is = simulateWholeGene(ref_read,5,100,20,21);
+      
+      Enumeration<ShortgunSequence> e = is.seqs.elements();
+      
+      int count = 0;
+      while(e.hasMoreElements()){
+          System.out.println("Read Number : " + count++);
+          ShortgunSequence ss = e.nextElement();
+          
+          EncodedSequence encodeSim = SequenceUtil.encodeSerialReadSequence(ss.seq);
+          
+          SequenceUtil.mapGenome(encode, encodeSim);
+          
+      }
       //Enumeration<ShortgunSequence> e = is.seqs.elements();
       
       
