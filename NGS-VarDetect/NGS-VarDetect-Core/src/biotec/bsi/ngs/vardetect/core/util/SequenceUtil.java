@@ -633,7 +633,8 @@ public class SequenceUtil {
             
         }
         
-        System.out.println("Key : "+index+ "Has : "+outputMap.get(index));
+        System.out.println("Key : "+index+ "Has : "+outputMap.get(index)); // Print the number of align at index variable(Key) 
+                                                                            // outputMap is hashmap the store the align index (Key) and number of base that align on that index.
         //TreeMap<Long> ref = new TreeMap(chr.);
         //System.out.println(test);
         //Enumeration e = read.getEncodeMap().keys();
