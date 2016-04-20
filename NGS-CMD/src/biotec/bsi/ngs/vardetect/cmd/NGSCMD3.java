@@ -54,7 +54,7 @@ public class NGSCMD3 {
           
           EncodedSequence encodeSim = SequenceUtil.encodeSerialReadSequence(ss.seq);
           
-          SequenceUtil.mapGenome(encode, encodeSim);
+          SequenceUtil.mapGenome(encode, encodeSim); // encode = referance map ; encodeSim = read
           
       }
       //Enumeration<ShortgunSequence> e = is.seqs.elements();
