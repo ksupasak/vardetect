@@ -610,7 +610,7 @@ public class SequenceUtil {
             SortedSet<Long> vals = new TreeSet(encodeSim.getEncodeMap().values()) ;
             Map<Long,Long> readMap = encodeSim.getEncodeMap();
          
-             int count = 1;
+            int count = 1;
             long index = 0;
             long roundMatch = 1;
             long roundNMatch = 1;
@@ -646,8 +646,10 @@ public class SequenceUtil {
         
         
         
-        return null;
+        return outputMap;
     }
+    
+    
     public static Map mapGenome(EncodedSequence chr, EncodedSequence read){
         
         
