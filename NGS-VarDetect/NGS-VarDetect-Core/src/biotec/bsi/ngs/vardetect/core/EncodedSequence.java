@@ -32,14 +32,25 @@ public class EncodedSequence {
     //Hashtable<Long,Long> map;
     //TreeMap<Long,Long> map;
     Map<Long,Long> map;
+    String name;
     
     public void setMap(Map<Long, Long> map) {
+        this.map = map;
+        //this.name = chrName;
+    }
+    
+    public void setReadMap(Map<Long,Long> map){
         this.map = map;
     }
     
     public Map getEncodeMap(){
         return this.map;
     }
+    
+    public String getEncodeChrName(){
+        return this.name;
+    }
+    
     public void readFromPath(String file_path, String fa) throws FileNotFoundException, IOException {
         
         map = new HashMap<Long,Long>();

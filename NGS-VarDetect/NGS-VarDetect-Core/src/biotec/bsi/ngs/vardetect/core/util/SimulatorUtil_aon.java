@@ -57,8 +57,12 @@ public class SimulatorUtil_aon {
             System.out.println(read);
             
             ShortgunSequence ss = new ShortgunSequence(read);
-            is.seqs.add(ss);         
+            is.seqs.add(ss);
+            
         }
+        
+        //is.addName(ref.getChromosomes());
+        
         
         //while(chrs.elements()..hasMoreElements()){
             

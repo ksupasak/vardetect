@@ -277,6 +277,10 @@ public class SequenceUtil {
                  
 //                   System.out.println(s+"\t"+mer+" at "+pos+" with "+map.get(mer)); 
                }else{
+                  //cmer<<=8;
+                  //cmer+=chr.getChrNumber();
+                  pos<<=8;
+                  pos+=chr.getChrNumber();
                   map.put(cmer, pos);
                }
                
@@ -285,7 +289,7 @@ public class SequenceUtil {
            
            }
        }
-       
+       //System.out.println("In encodeSerialChromosome " + chrName);
        seq.setMap(map);
        
        
@@ -297,6 +301,130 @@ public class SequenceUtil {
        return seq;
    }
     
+    public static EncodedSequence encodeSerialChromosomeSequenceV2(ChromosomeSequence chr){
+       
+       EncodedSequence seq = new EncodedSequence();
+       
+       int kmer = 20;
+       int sliding = 1;
+       int repeat = 0;
+       
+       //Hashtable<Long,Long> map =new Hashtable<Long,Long>();
+       //TreeMap<Long,Long> map = new TreeMap();
+       Map<Long,Long> map = new HashMap();
+       
+       StringBuffer sb = chr.getSequence();
+       String smallb = sb.toString().toLowerCase();
+       
+       
+       
+       int n = (sb.length()-kmer)/sliding;
+       
+       long cmer = -1;
+       
+       
+       long mask = 0; 
+       
+       for(int i =0;i<kmer;i++)mask=mask*4+3;
+       
+       
+       System.out.println(mask);
+       
+       
+       for(int i =0;i<n;i++){
+           
+
+          String s = sb.substring(i*sliding,i*sliding+kmer);
+          String s2 = smallb.substring(i*sliding, i*sliding+kmer);
+          
+          long pos = i*sliding;
+          
+          if(s.charAt(0)!='N'&&s.compareTo(s2)!=0){
+              
+//          System.out.println(s+" "+s2);
+          if(cmer==-1){
+            cmer = encodeMer(s,kmer);
+          }else{
+            
+            char a = smallb.charAt(i*sliding+kmer-1);
+            int t =-1;
+            switch(a){
+                case 'a':
+                    t=0; // 00
+                    break;
+                case 't': 
+                    t=3; // 11
+                    break;
+                case 'c':
+                    t=1; // 01 
+                    break;
+                case 'g':
+                    t=2; // 10 
+                    break;
+                default : 
+                    t=-1;
+                break;
+               
+            }
+            if(t>=0){
+                
+//                String s2 = sb.substring((i-1)*sliding,(i-1)*sliding+kmer);
+//                long omer = cmer;               
+                cmer *= 4;
+                cmer &= mask;
+                cmer += t;
+            
+                    
+//                System.out.println(""+s+" "+cmer+"\t"+s2+" "+omer+" "+t);
+                
+            }else{
+                System.out.println(a);
+                cmer = -1;
+                i+=kmer;
+                
+                
+            }
+            
+              
+              
+          }
+           
+          
+          
+           
+           if(i%10000==0)System.out.println("Loop "+i*sliding+" "+repeat);
+           
+           if(cmer>=0){
+               
+               if(map.containsKey(cmer)){
+                 
+                  repeat ++;
+                 
+//                   System.out.println(s+"\t"+mer+" at "+pos+" with "+map.get(mer)); 
+               }else{
+                  
+                  cmer<<=8;
+                  cmer+=chr.getChrNumber();
+                  
+                  map.put(cmer, pos);
+               }
+               
+           }
+           
+           
+           }
+       }
+       //System.out.println("In encodeSerialChromosome " + chrName);
+       seq.setMap(map);
+       
+       
+       System.out.println("Total mer :" +n);
+       System.out.println("Total uniq mer :" +map.size());
+       System.out.println("Total rep :" +repeat);
+       
+       
+       return seq;
+   }
     
     public static EncodedSequence encodeSerialReadSequence(CharSequence chr){
        // Output is CharSequence
@@ -400,6 +528,8 @@ public class SequenceUtil {
                  
 //                   System.out.println(s+"\t"+mer+" at "+pos+" with "+map.get(mer)); 
                }else{
+                  //cmer<<=8; 
+                  pos<<=8;
                   map.put(cmer, pos);
                }
                
@@ -409,7 +539,7 @@ public class SequenceUtil {
            }
        }
        
-       seq.setMap(map);
+       seq.setReadMap(map);
        
         
        System.out.println("Total mer :" +n);
@@ -536,7 +666,7 @@ public class SequenceUtil {
         }catch(Exception e){
             System.out.println("Error");
         }
-        
+        //System.out.println("From Encode "+encode.getEncodeChrName());
 //        return null;
         return encode;
 
@@ -598,8 +728,10 @@ public class SequenceUtil {
        
         Map<Long,Long> outputMap = new HashMap();
         Map<Long,Long> chrMap = refChr.getEncodeMap();
-        
-        
+        Long[][] value = new Long[1][2];
+        String name;
+                
+        //Long chrnum = refChr.getEncodeChrName().split("chr");
         
         Enumeration<ShortgunSequence> e = read.seqs.elements();
         while(e.hasMoreElements()){
@@ -629,8 +761,10 @@ public class SequenceUtil {
                     //if (checkMap == 0){
                         //count++;
                     //}
+                    //value[0][0] = roundMatch++;
+                    //value[0][1] = read.getChrName();
                     outputMap.put(index,roundMatch++);
-
+                     
 
                 }else{
                     System.out.println(" Key " + getKeyFromValue(readMap,val) + ": Not match");
@@ -664,17 +798,31 @@ public class SequenceUtil {
         long index = 0;
         long roundMatch = 1;
         long roundNMatch = 1;
+        long dummyPos;
+        long dummyIndex;
+        Object dummykey;
         //Obiect readKey = 0;
         for (Long val : vals){
             //readKey = getKeyFromValue(readMap,val);
             //System.out.println(key);
             System.out.println("Number of mapping iteration : " + count++);
 //            System.out.println("the value is " + val + " Key is " + getKeyFromValue(read.getEncodeMap(),val));
-            if (chrMap.containsKey(getKeyFromValue(readMap,val))){
-                
+            dummykey = getKeyFromValue(readMap,val);
+            
+            //if (chrMap.containsKey(getKeyFromValue(readMap,val))){
+            if (chrMap.containsKey(dummykey)){    
                 //System.out.println("Key " + getKeyFromValue(read.getEncodeMap(),val) +": Match at position " + chr.getEncodeMap().get(getKeyFromValue(read.getEncodeMap(),val)));
-                System.out.println("Key " + getKeyFromValue(chrMap,val) +": Match at position " + chrMap.get(getKeyFromValue(readMap,val)));
-                index = chrMap.get(getKeyFromValue(readMap,val)) - val;
+                //System.out.println("Key " + getKeyFromValue(chrMap,val) +": Match at position " + chrMap.get(getKeyFromValue(readMap,val)));
+                System.out.println("Key " + dummykey +": Match at position " + chrMap.get(dummykey));
+                //index = chrMap.get(getKeyFromValue(readMap,val)) - val;
+                
+                /* Do more OOP for convert position and get chr number
+                    Now I put chromosome number in position */
+                
+                
+                
+                dummyPos = chrMap.get(dummykey)>>8;
+                index = dummyPos - (val>>=8);
                 System.out.println("Align at : " + index );
                 //if (checkMap == 0){
                     //count++;

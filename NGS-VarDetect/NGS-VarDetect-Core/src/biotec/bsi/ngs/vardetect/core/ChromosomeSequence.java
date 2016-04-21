@@ -18,6 +18,7 @@ public class ChromosomeSequence {
     
     String name;
     StringBuffer seq;
+    Long chrNum;
     
     
     public ChromosomeSequence(ReferenceSequence ref, String name, StringBuffer seq){
@@ -38,7 +39,22 @@ public class ChromosomeSequence {
     public String getName(){
         return name;
     }
-
+    
+    public Long getChrNumber(){
+        String[] dummy = name.split("r");
+        if (dummy[1]=="X"){
+            chrNum = 23L;
+        }
+        else if(dummy[1]=="Y"){
+            chrNum = 24L;
+        }
+        else{
+            chrNum = Long.parseLong(dummy[1]);
+        }
+                
+        return chrNum;
+    }
+    
     public StringBuffer getSequence() {
         return seq;
     }

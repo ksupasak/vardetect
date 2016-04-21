@@ -38,7 +38,7 @@ public class ReferenceSequence {
         return null;
     }
     
-        public Vector<ChromosomeSequence> getChromosomes(){
+    public Vector<ChromosomeSequence> getChromosomes(){
         return chrs;
     }
        
