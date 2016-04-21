@@ -27,23 +27,29 @@ public class NGSCMD {
         // TODO code application logic here
         
        //ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
-      ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
+      //ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
       
       
-      ChromosomeSequence chr = ref.getChromosomes().elementAt(0);
-      EncodedSequence encode = SequenceUtil.getEncodeSequence(chr);
+      //ChromosomeSequence chr = ref.getChromosomes().elementAt(0);
+      //EncodedSequence encode = SequenceUtil.getEncodeSequence(chr);
+      //System.out.println(chr.getName());
+      //System.out.println(encode.getEncodeChrName());
+      //String[] ss = encode.getEncodeChrName().split("r");
+      //System.out.println(encode.getEncodeChrName().split("r"));
       
-      InputSequence is = SimulatorUtil.simulateIndel(chr, 5, 100);
+      //InputSequence is = SimulatorUtil.simulateIndel(chr, 5, 100);
       
-      Enumeration<ShortgunSequence> e = is.seqs.elements();
+      //Enumeration<ShortgunSequence> e = is.seqs.elements();
       
-      while(e.hasMoreElements()){
+      //while(e.hasMoreElements()){
           
-          ShortgunSequence ss = e.nextElement();
+          //ShortgunSequence ss = e.nextElement();
           
-          EncodedSequence encodeSim = SequenceUtil.encodeSerialReadSequence(ss.seq);
+          //EncodedSequence encodeSim = SequenceUtil.encodeSerialReadSequence(ss.seq);
           
-          SequenceUtil.mapGenome(encode, encodeSim);
+          //SequenceUtil.mapGenome(encode, encodeSim);
+          
+          
           
           
       }
@@ -105,6 +111,6 @@ public class NGSCMD {
        
 //         SequenceUtil.extractReferenceSequence(args[1], args[3]);
        
-    }
+    //}
     
 }

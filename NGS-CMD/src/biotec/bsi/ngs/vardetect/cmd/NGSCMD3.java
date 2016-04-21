@@ -19,6 +19,8 @@ import java.io.DataOutputStream;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -45,9 +47,15 @@ public class NGSCMD3 {
       
       InputSequence is = simulateWholeGene(ref_read,5,100,20,21);
       
-      Enumeration<ShortgunSequence> e = is.seqs.elements();
+      //Enumeration<ShortgunSequence> e = is.seqs.elements();
+      Map<Long,Long> mapRes;
+      //Map<Long,Long> mapRes = new HashMap();
       
-      int count = 0;
+      mapRes = SequenceUtil.mapGenomeShotgun(encode, is);
+      System.out.println("Summary : All key contains = "+mapRes.keySet());
+      
+ 
+      /*int count = 0;
       while(e.hasMoreElements()){
           System.out.println("Read Number : " + count++);
           ShortgunSequence ss = e.nextElement();
@@ -56,7 +64,7 @@ public class NGSCMD3 {
           
           SequenceUtil.mapGenome(encode, encodeSim); // encode = referance map ; encodeSim = read
           
-      }
+      }/*
       //Enumeration<ShortgunSequence> e = is.seqs.elements();
       
       

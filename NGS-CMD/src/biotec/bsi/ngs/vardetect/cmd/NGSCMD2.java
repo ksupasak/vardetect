@@ -30,5 +30,25 @@ public class NGSCMD2 {
         ReferenceExonIntron output = new ReferenceExonIntron();
         ReferenceExonIntron ee = SequenceUtil.readExonIntron(args[3]);
         output = SequenceUtil.randomExonIntron(ee);
+        
+        //String test = "x";
+        
+        //String[] aon = test.split("r");
+        //System.out.println(Long.valueOf(test));
+        //Long[][] a = new Long[10][1];
+        //Object[][] aon new Object[1][2];
+        
+        /*long test = 14726418;
+        long chr = 21;
+        
+        test<<=8;
+        test = test+chr;
+        System.out.println(test);
+        
+        long newtest = test&255;
+        System.out.println(newtest);
+        
+        long realtest = test>>8;
+        System.out.println(realtest);*/
     }
 }
