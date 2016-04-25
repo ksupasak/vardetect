@@ -8,6 +8,7 @@ package biotec.bsi.ngs.vardetect.cmd;
 import biotec.bsi.ngs.vardetect.core.ChromosomeSequence;
 import biotec.bsi.ngs.vardetect.core.EncodedSequence;
 import biotec.bsi.ngs.vardetect.core.InputSequence;
+import biotec.bsi.ngs.vardetect.core.MapResult;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
@@ -48,11 +49,11 @@ public class NGSCMD3 {
       InputSequence is = simulateWholeGene(ref_read,5,100,20,21);
       
       //Enumeration<ShortgunSequence> e = is.seqs.elements();
-      Map<Long,Long> mapRes;
+      MapResult mapRes;
       //Map<Long,Long> mapRes = new HashMap();
-      
-      mapRes = SequenceUtil.mapGenomeShotgun(encode, is);
-      System.out.println("Summary : All key contains = "+mapRes.keySet());
+      //System.out.println("all key "+encode.getEncodeMap().keySet());
+      mapRes = SequenceUtil.mapGenomeShotgunV2(encode, is);
+      System.out.println("Summary : All key contains = "+mapRes.getResult().keySet());
       
  
       /*int count = 0;
