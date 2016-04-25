@@ -10,6 +10,7 @@ import biotec.bsi.ngs.vardetect.core.EncodedSequence;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.ExonIntron;
 import biotec.bsi.ngs.vardetect.core.InputSequence;
+import biotec.bsi.ngs.vardetect.core.MapResult;
 import biotec.bsi.ngs.vardetect.core.ReferenceExonIntron;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import java.io.BufferedReader;
@@ -744,6 +745,7 @@ public class SequenceUtil {
          
             int count = 1;
             long index = 0;
+            long indexB = 0;
             long roundMatch = 1;
             long roundNMatch = 1;
             //Obiect readKey = 0;
@@ -755,8 +757,19 @@ public class SequenceUtil {
                 if (chrMap.containsKey(getKeyFromValue(readMap,val))){
 
                     //System.out.println("Key " + getKeyFromValue(read.getEncodeMap(),val) +": Match at position " + chr.getEncodeMap().get(getKeyFromValue(read.getEncodeMap(),val)));
-                    System.out.println("Key " + getKeyFromValue(chrMap,val) +": Match at position " + chrMap.get(getKeyFromValue(readMap,val)));
+                    System.out.println("val : " + val);
+                            
+                    System.out.println("Key " + getKeyFromValue(readMap,val) +": Match at position " + chrMap.get(getKeyFromValue(readMap,val)));
                     index = chrMap.get(getKeyFromValue(readMap,val)) - val;
+                    
+                    indexB = (chrMap.get(getKeyFromValue(readMap,val))>>8) - (val>>8);
+                    System.out.println("New indexB without add number of chromosome : " + indexB);
+                    indexB = (indexB<<8)+(chrMap.get(getKeyFromValue(readMap,val))&255);
+                    System.out.println("New indexB with add number of chromosome : " + indexB);
+                     
+                    System.out.println("Cross check with reference key : " + (getKeyFromValue(chrMap,(index+val))) );
+                    //System.out.println("Position that map on reference : " + chrMap.get(getKeyFromValue(readMap,val)));
+                    
                     System.out.println("Align at : " + index );
                     //if (checkMap == 0){
                         //count++;
@@ -784,6 +797,84 @@ public class SequenceUtil {
     }
     
     
+    public static MapResult mapGenomeShotgunV2(EncodedSequence refChr, InputSequence read){
+        
+        MapResult result = new MapResult();
+        Map<Long,Long> outputMap = new HashMap();
+        Map<Long,Long> chrMap = refChr.getEncodeMap();
+        Long[][] value = new Long[1][2];
+        String name;
+                
+        //Long chrnum = refChr.getEncodeChrName().split("chr");
+        
+        Enumeration<ShortgunSequence> e = read.seqs.elements();
+        while(e.hasMoreElements()){
+            ShortgunSequence ss = e.nextElement();
+          
+            EncodedSequence encodeSim = SequenceUtil.encodeSerialReadSequence(ss.seq);
+            
+            SortedSet<Long> vals = new TreeSet(encodeSim.getEncodeMap().values()) ;
+            Map<Long,Long> readMap = encodeSim.getEncodeMap();
+         
+            int count = 1;
+            long index = 0;
+            long indexB = 0;
+            long roundMatch = 1;
+            long roundNMatch = 1;
+            //Obiect readKey = 0;
+            for (Long val : vals){
+                //readKey = getKeyFromValue(readMap,val);
+                //System.out.println(key);
+                System.out.println("Number of mapping iteration : " + count++);
+    //            System.out.println("the value is " + val + " Key is " + getKeyFromValue(read.getEncodeMap(),val));
+                if (chrMap.containsKey(getKeyFromValue(readMap,val))){
+
+                    //System.out.println("Key " + getKeyFromValue(read.getEncodeMap(),val) +": Match at position " + chr.getEncodeMap().get(getKeyFromValue(read.getEncodeMap(),val)));
+                    System.out.println("val : " + val);
+                            
+                    System.out.println("Key " + getKeyFromValue(readMap,val) +": Match at position " + chrMap.get(getKeyFromValue(readMap,val)));
+                    index = chrMap.get(getKeyFromValue(readMap,val)) - val;
+                    
+                    indexB = (chrMap.get(getKeyFromValue(readMap,val))>>8) - (val>>8);
+                    System.out.println("New indexB without add number of chromosome : " + indexB);
+                    indexB = (indexB<<8)+(chrMap.get(getKeyFromValue(readMap,val))&255);
+                    System.out.println("New indexB with add number of chromosome : " + indexB);
+                     
+                    System.out.println("Cross check with reference key : " + (getKeyFromValue(chrMap,(index+val))) );
+                    //System.out.println("Position that map on reference : " + chrMap.get(getKeyFromValue(readMap,val)));
+                    
+                    System.out.println("Align at : " + index );
+                    //if (checkMap == 0){
+                        //count++;
+                    //}
+                    //value[0][0] = roundMatch++;
+                    //value[0][1] = read.getChrName();
+                    /////outputMap.put(index,roundMatch++);
+                    result.addResult(index,roundMatch++);
+                     
+
+                }else{
+                    System.out.println(" Key " + getKeyFromValue(readMap,val) + ": Not match");
+                    //index = val;
+                    roundMatch = 1;  // reset round
+                    //System.out.println("");
+                }   
+                
+            }
+
+            System.out.println("Key : "+index+ "Has : "+result.getResult().get(index));
+        }
+        
+        
+        
+        return result;
+    }
+    
+    
+    
+    
+    
+    
     public static Map mapGenome(EncodedSequence chr, EncodedSequence read){
         
         
@@ -793,6 +884,7 @@ public class SequenceUtil {
         Map<Long,Long> outputMap = new HashMap();
         Map<Long,Long> chrMap = chr.getEncodeMap();
         Map<Long,Long> readMap = read.getEncodeMap();
+        MapResult result = new MapResult();
         
         int count = 1;
         long index = 0;
@@ -800,6 +892,7 @@ public class SequenceUtil {
         long roundNMatch = 1;
         long dummyPos;
         long dummyIndex;
+        long dummyChrName;
         Object dummykey;
         //Obiect readKey = 0;
         for (Long val : vals){
@@ -822,7 +915,9 @@ public class SequenceUtil {
                 
                 
                 dummyPos = chrMap.get(dummykey)>>8;
+                dummyChrName = chrMap.get(dummykey)&255;
                 index = dummyPos - (val>>=8);
+                index = (index<<=8)+dummyChrName;
                 System.out.println("Align at : " + index );
                 //if (checkMap == 0){
                     //count++;
