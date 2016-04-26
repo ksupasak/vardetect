@@ -38,12 +38,12 @@ public class NGSCMD3 {
       
       
       ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
-      ChromosomeSequence chr = ref.getChromosomes().elementAt(0);
-      System.out.println("Name of Pick chromosome : " + chr.getName());
+      ///ChromosomeSequence chr = ref.getChromosomes().elementAt(0);
+      ///System.out.println("Name of Pick chromosome : " + chr.getName());
       
       
-      EncodedSequence encode = SequenceUtil.getEncodeSequence(chr);
-      System.out.println("Size of encode referecce : " + encode.getEncodeMap().size());
+      ///EncodedSequence encode = SequenceUtil.getEncodeSequence(chr);
+      ///System.out.println("Size of encode referecce : " + encode.getEncodeMap().size());
       
       
       InputSequence is = simulateWholeGene(ref_read,5,100,20,21);
@@ -52,10 +52,16 @@ public class NGSCMD3 {
       MapResult mapRes;
       //Map<Long,Long> mapRes = new HashMap();
       //System.out.println("all key "+encode.getEncodeMap().keySet());
-      mapRes = SequenceUtil.mapGenomeShotgunV2(encode, is);
-      System.out.println("Summary : All key contains = "+mapRes.getResult().keySet());
-      
- 
+      mapRes = SequenceUtil.mapGenomeShotgunV3(ref, is);
+      //System.out.println("Summary : All key contains = "+mapRes.getResultMap().keySet());
+      System.out.println(mapRes.getResultArray().size());
+      Object dummy;
+      for (int i = 0;i<mapRes.getAlignPosition().size();i++){
+          //dummy = mapRes.getResultArray().get(i);
+          
+          System.out.println("Read name : " + mapRes.getReadName().get(i) + " Align at : " + mapRes.getAlignPosition().get(i) + " : On chromosome : "+ mapRes.getchrNumber().get(i)+ " : Match : " + mapRes.getNumMatch().get(i));
+          
+      }
       /*int count = 0;
       while(e.hasMoreElements()){
           System.out.println("Read Number : " + count++);
