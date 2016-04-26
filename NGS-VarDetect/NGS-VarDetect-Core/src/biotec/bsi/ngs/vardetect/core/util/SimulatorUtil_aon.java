@@ -46,6 +46,7 @@ public class SimulatorUtil_aon {
         CharSequence iniTemplate = SequenceUtil.concatenateChromosome(chrA, chrB, ln_read-1, ln_read-1);
         
         String read;
+        String readName;
         for(int i = 0;i<num_read;i++){
             int iniread = rand.nextInt(ln_read);
             
@@ -57,7 +58,9 @@ public class SimulatorUtil_aon {
             System.out.println(read);
             
             ShortgunSequence ss = new ShortgunSequence(read);
-            is.seqs.add(ss);
+            readName = "Read"+i;
+            ss.addReadName(readName);
+            is.addRead(ss);
             
         }
         

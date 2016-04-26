@@ -11,10 +11,22 @@ package biotec.bsi.ngs.vardetect.core;
  */
 public class ShortgunSequence {
  
-    public String seq;
+    private String seq;
+    private String readName;
     
     public ShortgunSequence(String seq){
         this.seq = seq;
+    }
+    
+    public void addReadName(String readName){
+        this.readName = readName;
+    }
+    
+    public String getReadName(){
+        return readName;
+    }
+    public String getSequence(){
+        return seq;
     }
     
 }

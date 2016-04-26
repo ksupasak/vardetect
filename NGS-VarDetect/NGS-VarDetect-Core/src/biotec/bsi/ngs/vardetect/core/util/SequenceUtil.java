@@ -733,12 +733,12 @@ public class SequenceUtil {
         String name;
                 
         //Long chrnum = refChr.getEncodeChrName().split("chr");
-        
-        Enumeration<ShortgunSequence> e = read.seqs.elements();
+        Vector readVector = read.getInputSequence();
+        Enumeration<ShortgunSequence> e = readVector.elements();
         while(e.hasMoreElements()){
             ShortgunSequence ss = e.nextElement();
           
-            EncodedSequence encodeSim = SequenceUtil.encodeSerialReadSequence(ss.seq);
+            EncodedSequence encodeSim = SequenceUtil.encodeSerialReadSequence(ss.getSequence());
             
             SortedSet<Long> vals = new TreeSet(encodeSim.getEncodeMap().values()) ;
             Map<Long,Long> readMap = encodeSim.getEncodeMap();
@@ -806,12 +806,12 @@ public class SequenceUtil {
         String name;
                 
         //Long chrnum = refChr.getEncodeChrName().split("chr");
-        
-        Enumeration<ShortgunSequence> e = read.seqs.elements();
+        Vector readVector = read.getInputSequence();
+        Enumeration<ShortgunSequence> e = readVector.elements();
         while(e.hasMoreElements()){
             ShortgunSequence ss = e.nextElement();
           
-            EncodedSequence encodeSim = SequenceUtil.encodeSerialReadSequence(ss.seq);
+            EncodedSequence encodeSim = SequenceUtil.encodeSerialReadSequence(ss.getSequence());
             
             SortedSet<Long> vals = new TreeSet(encodeSim.getEncodeMap().values()) ;
             Map<Long,Long> readMap = encodeSim.getEncodeMap();
@@ -850,7 +850,7 @@ public class SequenceUtil {
                     //value[0][0] = roundMatch++;
                     //value[0][1] = read.getChrName();
                     /////outputMap.put(index,roundMatch++);
-                    result.addResult(index,roundMatch++);
+                    result.addResultMap(index,roundMatch++);
                      
 
                 }else{
@@ -862,7 +862,7 @@ public class SequenceUtil {
                 
             }
 
-            System.out.println("Key : "+index+ "Has : "+result.getResult().get(index));
+            System.out.println("Key : "+index+ "Has : "+result.getResultMap().get(index));
         }
         
         
@@ -870,10 +870,120 @@ public class SequenceUtil {
         return result;
     }
     
+ public static MapResult mapGenomeShotgunV3(ReferenceSequence refGene, InputSequence read){
+        
+        // Process each read separately and add result to array list
+        ChromosomeSequence chr = refGene.getChromosomes().elementAt(0);
+        System.out.println("Name of Pick chromosome : " + chr.getName());
+
+        EncodedSequence encode = SequenceUtil.getEncodeSequence(chr);
+        System.out.println("Size of encode referecce : " + encode.getEncodeMap().size());
+                
+        //Long chrnum = refChr.getEncodeChrName().split("chr");
+        
+        MapResult result = new MapResult();
+        Vector readVector = read.getInputSequence();
+        Enumeration<ShortgunSequence> e = readVector.elements();
+        while(e.hasMoreElements()){
+           
+            Map<Long,Long> outputMap = new HashMap();
+            Map<Long,Long> chrMap = encode.getEncodeMap();
+            Long[][] value = new Long[1][2];
+            String name;
+
+            
+            
+            
+            ShortgunSequence ss = e.nextElement();
+          
+            EncodedSequence encodeSim = SequenceUtil.encodeSerialReadSequence(ss.getSequence());
+            
+            SortedSet<Long> vals = new TreeSet(encodeSim.getEncodeMap().values()) ;
+            Map<Long,Long> readMap = encodeSim.getEncodeMap();
+         
+            int count = 1;
+            long index = 0;
+            long indexB = 0;
+            long roundMatch = 1;
+            long roundNMatch = 1;
+            //Obiect readKey = 0;
+            
+            for (Long val : vals){
+                //readKey = getKeyFromValue(readMap,val);
+                //System.out.println(key);
+                System.out.println("Number of mapping iteration : " + count++);
+    //            System.out.println("the value is " + val + " Key is " + getKeyFromValue(read.getEncodeMap(),val));
+                if (chrMap.containsKey(getKeyFromValue(readMap,val))){
+
+                    //System.out.println("Key " + getKeyFromValue(read.getEncodeMap(),val) +": Match at position " + chr.getEncodeMap().get(getKeyFromValue(read.getEncodeMap(),val)));
+                    System.out.println("val : " + val);
+                            
+                    System.out.println("Key " + getKeyFromValue(readMap,val) +": Match at position " + chrMap.get(getKeyFromValue(readMap,val)));
+                    index = chrMap.get(getKeyFromValue(readMap,val)) - val;
+                    
+                    indexB = (chrMap.get(getKeyFromValue(readMap,val))>>8) - (val>>8);
+                    System.out.println("New indexB without add number of chromosome : " + indexB);
+                    indexB = (indexB<<8)+(chrMap.get(getKeyFromValue(readMap,val))&255);
+                    System.out.println("New indexB with add number of chromosome : " + indexB);
+                     
+                    System.out.println("Cross check with reference key : " + (getKeyFromValue(chrMap,(index+val))) );
+                    //System.out.println("Position that map on reference : " + chrMap.get(getKeyFromValue(readMap,val)));
+                    
+                    System.out.println("Align at : " + index );
+                    //if (checkMap == 0){
+                        //count++;
+                    //}
+                    //value[0][0] = roundMatch++;
+                    //value[0][1] = read.getChrName();
+                    
+                    if (roundMatch ==1 && outputMap.containsKey(index)){
+                        roundMatch = roundMatch + (outputMap.get(index));
+                    }
+                    else{
+                        roundMatch++;
+                    }
+                    outputMap.put(index,roundMatch);
+                    /////result.addResultMap(index,roundMatch++);
+                     
+
+                }else{
+                    System.out.println(" Key " + getKeyFromValue(readMap,val) + ": Not match");
+                    //index = val;
+                    roundMatch = 1;  // reset round
+                    //System.out.println("");
+                }   
+                
+            }
+            
+            //result.addResultArray(outputMap);
+
+            System.out.println("Key : "+index+ "Has : " + outputMap.get(index));
+            result.addResult(outputMap,ss.getReadName());
+        
+        }
+        
+        /* Save result to file */
+        
+        
+        
+        return result;
+    }    
     
     
-    
-    
+    /*public static MapResult mapping(ReferenceSequence refGene, InputSequence read){
+        
+        MapResult result = new MapResult();
+        Map outputMap;
+        Enumeration<ShortgunSequence> e = read.seqs.elements();
+        while(e.hasMoreElements()){
+            
+            ShortgunSequence ss = e.nextElement();
+            outputMap = SequenceUtil.mapGenomeShotgunV3(refGene, ss);
+            result.addResultArray(outputMap);
+        }
+        
+        return result;
+    }*/
     
     public static Map mapGenome(EncodedSequence chr, EncodedSequence read){
         

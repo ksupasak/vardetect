@@ -13,18 +13,26 @@ import java.util.Vector;
  */
 public class InputSequence {
     
-   public Vector<ShortgunSequence> seqs;
+   private Vector<ShortgunSequence> seqs;
    private String name;
    
    public InputSequence(){
        seqs = new Vector<ShortgunSequence>();
    }
    
-   public void addName(String chrName){
+   public void addchrName(String chrName){
        this.name = chrName;
+   }
+   
+   public void addRead(ShortgunSequence in){
+       this.seqs.add(in);
    }
    public String getChrName(){
        return this.name;
+   }
+   
+   public Vector getInputSequence(){
+       return this.seqs;
    }
    
 }

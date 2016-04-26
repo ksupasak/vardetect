@@ -47,7 +47,7 @@ public class SimulatorUtil {
                 System.out.println(template);
 
                 ShortgunSequence ss = new ShortgunSequence(template);
-                is.seqs.add(ss);    
+                is.addRead(ss);    
             } 
             
         
