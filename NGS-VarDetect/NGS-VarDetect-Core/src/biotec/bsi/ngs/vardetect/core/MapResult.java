@@ -5,6 +5,11 @@
  */
 package biotec.bsi.ngs.vardetect.core;
 
+import java.io.DataOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -96,11 +101,45 @@ public class MapResult {
     public void getResult(){
         
         for (long i = 0;i<=arrayResult.size();i++){
-            
-            
-        }
-        
+             
+        } 
     }
     
+    public void writeToPath(String path, String fa) throws FileNotFoundException, IOException {
+        
+        
+
+
+        //Enumeration<Long> e = map.keys();
+        if(fa.compareTo("map")==0){
+            PrintStream ps = new PrintStream(path+"/Map_Result."+fa);
+            for (int i = 0;i<alignPosition.size();i++){
+                ps.println(readName.get(i)+"\t"+alignPosition.get(i)+"\t"+chrNumber.get(i)+"\t"+numMatch.get(i));
+                
+            }
+        }
+        else if(fa.compareTo("bmap")==0){
+        
+            /*DataOutputStream os = new DataOutputStream(new FileOutputStream(path+"."+fa));
+            System.out.println("Total line in file : " + alignPosition.size());
+            for (int i = 0;i<alignPosition.size();i++){
+              
+              os.writeBytes(fa);
+              System.out.println("Read name : " + mapRes.getReadName().get(i) + " Align at : " + mapRes.getAlignPosition().get(i) + " : On chromosome : "+ mapRes.getchrNumber().get(i)+ " : Match : " + mapRes.getNumMatch().get(i));
+
+            }
+
+            os.writeInt(map.keySet().size());
+        
+            for (Map.Entry<Long,Long> entry : map.entrySet()){
+                Long mer = entry.getKey();
+                Long pos = map.get(mer);
+                os.writeLong(mer);
+                os.writeLong(pos);
+            }
+        os.close();  */  
+
+        }    
+    } 
     
 }

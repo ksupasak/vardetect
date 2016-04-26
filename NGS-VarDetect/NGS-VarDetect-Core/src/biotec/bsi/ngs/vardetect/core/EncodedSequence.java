@@ -120,33 +120,31 @@ public class EncodedSequence {
 
        
        
-       //Enumeration<Long> e = map.keys();
-       if(fa.compareTo("map")==0){
-       PrintStream ps = new PrintStream(path+"."+fa);
-       for (Map.Entry<Long,Long> entry : map.entrySet()){
-           Long mer = entry.getKey();
-           Long pos = map.get(mer);
-           ps.println(mer+"\t"+pos);
-           
-       }}
-       else
-       if(fa.compareTo("bmap")==0){
-           
-       DataOutputStream os = new DataOutputStream(new FileOutputStream(path+"."+fa));
-       System.out.println("Total bmer : "+map.keySet().size());
+        //Enumeration<Long> e = map.keys();
+        if(fa.compareTo("map")==0){
+            PrintStream ps = new PrintStream(path+"."+fa);
+            for (Map.Entry<Long,Long> entry : map.entrySet()){
+                Long mer = entry.getKey();
+                Long pos = map.get(mer);
+                ps.println(mer+"\t"+pos);
 
-       os.writeInt(map.keySet().size());
-       for (Map.Entry<Long,Long> entry : map.entrySet()){
-           Long mer = entry.getKey();
-           Long pos = map.get(mer);
-           os.writeLong(mer);
-           os.writeLong(pos);
-       }
-       os.close();    
-     
-       } 
-           
-           
+            }
+        }
+        else if(fa.compareTo("bmap")==0){
+
+            DataOutputStream os = new DataOutputStream(new FileOutputStream(path+"."+fa));
+            System.out.println("Total bmer : "+map.keySet().size());
+
+            os.writeInt(map.keySet().size());
+            for (Map.Entry<Long,Long> entry : map.entrySet()){
+                Long mer = entry.getKey();
+                Long pos = map.get(mer);
+                os.writeLong(mer);
+                os.writeLong(pos);
+            }
+            os.close();    
+        } 
+
     }
        
        

@@ -870,7 +870,7 @@ public class SequenceUtil {
         return result;
     }
     
- public static MapResult mapGenomeShotgunV3(ReferenceSequence refGene, InputSequence read){
+ public static MapResult mapGenomeShotgunV3(ReferenceSequence refGene, InputSequence read) throws IOException{
         
         // Process each read separately and add result to array list
         ChromosomeSequence chr = refGene.getChromosomes().elementAt(0);
@@ -964,8 +964,8 @@ public class SequenceUtil {
         
         /* Save result to file */
         
-        
-        
+        //result.writeToPath(chr.getFilePath(),"map");
+        result.writeToPath(refGene.getPath(), "map");
         return result;
     }    
     
