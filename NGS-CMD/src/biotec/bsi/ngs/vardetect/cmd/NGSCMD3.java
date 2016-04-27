@@ -32,6 +32,10 @@ public class NGSCMD3 {
     
     public static void main(String[] args) throws IOException{
         
+        String file_path = "/Users/worawich/VMdev/dataScieneToolBox/projects/genomic_projects/Reference_hg19/Map_Result.map";
+        
+        
+        
         //ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
         ReferenceSequence ref_read = SequenceUtil.readReferenceSequence(args[0]);
         System.out.println("Read Done");
@@ -50,22 +54,29 @@ public class NGSCMD3 {
         InputSequence is = simulateWholeGene(ref_read,5,100,20,21);
 
         //Enumeration<ShortgunSequence> e = is.seqs.elements();
-        MapResult mapRes;
+        MapResult mapRes = new MapResult();
         //Map<Long,Long> mapRes = new HashMap();
         //System.out.println("all key "+encode.getEncodeMap().keySet());
+        
         mapRes = SequenceUtil.mapGenomeShotgunV3(ref, is);
+        /////mapRes.readFromPath(file_path, "map");
+        
         //mapRes.writeToPath(ref.getPath(), "map");
         //System.out.println("Summary : All key contains = "+mapRes.getResultMap().keySet());
         System.out.println(mapRes.getResultArray().size());
 
         for (int i = 0;i<mapRes.getAlignPosition().size();i++){
             //dummy = mapRes.getResultArray().get(i);
-
+            
             System.out.println("Read name : " + mapRes.getReadName().get(i) + " Align at : " + mapRes.getAlignPosition().get(i) + " : On chromosome : "+ mapRes.getchrNumber().get(i)+ " : Match : " + mapRes.getNumMatch().get(i));
 
         }
 
-
+        SequenceUtil.createHistrogram(mapRes,"Read0");
+        SequenceUtil.createHistrogram(mapRes,"Read1");
+        SequenceUtil.createHistrogram(mapRes,"Read2");
+        SequenceUtil.createHistrogram(mapRes,"Read3");
+        SequenceUtil.createHistrogram(mapRes,"Read4");
         /*int count = 0;
         while(e.hasMoreElements()){
             System.out.println("Read Number : " + count++);
