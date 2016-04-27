@@ -1288,7 +1288,7 @@ public class SequenceUtil {
                 output +="*";
             }
             
-            System.out.println(readN+",chr"+chrName+","+Position+" : "+output);
+            System.out.println(readN+"\t|\tchr"+chrName+"\t|\t"+Position+"\t| "+output);
             
         }     
     }
