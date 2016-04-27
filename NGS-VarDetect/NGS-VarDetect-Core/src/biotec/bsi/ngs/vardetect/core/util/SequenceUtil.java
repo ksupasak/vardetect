@@ -22,6 +22,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -1262,6 +1263,38 @@ public class SequenceUtil {
         return output;
     }
 
+    public static void createHistrogram(MapResult inResult, String readName){
+        ArrayList indexArray = new ArrayList();
+        
+        indexArray = indexOfAll(readName,inResult.getReadName());
+        
+        System.out.println("\tHistogram");
+        
+        for (int i = 0;i<indexArray.size();i++){
+            int index = Integer.valueOf(indexArray.get(i).toString());
+            long Position = Long.valueOf(inResult.getAlignPosition().get(index).toString());
+            String readN = inResult.getReadName().get(index).toString();
+            long match = Long.valueOf(inResult.getNumMatch().get(index).toString());
+            long chrName = Long.valueOf(inResult.getchrNumber().get(index).toString().toString());
+            String output = "";
+            
+            for (int j=0;j<=match;j++){
+                output +="*";
+            }
+            
+            System.out.println(readN+",chr"+chrName+","+Position+" : "+output);
+            
+        }     
+    }
     
-    
+
+
+    public static ArrayList indexOfAll(String obj, ArrayList list){
+        ArrayList indexList = new ArrayList();
+        for (int i = 0; i < list.size(); i++)
+            if(obj.equals(list.get(i)))
+                indexList.add(i);
+        return indexList;
+    }
+
 }
