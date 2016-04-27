@@ -42,7 +42,7 @@ public class NGSCMD3 {
         System.out.println("File path is : "+ ref_read.getPath());
 
 
-        ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
+        //////////ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
         ///ChromosomeSequence chr = ref.getChromosomes().elementAt(0);
         ///System.out.println("Name of Pick chromosome : " + chr.getName());
 
@@ -51,14 +51,14 @@ public class NGSCMD3 {
         ///System.out.println("Size of encode referecce : " + encode.getEncodeMap().size());
 
 
-        InputSequence is = simulateWholeGene(ref_read,5,100,20,21);
+        InputSequence is = simulateWholeGene(ref_read,5,100,20,21); 
 
         //Enumeration<ShortgunSequence> e = is.seqs.elements();
         MapResult mapRes = new MapResult();
         //Map<Long,Long> mapRes = new HashMap();
         //System.out.println("all key "+encode.getEncodeMap().keySet());
         
-        mapRes = SequenceUtil.mapGenomeShotgunV3(ref, is);
+        mapRes = SequenceUtil.mapGenomeShotgunV3(ref_read, is,12,13); // Last 2 number is defined for element in reference that we want to map to. chr 20 and 21 is on element 12 ans 13
         /////mapRes.readFromPath(file_path, "map");
         
         //mapRes.writeToPath(ref.getPath(), "map");
