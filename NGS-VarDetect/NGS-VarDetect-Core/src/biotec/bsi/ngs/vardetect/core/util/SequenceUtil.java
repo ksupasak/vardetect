@@ -13,8 +13,12 @@ import biotec.bsi.ngs.vardetect.core.InputSequence;
 import biotec.bsi.ngs.vardetect.core.MapResult;
 import biotec.bsi.ngs.vardetect.core.ReferenceExonIntron;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -23,7 +27,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -43,6 +49,258 @@ import java.util.Vector;
 public class SequenceUtil {
     
    
+    public static ReferenceSequence  readAndIndexReferenceSequence(String filename){
+     
+        
+           
+       
+    ReferenceSequence ref = new ReferenceSequence();
+    ref.setFilename(filename);
+       
+        
+           
+    Charset charset = Charset.forName("US-ASCII");
+    Path path = Paths.get(filename);
+    String chr = null;
+//    String seq = "";
+    
+    StringBuffer seq = new StringBuffer();
+
+    try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+    String line = null;
+    
+    while ((line = reader.readLine()) != null) {
+        
+        if(line.charAt(0)=='>'){
+        
+            if(chr!=null){
+                
+                System.out.println("CHR : "+chr+" Size : "+seq.length());
+                
+                ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+                
+                ref.addChromosomeSequence(c);
+//               break;
+                
+            }
+            seq = new StringBuffer();
+            chr = line.substring(1,line.length());
+              
+               
+        }else{
+            
+            seq.append(line.trim());
+            
+            
+        }
+        
+    }
+    
+    if(seq.length()>0){
+        
+        System.out.println("CHR : "+chr+" Size : "+seq.length());
+
+        ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+                
+        ref.addChromosomeSequence(c);
+        
+    }
+    
+    
+    
+    
+    System.out.println("Number of chromosomes : "+ref.getChromosomes().size());
+    
+    
+    
+    Enumeration<ChromosomeSequence> e = ref.getChromosomes().elements();
+    
+    
+    
+    while(e.hasMoreElements()){
+        
+        ChromosomeSequence s = e.nextElement();
+        
+        EncodedSequence encoded = encodeSerialChromosomeSequenceV3(s);
+        
+    }
+    
+    
+    } catch (IOException x) {
+        System.err.format("IOException: %s%n", x);
+    }    
+           
+           
+     
+       return ref;
+        
+    }
+    
+    
+    
+     public static EncodedSequence encodeSerialChromosomeSequenceV3(ChromosomeSequence chr) throws FileNotFoundException, IOException{
+       
+       EncodedSequence seq = new EncodedSequence();
+       
+       int kmer = 18;
+       int sliding = 1;
+       int repeat = 0;
+       
+       System.out.println(chr.getFilePath());
+       
+       DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(chr.getFilePath()+".bin")));
+//            System.out.println("Total bmer : "+map.keySet().size());
+
+//            os.writeInt(map.keySet().size());
+//            for (Map.Entry<Long,Long> entry : map.entrySet()){
+//                Long mer = entry.getKey();
+//                Long pos = map.get(mer);
+               
+       
+       //Hashtable<Long,Long> map =new Hashtable<Long,Long>();
+       //TreeMap<Long,Long> map = new TreeMap();
+//       Map<Long,Long> map = new HashMap();
+       
+       StringBuffer sb = chr.getSequence();
+//       String smallb = sb.toString().toLowerCase();
+       
+       
+       
+       int n = (sb.length()-kmer)/sliding;
+       
+       long cmer = -1;
+       
+       
+       long mask = 0; 
+       int count = 0;
+       long list[] = new long[n];
+       
+//       Vector<Long> list = new Vector<Long>(200000);
+       
+              
+       for(int i =0;i<kmer;i++)mask=mask*4+3;
+       
+       
+       System.out.println(mask);
+       
+       
+       for(int i =0;i<n;i++){
+           
+
+//          String s2 = smallb.substring(i*sliding,i*sliding+kmer);
+          
+          long pos = i*sliding;
+          char chx = sb.charAt(i*sliding+kmer-1);
+          if(chx!='N'){
+
+              
+//          System.out.println(s);
+          if(cmer==-1){
+            String s = sb.substring(i*sliding,i*sliding+kmer);
+
+            cmer = encodeMer(s,kmer);
+          }else{
+            
+            //smallb.charAt(i*sliding+kmer-1);
+            int t =-1;
+            switch(chx){
+                case 'A':
+                case 'a':
+                    t=0; // 00
+                    break;
+                case 'T':
+                case 't': 
+                    t=3; // 11
+                    break;
+                case 'C':
+                case 'c':
+                    t=1; // 01 
+                    break;
+                case 'G':
+                case 'g':
+                    t=2; // 10 
+                    break;
+                default : 
+                    t=-1;
+                break;
+               
+            }
+            if(t>=0){
+                
+//                String s2 = sb.substring((i-1)*sliding,(i-1)*sliding+kmer);
+//                long omer = cmer;               
+                cmer *= 4;
+                cmer &= mask;
+                cmer += t;
+            
+                    
+//                System.out.println(""+s+" "+cmer+"\t"+s2+" "+omer+" "+t);
+                
+            }else{
+//                System.out.println(a);
+                cmer = -1;
+                i+=kmer;
+                
+                
+            }
+            
+              
+              
+          }
+           
+          
+          
+           
+           if(i%1000000==0)System.out.println("Encode "+chr.getName()+" "+i*sliding);
+           
+           if(cmer>=0){
+               
+              
+               long x = (cmer<<(64- kmer*2))|pos;
+               list[count++] = x;
+
+           }
+           
+           
+           }
+       }
+       
+     
+     Arrays.sort(list);
+     
+      
+//   Vector<Long> list2 = new Vector<Long>(Arrays.asList(list));
+//   list2.
+       
+//    Collections.sort(list2, new Comparator<Long>() {
+//    @Override public int compare(Long one, Long two) {
+//        return one.compareTo(two);
+//    }
+//    }
+//    );       
+   os.writeInt(list.length);
+    for(int i=0;i<list.length;i++){
+        if(i%1000000==0)System.out.println("Write "+chr.getName()+" "+i);
+        os.writeLong(list[i]);
+//        System.out.println();
+    }
+       os.close();
+       
+       //System.out.println("In encodeSerialChromosome " + chrName);
+//       seq.setMap(map);
+       
+       
+//       System.out.println("Total mer :" +n);
+//       System.out.println("Total uniq mer :" +map.size());
+//       System.out.println("Total rep :" +repeat);
+       
+       
+       return seq;
+   }
+    
+    
+
+    
     public static ReferenceSequence  readReferenceSequence(String filename){
      
        
@@ -1302,5 +1560,6 @@ public class SequenceUtil {
                 indexList.add(i);
         return indexList;
     }
+
 
 }

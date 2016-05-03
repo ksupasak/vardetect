@@ -26,7 +26,7 @@ public class NGSCMD {
     public static void main(String[] args) throws FileNotFoundException {
         // TODO code application logic here
         
-       //ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
+       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
       //ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
       
       
@@ -64,7 +64,7 @@ public class NGSCMD {
 //       
 //      Vector<ChromosomeSequence> chrs = refB.getChromosomes();
 //       
-//      Enumeration<ChromosomeSequence> e = chrs.elements();
+//      Enumeration<ChromosomeSequence> e = chrs.ele&ments();
 //      
 //      //aonSystem.out.println(e.nextElement().getSequence().length());
 //     
