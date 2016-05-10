@@ -31,8 +31,19 @@ public class EncodedSequence {
 
     //Hashtable<Long,Long> map;
     //TreeMap<Long,Long> map;
+    long mers[];
+    
     Map<Long,Long> map;
     String name;
+    
+    public void setMers(long mers[]){
+        this.mers = mers;     
+    }
+    
+    public long [] getMers(){
+        return this.mers;
+    }
+    
     
     public void setMap(Map<Long, Long> map) {
         this.map = map;
