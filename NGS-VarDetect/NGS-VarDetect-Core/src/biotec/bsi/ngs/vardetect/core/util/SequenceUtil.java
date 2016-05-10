@@ -531,7 +531,7 @@ public class SequenceUtil {
 //                   System.out.println(s+"\t"+mer+" at "+pos+" with "+map.get(mer)); 
                }else{
                   //cmer<<=8; 
-                  pos<<=8;
+                  //pos<<=8;
                   map.put(cmer, pos);
                }
                
@@ -911,7 +911,7 @@ public class SequenceUtil {
                 long index = 0;
                 long indexB = 0;
                 long roundMatch = 0;
-                long roundNMatch = 1;
+                long roundNMatch = 0;
                 //Obiect readKey = 0;
 
                 for (Long val : vals){
@@ -925,14 +925,16 @@ public class SequenceUtil {
                         System.out.println("val : " + val);
 
                         System.out.println("Key " + getKeyFromValue(readMap,val) +": Match at position " + chrMap.get(getKeyFromValue(readMap,val)));
-                        index = chrMap.get(getKeyFromValue(readMap,val)) - val;
-
+                        ///index = chrMap.get(getKeyFromValue(readMap,val)) - val;
+                        ////index = chrMap.get(getKeyFromValue(readMap,val)) - roundNMatch;
                         indexB = (chrMap.get(getKeyFromValue(readMap,val))>>8) - (val>>8);
+                        index = ((indexB-roundMatch)<<8)+(chrMap.get(getKeyFromValue(readMap,val))&255);
                         System.out.println("New indexB without add number of chromosome : " + indexB);
                         indexB = (indexB<<8)+(chrMap.get(getKeyFromValue(readMap,val))&255);
                         System.out.println("New indexB with add number of chromosome : " + indexB);
 
-                        System.out.println("Cross check with reference key : " + (getKeyFromValue(chrMap,(index+val))) );
+                        //System.out.println("Cross check with reference key : " + (getKeyFromValue(chrMap,(index+val))) );
+                        System.out.println("Cross check with reference key : " + (getKeyFromValue(chrMap,(index))) );
                         //System.out.println("Position that map on reference : " + chrMap.get(getKeyFromValue(readMap,val)));
 
                         System.out.println("Align at : " + index );
@@ -943,12 +945,15 @@ public class SequenceUtil {
                         //value[0][1] = read.getChrName();
 
                         if (roundMatch ==0 && outputMap.containsKey(index)){
-                            roundMatch = roundMatch + (outputMap.get(index));
+                            roundMatch = 1 + (outputMap.get(index));
+                            outputMap.put(index,roundMatch);
                         }
                         else{
                             roundMatch++;
+                            outputMap.put(index,roundMatch);
                         }
-                        outputMap.put(index,roundMatch);
+                        
+                        ///////outputMap.put(index,roundMatch);
                         /////result.addResultMap(index,roundMatch++);
 
 
@@ -956,9 +961,10 @@ public class SequenceUtil {
                         System.out.println(" Key " + getKeyFromValue(readMap,val) + ": Not match");
                         //index = val;
                         roundMatch = 0;  // reset round
+                        
                         //System.out.println("");
                     }   
-
+                    
                 }
 
                 //result.addResultArray(outputMap);
