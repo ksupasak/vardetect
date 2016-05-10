@@ -7,8 +7,10 @@ package biotec.bsi.ngs.vardetect.cmd;
 import biotec.bsi.ngs.vardetect.core.*;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
+import static biotec.bsi.ngs.vardetect.core.util.SequenceUtil.encodeSerialChromosomeSequenceV3;
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Hashtable;
 import java.util.Map;
@@ -23,10 +25,34 @@ public class NGSCMD {
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
+//       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
+       
+          ReferenceSequence ref = SequenceUtil.getReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
+          
+          ChromosomeSequence c = ref.getChromosomeSequenceByName("chr11");
+
+          InputSequence input =  SimulatorUtil.simulateIndel(c, 5, 100);
+       
+          
+      // alignment
+      
+        Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
+
+        while(chrs.hasMoreElements()){
+            ChromosomeSequence chr = chrs.nextElement();
+            Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
+            EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr);
+            while(seqs.hasMoreElements()){
+                ShortgunSequence seq = seqs.nextElement();
+                System.out.println(""+chr.getName()+" ");
+            }
+            System.gc();
+            
+        }
+          
       //ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
       
       

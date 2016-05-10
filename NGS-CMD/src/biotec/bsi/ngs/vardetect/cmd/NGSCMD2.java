@@ -27,28 +27,28 @@ import java.util.Vector;
 public class NGSCMD2 {
     
     public static void main(String args[]) throws FileNotFoundException, IOException{
-        ReferenceExonIntron output = new ReferenceExonIntron();
-        ReferenceExonIntron ee = SequenceUtil.readExonIntron(args[3]);
-        output = SequenceUtil.randomExonIntron(ee);
+//        ReferenceExonIntron output = new ReferenceExonIntron();
+//        ReferenceExonIntron ee = SequenceUtil.readExonIntron(args[3]);
+//        output = SequenceUtil.randomExonIntron(ee);
         
         //String test = "x";
         
         //String[] aon = test.split("r");
-        //System.out.println(Long.valueOf(test));
-        //Long[][] a = new Long[10][1];
+//        System.out.println(Long.valueOf(1233));
+//        Long[][] a = new Long[10][1];
         //Object[][] aon new Object[1][2];
         
-        /*long test = 14726418;
-        long chr = 21;
+        long test = 14726418;
+        DataOutputStream os = new DataOutputStream(new FileOutputStream("outx.txt"));
         
-        test<<=8;
-        test = test+chr;
-        System.out.println(test);
-        
-        long newtest = test&255;
-        System.out.println(newtest);
-        
-        long realtest = test>>8;
-        System.out.println(realtest);*/
+         os.writeInt((int)test);
+         os.close();
+//        System.out.println(test);
+//        
+//        long newtest = test&255;
+//        System.out.println(newtest);
+//        
+//        long realtest = test>>8;
+//        System.out.println(realtest);
     }
 }
