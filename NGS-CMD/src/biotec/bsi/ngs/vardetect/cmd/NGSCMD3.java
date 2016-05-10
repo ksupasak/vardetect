@@ -58,7 +58,7 @@ public class NGSCMD3 {
         //Map<Long,Long> mapRes = new HashMap();
         //System.out.println("all key "+encode.getEncodeMap().keySet());
         
-        mapRes = SequenceUtil.mapGenomeShotgunV3(ref_read, is,12,13); // Last 2 number is defined for element in reference that we want to map to. chr 20 and 21 is on element 12 ans 13
+        mapRes = SequenceUtil.mapGenomeShotgunV3(ref_read, is,0,24); // Last 2 number is defined for element in reference that we want to map to. chr 20 and 21 is on element 12 ans 13
         /////mapRes.readFromPath(file_path, "map");
         
         //mapRes.writeToPath(ref.getPath(), "map");
