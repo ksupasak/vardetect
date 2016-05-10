@@ -4,8 +4,12 @@
  * and open the template in the editor.
  */
 package biotec.bsi.ngs.vardetect.core;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 /**
  *
@@ -56,6 +60,15 @@ public class ChromosomeSequence {
     }
     
     public StringBuffer getSequence() {
+        try{
+            BufferedReader chr_reader = new BufferedReader(new InputStreamReader(new FileInputStream(this.getFilePath()+".fa")));
+            System.out.println(chr_reader.readLine());
+            StringBuffer sb = new StringBuffer(chr_reader.readLine());
+            System.out.println(sb.subSequence(10000, 10100));
+            this.setSequence(sb);
+        }catch(IOException e){
+            
+        }
         return seq;
     }
 
@@ -66,6 +79,10 @@ public class ChromosomeSequence {
     public void writeToFile(String fa) throws FileNotFoundException {
         String path = getFilePath();
         writeToPath(path, fa);
+    }
+
+    public void setSequence(StringBuffer sb) {
+        this.seq = sb;
     }
     
 }

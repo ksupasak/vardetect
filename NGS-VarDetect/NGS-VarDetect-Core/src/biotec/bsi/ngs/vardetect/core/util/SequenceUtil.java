@@ -13,17 +13,28 @@ import biotec.bsi.ngs.vardetect.core.InputSequence;
 import biotec.bsi.ngs.vardetect.core.MapResult;
 import biotec.bsi.ngs.vardetect.core.ReferenceExonIntron;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.io.Reader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -42,7 +53,406 @@ import java.util.Vector;
  */
 public class SequenceUtil {
     
-   
+//    lazy load chromosome
+    
+    public static ReferenceSequence getReferenceSequence(String filename) throws IOException {
+
+    ReferenceSequence ref = new ReferenceSequence();
+    ref.setFilename(filename);
+    
+    
+//   has index then index file .index  : list of chromosome
+//   read each chromosome then extract .fa to file and build bin
+
+    System.out.println(ref.getPath());
+    
+    File index_file = new File(filename+".index");
+    
+    boolean create_index = false;
+    boolean extract_chr = false;
+    
+    
+    if(index_file.exists()){
+        String chr= null;
+
+        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(index_file)));
+        while((chr=br.readLine())!=null){
+            System.out.println(chr);
+            File chr_file = new File(ref.getPath()+File.separator+chr+".fa");
+            if(chr_file.exists()){
+                 ChromosomeSequence c = new ChromosomeSequence(ref,chr,null);
+                 ref.addChromosomeSequence(c);
+                 
+                 
+                 
+                 File bin_file = new File(c.getFilePath()+".bin");
+                 if(bin_file.exists()==false){
+                     if(c.getSequence()==null){
+                   
+                     }
+                     EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c);
+                 }
+                 
+                 
+                 
+            }else{
+                 extract_chr=true;
+            }
+        } 
+    }else{
+        create_index = true;
+    }
+
+    
+    
+    
+    
+    if(create_index||extract_chr){
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(filename);
+        String chr = null;
+    
+        StringBuffer seq = new StringBuffer();
+
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+        String line = null;
+
+        while ((line = reader.readLine()) != null) {
+
+            if(line.charAt(0)=='>'){
+
+                if(chr!=null){
+
+                    System.out.println("CHR : "+chr+" Size : "+seq.length());
+
+                    ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+
+                    ref.addChromosomeSequence(c);
+
+
+                }
+                seq = new StringBuffer();
+                chr = line.substring(1,line.length());
+
+
+            }else{
+
+                seq.append(line.trim());
+
+
+            }
+
+        }
+    
+    if(seq.length()>0){
+        
+        System.out.println("CHR : "+chr+" Size : "+seq.length());
+        ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+        ref.addChromosomeSequence(c);
+        
+        
+        
+        
+        
+    }
+    
+    
+    } catch (IOException x) {
+        System.err.format("IOException: %s%n", x);
+    }    
+    
+    if(extract_chr){
+        Enumeration<ChromosomeSequence> e = ref.getChromosomes().elements();
+        while(e.hasMoreElements()){
+            ChromosomeSequence s = e.nextElement();
+            File chr_file = new File(s.getFilePath()+".fa");
+            if(!chr_file.exists()){
+                s.writeToFile("FA");
+            }
+        }
+    }
+    
+//    ========================= read all chromosome
+    if(create_index){
+//          File index_file = new File(ref.getPath()+".index");
+
+        PrintStream ps = new PrintStream(new FileOutputStream(index_file));
+         
+        
+        Enumeration<ChromosomeSequence> e2 = ref.getChromosomes().elements();
+        while(e2.hasMoreElements()){
+            ChromosomeSequence s = e2.nextElement();
+            ps.println(s.getName());
+            
+        }
+        
+        ps.close();
+    }
+    
+//    
+    
+    
+    
+    
+    
+    
+    
+    
+    }
+
+    
+    
+    return ref;
+    
+    }
+    
+    
+//    public static ChromosomeSequence loadChromosomeSequence(ReferenceSequence ref, String filename);
+    
+    
+    public static ReferenceSequence  readAndIndexReferenceSequence(String filename){
+     
+        
+           
+       
+    ReferenceSequence ref = new ReferenceSequence();
+    ref.setFilename(filename);
+       
+        
+           
+    Charset charset = Charset.forName("US-ASCII");
+    Path path = Paths.get(filename);
+    String chr = null;
+//    String seq = "";
+    
+    StringBuffer seq = new StringBuffer();
+
+    try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+    String line = null;
+    
+    while ((line = reader.readLine()) != null) {
+        
+        if(line.charAt(0)=='>'){
+        
+            if(chr!=null){
+                
+                System.out.println("CHR : "+chr+" Size : "+seq.length());
+                
+                ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+                
+                ref.addChromosomeSequence(c);
+               break;
+                
+            }
+            seq = new StringBuffer();
+            chr = line.substring(1,line.length());
+              
+               
+        }else{
+            
+            seq.append(line.trim());
+            
+            
+        }
+        
+    }
+    
+    if(seq.length()>0){
+        
+        System.out.println("CHR : "+chr+" Size : "+seq.length());
+
+        ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+                
+        ref.addChromosomeSequence(c);
+        
+    }
+    
+    
+    
+    
+    System.out.println("Number of chromosomes : "+ref.getChromosomes().size());
+    
+    
+    
+    Enumeration<ChromosomeSequence> e = ref.getChromosomes().elements();
+    
+    
+    
+    while(e.hasMoreElements()){
+        
+        ChromosomeSequence s = e.nextElement();
+        
+//        EncodedSequence encoded = encodeSerialChromosomeSequenceV3(s);
+        
+    }
+    
+    
+    } catch (IOException x) {
+        System.err.format("IOException: %s%n", x);
+    }    
+           
+           
+     
+       return ref;
+        
+    }
+    
+    
+    
+     public static EncodedSequence encodeSerialChromosomeSequenceV3(ChromosomeSequence chr) throws FileNotFoundException, IOException{
+       
+       EncodedSequence seq = new EncodedSequence();
+       
+       int kmer = 18;
+       int sliding = 1;
+       int repeat = 0;
+       
+       
+       File f = new File(chr.getFilePath()+".bin");
+       
+       if(f.exists()){
+           
+           int count = 0 ;
+            
+            DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
+            int size = is.readInt();
+            
+           long list[] = new long[size];
+            System.out.println("Totalxx bmer : "+size);
+
+            for(int i=0;i<size;i++){
+               
+               
+                
+                list[i] = is.readLong();
+                int percent = (int)(1.0*count/size); 
+//                System.out.println(Long.toBinaryString(list[i]));
+            
+                if(percent%10==0&&percent!=0)System.out.println("Read binary Mer "+chr.getName()+" "+count);
+                count ++;
+            }
+            System.out.println("Total bmer : "+size);
+
+            is.close();
+           
+            
+//            seq.setMers(list);
+             
+           
+           
+           
+           
+       }else{
+           
+     
+       
+       DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)));
+
+       StringBuffer sb = chr.getSequence();
+       
+       
+       int n = (sb.length()-kmer)/sliding;       
+       long cmer = -1;
+       long mask = 0; 
+       int count = 0;
+  
+       long list[] = new long[n];
+       
+              
+       for(int i =0;i<kmer;i++)mask=mask*4+3;
+       
+       System.out.println(mask);
+       
+       
+       for(int i =0;i<n;i++){
+          
+          long pos = i*sliding;
+          char chx = sb.charAt(i*sliding+kmer-1);
+          if(chx!='N'){
+          if(cmer==-1){
+            String s = sb.substring(i*sliding,i*sliding+kmer);
+            cmer = encodeMer(s,kmer);
+          }else{
+            
+            int t =-1;
+            switch(chx){
+                case 'A':
+                case 'a':
+                    t=0; // 00
+                    break;
+                case 'T':
+                case 't': 
+                    t=3; // 11
+                    break;
+                case 'C':
+                case 'c':
+                    t=1; // 01 
+                    break;
+                case 'G':
+                case 'g':
+                    t=2; // 10 
+                    break;
+                default : 
+                    t=-1;
+                break;
+               
+            }
+            if(t>=0){
+                
+                cmer *= 4;
+                cmer &= mask;
+                cmer += t;
+            
+            }else{
+                cmer = -1;
+                i+=kmer;
+            }
+            
+              
+              
+          }
+           
+          
+          
+           
+           if(i%1000000==0)System.out.println("Encode "+chr.getName()+" "+i*sliding);
+           
+           if(cmer>=0){
+               
+              
+               long x = (cmer<<(64- kmer*2))|pos;
+               list[count++] = x;
+
+           }
+           
+           
+           }
+       }
+       
+     
+     Arrays.sort(list);
+
+     
+    os.writeInt(list.length);
+    for(int i=0;i<list.length;i++){
+        if(i%1000000==0)System.out.println("Write "+chr.getName()+" "+i);
+        os.writeLong(list[i]);
+    }
+       os.close();
+       
+       seq.setMers(list);
+ 
+    }
+       
+       
+       
+       
+       return seq;
+   }
+    
+    
+
+    
     public static ReferenceSequence  readReferenceSequence(String filename){
      
        
@@ -1308,5 +1718,8 @@ public class SequenceUtil {
                 indexList.add(i);
         return indexList;
     }
+
+  
+
 
 }

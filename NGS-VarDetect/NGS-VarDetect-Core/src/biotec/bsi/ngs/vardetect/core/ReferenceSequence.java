@@ -35,6 +35,14 @@ public class ReferenceSequence {
     }
     
     public ChromosomeSequence getChromosomeSequenceByName(String name){
+        
+        Enumeration<ChromosomeSequence> e = chrs.elements();
+        
+        while(e.hasMoreElements()){
+           ChromosomeSequence chr = e.nextElement();
+           if(chr.getName().compareTo(name)==0)return chr;
+        }     
+        
         return null;
     }
     
