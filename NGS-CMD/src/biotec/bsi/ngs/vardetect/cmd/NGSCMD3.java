@@ -12,6 +12,7 @@ import biotec.bsi.ngs.vardetect.core.MapResult;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
+import static biotec.bsi.ngs.vardetect.core.util.SequenceUtil.encodeSerialChromosomeSequenceV3;
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil;
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_aon.*;
 import static biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_aon.simulateWholeGene;
@@ -34,13 +35,14 @@ public class NGSCMD3 {
         
         String file_path = "/Users/worawich/VMdev/dataScieneToolBox/projects/genomic_projects/Reference_hg19/Map_Result.map";
         
-        
+    
         
         //ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
         ReferenceSequence ref_read = SequenceUtil.readReferenceSequence(args[0]);
         System.out.println("Read Done");
         System.out.println("File path is : "+ ref_read.getPath());
-
+        
+     
 
         //////////ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
         ///ChromosomeSequence chr = ref.getChromosomes().elementAt(0);

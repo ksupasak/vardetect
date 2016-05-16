@@ -30,7 +30,7 @@ public class NGSCMD {
         
 //       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
        
-          ReferenceSequence ref = SequenceUtil.getReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
+          ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0]);
           
           ChromosomeSequence c = ref.getChromosomeSequenceByName("chr11");
 
