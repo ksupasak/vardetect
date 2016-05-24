@@ -35,8 +35,10 @@ public class NGSCMD4 {
         InputSequence input =  SimulatorUtil_aon.simulateWholeGene(ref, 5, 100, 20, 21);
         
         
-          
+        ChromosomeSequence aon = ref.getChromosomeSequenceByName("chr21");
       // alignment
+        EncodedSequence test = SequenceUtil.getEncodeSequenceV2(aon);
+        System.out.println(test.getMers());
       
         /*Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
 
