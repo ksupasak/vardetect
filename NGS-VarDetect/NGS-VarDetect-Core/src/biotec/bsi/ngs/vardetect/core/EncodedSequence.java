@@ -69,40 +69,37 @@ public class EncodedSequence {
         
         if(fa.compareTo("map")==0){
         
-        Charset charset = Charset.forName("US-ASCII");
-    
-        Path path = Paths.get(file_path+"."+fa);
-        
-        
-        StringBuffer seq = new StringBuffer();
+            Charset charset = Charset.forName("US-ASCII");
 
-        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
-        String line = null;
-        int count = 0 ;
-    
+            Path path = Paths.get(file_path+"."+fa);
+
+
+            StringBuffer seq = new StringBuffer();
+
+            try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+                String line = null;
+                int count = 0 ;
+
+
+
+                while ((line = reader.readLine()) != null) {
+                    String[] st = line.split("\t");
+
+                    long mer = Long.valueOf(st[0]);
+                    long pos = Long.valueOf(st[1]);
+
+                    map.put(mer, pos);
+
+                    if(count%1000000==0)System.out.println("Read Mer "+count);
+                    count ++;
+                }
+            System.out.println("Total mer : "+map.size());
         
-        
-        while ((line = reader.readLine()) != null) {
-            String[] st = line.split("\t");
-               
-            long mer = Long.valueOf(st[0]);
-            long pos = Long.valueOf(st[1]);
-            
-            map.put(mer, pos);
-            
-            if(count%1000000==0)System.out.println("Read Mer "+count);
-            count ++;
-            
-            
-        }
-        System.out.println("Total mer : "+map.size());
-        
-       }catch(Exception e){
+            }catch(Exception e){
            
-       }
+            }
         
-        }else
-        if(fa.compareTo("bmap")==0){
+        }else if(fa.compareTo("bmap")==0){
             int count = 0 ;
             
             DataInputStream is = new DataInputStream(new FileInputStream(file_path+"."+fa));
@@ -113,16 +110,39 @@ public class EncodedSequence {
                
                 long mer = is.readLong();
                 long pos = is.readLong();
-                 map.put(mer, pos);
+                map.put(mer, pos);
             
-            if(count%1000000==0)System.out.println("Read binary Mer "+count);
-                count ++;
+                if(count%1000000==0)System.out.println("Read binary Mer "+count);
+                    count ++;
             }
             System.out.println("Total bmer : "+size);
 
             is.close();
+        }else if(fa.compareTo("bin")==0){
+            int count = 0 ;
+            DataInputStream is = new DataInputStream(new FileInputStream(file_path+"."+fa));
+            
+            int size = is.readInt();
+            System.out.println("Totalxx bmer : "+size);
+            //System.out.println(is.readLong()>>28);
+            //System.out.println(is.readLong()&268435455);
+
+            for(int i=0;i<size;i++){
+                
+                long mer = is.readLong();
+                //mers[i] = mer;
+                
+                if((mer&268435455)<100){
+                     System.out.println("Yeahhhhhhhh" + (mer&268435455));
+                }
+                if(count%1000000==0)System.out.println("Read binary Mer "+count);
+                    count ++;
+            }
+            System.out.println("Total bmer : "+size);
+
+            is.close();  
         }
-        
+      
         
     }
     

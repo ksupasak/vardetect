@@ -308,7 +308,7 @@ public class SequenceUtil {
        int repeat = 0;
        
        
-       File f = new File(chr.getFilePath()+".bin");
+       File f = new File(chr.getFilePath()+".bin"); //File object
        
        if(f.exists()){
            
@@ -346,7 +346,7 @@ public class SequenceUtil {
            
      
        
-       DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f)));
+       DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))); // create object for output data stream
 
        StringBuffer sb = chr.getSequence();
        
@@ -356,7 +356,7 @@ public class SequenceUtil {
        long mask = 0; 
        int count = 0;
   
-       long list[] = new long[n];
+       long list[] = new long[n]; // Pre - allocate Array by n
        
               
        for(int i =0;i<kmer;i++)mask=mask*4+3;
@@ -436,7 +436,7 @@ public class SequenceUtil {
     os.writeInt(list.length);
     for(int i=0;i<list.length;i++){
         if(i%1000000==0)System.out.println("Write "+chr.getName()+" "+i);
-        os.writeLong(list[i]);
+        os.writeLong(list[i]); // write list variable to file .bin
     }
        os.close();
        
@@ -1083,6 +1083,33 @@ public class SequenceUtil {
         return encode;
 
     }
+    
+    public static EncodedSequence getEncodeSequenceV2(ChromosomeSequence chr) {
+
+        EncodedSequence encode = null;
+//        System.out.println(chr.getFilePath());
+        Path fp = Paths.get(chr.getFilePath()+".bin");
+        File f = fp.toFile();
+        try{
+
+            if(f.exists()){
+                encode = new EncodedSequence();
+                encode.readFromPath(chr.getFilePath(), "bin");
+            }else{
+                encode = SequenceUtil.encodeSerialChromosomeSequenceV3(chr);
+    //            encode.writeToPath(chr.getFilePath(), "map");
+                encode.writeToPath(chr.getFilePath(), "bin");
+            }
+        
+        }catch(Exception e){
+            System.out.println("Error YoYOYO" + e);
+        }
+        //System.out.println("From Encode "+encode.getEncodeChrName());
+//        return null;
+        return encode;
+
+    }
+    
  
 
     public static CharSequence concatenateChromosome(ChromosomeSequence chrA,ChromosomeSequence chrB, int cutLengthA, int cutLengthB){
@@ -1281,7 +1308,7 @@ public class SequenceUtil {
         return result;
     }
     
- public static MapResult mapGenomeShotgunV3(ReferenceSequence refGene, InputSequence read,int startElement, int stopElement) throws IOException{
+    public static MapResult mapGenomeShotgunV3(ReferenceSequence refGene, InputSequence read,int startElement, int stopElement) throws IOException{
         
         // Process each read separately and add result to array list
         // chr 21,and 22 is at element 12,13 of whole genome reference
@@ -1392,7 +1419,11 @@ public class SequenceUtil {
         return result;
     }    
     
-    
+
+    public static MapResult mapGenomeShotgunV4(){
+        
+        return null;
+    } 
     /*public static MapResult mapping(ReferenceSequence refGene, InputSequence read){
         
         MapResult result = new MapResult();
