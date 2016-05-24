@@ -13,6 +13,6 @@ import biotec.bsi.ngs.vardetect.core.Aligner;
  */
 public class AlignerFactory {
     public static Aligner getAligner(){
-        return null;
+        return new BinaryAligner();
     }
 }

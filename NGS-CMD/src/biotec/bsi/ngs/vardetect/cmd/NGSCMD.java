@@ -4,6 +4,7 @@
  * and open the template in the editor.
  */
 package biotec.bsi.ngs.vardetect.cmd;
+import biotec.bsi.ngs.vardetect.alignment.AlignerFactory;
 import biotec.bsi.ngs.vardetect.core.*;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
@@ -32,27 +33,34 @@ public class NGSCMD {
        
           ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0]);
           
-          ChromosomeSequence c = ref.getChromosomeSequenceByName("chr11");
+          ChromosomeSequence c = ref.getChromosomeSequenceByName("chr22");
 
-          InputSequence input =  SimulatorUtil.simulateIndel(c, 5, 100);
+          InputSequence input =  SimulatorUtil.simulateIndel(c, 1000, 100);
        
           
+//          System.out.println(((1<<36)-1)<<28);
       // alignment
       
-        Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
-
-        while(chrs.hasMoreElements()){
-            ChromosomeSequence chr = chrs.nextElement();
-            Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
-            EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr);
-            while(seqs.hasMoreElements()){
-                ShortgunSequence seq = seqs.nextElement();
-                System.out.println(""+chr.getName()+" ");
-            }
-            System.gc();
-            
-        }
+      
+          Aligner aligner = AlignerFactory.getAligner();
           
+          AlignmentResult align = aligner.align(ref, input);
+      
+      
+//        Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
+//
+//        while(chrs.hasMoreElements()){
+//            ChromosomeSequence chr = chrs.nextElement();
+//            Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
+//            EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr);
+//            while(seqs.hasMoreElements()){
+//                ShortgunSequence seq = seqs.nextElement();
+//                System.out.println(""+chr.getName()+" ");
+//            }
+//            System.gc();
+//            
+//        }
+//          
       //ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
       
       
