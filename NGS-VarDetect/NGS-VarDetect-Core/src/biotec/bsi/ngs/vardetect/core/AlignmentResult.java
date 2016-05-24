@@ -9,11 +9,12 @@ package biotec.bsi.ngs.vardetect.core;
  *
  * @author soup
  */
-public interface Aligner {
+public class AlignmentResult {
     
-    public void setReferenceSequence(ReferenceSequence ref);
-    public AlignmentResult align(ReferenceSequence ref, InputSequence input);
-    public AlignmentResult align(InputSequence input);
+    InputSequence input;
     
+   public  AlignmentResult(InputSequence input){
+       this.input = input;
+   }
     
 }

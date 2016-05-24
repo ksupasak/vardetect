@@ -318,7 +318,7 @@ public class SequenceUtil {
             int size = is.readInt();
             
            long list[] = new long[size];
-            System.out.println("Totalxx bmer : "+size);
+//            System.out.println("Totalxx bmer : "+size);
 
             for(int i=0;i<size;i++){
                
@@ -331,7 +331,9 @@ public class SequenceUtil {
                 if(percent%10==0&&percent!=0)System.out.println("Read binary Mer "+chr.getName()+" "+count);
                 count ++;
             }
-            System.out.println("Total bmer : "+size);
+            
+            seq.setMers(list);
+//            System.out.println("Total bmer : "+size);
 
             is.close();
            
@@ -1013,27 +1015,31 @@ public class SequenceUtil {
    }
     
    
-    public static long encodeMer(String seq_input, int kmer){
+    public static long encodeMer(String seq, int kmer){
        
 //       cctgtagtacagtttgaagt
        long mer = 0 ;
        int t;
-       String seq = seq_input.toLowerCase();
-       if(seq.compareTo(seq_input)==0)return -1;
+//       String seq = seq_input.toLowerCase();
+//       if(seq.compareTo(seq_input)==0)return -1;
        for(int i=0;i < kmer && i<seq.length();i++){
             char a = seq.charAt(i);
            
             switch(a){
                 case 'a':
+                case 'A':
                     t=0; // 00
                     break;
                 case 't': 
+                case 'T':
                     t=3; // 11
                     break;
                 case 'c':
+                case 'C':
                     t=1; // 01 
                     break;
                 case 'g':
+                case 'G':
                     t=2; // 10 
                     break;
                 default : 
@@ -1043,11 +1049,7 @@ public class SequenceUtil {
             }
             
             if(t>=0){
-                // ctag
-                // c 1
-                // ct 7
-                // cta 28
-                // ctag 114
+
                 mer=mer*4+t;
                 
             }

@@ -36,6 +36,46 @@ public class EncodedSequence {
     Map<Long,Long> map;
     String name;
     
+    public long mask = -268435456;
+    public long mask2 = 268435455;
+    
+    
+    void EncodedSequence(){
+    }
+    
+    
+    public long align(long mer){
+        return align(mer, 0, mers.length-1);
+    }
+    public long align(long mer, int left, int right){
+        
+        int mid = (left+right)/2;
+        long i = mers[mid]&mask;
+        
+        if(left>right)return -1;
+        else
+            if(i<mer){
+                return align(mer, mid+1,right);
+            }else
+                if(i>mer){
+                    return align(mer, left,mid-1);
+                }else
+                    if(i==mer){
+                        long j = mers[mid];
+                        return j&mask2;
+                    }
+        
+        return -1;
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
     public void setMers(long mers[]){
         this.mers = mers;     
     }
