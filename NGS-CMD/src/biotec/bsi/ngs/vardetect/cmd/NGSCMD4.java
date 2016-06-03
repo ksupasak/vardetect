@@ -5,6 +5,9 @@
  */
 package biotec.bsi.ngs.vardetect.cmd;
 
+import biotec.bsi.ngs.vardetect.alignment.AlignerFactory;
+import biotec.bsi.ngs.vardetect.core.Aligner;
+import biotec.bsi.ngs.vardetect.core.AlignmentResult;
 import biotec.bsi.ngs.vardetect.core.ChromosomeSequence;
 import biotec.bsi.ngs.vardetect.core.EncodedSequence;
 import biotec.bsi.ngs.vardetect.core.InputSequence;
@@ -13,7 +16,7 @@ import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import static biotec.bsi.ngs.vardetect.core.util.SequenceUtil.encodeSerialChromosomeSequenceV3;
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil;
-import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_aon;
+import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_WholeGene;
 import java.io.IOException;
 import java.util.Enumeration;
 
@@ -21,6 +24,7 @@ import java.util.Enumeration;
  *
  * @author worawich
  */
+
 public class NGSCMD4 {
     
      public static void main(String[] args) throws IOException {
@@ -30,15 +34,21 @@ public class NGSCMD4 {
        
         ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0]);
           
-        ChromosomeSequence c = ref.getChromosomeSequenceByName("chr11");
+        ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
 
-        InputSequence input =  SimulatorUtil_aon.simulateWholeGene(ref, 5, 100, 20, 21);
+        InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGene(ref, 5, 100, 20, 21);
         
         
-        ChromosomeSequence aon = ref.getChromosomeSequenceByName("chr21");
+        
+        Aligner aligner = AlignerFactory.getAligner();
+          
+        AlignmentResult align = aligner.align(ref, input);
+        
+        
+       /* ChromosomeSequence aon = ref.getChromosomeSequenceByName("chr21");
       // alignment
         EncodedSequence test = SequenceUtil.getEncodeSequenceV2(aon);
-        System.out.println(test.getMers());
+        System.out.println(test.getMers());*/
       
         /*Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
 
@@ -55,4 +65,5 @@ public class NGSCMD4 {
         }*/
     
     }
+
 }

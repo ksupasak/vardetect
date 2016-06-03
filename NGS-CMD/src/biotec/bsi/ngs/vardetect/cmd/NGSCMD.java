@@ -35,7 +35,7 @@ public class NGSCMD {
           
           ChromosomeSequence c = ref.getChromosomeSequenceByName("chr22");
 
-          InputSequence input =  SimulatorUtil.simulateIndel(c, 1000, 100);
+          InputSequence input =  SimulatorUtil.simulateIndel(c, 5, 100);
        
           
 //          System.out.println(((1<<36)-1)<<28);
