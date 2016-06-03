@@ -66,7 +66,7 @@ public class BinaryAligner implements Aligner{
                     
                     String s = seq.getSequence();
                     
-                     System.out.print(chr.getName()+"\t");
+                    System.out.print(chr.getName()+"\t"); 
                     
                     
                     for(int i=0;i<s.length()-mer;i++){
