@@ -31,9 +31,9 @@ public class SimulatorUtil_WholeGene {
         System.out.println("Chromosome loop");
         for(int chrNum=0;chrNum<chrs.size();chrNum++){
         
-            System.out.println("chr number" + chrNum);
+            System.out.println("chr number: " + chrNum);
             ChromosomeSequence chr = chrs.elementAt(chrNum);
-            System.out.println("Chromosome name"+chr.getName());
+            System.out.println("Chromosome name: "+chr.getName());
 
             if (chr.getName().equalsIgnoreCase(namechrA)){
                 chrA = chr;
@@ -42,7 +42,7 @@ public class SimulatorUtil_WholeGene {
                 chrB = chr;
             }   
         }
-        System.out.println("boncatenate");
+        System.out.println("concatenate");
         CharSequence iniTemplate = SequenceUtil.concatenateChromosome(chrA, chrB, ln_read-1, ln_read-1);
         
         String read;

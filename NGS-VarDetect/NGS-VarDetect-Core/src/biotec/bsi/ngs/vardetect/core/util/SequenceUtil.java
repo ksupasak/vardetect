@@ -1154,9 +1154,9 @@ public class SequenceUtil {
         }
             concatenateCut = cutA.toString()+cutB.toString();
  
-            System.out.println(cutA);
-            System.out.println(cutB);
-            System.out.println(concatenateCut);
+            System.out.println("Random cut of chrA: " + cutA);
+            System.out.println("Random cut of chrB: " + cutB);
+            System.out.println("Concatenate chromosome: " + concatenateCut);
             
             // not finish
         //}
