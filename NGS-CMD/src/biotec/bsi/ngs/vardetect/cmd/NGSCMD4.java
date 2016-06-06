@@ -31,18 +31,19 @@ public class NGSCMD4 {
         // TODO code application logic here
         
 //       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
-       
+        
+        System.out.println("Get reference sequence");
         ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0]);
-          
-        ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
-
+       
+        //ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
+        System.out.println("Simulate Data");
         InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGene(ref, 5, 100, 20, 21);
         
         
         
-        Aligner aligner = AlignerFactory.getAligner();
+        //Aligner aligner = AlignerFactory.getAligner();
           
-        AlignmentResult align = aligner.align(ref, input);
+        //AlignmentResult align = aligner.align(ref, input);
         
         
        /* ChromosomeSequence aon = ref.getChromosomeSequenceByName("chr21");
