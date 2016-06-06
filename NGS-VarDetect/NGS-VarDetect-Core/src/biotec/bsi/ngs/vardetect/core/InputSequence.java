@@ -34,5 +34,7 @@ public class InputSequence {
    public Vector getInputSequence(){
        return this.seqs;
    }
-   
+   public int getNumberShortgunSequence(){
+       return this.seqs.size();
+   }
 }
