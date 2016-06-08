@@ -23,7 +23,7 @@ public class AlignmentResult {
     private long count = 0;
 
     ArrayList tempResult;    
-    ArrayList arrayResult;
+    ArrayList<Long> arrayResult;
     ArrayList chrNumber;
     ArrayList alignPosition;
     ArrayList numMatch;
@@ -46,14 +46,25 @@ public class AlignmentResult {
     }
     
     public void addResult(long idx, long chrNumber, String readName){
+        this.newResult.put(readName, this.arrayResult);
         this.index = idx;
         long dummy_subcode = (idx<<8)+chrNumber;
         
         if (dummy_subcode != this.code){
+           
+            if (count != 0){
+                
+                this.arrayResult = this.newResult.get(readName);
+                this.code = (dummy_subcode<<16)+count;
+                this.arrayResult.add(this.code);
+                
+                this.newResult.put(readName,this.arrayResult);
+            }
+            ///// Problem: how to collect the last result because we check variable changing but there is no change for the last result
+            
             this.code = dummy_subcode;
             count = 1;
             
-            this.code = (dummy_subcode<<16)+count;
             //tempResult.
             // Create Array to collect pre result in case that one read has more than one match
         }
