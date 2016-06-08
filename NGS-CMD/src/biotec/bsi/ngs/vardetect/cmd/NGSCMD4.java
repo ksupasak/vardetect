@@ -41,9 +41,9 @@ public class NGSCMD4 {
         
         
         
-        //Aligner aligner = AlignerFactory.getAligner();
+        Aligner aligner = AlignerFactory.getAligner();
           
-        //AlignmentResult align = aligner.align(ref, input);
+        AlignmentResult align = aligner.align(ref, input);
         
         
        /* ChromosomeSequence aon = ref.getChromosomeSequenceByName("chr21");
