@@ -43,11 +43,64 @@ public class EncodedSequence {
     void EncodedSequence(){
     }
     
+    public long[] align2(long mer){
+        
+        int index = align(mer, 0, mers.length-1);
+        
+        int start = -1;
+        int stop = -1;
+        
+        if(index>0){
+            for(int i=index;i>=0&&i>=index-200;i--){
+                long imer = mers[i]&mask;
+                
+                if(imer!=mer){
+                    start = i+1;
+                    break;
+                }else{
+                    
+                }
+            }
+            
+            for(int i=index;i<mers.length&&i<index+200;i++){
+                long imer = mers[i]&mask;
+                
+                if(imer!=mer){
+                    stop = i;
+                    break;
+                }else{
+                    
+                }
+            }
+            
+            
+            long j[] = new long[stop-start]; 
+            
+            for(int i =start;i<stop;i++){
+                if(i-start>=0)
+                j[i-start] = mers[i]&mask2;
+                        
+            }
+            
+            return j;
+//            System.out.println("start : "+start+" stop : "+stop+" length :"+(stop-start));
+            
+            
+            
+        }
+        
+        
+        return null;
+    }
     
     public long align(long mer){
-        return align(mer, 0, mers.length-1);
+        
+        int index = align(mer, 0, mers.length-1);
+        if(index>0)return mers[index]&mask2;
+        return -1;
     }
-    public long align(long mer, int left, int right){
+    
+    public int align(long mer, int left, int right){
         
         int mid = (left+right)/2;
         long i = mers[mid]&mask;
@@ -61,8 +114,8 @@ public class EncodedSequence {
                     return align(mer, left,mid-1);
                 }else
                     if(i==mer){
-                        long j = mers[mid];
-                        return j&mask2;
+//                        long j = mers[mid];
+                        return mid;
                     }
         
         return -1;

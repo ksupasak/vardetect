@@ -75,7 +75,13 @@ public class BinaryAligner implements Aligner{
 //                        System.out.println(""+sub+" "+sub.length()+": "+m);
                         if(m!=-1){
                             m = m<<28;
-                            long pos = encoded.align(m);
+//                            long pos = encoded.align(m);
+                            long pos2[] = encoded.align2(m);
+                            long pos = -1;
+                            if(pos2!=null&&pos2.length>0){
+                                pos = pos2[0];
+                            }
+                            
                             int idx = (int) (pos-i);
                             if(pos<0){
                               idx = 0;
