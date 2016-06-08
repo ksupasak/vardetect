@@ -126,6 +126,7 @@ public class SequenceUtil {
                     System.out.println("CHR : "+chr+" Size : "+seq.length());
 
                     ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+                    c.lazyLoad();
 
                     ref.addChromosomeSequence(c);
 

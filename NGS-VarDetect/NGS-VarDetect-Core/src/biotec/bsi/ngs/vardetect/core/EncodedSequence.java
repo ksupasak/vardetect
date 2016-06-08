@@ -72,17 +72,21 @@ public class EncodedSequence {
                     
                 }
             }
-            
-            
+            if(start<stop&&stop-start<500){
+//            System.out.println(" size "+(stop-start));
             long j[] = new long[stop-start]; 
             
             for(int i =start;i<stop;i++){
-                if(i-start>=0)
+                if(i-start>=0&&i>=0)
                 j[i-start] = mers[i]&mask2;
                         
             }
             
+            
             return j;
+            }
+            else
+                return null;
 //            System.out.println("start : "+start+" stop : "+stop+" length :"+(stop-start));
             
             
@@ -279,6 +283,12 @@ public class EncodedSequence {
            ps.println(mer+"\t"+pos);
          
        }*/
+
+    public void lazyLoad() {
+        
+         this.mers = null;
+
+    }
                
                
 

@@ -84,5 +84,10 @@ public class ChromosomeSequence {
     public void setSequence(StringBuffer sb) {
         this.seq = sb;
     }
+
+    public void lazyLoad() {
+        this.seq = null;
+        System.gc();
+    }
     
 }

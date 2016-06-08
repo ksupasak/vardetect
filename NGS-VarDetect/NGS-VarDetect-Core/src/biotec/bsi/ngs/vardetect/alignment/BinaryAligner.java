@@ -57,8 +57,9 @@ public class BinaryAligner implements Aligner{
                 
                 ChromosomeSequence chr = chrs.nextElement();
                 Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
+                System.out.println("reading .. "+chr.getName()+"");
+
                 EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr);
-                
                 while(seqs.hasMoreElements()){
                     ShortgunSequence seq = seqs.nextElement();
                     
@@ -97,6 +98,10 @@ public class BinaryAligner implements Aligner{
                     
                     
                 }
+                
+                encoded.lazyLoad();
+                encoded = null;
+                
                 System.gc();
                 
                 
