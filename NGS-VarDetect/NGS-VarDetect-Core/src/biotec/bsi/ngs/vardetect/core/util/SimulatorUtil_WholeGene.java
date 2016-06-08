@@ -16,7 +16,7 @@ import java.util.Vector;
  *
  * @author Worawich
  */
-public class SimulatorUtil_aon {
+public class SimulatorUtil_WholeGene {
     
     public static InputSequence simulateWholeGene(ReferenceSequence ref, int num_read, int ln_read, int numberchrA,int numberchrB){
         System.out.println("Begin Simulate");

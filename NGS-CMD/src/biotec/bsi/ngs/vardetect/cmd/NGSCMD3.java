@@ -12,9 +12,10 @@ import biotec.bsi.ngs.vardetect.core.MapResult;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
+import static biotec.bsi.ngs.vardetect.core.util.SequenceUtil.encodeSerialChromosomeSequenceV3;
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil;
-import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_aon.*;
-import static biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_aon.simulateWholeGene;
+import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_WholeGene.*;
+import static biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_WholeGene.simulateWholeGene;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
@@ -34,13 +35,14 @@ public class NGSCMD3 {
         
         String file_path = "/Users/worawich/VMdev/dataScieneToolBox/projects/genomic_projects/Reference_hg19/Map_Result.map";
         
-        
+    
         
         //ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
         ReferenceSequence ref_read = SequenceUtil.readReferenceSequence(args[0]);
         System.out.println("Read Done");
         System.out.println("File path is : "+ ref_read.getPath());
-
+        
+     
 
         //////////ReferenceSequence ref = SequenceUtil.readReferenceSequence(args[1]);
         ///ChromosomeSequence chr = ref.getChromosomes().elementAt(0);
@@ -58,7 +60,7 @@ public class NGSCMD3 {
         //Map<Long,Long> mapRes = new HashMap();
         //System.out.println("all key "+encode.getEncodeMap().keySet());
         
-        mapRes = SequenceUtil.mapGenomeShotgunV3(ref_read, is,12,13); // Last 2 number is defined for element in reference that we want to map to. chr 20 and 21 is on element 12 ans 13
+        mapRes = SequenceUtil.mapGenomeShotgunV3(ref_read, is,0,24); // Last 2 number is defined for element in reference that we want to map to. chr 20 and 21 is on element 12 ans 13
         /////mapRes.readFromPath(file_path, "map");
         
         //mapRes.writeToPath(ref.getPath(), "map");

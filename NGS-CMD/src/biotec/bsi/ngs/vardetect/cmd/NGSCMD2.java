@@ -10,7 +10,7 @@ import biotec.bsi.ngs.vardetect.core.InputSequence;
 import biotec.bsi.ngs.vardetect.core.ReferenceExonIntron;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
-import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_aon;
+import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_WholeGene;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.FileInputStream;
