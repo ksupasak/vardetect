@@ -31,11 +31,11 @@ public class NGSCMD {
         
 //       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
        
-          ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0]);
+          ReferenceSequence ref = SequenceUtil.getReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
           
           ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
 
-          InputSequence input =  SimulatorUtil.simulateIndel(c, 5, 100);
+        InputSequence input =  SimulatorUtil.simulateIndel(c, 5, 100);
        
           
 //          System.out.println(((1<<36)-1)<<28);
