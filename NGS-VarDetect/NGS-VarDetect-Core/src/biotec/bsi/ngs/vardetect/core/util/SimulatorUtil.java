@@ -20,7 +20,7 @@ public class SimulatorUtil {
     
     
     public static InputSequence simulateIndel(ChromosomeSequence chr, int number, int shortgun){
-        
+        String readName;
         InputSequence is = new InputSequence();
         StringBuffer sb = chr.getSequence();
         Random rand = new Random();
@@ -47,6 +47,8 @@ public class SimulatorUtil {
                 System.out.println(template);
 
                 ShortgunSequence ss = new ShortgunSequence(template);
+                readName = "Read"+i;
+                ss.addReadName(readName);
                 is.addRead(ss);    
             } 
             
