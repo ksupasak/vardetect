@@ -16,6 +16,8 @@ import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import static biotec.bsi.ngs.vardetect.core.util.SequenceUtil.encodeSerialChromosomeSequenceV3;
 import java.io.IOException;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -62,6 +64,7 @@ public class BinaryAligner implements Aligner{
                 EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr);
                 while(seqs.hasMoreElements()){
                     ShortgunSequence seq = seqs.nextElement();
+                    Map<Long,long[]> merMap = new HashMap();
                     
 //                    System.out.println(""+chr.getName()+" "+encoded.getMers().length);
                     
@@ -89,10 +92,11 @@ public class BinaryAligner implements Aligner{
                             }
 //                            System.out.println(""+chr.getName()+" "+sub+" "+sub.length()+" : "+m+" pos : "+pos+" idx : "+idx);
                             
-                            System.out.print("\t"+idx);
-                            
+                            System.out.print("\t"+pos);
+                            merMap = res.addResult(m, chr.getChrNumber(), pos2);    
                         }
-                    
+                    //System.out.println(" This mer Map check: "+ (merMap == null));
+                    res.createMap(seq.getReadName(), merMap);
                     }
                      System.out.println();
                     

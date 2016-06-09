@@ -48,9 +48,19 @@ public class SimulatorUtil_WholeGene {
         String read;
         String readName;
         for(int i = 0;i<num_read;i++){
-            int iniread = rand.nextInt(ln_read);
+            int iniread =  0;
+            int overLimitCheck = 0;
+            while(overLimitCheck == 0){
+                iniread = rand.nextInt(ln_read);
+                if (iniread<(ln_read-1)){
+                    overLimitCheck = 1;
+                }
+            }
             
+            System.out.println("iniread : "+iniread);
+            System.out.println("ln_read : "+ln_read);
             read = iniTemplate.subSequence(iniread, iniread+ln_read).toString();
+            
             
             System.out.println("Initial position: " + iniread);
             System.out.println("Number of base from " + namechrA + " : " + ((ln_read-iniread)-1));

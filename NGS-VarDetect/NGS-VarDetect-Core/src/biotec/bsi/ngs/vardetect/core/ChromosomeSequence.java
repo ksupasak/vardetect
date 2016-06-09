@@ -46,13 +46,13 @@ public class ChromosomeSequence {
     
     public Long getChrNumber(){
         String[] dummy = name.split("r");
-        if (dummy[1]=="X"){
+        
+        if (dummy[1].equals("X")){
             chrNum = 23L;
-        }
-        else if(dummy[1]=="Y"){
+        }else if(dummy[1].equals("Y")){
             chrNum = 24L;
-        }
-        else{
+        }else{
+            System.out.println("this is chr name check : " + dummy[1]);
             chrNum = Long.parseLong(dummy[1]);
         }
                 
