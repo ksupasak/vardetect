@@ -18,7 +18,10 @@ import static biotec.bsi.ngs.vardetect.core.util.SequenceUtil.encodeSerialChromo
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil;
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_WholeGene;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -31,6 +34,9 @@ public class NGSCMD4 {
         // TODO code application logic here
         
 //       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
+        Map<String,ArrayList<Map>> aon = new HashMap();
+        System.out.println(aon==null);
+        System.out.println(aon!=null);
         
         System.out.println("Get reference sequence");
         ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0]);
@@ -45,6 +51,15 @@ public class NGSCMD4 {
           
         AlignmentResult align = aligner.align(ref, input);
         
+        
+        Map<String,ArrayList<Map>> result = new HashMap();
+        result = align.getAlignmentResult();
+        ArrayList test = new ArrayList();
+        test = result.get("Read0");
+        System.out.print("/n");
+        System.out.print("Test represent Result: " + test.size());
+        
+        // Pass!! Next create represent data part //
         
        /* ChromosomeSequence aon = ref.getChromosomeSequenceByName("chr21");
       // alignment
