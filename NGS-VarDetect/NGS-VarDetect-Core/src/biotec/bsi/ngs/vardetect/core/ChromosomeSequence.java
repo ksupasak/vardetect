@@ -52,7 +52,7 @@ public class ChromosomeSequence {
         }else if(dummy[1].equals("Y")){
             chrNum = 24L;
         }else{
-            System.out.println("this is chr name check : " + dummy[1]);
+            //System.out.println("this is chr name check : " + dummy[1]);
             chrNum = Long.parseLong(dummy[1]);
         }
                 

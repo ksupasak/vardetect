@@ -65,9 +65,9 @@ public class AlignmentResult {
                 for(int i=0;i<len;i++){
                     code[i] = (chrNumber<<28)+pos[i];
                 }
-                System.out.println(" this is code check: " + code[0]);
-                System.out.println(" this is mer check: " + mer);
-                System.out.println(merPosMap == null);
+                //System.out.println(" this is code check: " + code[0]);
+                //System.out.println(" this is mer check: " + mer);
+                //System.out.println(merPosMap == null);
                 this.merPosMap.put(mer, code);
             }
         }
