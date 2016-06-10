@@ -10,6 +10,7 @@ import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import static biotec.bsi.ngs.vardetect.core.util.SequenceUtil.encodeSerialChromosomeSequenceV3;
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil;
+import biotec.bsi.ngs.vardetect.core.util.VisualizeResult;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Enumeration;
@@ -31,8 +32,8 @@ public class NGSCMD {
         
 //       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
        
-          ReferenceSequence ref = SequenceUtil.getReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
-          
+          //ReferenceSequence ref = SequenceUtil.getReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
+          ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0]);
           ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
 
         InputSequence input =  SimulatorUtil.simulateIndel(c, 5, 100);
@@ -46,7 +47,7 @@ public class NGSCMD {
           
           AlignmentResult align = aligner.align(ref, input);
       
-      
+          VisualizeResult.visualizeAlignmentResult(align);
 //        Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
 //
 //        while(chrs.hasMoreElements()){
