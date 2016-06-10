@@ -17,6 +17,7 @@ import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import static biotec.bsi.ngs.vardetect.core.util.SequenceUtil.encodeSerialChromosomeSequenceV3;
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil;
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_WholeGene;
+import biotec.bsi.ngs.vardetect.core.util.VisualizeResult;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -58,6 +59,8 @@ public class NGSCMD4 {
         test = result.get("Read0");
         System.out.print("/n");
         System.out.print("Test represent Result: " + test.size());
+        
+        VisualizeResult.visualizeAlignmentResult(align);
         
         // Pass!! Next create represent data part //
         
