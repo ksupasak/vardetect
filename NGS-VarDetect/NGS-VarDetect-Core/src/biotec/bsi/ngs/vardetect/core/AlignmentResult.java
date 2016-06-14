@@ -16,8 +16,11 @@ import java.util.Map;
 public class AlignmentResult {
     
     Map<Long,long[]> merPosMap;
+    Map<Long,ArrayList<Long>> merPosMapV2;
     Map<String,ArrayList<Map>> resultMap;
+    Map<String,Map<Long,ArrayList<Long>>> resultMapV2;
     ArrayList<Map> arrayMap;
+    ArrayList<Long> listCode;
             
     Map<String,Long> result;
     
@@ -54,10 +57,106 @@ public class AlignmentResult {
         this.readName = new ArrayList();    
     }
     
+    public void addResultV2(long mer, long chrNumber, long[] pos, String readName){
+        int len;
+        long[] code = pos;
+        long dummyCode;
+        
+        
+        if(this.resultMapV2.containsKey(readName)){
+            this.merPosMapV2 = this.resultMapV2.get(readName);
+            
+            if (this.merPosMapV2.containsKey(mer)){
+                this.listCode = this.merPosMapV2.get(mer);
+                if(pos!=null&&pos.length>0){
+                    len = pos.length;
+                    if(pos[0] > 0){
+                        for(int i=0;i<len;i++){
+                            dummyCode = (chrNumber<<28)+pos[i];
+                            this.listCode.add(dummyCode);
+                        }
+                        //System.out.println(" this is code check: " + code[0]);
+                        //System.out.println(" this is mer check: " + mer);
+                        //System.out.println(merPosMap == null);                
+                        this.merPosMapV2.put(mer, this.listCode);                        
+                    }
+                }
+                this.resultMapV2.put(readName, merPosMapV2);
+            }else{
+                if(pos!=null&&pos.length>0){
+                    len = pos.length;
+                    if(pos[0] > 0){
+                        for(int i=0;i<len;i++){
+                            dummyCode = (chrNumber<<28)+pos[i];
+                            this.listCode.add(dummyCode);
+                        }
+                        //System.out.println(" this is code check: " + code[0]);
+                        //System.out.println(" this is mer check: " + mer);
+                        //System.out.println(merPosMap == null);                
+                        this.merPosMapV2.put(mer, this.listCode);
+                    }
+                }          
+                
+            }      
+        }else{
+            if(pos!=null&&pos.length>0){
+                len = pos.length;
+                if(pos[0] > 0){
+                    for(int i=0;i<len;i++){
+                        dummyCode = (chrNumber<<28)+pos[i];
+                        this.listCode.add(dummyCode);
+                    }
+                        //System.out.println(" this is code check: " + code[0]);
+                        //System.out.println(" this is mer check: " + mer);
+                        //System.out.println(merPosMap == null);                
+                    this.merPosMapV2.put(mer, this.listCode);
+                }
+            }
+            this.resultMapV2.put(readName, merPosMapV2);
+        }
+        
+        
+        /*
+        if (this.merPosMap.containsKey(mer)){
+            this.listCode = this.merPosMap.get(mer);
+            if(pos!=null&&pos.length>0){
+                len = pos.length;
+                if(pos[0] > 0){
+                    for(int i=0;i<len;i++){
+                        dummyCode = (chrNumber<<28)+pos[i];
+                        this.listCode.add(dummyCode);
+                    }
+                    //System.out.println(" this is code check: " + code[0]);
+                    //System.out.println(" this is mer check: " + mer);
+                    //System.out.println(merPosMap == null);                
+                    this.merPosMap.put(mer, this.listCode);
+                }
+            }          
+        }else{
+            if(pos!=null&&pos.length>0){
+                len = pos.length;
+                if(pos[0] > 0){
+                    for(int i=0;i<len;i++){
+                        dummyCode = (chrNumber<<28)+pos[i];
+                        this.listCode.add(dummyCode);
+                    }
+                    //System.out.println(" this is code check: " + code[0]);
+                    //System.out.println(" this is mer check: " + mer);
+                    //System.out.println(merPosMap == null);                
+                    this.merPosMap.put(mer, this.listCode);
+                }
+            }          
+            
+        }
+        */
+        
+    }
+    
     public Map addResult(long mer, long chrNumber, long[] pos){
         
         int len;
         long[] code = pos; 
+        
         
         if(pos!=null&&pos.length>0){
             len = pos.length;
@@ -67,8 +166,8 @@ public class AlignmentResult {
                 }
                 //System.out.println(" this is code check: " + code[0]);
                 //System.out.println(" this is mer check: " + mer);
-                //System.out.println(merPosMap == null);
-                this.merPosMap.put(mer, code);
+                //System.out.println(merPosMap == null);                
+                ////this.merPosMap.put(mer, code);
             }
         }
         
@@ -128,5 +227,7 @@ public class AlignmentResult {
         return this.resultMap;
     }
     
-    
+    public Map getAlignmentResultV2(){
+        return this.resultMapV2;
+    }
 }

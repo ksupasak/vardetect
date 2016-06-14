@@ -84,6 +84,7 @@ public class BinaryAligner implements Aligner{
                             long pos = -1;
                             if(pos2!=null&&pos2.length>0){
                                 pos = pos2[0];
+                                //merMap = res.addResult(m, chr.getChrNumber(), pos2);
                             }
                             
                             int idx = (int) (pos-i);
@@ -93,10 +94,11 @@ public class BinaryAligner implements Aligner{
 //                            System.out.println(""+chr.getName()+" "+sub+" "+sub.length()+" : "+m+" pos : "+pos+" idx : "+idx);
                             
                             System.out.print("\t"+pos);
-                            merMap = res.addResult(m, chr.getChrNumber(), pos2);    
+                            merMap = res.addResult(m, chr.getChrNumber(), pos2);
+                            res.addResultV2(m, chr.getChrNumber(), pos2, seq.getReadName());
                         }
                     //System.out.println(" This mer Map check: "+ (merMap == null));
-                    res.createMap(seq.getReadName(), merMap);
+                    res.createMap(seq.getReadName(), merMap);                    
                     }
                      System.out.println();
                     
