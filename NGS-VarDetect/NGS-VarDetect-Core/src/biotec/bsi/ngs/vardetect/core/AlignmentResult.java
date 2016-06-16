@@ -408,7 +408,7 @@ public class AlignmentResult {
     }
     
     public int[] detectColor(ArrayList<Long> arrayCodePos, int index){
-        int[] colorCode = new int[4]; //
+        int[] colorCode = new int[4]; //Have four color code red = repeat in same chr; yellow = repeat with other chr; orange = repeate both same and other chr; green = unique
         int arraySize = arrayCodePos.size();
         int red = 0;
         int yellow = 0;
