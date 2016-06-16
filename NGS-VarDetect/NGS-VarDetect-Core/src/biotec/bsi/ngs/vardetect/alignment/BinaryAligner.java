@@ -84,6 +84,7 @@ public class BinaryAligner implements Aligner{
                             long pos = -1;
                             if(pos2!=null&&pos2.length>0){
                                 pos = pos2[0];
+                                pos = pos2.length;
                                 //merMap = res.addResult(m, chr.getChrNumber(), pos2);
                             }
                             
