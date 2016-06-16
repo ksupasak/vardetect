@@ -54,13 +54,18 @@ public class NGSCMD4 {
         
         
         Map<String,ArrayList<Map>> result = new HashMap();
-        result = align.getAlignmentResult();
-        ArrayList test = new ArrayList();
-        test = result.get("Read0");
-        System.out.print("/n");
-        System.out.print("Test represent Result: " + test.size());
+        result = align.getAlignmentResultV2();
+        //ArrayList test = new ArrayList();
+        //test = result.get("Read0");
+        //System.out.print("/n");
+        //System.out.print("Test represent Result: " + test.size());
         
-        VisualizeResult.visualizeAlignmentResult(align);
+        VisualizeResult.visualizeAlignmentResultV2(align);
+        
+        System.out.println("Size of Result: " + align.getAlignmentCount().size());
+        
+        VisualizeResult.visualizeAlignmentCountMatchPlusColor(align);
+        //VisualizeResult.visualizeAlignmentResult(align);
         
         // Pass!! Next create represent data part //
         
