@@ -40,7 +40,7 @@ public class NGSCMD4 {
         System.out.println(aon!=null);
         
         System.out.println("Get reference sequence");
-        ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0]);
+        ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0]); //runFile hg19.fa
        
         //ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
         System.out.println("Simulate Data");
@@ -62,9 +62,17 @@ public class NGSCMD4 {
         
         VisualizeResult.visualizeAlignmentResultV2(align);
         
-        System.out.println("Size of Result: " + align.getAlignmentCount().size());
+        //System.out.println("Size of Result: " + align.getAlignmentCount().size());
         
         VisualizeResult.visualizeAlignmentCountMatchPlusColor(align);
+        
+        
+        
+        // Create save result path by just plugin AlignmentResult
+        
+        
+        
+        
         //VisualizeResult.visualizeAlignmentResult(align);
         
         // Pass!! Next create represent data part //

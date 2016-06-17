@@ -48,6 +48,7 @@ public class NGSCMD {
           AlignmentResult align = aligner.align(ref, input);
       
           VisualizeResult.visualizeAlignmentResult(align);
+          VisualizeResult.visualizeAlignmentCountMatchPlusColor(align);
 //        Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
 //
 //        while(chrs.hasMoreElements()){
