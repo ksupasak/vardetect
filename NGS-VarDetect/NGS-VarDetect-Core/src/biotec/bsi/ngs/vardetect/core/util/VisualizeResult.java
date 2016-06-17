@@ -190,7 +190,7 @@ public class VisualizeResult {
         while(iterRead.hasNext()){
             Object readName = iterRead.next();
             Map<Long,long[]> countMap =  readList.get(readName);
-            System.out.println("Alignment result of "+ readName);
+            System.out.println("\nAlignment result of "+ readName);
             
             Set allPos = countMap.keySet();
             Iterator iterPos = allPos.iterator();
@@ -204,9 +204,16 @@ public class VisualizeResult {
                 long yellow = numCountPlusColor[2];
                 long orange = numCountPlusColor[3];
                 long green = numCountPlusColor[4];
+                long redInt = numCountPlusColor[5];
+                long yellowInt = numCountPlusColor[6];
+                long orangeInt = numCountPlusColor[7];
+                long greenInt = numCountPlusColor[8];
                 
 //                System.out.println("Align at position: \t%d" + alignPos + " \ton chrNumber: " + chrNumber + " \tAlign count: " + numCount + " \tNumber of Red: " + red + " \tNumber of Yellow: " + yellow + " \tNumber of Orange: " + orange + " \tNumber of Green" + green);
-                System.out.format("Align at position: %d\tOn chrNumber: %3d\tAlign count: %3d\tNumber of Red: %3d\tNumber of Yellow: %3d\tNumber of Orange: %3d\tNumber of Green: %3d%n",alignPos,chrNumber,numCount,red,yellow,orange,green);
+                //System.out.format("Align at position: %d\tOn chrNumber: %3d\tAlign count: %3d\tNumber of Red: %3d\tRed intensity: %3d\tNumber of Yellow: %3d\tYellow intensity: %3d\tNumber of Orange: %3d\tOrange intensity: %3d\tNumber of Green: %3d\tGreen intensity: %3d%n"
+                //,alignPos,chrNumber,numCount,red,redInt,yellow,yellowInt,orange,orangeInt,green,greenInt);
+                
+                System.out.format("Position %d : Chr %d\t%3d\t%3d\t%3d\t%3d\t%3d\t%3d\t%3d\t%3d\t%3d%n",alignPos,chrNumber,numCount,red,redInt,yellow,yellowInt,orange,orangeInt,green,greenInt);
             }
         }       
         
