@@ -5,6 +5,11 @@
  */
 package biotec.bsi.ngs.vardetect.core;
 
+import java.io.DataOutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -32,6 +37,7 @@ public class AlignmentResult {
     private long chrNum;
     private long code = 0;
     private long count = 0;
+    private long mask = 268435455;
 
     ArrayList tempResult;    
     ArrayList<Long> arrayResult;
@@ -65,7 +71,9 @@ public class AlignmentResult {
     
     public void addResultV2(long mer, long chrNumber, long[] pos, String readName){
         
-        // mer has been 28 bit left shift for matching propose. Beware when handle with mer.
+        /* mer has been 28 bit left shift for matching propose. Beware when handle with mer.
+           pos must be a compose number between position and chrnumber. By this format (Chr number):(Position 28 bit)*/
+        
         int len;
         long[] code = pos;
         long dummyCode;
@@ -484,5 +492,44 @@ public class AlignmentResult {
         colorCode[7] = greenInt;
         
         return colorCode;
+    }
+    
+    public void writeToPath(String path, String fa) throws FileNotFoundException, IOException {
+
+       
+        PrintStream ps = new PrintStream(path+"_AlignResult."+ fa);
+        
+        Map<String,Map<Long,long[]>> readList = getAlignmentCountPlusColor();
+        
+        Set allKey = readList.keySet();
+        Iterator iterRead = allKey.iterator();
+        
+        //ps.format("Result\tAlignPos\tChrNumber\tNumMatch\tGreen\tYellow\tOrange\tRed\tGreenInt\tYellowInt\tOrangeInt\tRedInt");
+        while(iterRead.hasNext()){
+            Object readName = iterRead.next();
+            Map<Long,long[]> countMap =  readList.get(readName);
+            ps.println(">Alignment result of "+ readName);
+            ps.format("            Result            \tNumMatch\tGreen\tYellow\tOrange\tRed\tGreenInt\tYellowInt\tOrangeInt\tRedInt%n");
+            Set allPos = countMap.keySet();
+            Iterator iterPos = allPos.iterator();
+            while(iterPos.hasNext()){
+                long positionCode = (long)iterPos.next();
+                long alignPos = positionCode&mask;
+                long chrNumber = positionCode>>28;
+                long[] numCountPlusColor = countMap.get(positionCode);
+                long numCount = numCountPlusColor[0];
+                long red = numCountPlusColor[1];
+                long yellow = numCountPlusColor[2];
+                long orange = numCountPlusColor[3];
+                long green = numCountPlusColor[4];
+                long redInt = numCountPlusColor[5];
+                long yellowInt = numCountPlusColor[6];
+                long orangeInt = numCountPlusColor[7];
+                long greenInt = numCountPlusColor[8];
+                
+                
+                ps.format("Position %d : Chr %d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",alignPos,chrNumber,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+            }
+        }
     }
 }

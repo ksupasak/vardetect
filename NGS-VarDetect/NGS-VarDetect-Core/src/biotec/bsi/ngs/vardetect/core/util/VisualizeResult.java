@@ -182,16 +182,18 @@ public class VisualizeResult {
     }
     
     public static void visualizeAlignmentCountMatchPlusColor(AlignmentResult inRes){
+        /* Main method for extract result */
+        
         Map<String,Map<Long,long[]>> readList = inRes.getAlignmentCountPlusColor();
         
         Set allKey = readList.keySet();
         Iterator iterRead = allKey.iterator();
-        
+        //System.out.format("%-12sResult%12s\tAlignPos\tChrNumber\tNumMatch\tGreen\tYellow\tOrange\tRed\tGreenInt\tYellowInt\tOrangeInt\tRedInt");
         while(iterRead.hasNext()){
             Object readName = iterRead.next();
             Map<Long,long[]> countMap =  readList.get(readName);
             System.out.println("\nAlignment result of "+ readName);
-            
+            System.out.format("            Result           \tNumMatch\tGreen\tYellow\tOrange\tRed\tGreenInt\tYellowInt\tOrangeInt\tRedInt");
             Set allPos = countMap.keySet();
             Iterator iterPos = allPos.iterator();
             while(iterPos.hasNext()){
@@ -213,8 +215,8 @@ public class VisualizeResult {
                 //System.out.format("Align at position: %d\tOn chrNumber: %3d\tAlign count: %3d\tNumber of Red: %3d\tRed intensity: %3d\tNumber of Yellow: %3d\tYellow intensity: %3d\tNumber of Orange: %3d\tOrange intensity: %3d\tNumber of Green: %3d\tGreen intensity: %3d%n"
                 //,alignPos,chrNumber,numCount,red,redInt,yellow,yellowInt,orange,orangeInt,green,greenInt);
                 
-                System.out.format("Position %d : Chr %d\t%3d\t%3d\t%3d\t%3d\t%3d\t%3d\t%3d\t%3d\t%3d%n",alignPos,chrNumber,numCount,red,redInt,yellow,yellowInt,orange,orangeInt,green,greenInt);
-            }
+                System.out.format("Position %12d : Chr %2d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",alignPos,chrNumber,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+         }
         }       
         
     }
