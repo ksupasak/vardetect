@@ -66,7 +66,7 @@ public class NGSCMD4 {
         
         VisualizeResult.visualizeAlignmentCountMatchPlusColor(align);
         
-        
+        align.writeToPath(ref.getPath(), "txt");
         
         // Create save result path by just plugin AlignmentResult
         
