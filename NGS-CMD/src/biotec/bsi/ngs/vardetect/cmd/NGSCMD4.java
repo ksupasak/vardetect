@@ -8,6 +8,7 @@ package biotec.bsi.ngs.vardetect.cmd;
 import biotec.bsi.ngs.vardetect.alignment.AlignerFactory;
 import biotec.bsi.ngs.vardetect.core.Aligner;
 import biotec.bsi.ngs.vardetect.core.AlignmentResult;
+import biotec.bsi.ngs.vardetect.core.AlignmentResultRead;
 import biotec.bsi.ngs.vardetect.core.ChromosomeSequence;
 import biotec.bsi.ngs.vardetect.core.EncodedSequence;
 import biotec.bsi.ngs.vardetect.core.InputSequence;
@@ -50,27 +51,29 @@ public class NGSCMD4 {
         
         Aligner aligner = AlignerFactory.getAligner();
           
-        AlignmentResult align = aligner.align(ref, input);
+        AlignmentResultRead align = aligner.align(ref, input);
         
         
-        Map<String,ArrayList<Map>> result = new HashMap();
-        result = align.getAlignmentResultV2();
+//        Map<String,ArrayList<Map>> result = new HashMap();
+//        result = align.getAlignmentResultV2();
         //ArrayList test = new ArrayList();
         //test = result.get("Read0");
         //System.out.print("/n");
         //System.out.print("Test represent Result: " + test.size());
         
-        VisualizeResult.visualizeAlignmentResultV2(align);
+//        VisualizeResult.visualizeAlignmentResultV2(align);
         
         //System.out.println("Size of Result: " + align.getAlignmentCount().size());
         
-        VisualizeResult.visualizeAlignmentCountMatchPlusColor(align);
+//        VisualizeResult.visualizeAlignmentCountMatchPlusColor(align);
         
-        align.writeToPath(ref.getPath(), "txt");
+//        align.writeToPath(ref.getPath(), "txt");
         
         // Create save result path by just plugin AlignmentResult
         
-        
+        System.out.println("Size new resutlt check " + align.getResult().size());
+        System.out.println("Data check"+align.getResult().get(0).getReadName());
+        System.out.println("Data check"+align.getResult().get(0).getSequence());
         
         
         //VisualizeResult.visualizeAlignmentResult(align);
