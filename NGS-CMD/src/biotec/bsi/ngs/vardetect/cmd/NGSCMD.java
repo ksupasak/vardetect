@@ -45,10 +45,10 @@ public class NGSCMD {
       
           Aligner aligner = AlignerFactory.getAligner();
           
-          AlignmentResult align = aligner.align(ref, input);
+          AlignmentResultRead align = aligner.align(ref, input);
       
-          VisualizeResult.visualizeAlignmentResult(align);
-          VisualizeResult.visualizeAlignmentCountMatchPlusColor(align);
+          //VisualizeResult.visualizeAlignmentResult(align);
+          //VisualizeResult.visualizeAlignmentCountMatchPlusColor(align);
 //        Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
 //
 //        while(chrs.hasMoreElements()){
