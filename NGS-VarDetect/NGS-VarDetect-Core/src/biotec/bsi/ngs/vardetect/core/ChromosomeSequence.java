@@ -60,6 +60,7 @@ public class ChromosomeSequence {
     }
     
     public StringBuffer getSequence() {
+        if(this.seq==null){
         try{
             BufferedReader chr_reader = new BufferedReader(new InputStreamReader(new FileInputStream(this.getFilePath()+".fa")));
             System.out.println(chr_reader.readLine());
@@ -68,6 +69,12 @@ public class ChromosomeSequence {
             this.setSequence(sb);
         }catch(IOException e){
             
+        }
+        System.out.println("seq = "+seq.length());
+
+        }else{
+                    System.out.println("exist = "+seq.length());
+
         }
         return seq;
     }

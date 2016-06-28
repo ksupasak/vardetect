@@ -80,6 +80,9 @@ public class SequenceUtil {
             System.out.println(chr);
             File chr_file = new File(ref.getPath()+File.separator+chr+".fa");
             if(chr_file.exists()){
+                
+                System.out.println("No chr" +chr_file);
+                
                  ChromosomeSequence c = new ChromosomeSequence(ref,chr,null);
                  ref.addChromosomeSequence(c);
                  
@@ -97,6 +100,8 @@ public class SequenceUtil {
                  
             }else{
                  extract_chr=true;
+                                 System.out.println("No chr" +chr_file);
+
             }
         } 
     }else{
@@ -126,7 +131,19 @@ public class SequenceUtil {
                     System.out.println("CHR : "+chr+" Size : "+seq.length());
 
                     ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+                    
+                    File chr_file = new File(c.getFilePath()+".fa");
+                    
+                    if(!chr_file.exists()){
+                        c.writeToFile("FA");
+                    }                   
+                    
+                    seq=null;
                     c.lazyLoad();
+                    
+                    EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c);
+
+         c.lazyLoad();
 
                     ref.addChromosomeSequence(c);
 
@@ -149,6 +166,21 @@ public class SequenceUtil {
         
         System.out.println("CHR : "+chr+" Size : "+seq.length());
         ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+        
+         File chr_file = new File(c.getFilePath()+".fa");
+                    
+         if(!chr_file.exists()){
+           c.writeToFile("FA");
+         }     
+         
+         seq = null;
+
+         c.lazyLoad();
+         
+               EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c);
+
+         c.lazyLoad();
+
         ref.addChromosomeSequence(c);
         
         
@@ -162,16 +194,16 @@ public class SequenceUtil {
         System.err.format("IOException: %s%n", x);
     }    
     
-    if(extract_chr){
-        Enumeration<ChromosomeSequence> e = ref.getChromosomes().elements();
-        while(e.hasMoreElements()){
-            ChromosomeSequence s = e.nextElement();
-            File chr_file = new File(s.getFilePath()+".fa");
-            if(!chr_file.exists()){
-                s.writeToFile("FA");
-            }
-        }
-    }
+//    if(extract_chr){
+//        Enumeration<ChromosomeSequence> e = ref.getChromosomes().elements();
+//        while(e.hasMoreElements()){
+//            ChromosomeSequence s = e.nextElement();
+//            File chr_file = new File(s.getFilePath()+".fa");
+//            if(!chr_file.exists()){
+//                s.writeToFile("FA");
+//            }
+//        }
+//    }
     
 //    ========================= read all chromosome
     if(create_index){
