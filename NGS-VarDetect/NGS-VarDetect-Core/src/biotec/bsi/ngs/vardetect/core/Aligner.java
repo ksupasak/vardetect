@@ -12,8 +12,8 @@ package biotec.bsi.ngs.vardetect.core;
 public interface Aligner {
     
     public void setReferenceSequence(ReferenceSequence ref);
-    public AlignmentResult align(ReferenceSequence ref, InputSequence input);
-    public AlignmentResult align(InputSequence input);
+    public AlignmentResultRead align(ReferenceSequence ref, InputSequence input);
+    public AlignmentResultRead align(InputSequence input);
     
     
 }

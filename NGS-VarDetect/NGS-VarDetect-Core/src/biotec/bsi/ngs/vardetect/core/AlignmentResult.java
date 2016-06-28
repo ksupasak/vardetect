@@ -509,7 +509,7 @@ public class AlignmentResult {
             Object readName = iterRead.next();
             Map<Long,long[]> countMap =  readList.get(readName);
             ps.println(">Alignment result of "+ readName);
-            ps.format("            Result            \tNumMatch\tGreen\tYellow\tOrange\tRed\tGreenInt\tYellowInt\tOrangeInt\tRedInt%n");
+            ps.printf("%-30s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
             Set allPos = countMap.keySet();
             Iterator iterPos = allPos.iterator();
             while(iterPos.hasNext()){
@@ -530,6 +530,7 @@ public class AlignmentResult {
                 
                 ps.format("Position %d : Chr %d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",alignPos,chrNumber,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
             }
+            ps.println();
         }
     }
 }
