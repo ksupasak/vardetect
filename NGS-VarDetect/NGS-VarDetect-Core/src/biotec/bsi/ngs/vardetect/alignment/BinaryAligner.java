@@ -50,6 +50,7 @@ public class BinaryAligner implements Aligner{
         
         
         AlignmentResult res = new AlignmentResult(input);
+        AlignmentResultRead alinResult = new AlignmentResultRead();
         
         int mer = 18;
         
@@ -104,6 +105,7 @@ public class BinaryAligner implements Aligner{
                             res.addResultV2(m, chr.getChrNumber(), pos2, seq.getReadName());
                             //System.out.println("Check seq length" + seq.getShortgunLength());
                             int totalMer = (seq.getShortgunLength()-mer)+1;
+                            
                             /* New Implement Part */
                             if (seq.getMerReadSize() < totalMer){
                                 MerRead merRead = new MerRead();
@@ -120,14 +122,17 @@ public class BinaryAligner implements Aligner{
                                     System.out.println("(Other time) Should be constant: Size Mer Read check: " + seq.getMerReadSize());
                                 }                                   
                             }
+                            /*----------------------*/
                             
                         }
                     //System.out.println(" This mer Map check: "+ (merMap == null));
                     res.createMap(seq.getReadName(), merMap);                    
                     }
                      System.out.println();
+                    /* New Implement Part */
+                    //seq.countAlignmentData(); // Create Alignment count data before change ShortgunSequence
                     
-                    
+                    /*--------------------*/
                 }
                 
                 encoded.lazyLoad();
@@ -142,12 +147,12 @@ public class BinaryAligner implements Aligner{
             }
             
         }
-        AlignmentResultRead alinResult = new AlignmentResultRead();  
+        //AlignmentResultRead alinResult = new AlignmentResultRead();  
         Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
         while(seqs.hasMoreElements()){
                     ShortgunSequence seq = seqs.nextElement();
-                    alinResult.addResult(seq);
-     
+                    seq.countAlignmentData();
+                    alinResult.addResult(seq);  
         }
         
         //return res;

@@ -6,6 +6,8 @@
 package biotec.bsi.ngs.vardetect.core.util;
 
 import biotec.bsi.ngs.vardetect.core.AlignmentResult;
+import biotec.bsi.ngs.vardetect.core.AlignmentResultRead;
+import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -216,14 +218,45 @@ public class VisualizeResult {
                 //,alignPos,chrNumber,numCount,red,redInt,yellow,yellowInt,orange,orangeInt,green,greenInt);
                 
                 System.out.format("Position %12d : Chr %2d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",alignPos,chrNumber,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
-         }
-        }       
-        
+            }
+        }           
     }
     
-    public static void countMatch(){
+    public static void visualizeAlignmentCountMatchPlusColor(AlignmentResultRead inRes){
+        /* Main method for extract result */
         
-        
+        ArrayList<ShortgunSequence> shortgunSequence = inRes.getResult();
+            
+        for(int i=0;i<shortgunSequence.size();i++){
+            
+            ShortgunSequence dummySS = shortgunSequence.get(i);
+            
+            Map<Long,long[]> alignmentCount = dummySS.getAlignmentCount();
+            System.out.println("\nAlignment result of "+ dummySS.getReadName());
+            System.out.format("            Result           \tNumMatch\tGreen\tYellow\tOrange\tRed\tGreenInt\tYellowInt\tOrangeInt\tRedInt");
+            Set allPos = alignmentCount.keySet();
+            Iterator iterPos = allPos.iterator();
+            while(iterPos.hasNext()){
+                long positionCode = (long)iterPos.next();
+                long alignPos = positionCode&mask;
+                long chrNumber = positionCode>>28;
+                long[] numCountPlusColor = alignmentCount.get(positionCode);
+                long numCount = numCountPlusColor[0];
+                long red = numCountPlusColor[1];
+                long yellow = numCountPlusColor[2];
+                long orange = numCountPlusColor[3];
+                long green = numCountPlusColor[4];
+                long redInt = numCountPlusColor[5];
+                long yellowInt = numCountPlusColor[6];
+                long orangeInt = numCountPlusColor[7];
+                long greenInt = numCountPlusColor[8];
+                
+//                System.out.println("Align at position: \t%d" + alignPos + " \ton chrNumber: " + chrNumber + " \tAlign count: " + numCount + " \tNumber of Red: " + red + " \tNumber of Yellow: " + yellow + " \tNumber of Orange: " + orange + " \tNumber of Green" + green);
+                //System.out.format("Align at position: %d\tOn chrNumber: %3d\tAlign count: %3d\tNumber of Red: %3d\tRed intensity: %3d\tNumber of Yellow: %3d\tYellow intensity: %3d\tNumber of Orange: %3d\tOrange intensity: %3d\tNumber of Green: %3d\tGreen intensity: %3d%n"
+                //,alignPos,chrNumber,numCount,red,redInt,yellow,yellowInt,orange,orangeInt,green,greenInt);
+                
+                System.out.format("Position %12d : Chr %2d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",alignPos,chrNumber,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+            }       
+        }    
     }
-    
 }

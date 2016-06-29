@@ -40,4 +40,25 @@ public class MerRead {
         }                
     }
     
+    public void createAlignmentResult(){
+        for(int i =0;i<this.chrPos.size();i++){
+            
+            long newAlignResult = (chrPos.get(i)-this.index);
+            chrAlgn.add(newAlignResult);
+            
+        }        
+    }
+    
+    public ArrayList<Long> getAlignmentResult(){
+        return this.chrAlgn;
+    }
+    
+    public long getMerCode(){
+        return this.merCode;
+    }
+    
+    public int getMerIndex(){
+        return this.index;
+    }
+    
 }
