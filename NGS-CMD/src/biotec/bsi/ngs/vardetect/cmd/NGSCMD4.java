@@ -65,17 +65,17 @@ public class NGSCMD4 {
         
         //System.out.println("Size of Result: " + align.getAlignmentCount().size());
         
-//        VisualizeResult.visualizeAlignmentCountMatchPlusColor(align);
+        VisualizeResult.visualizeAlignmentCountMatchPlusColor(align);
         
-//        align.writeToPath(ref.getPath(), "txt");
+        align.writeToPath(ref.getPath(), "txt");
         
         // Create save result path by just plugin AlignmentResult
         
-        System.out.println("Size new resutlt check " + align.getResult().size());
-        System.out.println("Data check"+align.getResult().get(0).getReadName());
-        System.out.println("Data check"+align.getResult().get(0).getSequence());
+        System.out.println(" Size new resutl check " + align.getResult().size());
+        System.out.println(" Data check "+align.getResult().get(0).getReadName());
+        System.out.println(" Data check "+align.getResult().get(0).getSequence());
         
-        
+        System.out.println(" Data check align result map empty or not : "+align.getResult().get(0).getAlignmentCount().isEmpty());
         //VisualizeResult.visualizeAlignmentResult(align);
         
         // Pass!! Next create represent data part //
