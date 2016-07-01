@@ -106,23 +106,23 @@ public class BinaryAligner implements Aligner{
                             //System.out.println("Check seq length" + seq.getShortgunLength());
                             int totalMer = (seq.getShortgunLength()-mer)+1;
                             
-                            /* New Implement Part */
+                            /* -------------------------New Implement Part (Stroe in object)---------------------------------------------*/
                             if (seq.getMerReadSize() < totalMer){
                                 MerRead merRead = new MerRead();
                                 merRead.addMatchResult(m, pos2, index);
                                 seq.addMerRead(merRead);
-                                System.out.println("(First Time) Size Mer Read check: " + seq.getMerReadSize());
+//                                System.out.println("(First Time) Size Mer Read check: " + seq.getMerReadSize());
                             }else{
-                                System.out.println("(Other time) Size Mer Read check: " + seq.getMerReadSize());
+//                                System.out.println("(Other time) Size Mer Read check: " + seq.getMerReadSize());
                                 if (index<seq.getMerReadSize()){
-                                    System.out.println("Check Index: " + index);
+//                                    System.out.println("Check Index: " + index);
                                     MerRead merRead = seq.getMerRead().get(index); // call back existing merRead to update
                                     merRead.addMatchResult(m, pos2, index);
                                     seq.addMerReadByIndex(index,merRead);
-                                    System.out.println("(Other time) Should be constant: Size Mer Read check: " + seq.getMerReadSize());
+//                                    System.out.println("(Other time) Should be constant: Size Mer Read check: " + seq.getMerReadSize());
                                 }                                   
                             }
-                            /*----------------------*/
+                            /*-----------------------------------------------------------------------------------------------------------*/
                             
                         }
                     //System.out.println(" This mer Map check: "+ (merMap == null));

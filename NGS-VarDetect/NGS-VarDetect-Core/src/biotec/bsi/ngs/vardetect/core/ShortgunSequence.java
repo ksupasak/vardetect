@@ -6,8 +6,10 @@
 package biotec.bsi.ngs.vardetect.core;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -17,16 +19,21 @@ public class ShortgunSequence {
  
     private String seq;
     private String readName;
-    private
+    private int threshold = 0;
+    
     ArrayList<MerRead> mers;
-    ArrayList<AlignmentData> algns;
+    //ArrayList<AlignmentData> algns;
     Map<Long,long[]> countResult;
+    Map<Long,long[]> countResultSorted;
+    Map<Long,long[]> countResultSortedCut;
     
     public ShortgunSequence(String seq){
         this.seq = seq;
         this.mers = new ArrayList();
-        this.algns = new ArrayList();
+        //this.algns = new ArrayList();
         this.countResult = new LinkedHashMap();
+        this.countResultSorted = new LinkedHashMap();
+        this.countResultSortedCut = new LinkedHashMap();
     }
     
     public void addReadName(String readName){
@@ -40,9 +47,9 @@ public class ShortgunSequence {
         this.mers.set(idx, mer);
     }
 
-    public void addAlignmentData(AlignmentData algn){
-        this.algns.add(algn);
-    }
+//    public void addAlignmentData(AlignmentData algn){
+//        this.algns.add(algn);
+//    }
     
      public int getMerReadSize(){
         return this.mers.size();
@@ -65,6 +72,132 @@ public class ShortgunSequence {
     
     public Map<Long,long[]> getAlignmentCount(){
         return this.countResult;
+    }
+    
+    public Map<Long,long[]> getAlignmentCountSorted(){
+        sortCountResult();
+        return this.countResultSorted;
+    }
+    
+    public Map<Long,long[]> getAlignmentCountSortedCut(int th){
+        this.threshold = th;
+        this.countResultSortedCut = new LinkedHashMap();
+        sortCountCutResult();
+        return this.countResultSortedCut;
+    }
+    
+    public void sortCountResult(){
+        long oldCount = 0;
+        long newCount = 0;
+        long contaiCheck = 0;
+        int i =0;
+        Object selectKey = null;
+        int numKey = this.countResult.size();
+
+//        Iterator roundIter = this.countResult.keySet().iterator();
+//        Iterator keyIter = this.countResult.keySet().iterator();
+        
+        Set set = this.countResult.keySet();
+        Iterator roundIter = set.iterator();
+        
+//        System.out.println("Check Key Size: "+ set.size());
+        
+        while(roundIter.hasNext()){
+   
+//            System.out.println("Do sorting round: "+ i);
+            if(this.countResultSorted.containsKey(roundIter.next())){
+                
+            }else{
+                Iterator keyIter = set.iterator();
+                while(keyIter.hasNext()){
+                    Object key = keyIter.next();
+                    if(this.countResultSorted.containsKey(key)){
+
+                    }else{
+                        newCount = this.countResult.get(key)[0];
+//                        System.out.println("Check newCount: "+newCount);
+//                        System.out.println("Check oldCount: "+oldCount);
+
+                        if(newCount > oldCount){
+                            oldCount = newCount;
+                            selectKey = key;
+//                            System.out.println("New>Old (Not Exist) Check OldCount: " + oldCount);
+//                            System.out.println("New>Old (Not Exist) Check Key: " + selectKey);
+                        }else if(newCount == oldCount){
+                            oldCount = newCount;
+                            selectKey = key;
+//                            System.out.println("New=Old (Not Exist) Check OldCount: " + oldCount);
+//                            System.out.println("New=Old (Not Exist) Check Key: " + selectKey);
+                        }
+                    }         
+                }
+//                System.out.println("Last check all value before collecting: Key="+selectKey+"Value count"+this.countResult.get(selectKey)[0]);
+                this.countResultSorted.put((long)selectKey, this.countResult.get(selectKey));
+            }
+//            System.out.println("oldCount Round Loop: "+ oldCount);
+            oldCount = 0;
+//            System.out.println("Set zero oldCount Round Loop: "+ oldCount);
+            i++;
+        }
+        
+    }
+    
+    public void sortCountCutResult(){
+        long oldCount = 0;
+        long newCount = 0;
+        long containCheck = 0;
+        int i =0;
+        Object selectKey = null;
+        int numKey = this.countResult.size();
+
+//        Iterator roundIter = this.countResult.keySet().iterator();
+//        Iterator keyIter = this.countResult.keySet().iterator();
+        
+        Set set = this.countResult.keySet();
+        Iterator roundIter = set.iterator();
+        
+//        System.out.println("Check Key Size: "+ set.size());
+        
+        while(roundIter.hasNext()){
+   
+//            System.out.println("Do sorting round: "+ i);
+            if(this.countResultSortedCut.containsKey(roundIter.next())){
+                
+            }else{
+                Iterator keyIter = set.iterator();
+                while(keyIter.hasNext()){
+                    Object key = keyIter.next();
+                    if(this.countResultSortedCut.containsKey(key)){
+
+                    }else{
+                        newCount = this.countResult.get(key)[0];
+//                        System.out.println("Check newCount: "+newCount);
+//                        System.out.println("Check oldCount: "+oldCount);
+
+                        if(newCount > oldCount){
+                            oldCount = newCount;
+                            selectKey = key;
+//                            System.out.println("New>Old (Not Exist) Check OldCount: " + oldCount);
+//                            System.out.println("New>Old (Not Exist) Check Key: " + selectKey);
+                        }else if(newCount == oldCount){
+                            oldCount = newCount;
+                            selectKey = key;
+//                            System.out.println("New=Old (Not Exist) Check OldCount: " + oldCount);
+//                            System.out.println("New=Old (Not Exist) Check Key: " + selectKey);
+                        }
+                    }         
+                }
+//                System.out.println("Last check all value before collecting: Key="+selectKey+"Value count"+this.countResult.get(selectKey)[0]);
+                if(this.countResult.get(selectKey)[0]>=this.threshold||this.countResult.get(selectKey)[1]<=this.threshold){
+                    this.countResultSortedCut.put((long)selectKey, this.countResult.get(selectKey));
+                }
+            }
+//            System.out.println("oldCount Round Loop: "+ oldCount);
+            oldCount = 0;
+//            System.out.println("Set zero oldCount Round Loop: "+ oldCount);
+            i++;
+        }
+        
     }
     
     public void countAlignmentData(){

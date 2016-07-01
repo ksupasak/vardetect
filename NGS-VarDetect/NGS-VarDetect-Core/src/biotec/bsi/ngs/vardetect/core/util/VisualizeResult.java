@@ -195,7 +195,7 @@ public class VisualizeResult {
             Object readName = iterRead.next();
             Map<Long,long[]> countMap =  readList.get(readName);
             System.out.println("\nAlignment result of "+ readName);
-            System.out.format("            Result           \tNumMatch\tGreen\tYellow\tOrange\tRed\tGreenInt\tYellowInt\tOrangeInt\tRedInt");
+            System.out.format("            Result           \tNumMatch\tGreen\tYellow\tOrange\tRed\tGreenInt\tYellowInt\tOrangeInt\tRedInt%n");
             Set allPos = countMap.keySet();
             Iterator iterPos = allPos.iterator();
             while(iterPos.hasNext()){
@@ -224,16 +224,17 @@ public class VisualizeResult {
     
     public static void visualizeAlignmentCountMatchPlusColor(AlignmentResultRead inRes){
         /* Main method for extract result */
-        
+        System.out.println("Visualize Alignment Result (From new result structure)");
+        System.out.println();
         ArrayList<ShortgunSequence> shortgunSequence = inRes.getResult();
             
         for(int i=0;i<shortgunSequence.size();i++){
             
             ShortgunSequence dummySS = shortgunSequence.get(i);
             
-            Map<Long,long[]> alignmentCount = dummySS.getAlignmentCount();
+            Map<Long,long[]> alignmentCount = dummySS.getAlignmentCountSorted();
             System.out.println("\nAlignment result of "+ dummySS.getReadName());
-            System.out.format("            Result           \tNumMatch\tGreen\tYellow\tOrange\tRed\tGreenInt\tYellowInt\tOrangeInt\tRedInt");
+            System.out.format("            Result           \tNumMatch\tGreen\tYellow\tOrange\tRed\tGreenInt\tYellowInt\tOrangeInt\tRedInt%n");
             Set allPos = alignmentCount.keySet();
             Iterator iterPos = allPos.iterator();
             while(iterPos.hasNext()){
