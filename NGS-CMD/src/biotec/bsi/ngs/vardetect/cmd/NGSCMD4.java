@@ -67,15 +67,17 @@ public class NGSCMD4 {
         
         VisualizeResult.visualizeAlignmentCountMatchPlusColor(align);
         
-        align.writeToPath(ref.getPath(), "txt");
+        align.writeSortedResultToPath(ref.getPath(), "txt");
+        align.writeUnSortedResultToPath(ref.getPath(), "txt");
+        align.writeSortedCutResultToPath(ref.getPath(), "txt", 5);
         
         // Create save result path by just plugin AlignmentResult
         
-        System.out.println(" Size new resutl check " + align.getResult().size());
-        System.out.println(" Data check "+align.getResult().get(0).getReadName());
-        System.out.println(" Data check "+align.getResult().get(0).getSequence());
-        
-        System.out.println(" Data check align result map empty or not : "+align.getResult().get(0).getAlignmentCount().isEmpty());
+//        System.out.println(" Size new resutl check " + align.getResult().size());
+//        System.out.println(" Data check "+align.getResult().get(0).getReadName());
+//        System.out.println(" Data check "+align.getResult().get(0).getSequence());
+//        
+//        System.out.println(" Data check align result map empty or not : "+align.getResult().get(0).getAlignmentCount().isEmpty());
         //VisualizeResult.visualizeAlignmentResult(align);
         
         // Pass!! Next create represent data part //
