@@ -71,6 +71,17 @@ public class NGSCMD4 {
         align.writeUnSortedResultToPath(ref.getPath(), "txt");
         align.writeSortedCutResultToPath(ref.getPath(), "txt", 5);
         
+        align.createAllClusterCode();
+        align.createAllClusterCodeSorted();
+        
+        for(int i =0;i<align.getAllClusterCode().length;i++){
+            System.out.println("Check cluster code: " + align.getAllClusterCode()[i]);
+        }
+        for(int i =0;i<align.getAllClusterCode().length;i++){
+            System.out.println("Check cluster code sorted: " + align.getAllClusterCodeSorted()[i]);
+        }
+        
+        align.createGroupingResult();
         // Create save result path by just plugin AlignmentResult
         
 //        System.out.println(" Size new resutl check " + align.getResult().size());
