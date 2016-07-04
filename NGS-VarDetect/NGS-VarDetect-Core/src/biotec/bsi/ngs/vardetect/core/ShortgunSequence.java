@@ -20,6 +20,7 @@ public class ShortgunSequence {
     private String seq;
     private String readName;
     private int threshold = 0;
+    private long clusterCode = 0;
     
     ArrayList<MerRead> mers;
     //ArrayList<AlignmentData> algns;
@@ -86,6 +87,19 @@ public class ShortgunSequence {
         return this.countResultSortedCut;
     }
     
+    public long getClusterCode(){
+        this.clusterCode = 0;
+        Set set = this.countResultSortedCut.keySet();
+        Iterator keyIter = set.iterator();
+        
+        while(keyIter.hasNext()){
+            //System.out.println("Read name" + readName + " Cluster Code Check : " + this.clusterCode);
+            this.clusterCode = this.clusterCode + (long)keyIter.next();
+            //System.out.println("Read name" + readName + " Cluster Code Check : " + this.clusterCode);
+        }
+        return this.clusterCode;
+    }
+    
     public void sortCountResult(){
         long oldCount = 0;
         long newCount = 0;
@@ -103,37 +117,37 @@ public class ShortgunSequence {
 //        System.out.println("Check Key Size: "+ set.size());
         
         while(roundIter.hasNext()){
-   
+              roundIter.next();
 //            System.out.println("Do sorting round: "+ i);
-            if(this.countResultSorted.containsKey(roundIter.next())){
-                
-            }else{
-                Iterator keyIter = set.iterator();
-                while(keyIter.hasNext()){
-                    Object key = keyIter.next();
-                    if(this.countResultSorted.containsKey(key)){
 
-                    }else{
-                        newCount = this.countResult.get(key)[0];
+            Iterator keyIter = set.iterator();
+            while(keyIter.hasNext()){
+                Object key = keyIter.next();
+                if(this.countResultSorted.containsKey(key)){
+
+                }else{
+                    newCount = this.countResult.get(key)[0];
 //                        System.out.println("Check newCount: "+newCount);
 //                        System.out.println("Check oldCount: "+oldCount);
 
-                        if(newCount > oldCount){
-                            oldCount = newCount;
-                            selectKey = key;
+                    if(newCount > oldCount){
+                        oldCount = newCount;
+                        selectKey = key;
 //                            System.out.println("New>Old (Not Exist) Check OldCount: " + oldCount);
 //                            System.out.println("New>Old (Not Exist) Check Key: " + selectKey);
-                        }else if(newCount == oldCount){
-                            oldCount = newCount;
-                            selectKey = key;
+                    }else if(newCount == oldCount){
+                        oldCount = newCount;
+                        selectKey = key;
 //                            System.out.println("New=Old (Not Exist) Check OldCount: " + oldCount);
 //                            System.out.println("New=Old (Not Exist) Check Key: " + selectKey);
-                        }
-                    }         
-                }
+                    }
+                }         
+            }
 //                System.out.println("Last check all value before collecting: Key="+selectKey+"Value count"+this.countResult.get(selectKey)[0]);
+            if (selectKey != null){
                 this.countResultSorted.put((long)selectKey, this.countResult.get(selectKey));
             }
+
 //            System.out.println("oldCount Round Loop: "+ oldCount);
             oldCount = 0;
 //            System.out.println("Set zero oldCount Round Loop: "+ oldCount);
@@ -159,11 +173,9 @@ public class ShortgunSequence {
 //        System.out.println("Check Key Size: "+ set.size());
         
         while(roundIter.hasNext()){
-   
+              roundIter.next();
 //            System.out.println("Do sorting round: "+ i);
-            if(this.countResultSortedCut.containsKey(roundIter.next())){
-                
-            }else{
+
                 Iterator keyIter = set.iterator();
                 while(keyIter.hasNext()){
                     Object key = keyIter.next();
@@ -188,10 +200,18 @@ public class ShortgunSequence {
                     }         
                 }
 //                System.out.println("Last check all value before collecting: Key="+selectKey+"Value count"+this.countResult.get(selectKey)[0]);
-                if(this.countResult.get(selectKey)[0]>=this.threshold||this.countResult.get(selectKey)[1]<=this.threshold){
-                    this.countResultSortedCut.put((long)selectKey, this.countResult.get(selectKey));
+                if(selectKey != null){
+//                    if(this.countResult.get(selectKey)[0]>=this.threshold){
+//                        if(this.countResult.get(selectKey)[1]<=this.threshold){
+//                            
+//                        }
+//                        
+//                    }
+                    if(this.countResult.get(selectKey)[0]>=this.threshold && this.countResult.get(selectKey)[1]<=this.threshold){
+                        this.countResultSortedCut.put((long)selectKey, this.countResult.get(selectKey));
+                    }
                 }
-            }
+
 //            System.out.println("oldCount Round Loop: "+ oldCount);
             oldCount = 0;
 //            System.out.println("Set zero oldCount Round Loop: "+ oldCount);
@@ -279,14 +299,14 @@ public class ShortgunSequence {
 //                       System.out.println("First time Align At: " + alignPosV2);
                     count = 1;
                     countAndColor[0] = count;
-                    countAndColor[1] = colorCode[0];
-                    countAndColor[2] = colorCode[1];
-                    countAndColor[3] = colorCode[2];
-                    countAndColor[4] = colorCode[3];
-                    countAndColor[5] = colorCode[4];
-                    countAndColor[6] = colorCode[5];
-                    countAndColor[7] = colorCode[6];
-                    countAndColor[8] = colorCode[7];
+                    countAndColor[1] = colorCode[0]; // Red
+                    countAndColor[2] = colorCode[1]; // Yellow
+                    countAndColor[3] = colorCode[2]; // orange
+                    countAndColor[4] = colorCode[3]; // green
+                    countAndColor[5] = colorCode[4]; // RedInt
+                    countAndColor[6] = colorCode[5]; // YellowInt
+                    countAndColor[7] = colorCode[6]; // OrangeInt
+                    countAndColor[8] = colorCode[7]; // GreenInt
 
                     System.out.println("This is first time of countAndColor check before put to map: Align at: "+ algnCode +" Count = " + count + " Red: "+countAndColor[1]+" Yellow: " + countAndColor[2] +" Orange: "+countAndColor[3]+ " Green: "+ countAndColor[4]);
                     System.out.println("This is first time of countAndColor check before put to map: Align at: "+ algnCode +" Count = " + count + " RedInt: "+countAndColor[5]+" YellowInt: " + countAndColor[6] +" OrangeInt: "+countAndColor[7]+ " GreenInt: "+ countAndColor[8]);

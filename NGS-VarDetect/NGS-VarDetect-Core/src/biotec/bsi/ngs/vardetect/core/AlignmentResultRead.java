@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -19,12 +20,14 @@ import java.util.Set;
  */
 public class AlignmentResultRead {
     private ArrayList<ShortgunSequence> shrtRead;
+    private ArrayList<ClusterGroup> clusterResult;
+    long[] allClusterCodeSorted;
+    long[] allClusterCode;
     private static long mask = 268435455;
     
     public AlignmentResultRead(){
         
-        this.shrtRead = new ArrayList();
-       
+       this.shrtRead = new ArrayList(); 
     }
     
     public void addResult(ShortgunSequence inRead){
@@ -34,6 +37,62 @@ public class AlignmentResultRead {
     public ArrayList<ShortgunSequence> getResult(){
     
         return this.shrtRead;
+    }
+    
+    public void createGroupingResult(){
+        long dummyCode = 0;
+        long oldDummyCode = 0;
+        
+        ClusterGroup group = new ClusterGroup();
+        for(int i =0;i<this.allClusterCodeSorted.length;i++){
+            dummyCode = this.allClusterCodeSorted[i];
+            for(int j =0;j<this.shrtRead.size();j++){
+                ShortgunSequence dummySS = shrtRead.get(j);
+                if(dummySS.getClusterCode() == dummyCode){
+                    if(i == 0){
+                        group.addShortgunRead(dummySS);
+                        oldDummyCode = dummyCode;
+                    }else if(i!=0 && Math.abs(dummyCode-oldDummyCode)<=100){
+                        group.addShortgunRead(dummySS);
+                        oldDummyCode = dummyCode;
+                    }else if(i!=0 && Math.abs(dummyCode-oldDummyCode)>100){
+                        group = new ClusterGroup();
+                        group.addShortgunRead(dummySS);
+                        oldDummyCode = dummyCode;
+                    }
+                    
+                    System.out.println(dummyCode + "\t" + dummySS.getReadName());
+                }
+            }
+        }
+    }
+    
+    public void createAllClusterCode(){
+        this.allClusterCode = new long[this.shrtRead.size()];
+        for(int i =0;i<this.shrtRead.size();i++){
+            long dummyCode = shrtRead.get(i).getClusterCode();
+            this.allClusterCode[i] = dummyCode;
+        }
+    }
+    
+    public void createAllClusterCodeSorted(){
+        this.allClusterCodeSorted = new long[this.shrtRead.size()];
+        for(int i =0;i<this.shrtRead.size();i++){
+            long dummyCode = shrtRead.get(i).getClusterCode();
+            this.allClusterCodeSorted[i] = dummyCode;
+        }
+        Arrays.sort(this.allClusterCodeSorted);
+    }
+    
+    public long[] getAllClusterCode(){
+        
+        //Arrays.sort(this.allClusterCode);
+        return this.allClusterCode;
+    }
+    
+    public long[] getAllClusterCodeSorted(){
+        
+        return this.allClusterCodeSorted;
     }
     
     public void writeSortedResultToPath(String path, String fa) throws FileNotFoundException, IOException {
@@ -70,7 +129,7 @@ public class AlignmentResultRead {
                 long greenInt = numCountPlusColor[8];
                 
                 
-                ps.format("Position %d : Chr %d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",alignPos,chrNumber,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                ps.format("Chr %d : Position %d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
             }
             ps.println();
         }
@@ -110,7 +169,7 @@ public class AlignmentResultRead {
                 long greenInt = numCountPlusColor[8];
                 
                 
-                ps.format("Position %d : Chr %d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",alignPos,chrNumber,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                ps.format("Chr %d : Position %d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
             }
             ps.println();
         }
@@ -150,7 +209,7 @@ public class AlignmentResultRead {
                 long greenInt = numCountPlusColor[8];
                 
                 
-                ps.format("Position %d : Chr %d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",alignPos,chrNumber,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                ps.format("Chr %d : Position %d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
             }
             ps.println();
         }

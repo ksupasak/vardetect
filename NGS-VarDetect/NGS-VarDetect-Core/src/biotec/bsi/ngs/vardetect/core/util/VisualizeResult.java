@@ -217,7 +217,7 @@ public class VisualizeResult {
                 //System.out.format("Align at position: %d\tOn chrNumber: %3d\tAlign count: %3d\tNumber of Red: %3d\tRed intensity: %3d\tNumber of Yellow: %3d\tYellow intensity: %3d\tNumber of Orange: %3d\tOrange intensity: %3d\tNumber of Green: %3d\tGreen intensity: %3d%n"
                 //,alignPos,chrNumber,numCount,red,redInt,yellow,yellowInt,orange,orangeInt,green,greenInt);
                 
-                System.out.format("Position %12d : Chr %2d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",alignPos,chrNumber,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                System.out.format("Chr %2d : Position %12d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
             }
         }           
     }
@@ -256,7 +256,7 @@ public class VisualizeResult {
                 //System.out.format("Align at position: %d\tOn chrNumber: %3d\tAlign count: %3d\tNumber of Red: %3d\tRed intensity: %3d\tNumber of Yellow: %3d\tYellow intensity: %3d\tNumber of Orange: %3d\tOrange intensity: %3d\tNumber of Green: %3d\tGreen intensity: %3d%n"
                 //,alignPos,chrNumber,numCount,red,redInt,yellow,yellowInt,orange,orangeInt,green,greenInt);
                 
-                System.out.format("Position %12d : Chr %2d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",alignPos,chrNumber,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                System.out.format("Chr %2d : Position %12d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
             }       
         }    
     }
