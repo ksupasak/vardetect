@@ -82,6 +82,11 @@ public class NGSCMD4 {
         }
         
         align.createGroupingResult();
+        System.out.println(" ****** Check cluster result: " + align.getclusterResult().size());
+        
+        
+        align.calculateEuclidientdistance();
+        
         // Create save result path by just plugin AlignmentResult
         
 //        System.out.println(" Size new resutl check " + align.getResult().size());
