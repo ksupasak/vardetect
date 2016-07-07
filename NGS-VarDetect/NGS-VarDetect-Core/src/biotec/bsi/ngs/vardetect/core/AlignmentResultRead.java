@@ -24,10 +24,13 @@ public class AlignmentResultRead {
     long[] allClusterCodeSorted;
     long[] allClusterCode;
     private static long mask = 268435455;
+    private ClusterGroup group;
     
     public AlignmentResultRead(){
         
-       this.shrtRead = new ArrayList(); 
+       this.shrtRead = new ArrayList();
+       this.group = new ClusterGroup();
+       this.clusterResult = new ArrayList();
     }
     
     public void addResult(ShortgunSequence inRead){
@@ -39,25 +42,86 @@ public class AlignmentResultRead {
         return this.shrtRead;
     }
     
+//    public void createdistancetable(){
+//        int sizeMax = 2;
+//        for(int i=0;i<this.shrtRead.size();i++){
+//            ShortgunSequence dummyMainSS = shrtRead.get(i);
+//            int sizeRes = dummyMainSS.countResultSortedCut.size();
+//            if (sizeRes < sizeMax){
+//                for (int k=0;k<sizeRes;k++){
+//                    long dummyPos = (long)dummyMainSS.getListPosMatch().get(k);
+//                    
+//                }
+//            }else if (sizeRes >= sizeMax){
+//                for (int k=0;k<sizeRes;k++){
+//                    long dummyPos = (long)dummyMainSS.getListPosMatch().get(k);
+//                }
+//            }
+//            
+//            
+//            
+//            for (int j=0;j<this.shrtRead.size();j++){
+//                ShortgunSequence dummySubSS = shrtRead.get(j);
+//                
+//                if(dummyMainSS.getReadName() != dummySubSS.getReadName()){
+//                    ArrayList dummyCheckSS = dummyMainSS.getListChrMatch();
+//                    dummyCheckSS.retainAll(shrtRead);
+//                    dummyMainSS.getListChrMatch().indexOf(dummyCheckSS);
+//                    
+//                    //dummyMainSS.getReadName()
+//                    //dummyMainSS.getListChrMatch().reta
+//                            
+//                }
+//            }
+//        }
+//        
+//    }
+    
+    public void calculateEuclidientdistance(){
+        double[] distanceVector = new double[shrtRead.size()];
+        
+        for(int i =0;i<shrtRead.size();i++){
+            ShortgunSequence dummyMainSS = shrtRead.get(i);
+            for(int j=0;j<shrtRead.size();j++){
+                ShortgunSequence dummySubSS = shrtRead.get(j);
+                distanceVector[j] = distance(dummyMainSS.getClusterVector(),dummySubSS.getClusterVector());
+            }
+            dummyMainSS.addDistanceVector(distanceVector);
+        }
+    }
+    
+    public double distance(long[] a, long[] b){
+        double diff_square_sum = 0.0;
+        for (int i = 0; i<a.length; i++){
+            diff_square_sum += (a[i]-b[i]) * (a[i]-b[i]);
+        }
+        return Math.sqrt(diff_square_sum);
+    }
+    
     public void createGroupingResult(){
         long dummyCode = 0;
         long oldDummyCode = 0;
         
-        ClusterGroup group = new ClusterGroup();
-        for(int i =0;i<this.allClusterCodeSorted.length;i++){
+        this.group = new ClusterGroup();
+        for(int i = 0;i<this.allClusterCodeSorted.length;i++){
             dummyCode = this.allClusterCodeSorted[i];
             for(int j =0;j<this.shrtRead.size();j++){
                 ShortgunSequence dummySS = shrtRead.get(j);
                 if(dummySS.getClusterCode() == dummyCode){
                     if(i == 0){
-                        group.addShortgunRead(dummySS);
+                        System.out.println(" Check : Do adding in first group (First time) i = " + i+ " : j =  "+j );
+                        this.group.addShortgunRead(dummySS);
                         oldDummyCode = dummyCode;
                     }else if(i!=0 && Math.abs(dummyCode-oldDummyCode)<=100){
-                        group.addShortgunRead(dummySS);
+                        System.out.println(" Check : Do adding in group : i = " + i+ " : j =  "+j);
+                        this.group.addShortgunRead(dummySS);
                         oldDummyCode = dummyCode;
                     }else if(i!=0 && Math.abs(dummyCode-oldDummyCode)>100){
-                        group = new ClusterGroup();
-                        group.addShortgunRead(dummySS);
+                        this.clusterResult.add(this.group); // adding to array before renew it
+                        System.out.println(" Check : Do create new group and add to new group : i = " + i+ " : j =  "+j);
+                        
+                        this.group = new ClusterGroup();
+                        this.group.addShortgunRead(dummySS);
                         oldDummyCode = dummyCode;
                     }
                     
@@ -65,6 +129,7 @@ public class AlignmentResultRead {
                 }
             }
         }
+        this.clusterResult.add(this.group); // adding to array (for last group)
     }
     
     public void createAllClusterCode(){
@@ -82,6 +147,11 @@ public class AlignmentResultRead {
             this.allClusterCodeSorted[i] = dummyCode;
         }
         Arrays.sort(this.allClusterCodeSorted);
+    }
+    
+    public ArrayList<ClusterGroup> getclusterResult(){
+        
+        return this.clusterResult;
     }
     
     public long[] getAllClusterCode(){

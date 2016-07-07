@@ -20,10 +20,10 @@ public class ClusterGroup {
     }
     
     public void addShortgunRead(ShortgunSequence readSS){
-        
+        this.clusterRead.add(readSS);
     }
     
     public ArrayList<ShortgunSequence> getShortgunRead(){
-        return null;
+        return this.clusterRead;
     }
 }

@@ -21,8 +21,15 @@ public class ShortgunSequence {
     private String readName;
     private int threshold = 0;
     private long clusterCode = 0;
+    private static long mask = 268435455;
+    private long[] clusterVector;
+    private double[] distanceVector;
     
     ArrayList<MerRead> mers;
+    ArrayList listChr;
+    ArrayList listPos;
+    ArrayList listResultCode;
+    ArrayList<VectorResult> listVector;
     //ArrayList<AlignmentData> algns;
     Map<Long,long[]> countResult;
     Map<Long,long[]> countResultSorted;
@@ -35,6 +42,11 @@ public class ShortgunSequence {
         this.countResult = new LinkedHashMap();
         this.countResultSorted = new LinkedHashMap();
         this.countResultSortedCut = new LinkedHashMap();
+        this.listChr = new ArrayList();
+        this.listPos = new ArrayList();
+        this.listResultCode = new ArrayList();
+        this.clusterVector = new long[24];
+        
     }
     
     public void addReadName(String readName){
@@ -44,6 +56,7 @@ public class ShortgunSequence {
     public void addMerRead(MerRead mer){
         this.mers.add(mer);
     }
+    
     public void addMerReadByIndex(int idx,MerRead mer){
         this.mers.set(idx, mer);
     }
@@ -52,13 +65,22 @@ public class ShortgunSequence {
 //        this.algns.add(algn);
 //    }
     
-     public int getMerReadSize(){
+    public void addDistanceVector(double[] a){
+        distanceVector = a;
+    }
+    
+    public double[] getDistanceVector(){
+        return distanceVector;
+    }
+    
+    public int getMerReadSize(){
         return this.mers.size();
     }
     
     public ArrayList<MerRead> getMerRead(){
         return this.mers;
     }
+    
     public String getReadName(){
         return readName;
     }
@@ -98,6 +120,47 @@ public class ShortgunSequence {
             //System.out.println("Read name" + readName + " Cluster Code Check : " + this.clusterCode);
         }
         return this.clusterCode;
+    }
+    
+    public ArrayList getListChrMatch(){        
+        return this.listChr;
+    }
+    
+    public ArrayList getListPosMatch(){
+        return this.listPos;
+    }
+    
+    public long[] getClusterVector(){
+        return clusterVector;
+    }
+    
+//    public void createVectorAll(String choice){
+//        
+//        ArrayList<VectorResult> listVector = new ArrayList();
+//        for (int i=0;i<listChr.size();i++){
+//            for (int j=i+1;j<listChr.size();j++){
+//                VectorResult vectorResult = new VectorResult();
+//                vectorResult.addChrPosCode((long)listResultCode.get(i),(long)listResultCode.get(j));
+//                listVector.add(vectorResult);
+//            }    
+//        }
+//    }
+    
+    public void createVectorTopTwo(){
+        clusterVector = new long[24];
+
+        listVector = new ArrayList();
+        VectorResult vectorResult = new VectorResult();
+        
+        if(listResultCode.size()==1){
+            int index = (int)listChr.get(0);
+            clusterVector[index] = (long)listPos.get(0);
+        }else{
+            int index = (int)listChr.get(0);
+            clusterVector[index] = (long)listPos.get(0);
+            index = (int)listChr.get(1);
+            clusterVector[index] = (long)listPos.get(0);
+        }
     }
     
     public void sortCountResult(){
@@ -209,6 +272,12 @@ public class ShortgunSequence {
 //                    }
                     if(this.countResult.get(selectKey)[0]>=this.threshold && this.countResult.get(selectKey)[1]<=this.threshold){
                         this.countResultSortedCut.put((long)selectKey, this.countResult.get(selectKey));
+                        long chr = ((long)selectKey)>>28;
+                        long pos = ((long)selectKey&this.mask);
+                        listChr.add(chr);
+                        listPos.add(pos);
+                        listResultCode.add(selectKey);
+                        
                     }
                 }
 
