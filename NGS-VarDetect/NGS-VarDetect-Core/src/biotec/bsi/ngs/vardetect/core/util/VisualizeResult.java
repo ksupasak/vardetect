@@ -260,4 +260,44 @@ public class VisualizeResult {
             }       
         }    
     }
+    
+    public static void visualizeDistanceTable(AlignmentResultRead inRes){
+//        ArrayList<ShortgunSequence> listSS = inRes.getResult();
+//        
+//        System.out.println("Distance Table (Between Read and Read)");
+//        for(int i=0;i<listSS.size();i++){
+//            ShortgunSequence dummySS = listSS.get(i);
+//            System.out.print("Name: " + dummySS.getReadName() + "\t\t");
+//            double[] dummyDistance = dummySS.getDistanceVector();
+//            for(int j=0 ; j<dummyDistance.length;j++){
+//                System.out.print(dummyDistance[j]+"\t");
+//            }
+//            System.out.println();    
+//        }
+        
+        
+        ArrayList<ShortgunSequence> shrtRead = inRes.getResult();
+        System.out.println("Distance Table");
+        System.out.format("Reads Name");
+        for (int i=0;i<shrtRead.size();i++){           // Loop Mer by Mer
+            
+            ShortgunSequence dummySS = shrtRead.get(i);
+        //--------------------------    
+
+        //---------------------------------
+ 
+            System.out.format("\t%10s",dummySS.getReadName());
+        }
+        System.out.println();
+        for (int i=0;i<shrtRead.size();i++){ 
+            ShortgunSequence dummySS = shrtRead.get(i);
+            System.out.print("Name: "+dummySS.getReadName());
+            
+            for(int j=0;j<shrtRead.size();j++){
+                System.out.format("\t%10.5f", dummySS.getDistanceVector()[j]);
+            }
+            System.out.println();
+        }
+        
+    }
 }

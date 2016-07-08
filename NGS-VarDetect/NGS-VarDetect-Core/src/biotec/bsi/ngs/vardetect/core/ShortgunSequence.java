@@ -46,6 +46,7 @@ public class ShortgunSequence {
         this.listPos = new ArrayList();
         this.listResultCode = new ArrayList();
         this.clusterVector = new long[24];
+        this.distanceVector = new double[24];
         
     }
     
@@ -131,6 +132,12 @@ public class ShortgunSequence {
     }
     
     public long[] getClusterVector(){
+        createVectorTopTwo();
+        System.out.print(readName + ": This is clusterVector vector check:\t");
+        for (int i = 0; i<clusterVector.length;i++){
+            System.out.print(clusterVector[i] + "\t");
+        }
+        System.out.println();
         return clusterVector;
     }
     
@@ -153,13 +160,13 @@ public class ShortgunSequence {
         VectorResult vectorResult = new VectorResult();
         
         if(listResultCode.size()==1){
-            int index = (int)listChr.get(0);
+            int index = Math.toIntExact((long)listChr.get(0));
             clusterVector[index] = (long)listPos.get(0);
-        }else{
-            int index = (int)listChr.get(0);
+        }else if(listResultCode.size()>1){
+            int index = Math.toIntExact((long)listChr.get(0));
             clusterVector[index] = (long)listPos.get(0);
-            index = (int)listChr.get(1);
-            clusterVector[index] = (long)listPos.get(0);
+            index = Math.toIntExact((long)listChr.get(1));
+            clusterVector[index] = (long)listPos.get(1);
         }
     }
     

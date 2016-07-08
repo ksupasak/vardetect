@@ -77,16 +77,39 @@ public class AlignmentResultRead {
 //        
 //    }
     
-    public void calculateEuclidientdistance(){
-        double[] distanceVector = new double[shrtRead.size()];
-        
+    
+    public void calculateEuclidientdistance(){ 
         for(int i =0;i<shrtRead.size();i++){
+            double[] distanceVector = new double[shrtRead.size()];
             ShortgunSequence dummyMainSS = shrtRead.get(i);
             for(int j=0;j<shrtRead.size();j++){
                 ShortgunSequence dummySubSS = shrtRead.get(j);
                 distanceVector[j] = distance(dummyMainSS.getClusterVector(),dummySubSS.getClusterVector());
+                
+                System.out.println();
+                System.out.println("DummyMainSS/"+dummyMainSS.getReadName()+" pair with DummySubSS/"+dummySubSS.getReadName()+" : distanceVector["+j+"] = "+distanceVector[j]);
+                System.out.println();
             }
+            System.out.println("Check before add to "+dummyMainSS.getReadName());
+            for(int a=0;a<distanceVector.length;a++){
+                System.out.print("\t"+distanceVector[a]);
+            }
+            System.out.println();
             dummyMainSS.addDistanceVector(distanceVector);
+            System.out.println("Check after add to "+dummyMainSS.getReadName());
+            for(int a=0;a<distanceVector.length;a++){
+                System.out.print("\t"+distanceVector[a]);
+            }
+            System.out.println();
+            
+        }
+        for(int i =0;i<shrtRead.size();i++){
+            ShortgunSequence dummyMainSS = shrtRead.get(i);
+            System.out.println("************ ReadName:"+dummyMainSS.getReadName()+" check saved vector distance ************");
+            for (int check =0;check<shrtRead.size();check++){
+                System.out.print("\t"+dummyMainSS.getDistanceVector()[check]);   
+            }
+            System.out.println();
         }
     }
     
@@ -283,6 +306,34 @@ public class AlignmentResultRead {
             }
             ps.println();
         }
+    }
+
+    public void writeDistanceTableToPath(String path, String fa) throws FileNotFoundException, IOException {
+
+       /* Must specify threshold for cut result (The result that less than threshold will be cut out)*/
+        PrintStream ps = new PrintStream(path+"_DistanceTable."+ fa);
+        
+        ps.println("Distance Table");
+        ps.format("Reads Name");
+        for (int i=0;i<this.shrtRead.size();i++){           // Loop Mer by Mer
+            
+            ShortgunSequence dummySS = this.shrtRead.get(i);
+        //--------------------------    
+
+        //---------------------------------
+ 
+            ps.format("\t%10s",dummySS.getReadName());
+        }
+        ps.println();
+        for (int i=0;i<this.shrtRead.size();i++){ 
+            ShortgunSequence dummySS = this.shrtRead.get(i);
+            ps.print("Name: "+dummySS.getReadName());
+            
+            for(int j=0;j<this.shrtRead.size();j++){
+                ps.format("\t%10.5f", dummySS.getDistanceVector()[j]);
+            }
+            ps.println();
+        }   
     }    
         
     

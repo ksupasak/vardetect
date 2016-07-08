@@ -1184,11 +1184,16 @@ public class SequenceUtil {
                 cutB = chrB.getSequence().subSequence(iniB, iniB+cutLengthB);
             }else checkB = 0;
         }
+        
             concatenateCut = cutA.toString()+cutB.toString();
- 
+            
             System.out.println("Random cut of chr" + chrA.getChrNumber() + " from position " + iniA + " : " + cutA);
             System.out.println("Random cut of chr" + chrB.getChrNumber() + " from position " + iniB + " : " + cutB);
             System.out.println("Concatenate chromosome: " + concatenateCut);
+            
+            cutA = null;
+            cutB = null;
+            System.gc();
             
             // not finish
         //}
