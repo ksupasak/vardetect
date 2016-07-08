@@ -45,8 +45,8 @@ public class NGSCMD4 {
        
         //ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
         System.out.println("Simulate Data");
-        InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGene(ref, 5, 100, 20, 21);
-        
+        //InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGene(ref, 5, 100, "20", "21");
+        InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGeneRandom(ref, 2, 100, 5);
         
         
         Aligner aligner = AlignerFactory.getAligner();
@@ -86,7 +86,8 @@ public class NGSCMD4 {
         
         
         align.calculateEuclidientdistance();
-        
+        VisualizeResult.visualizeDistanceTable(align);
+        align.writeDistanceTableToPath(ref.getPath(), "txt");
         // Create save result path by just plugin AlignmentResult
         
 //        System.out.println(" Size new resutl check " + align.getResult().size());

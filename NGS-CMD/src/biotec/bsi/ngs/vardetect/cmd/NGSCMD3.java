@@ -53,7 +53,7 @@ public class NGSCMD3 {
         ///System.out.println("Size of encode referecce : " + encode.getEncodeMap().size());
 
 
-        InputSequence is = simulateWholeGene(ref_read,5,100,20,21); 
+        InputSequence is = simulateWholeGene(ref_read,5,100,"20","21"); 
 
         //Enumeration<ShortgunSequence> e = is.seqs.elements();
         MapResult mapRes = new MapResult();
