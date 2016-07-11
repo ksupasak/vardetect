@@ -26,4 +26,5 @@ public class ClusterGroup {
     public ArrayList<ShortgunSequence> getShortgunRead(){
         return this.clusterRead;
     }
+    
 }

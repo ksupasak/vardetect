@@ -23,6 +23,7 @@ public class AlignmentResultRead {
     private ArrayList<ClusterGroup> clusterResult;
     long[] allClusterCodeSorted;
     long[] allClusterCode;
+    double[][] distanceTable;
     private static long mask = 268435455;
     private ClusterGroup group;
     
@@ -77,15 +78,25 @@ public class AlignmentResultRead {
 //        
 //    }
     
+    public double[][] getDistanceTable(){
+        return this.distanceTable;
+    }
     
-    public void calculateEuclidientdistance(){ 
+    public void createGroupCharacteristic(double threshold){
+        for(int i=0;i<this.shrtRead.size();i++){
+            shrtRead.get(i).createInGroupOutGroup(threshold);
+        }
+    }
+    
+    public void calculateEuclidientdistance(){
+        this.distanceTable = new double[shrtRead.size()][shrtRead.size()];
         for(int i =0;i<shrtRead.size();i++){
             double[] distanceVector = new double[shrtRead.size()];
             ShortgunSequence dummyMainSS = shrtRead.get(i);
             for(int j=0;j<shrtRead.size();j++){
                 ShortgunSequence dummySubSS = shrtRead.get(j);
                 distanceVector[j] = distance(dummyMainSS.getClusterVector(),dummySubSS.getClusterVector());
-                
+                this.distanceTable[i][j] = distanceVector[j];
                 System.out.println();
                 System.out.println("DummyMainSS/"+dummyMainSS.getReadName()+" pair with DummySubSS/"+dummySubSS.getReadName()+" : distanceVector["+j+"] = "+distanceVector[j]);
                 System.out.println();
@@ -330,7 +341,7 @@ public class AlignmentResultRead {
             ps.print("Name: "+dummySS.getReadName());
             
             for(int j=0;j<this.shrtRead.size();j++){
-                ps.format("\t%10.5f", dummySS.getDistanceVector()[j]);
+                ps.format("\t%10.2f", dummySS.getDistanceVector()[j]);
             }
             ps.println();
         }   

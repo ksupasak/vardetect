@@ -7,6 +7,7 @@ package biotec.bsi.ngs.vardetect.core.util;
 
 import biotec.bsi.ngs.vardetect.core.AlignmentResult;
 import biotec.bsi.ngs.vardetect.core.AlignmentResultRead;
+import biotec.bsi.ngs.vardetect.core.ClusterGroup;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -294,10 +295,24 @@ public class VisualizeResult {
             System.out.print("Name: "+dummySS.getReadName());
             
             for(int j=0;j<shrtRead.size();j++){
-                System.out.format("\t%10.5f", dummySS.getDistanceVector()[j]);
+                System.out.format("\t%10.2f", dummySS.getDistanceVector()[j]);
             }
             System.out.println();
         }
         
+    }
+    
+    public static void visualizeClusterGoup(ArrayList<ClusterGroup> listGroup){
+        System.out.println("Visualize Grouping Result");
+        for(int i=0;i<listGroup.size();i++){
+            ClusterGroup dummyCG = listGroup.get(i);
+            System.out.print("Group" + i + ":");
+            ArrayList<ShortgunSequence> listSS = dummyCG.getShortgunRead();
+            for(int j=0;j<listSS.size();j++){
+                ShortgunSequence dummySS = listSS.get(j);
+                System.out.print("\t"+dummySS.getReadName());
+            }
+            System.out.println();
+        }  
     }
 }

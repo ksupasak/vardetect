@@ -29,6 +29,8 @@ public class ShortgunSequence {
     ArrayList listChr;
     ArrayList listPos;
     ArrayList listResultCode;
+    ArrayList inGroup;
+    ArrayList outGroup;        
     ArrayList<VectorResult> listVector;
     //ArrayList<AlignmentData> algns;
     Map<Long,long[]> countResult;
@@ -47,6 +49,8 @@ public class ShortgunSequence {
         this.listResultCode = new ArrayList();
         this.clusterVector = new long[24];
         this.distanceVector = new double[24];
+        this.inGroup = new ArrayList();
+        this.outGroup = new ArrayList();
         
     }
     
@@ -152,6 +156,25 @@ public class ShortgunSequence {
 //            }    
 //        }
 //    }
+    
+    public ArrayList getInGroup(){
+        return this.outGroup;
+    }
+    
+    public ArrayList getOutGroup(){
+        return this.outGroup;
+    }
+    
+    public void createInGroupOutGroup(double th){
+        for(int i =0;i<this.distanceVector.length;i++){
+            double dValue = this.distanceVector[i];
+            if (dValue <= th){
+                inGroup.add(i);
+            }else{
+                outGroup.add(i);                
+            }
+        }
+    }
     
     public void createVectorTopTwo(){
         clusterVector = new long[24];
