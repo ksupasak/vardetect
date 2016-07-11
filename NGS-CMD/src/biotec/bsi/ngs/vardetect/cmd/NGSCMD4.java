@@ -10,10 +10,12 @@ import biotec.bsi.ngs.vardetect.core.Aligner;
 import biotec.bsi.ngs.vardetect.core.AlignmentResult;
 import biotec.bsi.ngs.vardetect.core.AlignmentResultRead;
 import biotec.bsi.ngs.vardetect.core.ChromosomeSequence;
+import biotec.bsi.ngs.vardetect.core.ClusterGroup;
 import biotec.bsi.ngs.vardetect.core.EncodedSequence;
 import biotec.bsi.ngs.vardetect.core.InputSequence;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
+import biotec.bsi.ngs.vardetect.core.util.Clustering;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import static biotec.bsi.ngs.vardetect.core.util.SequenceUtil.encodeSerialChromosomeSequenceV3;
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil;
@@ -88,6 +90,12 @@ public class NGSCMD4 {
         align.calculateEuclidientdistance();
         VisualizeResult.visualizeDistanceTable(align);
         align.writeDistanceTableToPath(ref.getPath(), "txt");
+        
+        
+        ArrayList<ClusterGroup> groupResult = Clustering.clusteringGroup(align, 100);
+        System.out.println(" check number of group : " + groupResult.size());
+        VisualizeResult.visualizeClusterGoup(groupResult);
+        
         // Create save result path by just plugin AlignmentResult
         
 //        System.out.println(" Size new resutl check " + align.getResult().size());
