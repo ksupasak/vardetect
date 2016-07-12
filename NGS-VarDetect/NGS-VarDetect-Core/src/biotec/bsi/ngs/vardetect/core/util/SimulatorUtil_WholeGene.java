@@ -159,7 +159,10 @@ public class SimulatorUtil_WholeGene {
             }
             System.out.println("concatenate");
             CharSequence iniTemplate = SequenceUtil.concatenateChromosome(chrA, chrB, ln_read-1, ln_read-1);
-
+            
+            chrA.lazyLoad();
+            chrB.lazyLoad();
+            
             String read;
             String readName;
             for(int j = 0;j<num_shortgun;j++){

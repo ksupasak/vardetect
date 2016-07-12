@@ -184,12 +184,12 @@ public class ShortgunSequence {
         
         if(listResultCode.size()==1){
             int index = Math.toIntExact((long)listChr.get(0));
-            clusterVector[index] = (long)listPos.get(0);
-        }else if(listResultCode.size()>1){
+            clusterVector[index-1] = (long)listPos.get(0);          //index-1 because index in java start from 0 
+        }else if(listResultCode.size()>1){                          //So for chr 24 it must be index 23 of array
             int index = Math.toIntExact((long)listChr.get(0));
-            clusterVector[index] = (long)listPos.get(0);
+            clusterVector[index-1] = (long)listPos.get(0);
             index = Math.toIntExact((long)listChr.get(1));
-            clusterVector[index] = (long)listPos.get(1);
+            clusterVector[index-1] = (long)listPos.get(1);
         }
     }
     
