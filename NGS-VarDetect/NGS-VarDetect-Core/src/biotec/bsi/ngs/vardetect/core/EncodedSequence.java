@@ -17,6 +17,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -31,13 +32,14 @@ public class EncodedSequence {
 
     //Hashtable<Long,Long> map;
     //TreeMap<Long,Long> map;
-    long mers[];
+    long mers[];            // Store reference sequence of specific chr for mapping propose
     
     Map<Long,Long> map;
     String name;
     
     public long mask = -268435456;
     public long mask2 = 268435455;
+    public long mask36Bit = 68719476735L;
     
     
     void EncodedSequence(){
@@ -76,14 +78,17 @@ public class EncodedSequence {
 //            System.out.println(" size "+(stop-start));
             long j[] = new long[stop-start]; 
             
-            for(int i =start;i<stop;i++){
-                if(i-start>=0&&i>=0)
-                j[i-start] = mers[i]&mask2;
-                        
-            }
-            
-            
-            return j;
+                for(int i =start;i<stop;i++){
+                    if(i-start>=0&&i>=0)
+                    j[i-start] = mers[i]&mask2;
+                    System.out.println();
+                    System.out.println("Check mers the value should be 64 bit : " + mers[i] );
+                    System.out.println("Check j the value should be 28 bit : " + j[i-start]);
+                    System.out.println();
+                }
+
+
+                return j;
             }
             else
                 return null;
@@ -93,7 +98,7 @@ public class EncodedSequence {
             
         }
         
-        
+        createComplimentStrand();
         return null;
     }
     
@@ -288,6 +293,34 @@ public class EncodedSequence {
         
          this.mers = null;
 
+    }
+    
+    public void createComplimentStrand(){
+        
+        System.out.println(" Create compliment strand ");
+        for(int i=0;i<this.mers.length;i++){
+            long dummyMerPos = this.mers[i];
+            System.out.println("Check fullcode dummyMerPos: " + dummyMerPos);
+            long dummyMer = dummyMerPos>>28;
+            long dummyPos = dummyMerPos&mask2;
+            
+            // Reconstruct (compliment DNA sequence)
+            System.out.println("Check mer sequemce befor compliment : " + dummyMer);
+            long dummyNewMer = (~dummyMer)&mask36Bit;
+            System.out.println("Check mer sequemce after compliment : " + dummyNewMer);
+            System.out.println("Check Position before reverse : " + dummyPos);
+            long dummyNewPos = (this.mers.length-1)-dummyPos; // length-1 because assume array has 10 member ; length is 10 but maximum it index is 9 becaus index start at 0 
+            // To get new inverse of position value, use this fomular (max index - old index) **Ex. old index is 9 so the inverse of it is (9 - 9) = 0 that's correct!! **
+            // Replace to long[] 
+            System.out.println("Check Position after reverse : " + dummyNewPos);
+            System.out.println("Check max index is : " + (this.mers.length-1));
+            long dummyNewMerPos = (dummyNewMer<<28)+dummyNewPos;
+            System.out.println("Check fullcode dummyNewMerPost : " + dummyNewMerPos);
+        }
+        
+        // re-sorted long[]
+        Arrays.sort(this.mers);
+        
     }
                
                

@@ -101,14 +101,27 @@ public class BinaryAligner implements Aligner{
 //                            System.out.println(""+chr.getName()+" "+sub+" "+sub.length()+" : "+m+" pos : "+pos+" idx : "+idx);
                             
                             System.out.print("\t"+pos);
-                            merMap = res.addResult(m, chr.getChrNumber(), pos2);
+                            if(pos2!=null){
+                                    System.out.println();
+                                    System.out.println("Before Mermap this is pos2 Check: before add to mer read = " + pos2[0]);
+                                    System.out.println();
+                                }
+                            merMap = res.addResult(m, chr.getChrNumber(), pos2); // Still confuse After pss this line all member in pos2 will chang from 28 bit of position to 36 bit of chr:Pos Hoe did it happen !!!
+                            // But it work!
+                            if(pos2!=null){
+                                    System.out.println();
+                                    System.out.println("After mer map this is pos2 Check: before add to mer read = " + pos2[0]);
+                                    System.out.println();
+                                }
                             res.addResultV2(m, chr.getChrNumber(), pos2, seq.getReadName());
                             //System.out.println("Check seq length" + seq.getShortgunLength());
                             int totalMer = (seq.getShortgunLength()-mer)+1;
                             
+                            /*************************************************************************************************************/
                             /* -------------------------New Implement Part (Stroe in object)---------------------------------------------*/
                             if (seq.getMerReadSize() < totalMer){
                                 MerRead merRead = new MerRead();
+                                
                                 merRead.addMatchResult(m, pos2, index);
                                 seq.addMerRead(merRead);
 //                                System.out.println("(First Time) Size Mer Read check: " + seq.getMerReadSize());
@@ -123,6 +136,7 @@ public class BinaryAligner implements Aligner{
                                 }                                   
                             }
                             /*-----------------------------------------------------------------------------------------------------------*/
+                            /*************************************************************************************************************/
                             
                         }
                     //System.out.println(" This mer Map check: "+ (merMap == null));

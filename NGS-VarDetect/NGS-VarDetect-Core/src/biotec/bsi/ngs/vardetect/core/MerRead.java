@@ -44,6 +44,10 @@ public class MerRead {
         for(int i =0;i<this.chrPos.size();i++){
             
             long newAlignResult = (chrPos.get(i)-this.index);
+            System.out.println();
+            System.out.println("Check chrPos " + chrPos.get(i));
+            System.out.println("Check chrPos tranform to chrnumber" + (chrPos.get(i)>>28));
+            System.out.println();
             chrAlgn.add(newAlignResult);
             
         }        
