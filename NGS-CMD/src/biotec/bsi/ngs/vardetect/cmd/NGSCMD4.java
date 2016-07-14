@@ -72,7 +72,7 @@ public class NGSCMD4 {
         align.writeSortedResultToPath(ref.getPath(), "txt");
         align.writeUnSortedResultToPath(ref.getPath(), "txt");
         align.writeSortedCutResultToPath(ref.getPath(), "txt", 5);
-        
+        /* Old Grouping algorithm
         align.createAllClusterCode();
         align.createAllClusterCodeSorted();
         
@@ -85,7 +85,7 @@ public class NGSCMD4 {
         
         align.createGroupingResult();
         System.out.println(" ****** Check cluster result: " + align.getclusterResult().size());
-        
+        */
         
         align.calculateEuclidientdistance();
         VisualizeResult.visualizeDistanceTable(align);
