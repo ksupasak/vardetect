@@ -19,7 +19,7 @@ public class Clustering {
     public static ArrayList<ClusterGroup> clusteringGroup(AlignmentResultRead inAlnRead, double threshold){
         ArrayList<ClusterGroup> listGroup = new ArrayList();
         ArrayList checkList = new ArrayList();
-        inAlnRead.createGroupCharacteristic(threshold);
+        inAlnRead.createGroupCharacteristic(threshold); // create significant data for clustering purpose
         ArrayList<ShortgunSequence> listSS = inAlnRead.getResult();
         ClusterGroup group = new ClusterGroup();
         for(int i=0;i<listSS.size();i++){

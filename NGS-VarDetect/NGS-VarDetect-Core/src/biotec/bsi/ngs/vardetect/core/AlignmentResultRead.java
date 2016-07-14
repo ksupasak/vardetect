@@ -214,13 +214,13 @@ public class AlignmentResultRead {
             
             Map<Long,long[]> countMap =  dummySS.getAlignmentCountSorted();
             ps.println(">Alignment result of "+ dummySS.getReadName());
-            ps.printf("%-30s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
+            ps.printf("%-30s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","Strand","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
             Set allPos = countMap.keySet();
             Iterator iterPos = allPos.iterator();
             while(iterPos.hasNext()){
                 long positionCode = (long)iterPos.next();
                 long alignPos = positionCode&mask;
-                long chrNumber = positionCode>>28;
+                long chrNumber = positionCode>>29; // 29 bit because positionCode have this structure [chr|strand|position]
                 long[] numCountPlusColor = countMap.get(positionCode);
                 long numCount = numCountPlusColor[0];
                 long red = numCountPlusColor[1];
@@ -232,8 +232,15 @@ public class AlignmentResultRead {
                 long orangeInt = numCountPlusColor[7];
                 long greenInt = numCountPlusColor[8];
                 
+                String strandNot = "no";
+                if(((positionCode>>28)&1) == 1){
+                    strandNot = "+";
+                }else if(((positionCode>>28)&1) == 0){
+                    strandNot = "-";
+                }   
                 
-                ps.format("Chr %d : Position %d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                
+                ps.format("Chr %2d : Position %12d\t%s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
             }
             ps.println();
         }
@@ -254,13 +261,13 @@ public class AlignmentResultRead {
             
             Map<Long,long[]> countMap =  dummySS.getAlignmentCount();
             ps.println(">Alignment result of "+ dummySS.getReadName());
-            ps.printf("%-30s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
+            ps.printf("%-30s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","Strand","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
             Set allPos = countMap.keySet();
             Iterator iterPos = allPos.iterator();
             while(iterPos.hasNext()){
                 long positionCode = (long)iterPos.next();
                 long alignPos = positionCode&mask;
-                long chrNumber = positionCode>>28;
+                long chrNumber = positionCode>>29;
                 long[] numCountPlusColor = countMap.get(positionCode);
                 long numCount = numCountPlusColor[0];
                 long red = numCountPlusColor[1];
@@ -272,8 +279,14 @@ public class AlignmentResultRead {
                 long orangeInt = numCountPlusColor[7];
                 long greenInt = numCountPlusColor[8];
                 
+                String strandNot = "no";
+                if(((positionCode>>28)&1) == 1){
+                    strandNot = "+";
+                }else if(((positionCode>>28)&1) == 0){
+                    strandNot = "-";
+                }   
                 
-                ps.format("Chr %d : Position %d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                ps.format("Chr %2d : Position %12d\t%s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
             }
             ps.println();
         }
@@ -294,13 +307,14 @@ public class AlignmentResultRead {
             
             Map<Long,long[]> countMap =  dummySS.getAlignmentCountSortedCut(threshold);
             ps.println(">Alignment result of "+ dummySS.getReadName());
-            ps.printf("%-30s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
+//            ps.printf("%-30s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
+            ps.printf("%-30s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","Strand","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
             Set allPos = countMap.keySet();
             Iterator iterPos = allPos.iterator();
             while(iterPos.hasNext()){
                 long positionCode = (long)iterPos.next();
                 long alignPos = positionCode&mask;
-                long chrNumber = positionCode>>28;
+                long chrNumber = positionCode>>29;
                 long[] numCountPlusColor = countMap.get(positionCode);
                 long numCount = numCountPlusColor[0];
                 long red = numCountPlusColor[1];
@@ -312,8 +326,15 @@ public class AlignmentResultRead {
                 long orangeInt = numCountPlusColor[7];
                 long greenInt = numCountPlusColor[8];
                 
+                String strandNot = "no";
+                if(((positionCode>>28)&1) == 1){
+                    strandNot = "+";
+                }else if(((positionCode>>28)&1) == 0){
+                    strandNot = "-";
+                }   
                 
-                ps.format("Chr %d : Position %d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+//                ps.format("Chr %d : Position %d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                ps.format("Chr %2d : Position %12d\t%s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
             }
             ps.println();
         }

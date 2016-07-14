@@ -86,7 +86,8 @@ public class BinaryAligner implements Aligner{
                         if(m!=-1){
                             m = m<<28;
 //                            long pos = encoded.align(m);
-                            long pos2[] = encoded.align2(m);
+//                            long pos2[] = encoded.align2(m);
+                            long pos2[] = encoded.fullAlign(m);
                             long pos = -1;
                             if(pos2!=null&&pos2.length>0){
                                 pos = pos2[0];
@@ -101,19 +102,19 @@ public class BinaryAligner implements Aligner{
 //                            System.out.println(""+chr.getName()+" "+sub+" "+sub.length()+" : "+m+" pos : "+pos+" idx : "+idx);
                             
                             System.out.print("\t"+pos);
-                            if(pos2!=null){
-                                    System.out.println();
-                                    System.out.println("Before Mermap this is pos2 Check: before add to mer read = " + pos2[0]);
-                                    System.out.println();
-                                }
-                            merMap = res.addResult(m, chr.getChrNumber(), pos2); // Still confuse After pss this line all member in pos2 will chang from 28 bit of position to 36 bit of chr:Pos Hoe did it happen !!!
+//                            if(pos2!=null){
+//                                    System.out.println();
+//                                    System.out.println("Before Mermap this is pos2 Check: before add to mer read = " + pos2[0]);
+//                                    System.out.println();
+//                                }
+//                            merMap = res.addResult(m, chr.getChrNumber(), pos2); // Still confuse After pss this line all member in pos2 will chang from 28 bit of position to 36 bit of chr:Pos Hoe did it happen !!!
                             // But it work!
-                            if(pos2!=null){
-                                    System.out.println();
-                                    System.out.println("After mer map this is pos2 Check: before add to mer read = " + pos2[0]);
-                                    System.out.println();
-                                }
-                            res.addResultV2(m, chr.getChrNumber(), pos2, seq.getReadName());
+//                            if(pos2!=null){
+//                                    System.out.println();
+//                                    System.out.println("After mer map this is pos2 Check: before add to mer read = " + pos2[0]);
+//                                    System.out.println();
+//                                }
+//                            res.addResultV2(m, chr.getChrNumber(), pos2, seq.getReadName());
                             //System.out.println("Check seq length" + seq.getShortgunLength());
                             int totalMer = (seq.getShortgunLength()-mer)+1;
                             
@@ -122,7 +123,7 @@ public class BinaryAligner implements Aligner{
                             if (seq.getMerReadSize() < totalMer){
                                 MerRead merRead = new MerRead();
                                 
-                                merRead.addMatchResult(m, pos2, index);
+                                merRead.addMatchResultStrand(m, pos2, index, chr.getChrNumber());
                                 seq.addMerRead(merRead);
 //                                System.out.println("(First Time) Size Mer Read check: " + seq.getMerReadSize());
                             }else{
@@ -130,7 +131,7 @@ public class BinaryAligner implements Aligner{
                                 if (index<seq.getMerReadSize()){
 //                                    System.out.println("Check Index: " + index);
                                     MerRead merRead = seq.getMerRead().get(index); // call back existing merRead to update
-                                    merRead.addMatchResult(m, pos2, index);
+                                    merRead.addMatchResultStrand(m, pos2, index, chr.getChrNumber());
                                     seq.addMerReadByIndex(index,merRead);
 //                                    System.out.println("(Other time) Should be constant: Size Mer Read check: " + seq.getMerReadSize());
                                 }                                   

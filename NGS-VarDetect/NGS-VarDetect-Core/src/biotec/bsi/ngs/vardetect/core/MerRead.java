@@ -17,16 +17,20 @@ public class MerRead {
     private int index;
     private ArrayList<Long> chrPos;
     private ArrayList<Long> chrAlgn;
+    private ArrayList<Long> chrStrandPos;
+    private ArrayList<Long> chrStrandAlgn;
     
     public MerRead(){
         this.chrPos = new ArrayList();
         this.chrAlgn = new ArrayList();
+        this.chrStrandPos = new ArrayList();
+        this.chrStrandAlgn = new ArrayList();
     
     }
     
-    // pos must be a compose number of chr:position and array of long (long[])
-    public void addMatchResult(long mer,long[] pos, int idx){
+    public void addMatchResultStrand(long mer,long[] pos, int idx, long chrNumber){
         
+        long[] code = pos;
         this.merCode = mer;
         this.index = idx;
         
@@ -34,10 +38,52 @@ public class MerRead {
             int len = pos.length;
             if(pos[0] > 0){
                 for(int i=0;i<len;i++){
-                    this.chrPos.add(pos[i]);
+                    code[i] = (chrNumber<<29)+pos[i]; // leftshift 29 bit because pos is 29 bit length [strand:position]
+//                    System.out.println();
+//                    System.out.println("This is strand check (must be 1) : " + ((code[i]>>28)&1));
+//                    System.out.println();
+                    this.chrStrandPos.add(code[i]);
                 }
             }
         }                
+    }
+    
+    // pos must be a compose number of chr:position and array of long (long[])
+    public void addMatchResult(long mer,long[] pos, int idx, long chrNumber){
+        
+        long[] code = pos;
+        this.merCode = mer;
+        this.index = idx;
+        
+        if(pos!=null&&pos.length>0){
+            int len = pos.length;
+            if(pos[0] > 0){
+                for(int i=0;i<len;i++){
+                    code[i] = (chrNumber<<28)+pos[i]; 
+                    this.chrPos.add(code[i]);
+                }
+            }
+        }                
+    }
+    
+    public void createAlignmentResultStrand(){
+        String strandNot = "no value";
+        for(int i =0;i<this.chrStrandPos.size();i++){
+            
+            long newAlignResult = (chrStrandPos.get(i)-this.index);
+            if(((chrStrandPos.get(i)>>28)&1) == 1){
+                strandNot = "+";
+            }else if(((chrStrandPos.get(i)>>28)&1) == 0){
+                strandNot = "-";
+            }        
+            System.out.println();
+            System.out.println("Check chrPos " + chrStrandPos.get(i));
+            System.out.println("Check strand : " + strandNot);
+            System.out.println("Check chrPos tranform to chrnumber" + (chrStrandPos.get(i)>>29));
+            System.out.println();
+            chrStrandAlgn.add(newAlignResult);
+            
+        }        
     }
     
     public void createAlignmentResult(){
@@ -53,10 +99,14 @@ public class MerRead {
         }        
     }
     
+    public ArrayList<Long> getAlignmentResultStrand(){
+        return this.chrStrandAlgn;
+    }
+    
     public ArrayList<Long> getAlignmentResult(){
         return this.chrAlgn;
     }
-    
+
     public long getMerCode(){
         return this.merCode;
     }
