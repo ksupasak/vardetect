@@ -235,13 +235,13 @@ public class VisualizeResult {
             
             Map<Long,long[]> alignmentCount = dummySS.getAlignmentCountSorted();
             System.out.println("\nAlignment result of "+ dummySS.getReadName());
-            System.out.format("            Result           \tNumMatch\tGreen\tYellow\tOrange\tRed\tGreenInt\tYellowInt\tOrangeInt\tRedInt%n");
+            System.out.format("            Result           \tStrand\tNumMatch\tGreen\tYellow\tOrange\tRed\tGreenInt\tYellowInt\tOrangeInt\tRedInt%n");
             Set allPos = alignmentCount.keySet();
             Iterator iterPos = allPos.iterator();
             while(iterPos.hasNext()){
                 long positionCode = (long)iterPos.next();
                 long alignPos = positionCode&mask;
-                long chrNumber = positionCode>>28;
+                long chrNumber = positionCode>>29;
                 long[] numCountPlusColor = alignmentCount.get(positionCode);
                 long numCount = numCountPlusColor[0];
                 long red = numCountPlusColor[1];
@@ -253,11 +253,64 @@ public class VisualizeResult {
                 long orangeInt = numCountPlusColor[7];
                 long greenInt = numCountPlusColor[8];
                 
+                String strandNot = "no";
+                if(((positionCode>>28)&1) == 1){
+                    strandNot = "+";
+                }else if(((positionCode>>28)&1) == 0){
+                    strandNot = "-";
+                } 
+                
 //                System.out.println("Align at position: \t%d" + alignPos + " \ton chrNumber: " + chrNumber + " \tAlign count: " + numCount + " \tNumber of Red: " + red + " \tNumber of Yellow: " + yellow + " \tNumber of Orange: " + orange + " \tNumber of Green" + green);
                 //System.out.format("Align at position: %d\tOn chrNumber: %3d\tAlign count: %3d\tNumber of Red: %3d\tRed intensity: %3d\tNumber of Yellow: %3d\tYellow intensity: %3d\tNumber of Orange: %3d\tOrange intensity: %3d\tNumber of Green: %3d\tGreen intensity: %3d%n"
                 //,alignPos,chrNumber,numCount,red,redInt,yellow,yellowInt,orange,orangeInt,green,greenInt);
+                System.out.format("Chr %2d : Position %12d| \t%10s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                //System.out.format("Chr %2d : Position %12d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+            }       
+        }    
+    }
+    
+    public static void visualizeAlignmentCountMatchCutPlusColor(AlignmentResultRead inRes,int threshold){
+        /* Main method for extract result */
+        System.out.println("Visualize Alignment Result (From new result structure)");
+        System.out.println();
+        ArrayList<ShortgunSequence> shortgunSequence = inRes.getResult();
+            
+        for(int i=0;i<shortgunSequence.size();i++){
+            
+            ShortgunSequence dummySS = shortgunSequence.get(i);
+            
+            Map<Long,long[]> alignmentCount = dummySS.getAlignmentCountSortedCut(threshold);
+            System.out.println("\nAlignment result of "+ dummySS.getReadName());
+            System.out.format("            Result           \tStrand\tNumMatch\tGreen\tYellow\tOrange\tRed\tGreenInt\tYellowInt\tOrangeInt\tRedInt%n");
+            Set allPos = alignmentCount.keySet();
+            Iterator iterPos = allPos.iterator();
+            while(iterPos.hasNext()){
+                long positionCode = (long)iterPos.next();
+                long alignPos = positionCode&mask;
+                long chrNumber = positionCode>>29;
+                long[] numCountPlusColor = alignmentCount.get(positionCode);
+                long numCount = numCountPlusColor[0];
+                long red = numCountPlusColor[1];
+                long yellow = numCountPlusColor[2];
+                long orange = numCountPlusColor[3];
+                long green = numCountPlusColor[4];
+                long redInt = numCountPlusColor[5];
+                long yellowInt = numCountPlusColor[6];
+                long orangeInt = numCountPlusColor[7];
+                long greenInt = numCountPlusColor[8];
                 
-                System.out.format("Chr %2d : Position %12d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                String strandNot = "no";
+                if(((positionCode>>28)&1) == 1){
+                    strandNot = "+";
+                }else if(((positionCode>>28)&1) == 0){
+                    strandNot = "-";
+                } 
+                
+//                System.out.println("Align at position: \t%d" + alignPos + " \ton chrNumber: " + chrNumber + " \tAlign count: " + numCount + " \tNumber of Red: " + red + " \tNumber of Yellow: " + yellow + " \tNumber of Orange: " + orange + " \tNumber of Green" + green);
+                //System.out.format("Align at position: %d\tOn chrNumber: %3d\tAlign count: %3d\tNumber of Red: %3d\tRed intensity: %3d\tNumber of Yellow: %3d\tYellow intensity: %3d\tNumber of Orange: %3d\tOrange intensity: %3d\tNumber of Green: %3d\tGreen intensity: %3d%n"
+                //,alignPos,chrNumber,numCount,red,redInt,yellow,yellowInt,orange,orangeInt,green,greenInt);
+                System.out.format("Chr %2d : Position %12d| \t%10s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                //System.out.format("Chr %2d : Position %12d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
             }       
         }    
     }

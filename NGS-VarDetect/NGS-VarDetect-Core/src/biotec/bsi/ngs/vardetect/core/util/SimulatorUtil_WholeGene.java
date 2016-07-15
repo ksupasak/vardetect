@@ -150,12 +150,16 @@ public class SimulatorUtil_WholeGene {
                 ChromosomeSequence chr = chrs.elementAt(chrNum);
                 System.out.println("Chromosome name: "+chr.getName());
 
-                if (chr.getName().equalsIgnoreCase(namechrA)){
+                if (chr.getName().equalsIgnoreCase(namechrA) && chr.getName().equalsIgnoreCase(namechrB)){
                     chrA = chr;
-                }
-                else if (chr.getName().equalsIgnoreCase(namechrB)){
                     chrB = chr;
-                }   
+                }else{
+                    if(chr.getName().equalsIgnoreCase(namechrA)){
+                        chrA = chr;
+                    }else if(chr.getName().equalsIgnoreCase(namechrB)){
+                        chrB = chr;
+                    } 
+                }
             }
             System.out.println("concatenate");
             CharSequence iniTemplate = SequenceUtil.concatenateChromosome(chrA, chrB, ln_read-1, ln_read-1);

@@ -32,8 +32,8 @@ public class EncodedSequence {
 
     //Hashtable<Long,Long> map;
     //TreeMap<Long,Long> map;
-    long mers[];            // Store reference sequence of specific chr for mapping propose
-    long mersComp[] = null;
+    long[] mers;            // Store reference sequence of specific chr for mapping propose
+    long[] mersComp;
     
     Map<Long,Long> map;
     String name;
@@ -43,7 +43,9 @@ public class EncodedSequence {
     public long mask36Bit = 68719476735L;
     
     
-    void EncodedSequence(){
+    public EncodedSequence(){
+        this.mers = null;            // Store reference sequence of specific chr for mapping propose
+        this.mersComp = null;
     }
     
     public long addStrandNotation(long in, int strand){
@@ -86,8 +88,9 @@ public class EncodedSequence {
             return fullResult;
             
         }
+
         
-        
+        //return listResult;
     }
     
     public long[] align2Compliment(long mer){
@@ -127,10 +130,10 @@ public class EncodedSequence {
                 for(int i =start;i<stop;i++){
                     if(i-start>=0&&i>=0)
                     j[i-start] = addStrandNotation(mersComp[i]&mask2,strand);
-                    System.out.println();
-                    System.out.println("Check mers the value should be 64 bit : " + mersComp[i] );
-                    System.out.println("Check j the value should be 28 bit : " + j[i-start]);
-                    System.out.println();
+//                    System.out.println();
+//                    System.out.println("Check mers the value should be 64 bit : " + mersComp[i] );
+//                    System.out.println("Check j the value should be 28 bit : " + j[i-start]);
+//                    System.out.println();
                 }
 
 
@@ -149,7 +152,7 @@ public class EncodedSequence {
     }
     
     public long[] align2(long mer){
-        System.out.println("\n Do Strand + Alignment");
+//        System.out.println("\n Do Strand + Alignment");
         int strand = 1; // Notation for strand +
         int index = align(mer, 0, mers.length-1);
         
@@ -186,10 +189,10 @@ public class EncodedSequence {
                     if(i-start>=0&&i>=0)
 //                    j[i-start] = mers[i]&mask2;
                     j[i-start] = addStrandNotation(mers[i]&mask2,strand);
-                    System.out.println();
-                    System.out.println("Check mers the value should be 64 bit : " + mers[i] );
-                    System.out.println("Check j the value should be 28 bit : " + j[i-start]);
-                    System.out.println();
+//                    System.out.println();
+//                    System.out.println("Check mers the value should be 64 bit : " + mers[i] );
+//                    System.out.println("Check j the value should be 28 bit : " + j[i-start]);
+//                    System.out.println();
                 }
 
 
@@ -269,9 +272,16 @@ public class EncodedSequence {
     
     
     
+    public void setMersComp(long mers[]){
+        this.mersComp = mers;     
+    }
     
     public void setMers(long mers[]){
         this.mers = mers;     
+    }
+    
+    public long [] getMersComp(){
+        return this.mers;
     }
     
     public long [] getMers(){
@@ -430,10 +440,11 @@ public class EncodedSequence {
     
     public void createComplimentStrand(){
         
-        System.out.println("\n Create compliment strand ");
-        this.mersComp = mers;
-        for(int i=0;i<this.mers.length;i++){
-            long dummyMerPos = this.mers[i];
+//        System.out.println("\n Create compliment strand ");
+        this.mersComp = Arrays.copyOf(mers, mers.length);
+        //this.mersComp = this.mers;
+        for(int i=0;i<this.mersComp.length;i++){
+            long dummyMerPos = this.mersComp[i];
 //            System.out.println("Check fullcode dummyMerPos: " + dummyMerPos);
             long dummyMer = dummyMerPos>>28;
             long dummyPos = dummyMerPos&mask2;
@@ -443,21 +454,22 @@ public class EncodedSequence {
             long dummyNewMer = (~dummyMer)&mask36Bit;
 //            System.out.println("Check mer sequemce after compliment : " + dummyNewMer);
 //            System.out.println("Check Position before reverse : " + dummyPos);
-            long dummyNewPos = (this.mers.length-1)-dummyPos; /* length-1 because assume array has 10 member ; length is 10 but maximum it index is 9 becaus index start at 0 */
+            long dummyNewPos = (this.mersComp.length-1)-dummyPos; /* length-1 because assume array has 10 member ; length is 10 but maximum it index is 9 becaus index start at 0 */
             /* To get new inverse of position value, use this fomular (max index - old index) **Ex. old index is 9 so the inverse of it is (9 - 9) = 0 that's correct!! */
             // Replace to long[] 
 //            System.out.println("Check Position after reverse : " + dummyNewPos);
 //            System.out.println("Check max index is : " + (this.mers.length-1));
             long dummyNewMerPos = (dummyNewMer<<28)+dummyNewPos;
 //            System.out.println("Check fullcode dummyNewMerPost : " + dummyNewMerPos);
-            if (i%100000000==0){
-                System.out.println("Create compliment at : " + i);
-            }
-            mersComp[i] = dummyNewMerPos;
+//            if (i%100000000==0){
+//                System.out.println("Create compliment at : " + i);
+//            }
+            this.mersComp[i] = dummyNewMerPos;
         }
         
         // re-sorted long[]
         Arrays.sort(this.mersComp);
+        //return mersComp;
         
     }
                

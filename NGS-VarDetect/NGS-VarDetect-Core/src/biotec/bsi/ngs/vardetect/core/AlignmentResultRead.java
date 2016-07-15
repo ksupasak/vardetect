@@ -97,31 +97,31 @@ public class AlignmentResultRead {
                 ShortgunSequence dummySubSS = shrtRead.get(j);
                 distanceVector[j] = distance(dummyMainSS.getClusterVector(),dummySubSS.getClusterVector());
                 this.distanceTable[i][j] = distanceVector[j];
-                System.out.println();
-                System.out.println("DummyMainSS/"+dummyMainSS.getReadName()+" pair with DummySubSS/"+dummySubSS.getReadName()+" : distanceVector["+j+"] = "+distanceVector[j]);
-                System.out.println();
+//                System.out.println();
+//                System.out.println("DummyMainSS/"+dummyMainSS.getReadName()+" pair with DummySubSS/"+dummySubSS.getReadName()+" : distanceVector["+j+"] = "+distanceVector[j]);
+//                System.out.println();
             }
-            System.out.println("Check before add to "+dummyMainSS.getReadName());
+//            System.out.println("Check before add to "+dummyMainSS.getReadName());
             for(int a=0;a<distanceVector.length;a++){
-                System.out.print("\t"+distanceVector[a]);
+//                System.out.print("\t"+distanceVector[a]);
             }
-            System.out.println();
+//            System.out.println();
             dummyMainSS.addDistanceVector(distanceVector);
-            System.out.println("Check after add to "+dummyMainSS.getReadName());
+//            System.out.println("Check after add to "+dummyMainSS.getReadName());
             for(int a=0;a<distanceVector.length;a++){
-                System.out.print("\t"+distanceVector[a]);
+//                System.out.print("\t"+distanceVector[a]);
             }
-            System.out.println();
+//            System.out.println();
             
         }
-        for(int i =0;i<shrtRead.size();i++){
-            ShortgunSequence dummyMainSS = shrtRead.get(i);
-            System.out.println("************ ReadName:"+dummyMainSS.getReadName()+" check saved vector distance ************");
-            for (int check =0;check<shrtRead.size();check++){
-                System.out.print("\t"+dummyMainSS.getDistanceVector()[check]);   
-            }
-            System.out.println();
-        }
+//        for(int i =0;i<shrtRead.size();i++){
+//            ShortgunSequence dummyMainSS = shrtRead.get(i);
+//            System.out.println("************ ReadName:"+dummyMainSS.getReadName()+" check saved vector distance ************");
+//            for (int check =0;check<shrtRead.size();check++){
+//                System.out.print("\t"+dummyMainSS.getDistanceVector()[check]);   
+//            }
+//            System.out.println();
+//        }
     }
     
     public double distance(long[] a, long[] b){
@@ -214,7 +214,7 @@ public class AlignmentResultRead {
             
             Map<Long,long[]> countMap =  dummySS.getAlignmentCountSorted();
             ps.println(">Alignment result of "+ dummySS.getReadName());
-            ps.printf("%-30s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","Strand","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
+            ps.printf("%-35s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","Strand","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
             Set allPos = countMap.keySet();
             Iterator iterPos = allPos.iterator();
             while(iterPos.hasNext()){
@@ -240,7 +240,7 @@ public class AlignmentResultRead {
                 }   
                 
                 
-                ps.format("Chr %2d : Position %12d\t%s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                ps.format("Chr %2d : Position %12d|\t%8s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
             }
             ps.println();
         }
@@ -261,7 +261,7 @@ public class AlignmentResultRead {
             
             Map<Long,long[]> countMap =  dummySS.getAlignmentCount();
             ps.println(">Alignment result of "+ dummySS.getReadName());
-            ps.printf("%-30s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","Strand","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
+            ps.printf("%-35s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","Strand","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
             Set allPos = countMap.keySet();
             Iterator iterPos = allPos.iterator();
             while(iterPos.hasNext()){
@@ -286,7 +286,7 @@ public class AlignmentResultRead {
                     strandNot = "-";
                 }   
                 
-                ps.format("Chr %2d : Position %12d\t%s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                ps.format("Chr %2d : Position %12d|\t%8s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
             }
             ps.println();
         }
@@ -308,7 +308,7 @@ public class AlignmentResultRead {
             Map<Long,long[]> countMap =  dummySS.getAlignmentCountSortedCut(threshold);
             ps.println(">Alignment result of "+ dummySS.getReadName());
 //            ps.printf("%-30s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
-            ps.printf("%-30s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","Strand","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
+            ps.printf("%-35s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","Strand","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
             Set allPos = countMap.keySet();
             Iterator iterPos = allPos.iterator();
             while(iterPos.hasNext()){
@@ -334,7 +334,7 @@ public class AlignmentResultRead {
                 }   
                 
 //                ps.format("Chr %d : Position %d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
-                ps.format("Chr %2d : Position %12d\t%s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                ps.format("Chr %2d : Position %12d|\t%8s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
             }
             ps.println();
         }

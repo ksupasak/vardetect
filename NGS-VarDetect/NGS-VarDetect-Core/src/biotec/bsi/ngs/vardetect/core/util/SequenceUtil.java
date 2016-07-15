@@ -366,6 +366,8 @@ public class SequenceUtil {
             }
             
             seq.setMers(list);
+//            long[] listComp = createComplimentStrand(list);
+//            seq.setMersComp(listComp);
 //            System.out.println("Total bmer : "+size);
 
             is.close();
@@ -469,17 +471,19 @@ public class SequenceUtil {
 
      
     os.writeInt(list.length);
-    for(int i=0;i<list.length;i++){
-        if(i%1000000==0)System.out.println("Write "+chr.getName()+" "+i);
-        os.writeLong(list[i]); // write list variable to file .bin
-    }
+        for(int i=0;i<list.length;i++){
+            if(i%1000000==0)System.out.println("Write "+chr.getName()+" "+i);
+            os.writeLong(list[i]); // write list variable to file .bin
+        }
        os.close();
        
        seq.setMers(list);
+//       long[] listComp = createComplimentStrand(list);
+//       seq.setMersComp(listComp);
  
     }
        
-       
+    
        
        
        return seq;
@@ -1185,6 +1189,8 @@ public class SequenceUtil {
             }else checkB = 0;
         }
         
+        
+        
             concatenateCut = cutA.toString()+cutB.toString();
             
             System.out.println("Random cut of chr" + chrA.getChrNumber() + " from position " + iniA + " : " + cutA);
@@ -1791,6 +1797,95 @@ public class SequenceUtil {
     }
 
   
+    public static long[] createComplimentStrand(long[] inRef){
+        long mask = -268435456;
+        long mask2 = 268435455;
+        long mask36Bit = 68719476735L;
+        long[] mersComp = inRef;
+        
+        System.out.println("\n Create compliment strand ");
+        for(int i=0;i<mersComp.length;i++){
+            long dummyMerPos = mersComp[i];
+//            System.out.println("Check fullcode dummyMerPos: " + dummyMerPos);
+            long dummyMer = dummyMerPos>>28;
+            long dummyPos = dummyMerPos&mask2;
 
+            // Reconstruct (compliment DNA sequence)
+//            System.out.println("Check mer sequemce befor compliment : " + dummyMer);
+            long dummyNewMer = (~dummyMer)&mask36Bit;
+//            System.out.println("Check mer sequemce after compliment : " + dummyNewMer);
+//            System.out.println("Check Position before reverse : " + dummyPos);
+            long dummyNewPos = (mersComp.length-1)-dummyPos; /* length-1 because assume array has 10 member ; length is 10 but maximum it index is 9 becaus index start at 0 */
+            /* To get new inverse of position value, use this fomular (max index - old index) **Ex. old index is 9 so the inverse of it is (9 - 9) = 0 that's correct!! */
+            // Replace to long[] 
+//            System.out.println("Check Position after reverse : " + dummyNewPos);
+//            System.out.println("Check max index is : " + (this.mers.length-1));
+            long dummyNewMerPos = (dummyNewMer<<28)+dummyNewPos;
+//            System.out.println("Check fullcode dummyNewMerPost : " + dummyNewMerPos);
+            if (i%100000000==0){
+                System.out.println("Create compliment at : " + i);
+            }
+            mersComp[i] = dummyNewMerPos;
+        }
 
+        // re-sorted long[]
+        Arrays.sort(mersComp);
+        //return mersComp;
+        return mersComp;
+    }
+
+    public static String decodeMer(long inCode, int kmer){
+        String binaryCode = ""; 
+        if(inCode == 0){
+            for(int i = 0;i<kmer;i++){
+               binaryCode = binaryCode+"0";
+            }
+        }else{
+            binaryCode = Long.toBinaryString(inCode);
+        }
+        
+        int lenCode = binaryCode.length();
+        String sequenceBase = "";
+        String dummySequenceBase = "";
+        
+        for(int i=0;i<(lenCode/2);i++){
+            int indexF = i;
+            int indexL = i+2;
+            String dummyBase = binaryCode.subSequence(indexF, indexL).toString();
+            
+            switch(dummyBase){
+                case "00":
+                   dummySequenceBase = "A"; // 00     
+                   break;
+               case "11": 
+                   dummySequenceBase = "T"; // 11
+                   break;
+               case "01":               
+                   dummySequenceBase = "C"; // 01 
+                   break;
+               case "10":               
+                   dummySequenceBase = "G"; // 10 
+                   break;
+               default : 
+                   dummySequenceBase = "N";
+                   //return -1;
+            }
+            sequenceBase = sequenceBase + dummySequenceBase;    
+        }
+        
+        return sequenceBase;
+    }
+    
+    public static String createCompliment(String inSeq, int kmer){
+        long mask36Bit = 68719476735L;
+        
+        long merCode = encodeMer(inSeq,kmer);
+        long dummyNewMer = (~merCode)&mask36Bit;
+        
+        String outSeq = decodeMer(dummyNewMer,kmer);
+        System.out.println("createCompliment : Check inSeq = " + inSeq);
+        System.out.println("createCompliment : Check outSeq = " + outSeq);
+        
+        return outSeq;
+    }
 }
