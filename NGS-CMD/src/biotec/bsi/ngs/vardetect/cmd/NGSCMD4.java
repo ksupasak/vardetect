@@ -48,7 +48,7 @@ public class NGSCMD4 {
         //ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
         System.out.println("Simulate Data");
         //InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGene(ref, 5, 100, "20", "21");
-        InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGeneRandom(ref, 1, 100, 2);
+        InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGeneRandom(ref, 5, 100, 5);
         
         
         Aligner aligner = AlignerFactory.getAligner();
@@ -67,7 +67,7 @@ public class NGSCMD4 {
         
         //System.out.println("Size of Result: " + align.getAlignmentCount().size());
         
-        VisualizeResult.visualizeAlignmentCountMatchPlusColor(align);
+        VisualizeResult.visualizeAlignmentCountMatchCutPlusColor(align,100);
         
         align.writeSortedResultToPath(ref.getPath(), "txt");
         align.writeUnSortedResultToPath(ref.getPath(), "txt");
