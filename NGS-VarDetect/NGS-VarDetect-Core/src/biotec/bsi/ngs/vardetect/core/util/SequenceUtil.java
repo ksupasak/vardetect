@@ -1208,6 +1208,103 @@ public class SequenceUtil {
         return concatenateCut;
     }
     
+    public static CharSequence concatenateComplexChromosome(ChromosomeSequence chrA,ChromosomeSequence chrB, int cutLengthA, int cutLengthB){
+        //chrA.getsequence
+        int check,checkA = 1,checkB = 1;
+        CharSequence cutA,cutB,concatenateCut;
+        CharSequence checkN = "N";
+        
+        int lengthA = chrA.getSequence().length();
+        int lengthB = chrB.getSequence().length();
+        int rangeA = lengthA - 0 ;
+        int rangeB = lengthB - 0 ;
+        
+        Random r = new Random();
+        int iniA = r.nextInt(rangeA);
+        int iniB = r.nextInt(rangeB);
+        cutA = chrA.getSequence().subSequence(iniA, iniA+cutLengthA);
+        cutB = chrB.getSequence().subSequence(iniB, iniB+cutLengthB);
+        
+        
+        while(checkA == 1 || checkB == 1){
+            //System.out.println(rangeA);
+            //System.out.println(rangeB);
+            //System.out.println(lengthA);
+            //System.out.println(lengthB);
+
+            System.out.println(cutA.toString().contains("N"));
+            System.out.println(cutB.toString().contains("N"));
+                                
+            if(cutA.toString().contains("N") || cutA.toString().equals(cutA.toString().toLowerCase())){
+                iniA = r.nextInt(rangeA);
+                cutA = chrA.getSequence().subSequence(iniA, iniA+cutLengthA);                
+            }else checkA = 0;                        
+        
+            if(cutB.toString().contains("N") || cutB.toString().equals(cutB.toString().toLowerCase())){
+                iniB = r.nextInt(rangeB);
+                cutB = chrB.getSequence().subSequence(iniB, iniB+cutLengthB);
+            }else checkB = 0;
+        }
+        
+        Random fusionType = new Random();
+        int type = fusionType.nextInt(4);
+        
+        if(type == 0){
+            /* strand ++ */
+            concatenateCut = cutA.toString()+cutB.toString();
+            
+            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
+            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
+            System.out.println("Concatenate chromosome: " + concatenateCut);
+            
+        }else if(type == 1){
+            /* strand +- */
+            String invCutB = SequenceUtil.inverseSequence(cutB.toString());
+            String compCutB = SequenceUtil.createCompliment(invCutB);
+            
+            concatenateCut = cutA.toString()+compCutB;
+            
+            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
+            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
+            System.out.println("Concatenate chromosome: " + concatenateCut);
+            
+        }else if(type == 2){
+            /* strand -+ */
+            String invCutA = SequenceUtil.inverseSequence(cutA.toString());
+            String compCutA = SequenceUtil.createCompliment(invCutA);
+            
+            concatenateCut = compCutA + cutB.toString();
+            
+            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
+            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
+            System.out.println("Concatenate chromosome: " + concatenateCut);
+            
+        }else{
+            /* strand -- */
+            String invCutA = SequenceUtil.inverseSequence(cutA.toString());
+            String compCutA = SequenceUtil.createCompliment(invCutA);
+            String invCutB = SequenceUtil.inverseSequence(cutB.toString());
+            String compCutB = SequenceUtil.createCompliment(invCutB);
+        
+            concatenateCut = compCutA + compCutB;
+            
+            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
+            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
+            System.out.println("Concatenate chromosome: " + concatenateCut);
+            
+        }
+         
+        cutA = null;
+        cutB = null;
+        System.gc();
+            
+            // not finish
+        //}
+        
+        
+        return concatenateCut;
+    }
+    
     public static Map mapGenomeShotgun(EncodedSequence refChr, InputSequence read){
         
        
@@ -1798,6 +1895,9 @@ public class SequenceUtil {
 
   
     public static long[] createComplimentStrand(long[] inRef){
+        /*  Reconstruct whole chromosome sequence to compliment strand */
+        /* inRef is contain with DNA sequence of specific chromosome which already encodeed in kmer lebgth and position */
+        
         long mask = -268435456;
         long mask2 = 268435455;
         long mask36Bit = 68719476735L;
@@ -1810,7 +1910,7 @@ public class SequenceUtil {
             long dummyMer = dummyMerPos>>28;
             long dummyPos = dummyMerPos&mask2;
 
-            // Reconstruct (compliment DNA sequence)
+            /* Reconstruct compliment DNA sequence of whole chromosome */
 //            System.out.println("Check mer sequemce befor compliment : " + dummyMer);
             long dummyNewMer = (~dummyMer)&mask36Bit;
 //            System.out.println("Check mer sequemce after compliment : " + dummyNewMer);
@@ -1835,24 +1935,30 @@ public class SequenceUtil {
     }
 
     public static String decodeMer(long inCode, int kmer){
-        String binaryCode = ""; 
-        if(inCode == 0){
-            for(int i = 0;i<kmer;i++){
-               binaryCode = binaryCode+"0";
-            }
-        }else{
-            binaryCode = Long.toBinaryString(inCode);
-        }
         
+        
+        String binaryCode = Long.toBinaryString(inCode);/// transform wrong
+        long lengthBinary = binaryCode.length();
+        long fullLen = kmer*2;
+        
+        if(lengthBinary<fullLen){
+            for(int i =0;i<(fullLen-lengthBinary);i++){
+                binaryCode = "0"+binaryCode;
+            }
+        }
+
         int lenCode = binaryCode.length();
         String sequenceBase = "";
         String dummySequenceBase = "";
-        
-        for(int i=0;i<(lenCode/2);i++){
+        System.out.println("this is fulLen : " + fullLen);
+        System.out.println("this is lenBin : " + lengthBinary);
+        System.out.println("this is bin code inCode : " + inCode);
+        System.out.println("this is bin code check : " + binaryCode);
+        for(int i=0;i<lenCode;i = i+2){
             int indexF = i;
             int indexL = i+2;
             String dummyBase = binaryCode.subSequence(indexF, indexL).toString();
-            
+            System.out.println("This is base code check : " + dummyBase);
             switch(dummyBase){
                 case "00":
                    dummySequenceBase = "A"; // 00     
@@ -1870,22 +1976,44 @@ public class SequenceUtil {
                    dummySequenceBase = "N";
                    //return -1;
             }
+            System.out.println("this is dummy sequence check : round = "+i+" : dummySequenceBase = " + dummySequenceBase);
             sequenceBase = sequenceBase + dummySequenceBase;    
         }
         
         return sequenceBase;
     }
     
-    public static String createCompliment(String inSeq, int kmer){
+    public static String createCompliment(String inSeq){
+        /* Create compliment of short length sequence of DNA */  
+        CharSequence testSeq = inSeq;
         long mask36Bit = 68719476735L;
+        int kmer = testSeq.length();
+        long mask = ((long)(Math.pow(2,(kmer*2)))-1) ;
+        
+        System.out.println("createCompliment : Check merCode = " + kmer);
+        System.out.println("createCompliment : Check merCode = " + mask);
         
         long merCode = encodeMer(inSeq,kmer);
-        long dummyNewMer = (~merCode)&mask36Bit;
+        long dummyNewMer = (~merCode)&mask;
+        
+        System.out.println("createCompliment : Check merCode = " + merCode);
+        System.out.println("createCompliment : Check newMer = " + dummyNewMer);
         
         String outSeq = decodeMer(dummyNewMer,kmer);
-        System.out.println("createCompliment : Check inSeq = " + inSeq);
-        System.out.println("createCompliment : Check outSeq = " + outSeq);
+        
         
         return outSeq;
+    }
+    
+    public static String inverseSequence(String inSeq){
+        CharSequence testSeq = inSeq;
+        int kmer = testSeq.length();
+        String invSeq = "";
+        
+        for (int i = 0;i<kmer;i++){
+            invSeq = invSeq + String.valueOf(testSeq.charAt((testSeq.length()-1)-i));
+        }
+        
+        return invSeq;
     }
 }
