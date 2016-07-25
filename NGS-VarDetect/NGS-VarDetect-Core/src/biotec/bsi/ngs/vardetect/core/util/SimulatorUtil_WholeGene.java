@@ -276,7 +276,7 @@ public class SimulatorUtil_WholeGene {
                 }
             }
             System.out.println("concatenate");
-            CharSequence iniTemplate = SequenceUtil.concatenateComplexChromosome(chrA, chrB, ln_read-2, ln_read-2);
+            CharSequence iniTemplate = SequenceUtil.concatenateComplexChromosome(chrA, chrB, ln_read-1, ln_read-1);
             
             chrA.lazyLoad();
             chrB.lazyLoad();

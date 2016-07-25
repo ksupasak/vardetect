@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Reader;
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -83,24 +84,31 @@ public class SequenceUtil {
                 
                 System.out.println("No chr" +chr_file);
                 
-                 ChromosomeSequence c = new ChromosomeSequence(ref,chr,null);
-                 ref.addChromosomeSequence(c);
+                ChromosomeSequence c = new ChromosomeSequence(ref,chr,null);
+                ref.addChromosomeSequence(c);
                  
                  
                  
-                 File bin_file = new File(c.getFilePath()+".bin");
-                 if(bin_file.exists()==false){
-                     if(c.getSequence()==null){
+                File bin_file = new File(c.getFilePath()+".bin");
+                File comp_bin_file = new File(c.getFilePath()+"_comp.bin");
+                if(bin_file.exists()==false){
+                    if(c.getSequence()==null){
                    
-                     }
-                     EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c);
-                 }
-                 
+                    }
+                     
+                    EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c);
+                     
+                     
+                }
+                
+                if(comp_bin_file.exists()==false){
+                    EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c);
+                }
                  
                  
             }else{
-                 extract_chr=true;
-                                 System.out.println("No chr" +chr_file);
+                extract_chr=true;
+                System.out.println("No chr" +chr_file);
 
             }
         } 
@@ -120,77 +128,72 @@ public class SequenceUtil {
         StringBuffer seq = new StringBuffer();
 
         try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
-        String line = null;
+            String line = null;
 
-        while ((line = reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null) {
 
-            if(line.charAt(0)=='>'){
+                if(line.charAt(0)=='>'){
 
-                if(chr!=null){
+                    if(chr!=null){
 
-                    System.out.println("CHR : "+chr+" Size : "+seq.length());
+                        System.out.println("CHR : "+chr+" Size : "+seq.length());
 
-                    ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
-                    
-                    File chr_file = new File(c.getFilePath()+".fa");
-                    
-                    if(!chr_file.exists()){
-                        c.writeToFile("FA");
-                    }                   
-                    
-                    seq=null;
-                    c.lazyLoad();
-                    
-                    EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c);
+                        ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
 
-         c.lazyLoad();
+                        File chr_file = new File(c.getFilePath()+".fa");
 
-                    ref.addChromosomeSequence(c);
+                        if(!chr_file.exists()){
+                            c.writeToFile("FA");
+                        }                   
+
+                        seq=null;
+                        c.lazyLoad();
+
+                        EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c);
+
+                        c.lazyLoad();
+
+                        ref.addChromosomeSequence(c);
+
+
+                    }
+                    seq = new StringBuffer();
+                    chr = line.substring(1,line.length());
+
+
+                }else{
+
+                    seq.append(line.trim());
 
 
                 }
-                seq = new StringBuffer();
-                chr = line.substring(1,line.length());
-
-
-            }else{
-
-                seq.append(line.trim());
-
 
             }
+    
+        if(seq.length()>0){
 
+            System.out.println("CHR : "+chr+" Size : "+seq.length());
+            ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+
+            File chr_file = new File(c.getFilePath()+".fa");
+
+            if(!chr_file.exists()){
+                c.writeToFile("FA");
+            }     
+
+            seq = null;
+
+            c.lazyLoad();
+
+            EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c);
+
+            c.lazyLoad();
+
+            ref.addChromosomeSequence(c);
         }
-    
-    if(seq.length()>0){
-        
-        System.out.println("CHR : "+chr+" Size : "+seq.length());
-        ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
-        
-         File chr_file = new File(c.getFilePath()+".fa");
-                    
-         if(!chr_file.exists()){
-           c.writeToFile("FA");
-         }     
-         
-         seq = null;
 
-         c.lazyLoad();
-         
-               EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c);
-
-         c.lazyLoad();
-
-        ref.addChromosomeSequence(c);
-        
-        
-        
-        
-        
-    }
     
-    
-    } catch (IOException x) {
+    }catch (IOException x) {
         System.err.format("IOException: %s%n", x);
     }    
     
@@ -342,6 +345,7 @@ public class SequenceUtil {
        
        
        File f = new File(chr.getFilePath()+".bin"); //File object
+       File compF = new File(chr.getFilePath()+"_comp.bin");
        
        if(f.exists()){
            
@@ -350,7 +354,7 @@ public class SequenceUtil {
             DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
             int size = is.readInt();
             
-           long list[] = new long[size];
+            long list[] = new long[size];
 //            System.out.println("Totalxx bmer : "+size);
 
             for(int i=0;i<size;i++){
@@ -371,18 +375,48 @@ public class SequenceUtil {
 //            System.out.println("Total bmer : "+size);
 
             is.close();
-           
+            
+            /* Compliment Part */
+            if(compF.exists()){
+                is = new DataInputStream(new BufferedInputStream(new FileInputStream(compF)));
+                size = is.readInt();
+            
+                long[] complist = new long[size];
+    //            System.out.println("Totalxx bmer : "+size);
+
+                for(int i=0;i<size;i++){
+
+
+
+                    complist[i] = is.readLong();
+                    int percent = (int)(1.0*count/size); 
+    //                System.out.println(Long.toBinaryString(list[i]));
+
+                    if(percent%10==0&&percent!=0)System.out.println("Read compliment binary Mer "+chr.getName()+" "+count);
+                    count ++;
+                }
+                seq.setMersComp(complist);
+                is.close();
+            }else{
+                DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(compF)));
+                size = list.length;
+                long[] complist = new long[size];
+                complist = createComplimentStrand(list);
+                
+                os.writeInt(size);
+                    for(int i=0;i<size;i++){
+                        if(i%1000000==0)System.out.println("Write "+chr.getName()+" "+i);
+                        os.writeLong(complist[i]); // write list variable to file .bin
+                    }
+                os.close();
+                
+                seq.setMersComp(complist);   
+            }
             
 //            seq.setMers(list);
-             
-           
-           
-           
-           
+   
        }else{
-           
-     
-       
+
        DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))); // create object for output data stream
 
        StringBuffer sb = chr.getSequence();
@@ -443,31 +477,21 @@ public class SequenceUtil {
             }else{
                 cmer = -1;
                 i+=kmer;
-            }
-            
-              
-              
-          }
-           
-          
-          
-           
+            }  
+          }  
            if(i%1000000==0)System.out.println("Encode "+chr.getName()+" "+i*sliding);
            
-           if(cmer>=0){
-               
-              
+           if(cmer>=0){  
                long x = (cmer<<(64- kmer*2))|pos;
                list[count++] = x;
 
            }
-           
-           
+ 
            }
        }
        
      
-     Arrays.sort(list);
+    Arrays.sort(list);
 
      
     os.writeInt(list.length);
@@ -480,6 +504,42 @@ public class SequenceUtil {
        seq.setMers(list);
 //       long[] listComp = createComplimentStrand(list);
 //       seq.setMersComp(listComp);
+
+    /* Compliment Part */
+            if(compF.exists()){
+                DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(compF)));
+                int size = is.readInt();
+            
+                long[] complist = new long[size];
+    //            System.out.println("Totalxx bmer : "+size);
+
+                for(int i=0;i<size;i++){
+                    complist[i] = is.readLong();
+                    int percent = (int)(1.0*count/size); 
+    //                System.out.println(Long.toBinaryString(list[i]));
+
+                    if(percent%10==0&&percent!=0)System.out.println("Read compliment binary Mer "+chr.getName()+" "+count);
+                        count ++;
+                    }
+                seq.setMersComp(complist);
+                is.close();
+            }else{
+                os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(compF)));
+                int size = list.length;
+                long[] complist = new long[size];
+                complist = createComplimentStrand(list);
+                
+                os.writeInt(size);
+                    for(int i=0;i<size;i++){
+                        if(i%1000000==0)System.out.println("Write "+chr.getName()+" "+i);
+                        os.writeLong(complist[i]); // write list variable to file .bin
+                    }
+                os.close();
+                
+                seq.setMersComp(complist);   
+            }
+
+
  
     }
        
@@ -1260,7 +1320,7 @@ public class SequenceUtil {
         }else if(type == 1){
             /* strand +- */
             String invCutB = SequenceUtil.inverseSequence(cutB.toString());
-            String compCutB = SequenceUtil.createCompliment(invCutB);
+            String compCutB = SequenceUtil.createComplimentV2(invCutB);
             
             concatenateCut = cutA.toString()+compCutB;
             
@@ -1271,7 +1331,7 @@ public class SequenceUtil {
         }else if(type == 2){
             /* strand -+ */
             String invCutA = SequenceUtil.inverseSequence(cutA.toString());
-            String compCutA = SequenceUtil.createCompliment(invCutA);
+            String compCutA = SequenceUtil.createComplimentV2(invCutA);
             
             concatenateCut = compCutA + cutB.toString();
             
@@ -1282,9 +1342,9 @@ public class SequenceUtil {
         }else{
             /* strand -- */
             String invCutA = SequenceUtil.inverseSequence(cutA.toString());
-            String compCutA = SequenceUtil.createCompliment(invCutA);
+            String compCutA = SequenceUtil.createComplimentV2(invCutA);
             String invCutB = SequenceUtil.inverseSequence(cutB.toString());
-            String compCutB = SequenceUtil.createCompliment(invCutB);
+            String compCutB = SequenceUtil.createComplimentV2(invCutB);
         
             concatenateCut = compCutA + compCutB;
             
@@ -1901,7 +1961,10 @@ public class SequenceUtil {
         long mask = -268435456;
         long mask2 = 268435455;
         long mask36Bit = 68719476735L;
-        long[] mersComp = inRef;
+        long[] mersComp = Arrays.copyOf(inRef,inRef.length);
+        
+        inRef = null;
+        System.gc();
         
         System.out.println("\n Create compliment strand ");
         for(int i=0;i<mersComp.length;i++){
@@ -1912,7 +1975,22 @@ public class SequenceUtil {
 
             /* Reconstruct compliment DNA sequence of whole chromosome */
 //            System.out.println("Check mer sequemce befor compliment : " + dummyMer);
-            long dummyNewMer = (~dummyMer)&mask36Bit;
+//            long dummyNewMer = (~dummyMer)&mask36Bit;
+            
+            String binaryMer = Long.toBinaryString(dummyMer);
+            int kmer = binaryMer.length()/2;
+//            System.out.println("Create compliment at : " + i);
+//            System.out.println("Check binaryMer : " + binaryMer);
+//            System.out.println("Check dummyPos : " + dummyPos);
+            String revBin = new StringBuilder(binaryMer).reverse().toString(); //   reverse Sequence Ex 1011001 to 1001101 
+//            System.out.println("Check revBin : " + revBin);
+            long revNum = new BigInteger(revBin,2).longValue(); //  Cast binary string to decimal number
+            long dummyNewMer = (~revNum)&mask36Bit; //  Create compliment of it
+            
+            
+            
+            
+            
 //            System.out.println("Check mer sequemce after compliment : " + dummyNewMer);
 //            System.out.println("Check Position before reverse : " + dummyPos);
             long dummyNewPos = (mersComp.length-1)-dummyPos; /* length-1 because assume array has 10 member ; length is 10 but maximum it index is 9 becaus index start at 0 */
@@ -1950,15 +2028,16 @@ public class SequenceUtil {
         int lenCode = binaryCode.length();
         String sequenceBase = "";
         String dummySequenceBase = "";
-        System.out.println("this is fulLen : " + fullLen);
-        System.out.println("this is lenBin : " + lengthBinary);
-        System.out.println("this is bin code inCode : " + inCode);
-        System.out.println("this is bin code check : " + binaryCode);
-        for(int i=0;i<lenCode;i = i+2){
-            int indexF = i;
-            int indexL = i+2;
+//        System.out.println("this is fulLen : " + fullLen);
+//        System.out.println("this is lenBin : " + lengthBinary);
+//        System.out.println("this is bin code inCode : " + inCode);
+//        System.out.println("this is bin code check : " + binaryCode);
+        for(int i=0;i<lenCode/2;i++){
+            
+            int indexF = i*2;
+            int indexL = indexF+2;
             String dummyBase = binaryCode.subSequence(indexF, indexL).toString();
-            System.out.println("This is base code check : " + dummyBase);
+//            System.out.println("This is base code check : " + dummyBase);
             switch(dummyBase){
                 case "00":
                    dummySequenceBase = "A"; // 00     
@@ -1976,7 +2055,7 @@ public class SequenceUtil {
                    dummySequenceBase = "N";
                    //return -1;
             }
-            System.out.println("this is dummy sequence check : round = "+i+" : dummySequenceBase = " + dummySequenceBase);
+//            System.out.println("this is dummy sequence check : round = "+i+" : dummySequenceBase = " + dummySequenceBase);
             sequenceBase = sequenceBase + dummySequenceBase;    
         }
         
@@ -2005,6 +2084,45 @@ public class SequenceUtil {
         return outSeq;
     }
     
+    public static String createComplimentV2(String inSeq){
+        /* Create compliment of short length sequence of DNA */  
+        
+        int lenSeq = inSeq.length();
+        String outSeq = "";
+        String dummyBase;
+        
+        //System.out.println("this s inSeq check :\t"+inSeq);
+        for (int i=0;i<lenSeq;i++){
+
+            switch(inSeq.charAt(i)){
+                case 'a':
+                case 'A':
+                   dummyBase = "T"; // 00     
+                   break;
+                case 't':   
+                case 'T': 
+                   dummyBase = "A"; // 11
+                   break;
+                case 'c':
+                case 'C':               
+                   dummyBase = "G"; // 01 
+                   break;
+                case 'g':
+                case 'G':               
+                   dummyBase = "C"; // 10 
+                   break;
+                default : 
+                   dummyBase = "N";
+                   //return -1;
+            }
+            outSeq = outSeq+dummyBase; 
+        }
+        //System.out.println("this s outSeq check :\t"+outSeq);
+        
+        
+        return outSeq;
+    }
+    
     public static String inverseSequence(String inSeq){
         CharSequence testSeq = inSeq;
         int kmer = testSeq.length();
@@ -2016,4 +2134,5 @@ public class SequenceUtil {
         
         return invSeq;
     }
+    
 }

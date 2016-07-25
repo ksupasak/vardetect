@@ -5,6 +5,7 @@
  */
 package biotec.bsi.ngs.vardetect.core;
 
+import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -13,6 +14,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -59,9 +61,9 @@ public class EncodedSequence {
                
         long[] listResult = align2(mer);
 //        System.out.println("This is listResult check: " + listResult.length);
-        if (this.mersComp == null){
-            createComplimentStrand();
-        }
+//        if (this.mersComp == null){
+//            createComplimentStrand();
+//        }
         
         long[] listResultCompliment = align2Compliment(mer);
         
@@ -440,7 +442,7 @@ public class EncodedSequence {
     
     public void createComplimentStrand(){
         
-//        System.out.println("\n Create compliment strand ");
+        System.out.println("\n Create compliment strand ");
         this.mersComp = Arrays.copyOf(mers, mers.length);
         //this.mersComp = this.mers;
         for(int i=0;i<this.mersComp.length;i++){
@@ -451,7 +453,24 @@ public class EncodedSequence {
             
             // Reconstruct (compliment DNA sequence)
 //            System.out.println("Check mer sequemce befor compliment : " + dummyMer);
-            long dummyNewMer = (~dummyMer)&mask36Bit;
+            String binaryMer = Long.toBinaryString(dummyMer);
+            int kmer = binaryMer.length()/2;
+//            System.out.println("Create compliment at : " + i);
+//            System.out.println("Check binaryMer : " + binaryMer);
+//            System.out.println("Check dummyPos : " + dummyPos);
+            String revBin = new StringBuilder(binaryMer).reverse().toString(); //   reverse Sequence Ex 1011001 to 1001101 
+//            System.out.println("Check revBin : " + revBin);
+            long revNum = new BigInteger(revBin,2).longValue(); //  Cast binary string to decimal number
+            long dummyNewMer = (~revNum)&mask36Bit; //  Create compliment of it
+            
+//            String strMer = SequenceUtil.decodeMer(dummyMer,kmer);
+//            
+//            String invMer = SequenceUtil.inverseSequence(strMer);
+//            String compMer = SequenceUtil.createComplimentV2(invMer);
+           
+            //long dummyNewMer = SequenceUtil.encodeMer(compMer, kmer);
+            
+            //long dummyNewMer = (~dummyMer)&mask36Bit;
 //            System.out.println("Check mer sequemce after compliment : " + dummyNewMer);
 //            System.out.println("Check Position before reverse : " + dummyPos);
             long dummyNewPos = (this.mersComp.length-1)-dummyPos; /* length-1 because assume array has 10 member ; length is 10 but maximum it index is 9 becaus index start at 0 */
@@ -461,9 +480,10 @@ public class EncodedSequence {
 //            System.out.println("Check max index is : " + (this.mers.length-1));
             long dummyNewMerPos = (dummyNewMer<<28)+dummyNewPos;
 //            System.out.println("Check fullcode dummyNewMerPost : " + dummyNewMerPos);
-//            if (i%100000000==0){
-//                System.out.println("Create compliment at : " + i);
-//            }
+            
+            if (i%10000000==0){
+                System.out.println("Create compliment at : " + i);
+            }
             this.mersComp[i] = dummyNewMerPos;
         }
         
