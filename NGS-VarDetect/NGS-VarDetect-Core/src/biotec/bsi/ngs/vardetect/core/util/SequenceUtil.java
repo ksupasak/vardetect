@@ -396,13 +396,21 @@ public class SequenceUtil {
                     count ++;
                 }
                 seq.setMersComp(complist);
+                
+                complist=null;
+                System.gc();
+                
                 is.close();
             }else{
-                DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(compF)));
+                
                 size = list.length;
                 long[] complist = new long[size];
                 complist = createComplimentStrand(list);
                 
+                list=null;
+                System.gc();
+                
+                DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(compF)));
                 os.writeInt(size);
                     for(int i=0;i<size;i++){
                         if(i%1000000==0)System.out.println("Write "+chr.getName()+" "+i);
@@ -411,6 +419,9 @@ public class SequenceUtil {
                 os.close();
                 
                 seq.setMersComp(complist);   
+                
+                complist=null;
+                System.gc();
             }
             
 //            seq.setMers(list);
@@ -502,6 +513,10 @@ public class SequenceUtil {
        os.close();
        
        seq.setMers(list);
+       
+       list=null;
+       System.gc();
+                
 //       long[] listComp = createComplimentStrand(list);
 //       seq.setMersComp(listComp);
 
@@ -522,13 +537,21 @@ public class SequenceUtil {
                         count ++;
                     }
                 seq.setMersComp(complist);
+                
+                complist=null;
+                System.gc();
+                
                 is.close();
             }else{
-                os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(compF)));
+               
                 int size = list.length;
                 long[] complist = new long[size];
                 complist = createComplimentStrand(list);
                 
+                list=null;
+                System.gc();
+                
+                os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(compF)));
                 os.writeInt(size);
                     for(int i=0;i<size;i++){
                         if(i%1000000==0)System.out.println("Write "+chr.getName()+" "+i);
@@ -536,7 +559,10 @@ public class SequenceUtil {
                     }
                 os.close();
                 
-                seq.setMersComp(complist);   
+                seq.setMersComp(complist);
+                
+                complist=null;
+                System.gc();
             }
 
 
@@ -1967,10 +1993,13 @@ public class SequenceUtil {
         System.gc();
         
         System.out.println("\n Create compliment strand ");
+        System.out.println("******* First element before compliment : " + mersComp[0]);
+       
         for(int i=0;i<mersComp.length;i++){
             long dummyMerPos = mersComp[i];
 //            System.out.println("Check fullcode dummyMerPos: " + dummyMerPos);
-            long dummyMer = dummyMerPos>>28;
+            //long dummyMer = dummyMerPos>>28;
+            long dummyMer = (dummyMerPos>>28)&mask36Bit;
             long dummyPos = dummyMerPos&mask2;
 
             /* Reconstruct compliment DNA sequence of whole chromosome */
@@ -1980,13 +2009,14 @@ public class SequenceUtil {
             String binaryMer = Long.toBinaryString(dummyMer);
             int kmer = binaryMer.length()/2;
 //            System.out.println("Create compliment at : " + i);
-//            System.out.println("Check binaryMer : " + binaryMer);
+//            System.out.println("Check binaryMer (before compliment) : " + binaryMer);
 //            System.out.println("Check dummyPos : " + dummyPos);
             String revBin = new StringBuilder(binaryMer).reverse().toString(); //   reverse Sequence Ex 1011001 to 1001101 
-//            System.out.println("Check revBin : " + revBin);
+//            System.out.println("Check revBin (reverse binary) : " + revBin);
             long revNum = new BigInteger(revBin,2).longValue(); //  Cast binary string to decimal number
+//            System.out.println("Check revNum (decimal number of reverse binary) : " + revNum);
             long dummyNewMer = (~revNum)&mask36Bit; //  Create compliment of it
-            
+//            System.out.println("Check dummyNewMer (after compliment) : " + dummyNewMer);
             
             
             
@@ -2003,11 +2033,16 @@ public class SequenceUtil {
             if (i%100000000==0){
                 System.out.println("Create compliment at : " + i);
             }
+//            System.out.println("check old code in mersComp before add " + mersComp[i]);
+//            System.out.println("check code before add " + dummyNewMerPos);
             mersComp[i] = dummyNewMerPos;
+//            System.out.println("check code after add " + mersComp[i]);
         }
 
         // re-sorted long[]
+        System.out.println("******* First element after compliment unsorted  : " + mersComp[0]);
         Arrays.sort(mersComp);
+        System.out.println("******* First element after compliment sorted : " + mersComp[0]);
         //return mersComp;
         return mersComp;
     }
