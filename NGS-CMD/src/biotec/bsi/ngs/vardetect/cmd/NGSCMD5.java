@@ -46,7 +46,7 @@ public class NGSCMD5 {
         File f = new File("/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/hg19/chr21.bin"); //File object
         File compF = new File("/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/hg19/chr21_comp.bin");
         DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
-        DataInputStream compis = new DataInputStream(new BufferedInputStream(new FileInputStream(f)));
+        DataInputStream compis = new DataInputStream(new BufferedInputStream(new FileInputStream(compF)));
         int size = is.readInt();
         int compsize = compis.readInt();
         long[] list = new long[size];
@@ -59,20 +59,40 @@ public class NGSCMD5 {
             long dummyMer = list[i]>>28;
             long dummyPos = list[i]&mask2;            
             
-            for(int j=0;j<size;j++){
+//            for(int j=0;j<size;j++){
+//                complist[j] = compis.readLong();
+//                long compdummyMer = complist[j]>>28;
+//                long compdummyPos = complist[j]&mask2;
+//                if (dummyMer == compdummyMer){
+//                    System.out.println("Check dummyMer : " + dummyMer);
+//                    System.out.println("Check compdummyMer : " + compdummyMer);
+//                    System.out.println("Check position : " + dummyPos + " and : " + compdummyPos);
+//                    System.out.println("Binary Check dummyMer : " + Long.toBinaryString(dummyMer));
+//                    System.out.println("Binary Check compdummyMer : " + Long.toBinaryString(compdummyMer));
+//                    break;
+//                }
+//            }
+            
+        }
+        for(int j=0;j<size;j++){
                 complist[j] = compis.readLong();
                 long compdummyMer = complist[j]>>28;
                 long compdummyPos = complist[j]&mask2;
-                if (dummyPos == compdummyPos){
-                    System.out.println("Check dummyMer : " + dummyMer);
-                    System.out.println("Check compdummyMer : " + dummyMer);
-                    System.out.println("same position : " + compdummyPos + " and : " + compdummyPos);
-                    System.out.println("Binary Check dummyMer : " + Long.toBinaryString(dummyMer));
-                    System.out.println("Binary Check compdummyMer : " + Long.toBinaryString(compdummyMer));
-                    break;
-                }
+//                if (dummyMer == compdummyMer){
+//                    System.out.println("Check dummyMer : " + dummyMer);
+//                    System.out.println("Check compdummyMer : " + compdummyMer);
+//                    System.out.println("Check position : " + dummyPos + " and : " + compdummyPos);
+//                    System.out.println("Binary Check dummyMer : " + Long.toBinaryString(dummyMer));
+//                    System.out.println("Binary Check compdummyMer : " + Long.toBinaryString(compdummyMer));
+//                    break;
+//                }
             }
-        }
+        
+        System.out.println("Check dummyMer : " + (list[0]>>28));
+        System.out.println("Check compdummyMer : " + (complist[size-1]>>28));
+        System.out.println("Check position : " + (list[0]&mask2) + " and : " + (complist[size-1]&mask2));
+        System.out.println("Binary Check dummyMer : " + Long.toBinaryString((list[0]>>28)));
+        System.out.println("Binary Check compdummyMer : " + Long.toBinaryString((complist[size-1]>>28)));
         
     }
     
