@@ -40,8 +40,8 @@ public class EncodedSequence {
     Map<Long,Long> map;
     String name;
     
-    public long mask = -268435456;
-    public long mask2 = 268435455;
+    public long mask = -268435456; // Do and operation to get mer 
+    public long mask2 = 268435455; // Do and operation to get position
     public long mask36Bit = 68719476735L;
     
     
@@ -94,6 +94,66 @@ public class EncodedSequence {
         
         //return listResult;
     }
+    
+    public long[] align2ComplimentV2(long mer){
+        int strand = 0; // notation for strand -
+//        createComplimentStrand(); // Caution this function will change value in mers
+        int index = alignComp(mer, 0, mers.length-1);
+        
+        int start = -1;
+        int stop = -1;
+        
+        if(index>0){
+            for(int i=index;i>=0&&i>=index-200;i--){
+                long imer = mers[i]&mask;
+                
+                if(imer!=mer){
+                    start = i+1;
+                    break;
+                }else{
+                    
+                }
+            }
+            
+            for(int i=index;i<mers.length&&i<index+200;i++){
+                long imer = mers[i]&mask;
+                
+                if(imer!=mer){
+                    stop = i;
+                    break;
+                }else{
+                    
+                }
+            }
+            if(start<stop&&stop-start<500){
+//            System.out.println(" size "+(stop-start));
+            long j[] = new long[stop-start]; 
+            
+                for(int i =start;i<stop;i++){
+                    if(i-start>=0&&i>=0)
+                    j[i-start] = addStrandNotation(mers[i]&mask2,strand);
+//                    System.out.println();
+//                    System.out.println("Check mers the value should be 64 bit : " + mersComp[i] );
+//                    System.out.println("Check j the value should be 28 bit : " + j[i-start]);
+//                    System.out.println();
+                }
+
+
+                return j;
+            }
+            else
+                return null;
+//            System.out.println("start : "+start+" stop : "+stop+" length :"+(stop-start));
+            
+            
+            
+        }
+        
+        
+        return null;
+    }
+    
+    
     
     public long[] align2Compliment(long mer){
         int strand = 0; // notation for strand -
