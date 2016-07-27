@@ -302,15 +302,15 @@ public class EncodedSequence {
     
     public long alignComp(long mer){
         
-        int index = alignComp(mer, 0, mersComp.length-1);
-        if(index>0)return mersComp[index]&mask2;
+        int index = alignComp(mer, 0, mers.length-1);
+        if(index>0)return mers[index]&mask2;
         return -1;
     }
     
     public int alignComp(long mer, int left, int right){
         
         int mid = (left+right)/2;
-        long i = mersComp[mid]&mask;
+        long i = mers[mid]&mask;
         
         if(left>right)return -1;
         else
