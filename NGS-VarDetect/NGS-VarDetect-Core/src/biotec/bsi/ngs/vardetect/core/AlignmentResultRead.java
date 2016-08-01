@@ -83,19 +83,31 @@ public class AlignmentResultRead {
     }
     
     public void createGroupCharacteristic(double threshold){
+        /* Create grouping characteristic of each shortgun sequence(store in shrtRead) */
         for(int i=0;i<this.shrtRead.size();i++){
             shrtRead.get(i).createInGroupOutGroup(threshold);
         }
     }
     
     public void calculateEuclidientdistance(){
-        this.distanceTable = new double[shrtRead.size()][shrtRead.size()];
+        
+        this.distanceTable = new double[shrtRead.size()][shrtRead.size()]; // Prelocate 2D double array for store distance value (size = [number of shortgun read] x [number of shortgun read])
         for(int i =0;i<shrtRead.size();i++){
-            double[] distanceVector = new double[shrtRead.size()];
+            double[] distanceVector = new double[shrtRead.size()]; // distanceVector is a 1D double array stand for store distance value of main shortgun sequence clustervector and all other shortgun sequence clustervector
             ShortgunSequence dummyMainSS = shrtRead.get(i);
             for(int j=0;j<shrtRead.size();j++){
                 ShortgunSequence dummySubSS = shrtRead.get(j);
-                distanceVector[j] = distance(dummyMainSS.getClusterVector(),dummySubSS.getClusterVector());
+                
+                /*  distance function will calculate the distance vector of two in put vector               */
+                /*  We will pass the clusterVector as a input for distance function                         */
+                /*  Method getClusterVector will create the vector of align position of shortgun sequence   */
+                /*  Ex: read0SS0 has align on chr1 pos: 1000 and chr21 pos: 200                             */
+                /*  the clusterVector will look like this                                                   */
+                /*  [1000,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,200,0,0,0]                                    */
+                /*  as you can see the vector has 24 element which has value at first and 21 element follow by the chr that align */
+                /*  In this Implementtation we selected only top two alignment result to create cluster vector */ 
+                
+                distanceVector[j] = distance(dummyMainSS.getClusterVector(),dummySubSS.getClusterVector()); // this will return single value of distance between two vector 
                 this.distanceTable[i][j] = distanceVector[j];
 //                System.out.println();
 //                System.out.println("DummyMainSS/"+dummyMainSS.getReadName()+" pair with DummySubSS/"+dummySubSS.getReadName()+" : distanceVector["+j+"] = "+distanceVector[j]);
@@ -106,7 +118,7 @@ public class AlignmentResultRead {
 //                System.out.print("\t"+distanceVector[a]);
             }
 //            System.out.println();
-            dummyMainSS.addDistanceVector(distanceVector);
+            dummyMainSS.addDistanceVector(distanceVector); // store distance value in to main shrtgun sequence
 //            System.out.println("Check after add to "+dummyMainSS.getReadName());
             for(int a=0;a<distanceVector.length;a++){
 //                System.out.print("\t"+distanceVector[a]);

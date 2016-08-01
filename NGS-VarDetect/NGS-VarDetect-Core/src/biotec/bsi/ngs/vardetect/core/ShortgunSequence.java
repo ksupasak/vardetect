@@ -28,6 +28,7 @@ public class ShortgunSequence {
     ArrayList<MerRead> mers;
     ArrayList listChr;
     ArrayList listPos;
+    ArrayList listStrand;
     ArrayList listResultCode;
     ArrayList inGroup;
     ArrayList outGroup;        
@@ -46,6 +47,7 @@ public class ShortgunSequence {
         this.countResultSortedCut = new LinkedHashMap();
         this.listChr = new ArrayList();
         this.listPos = new ArrayList();
+        this.listStrand = new ArrayList();
         this.listResultCode = new ArrayList();
         this.clusterVector = new long[24];
         this.distanceVector = new double[24];
@@ -71,7 +73,14 @@ public class ShortgunSequence {
 //    }
     
     public void addDistanceVector(double[] a){
-        /* distanceVector store the distance value of this ShortgunSequence have 24 element (equal to number of chromosome) */
+        
+        /* distanceVector store the distance value of this ShortgunSequence have number of element equal to number of shortgun sequencethat has been feed in the algorithm (number of input) */
+        /*  EX: input sequence have 5 shortgun sequence  */
+        /*  distancevector will have 5 element also     */
+        /*  this shortgun sequence is ss1                */
+        /*  distanceVector = [ 0 , some distance value btw ss1 and ss2 , some distance value btw ss1 and ss3 , some distance value btw ss1 and ss4 , some distance value btw ss1 and ss5 ] */
+        /* this distanceVector has been calculate from method calculateEuclidientdistancein in class AlignmentResultRead  */
+        
         distanceVector = a;
     }
     
@@ -136,8 +145,12 @@ public class ShortgunSequence {
         return this.listPos;
     }
     
+    public ArrayList getListStrand(){
+        return this.listStrand;
+    }
+    
     public long[] getClusterVector(){ 
-        /* Return vector of top two high match position of this short sequence Vect has 24 dimension equal to number of chromosome)*/
+        /* Return vector of top two high match position of this short sequence Vector has 24 dimension equal to number of chromosome)*/
         createVectorTopTwo();
         System.out.print(readName + ": This is clusterVector vector check:\t");
         for (int i = 0; i<clusterVector.length;i++){
@@ -160,30 +173,30 @@ public class ShortgunSequence {
 //    }
     
     public ArrayList getInGroup(){
-        return this.outGroup;
+        return this.inGroup;
     }
     
     public ArrayList getOutGroup(){
-        return this.outGroup;
+        return this.outGroup; // ArrayList outGroup is already rearrange from low to high
     }
     
     public void createInGroupOutGroup(double th){
-        
+        /* Key for clustering */
         /*                                                                                                              */
-        /* Create inGroup and outGroup which is important for clustering purpose                                        */
-        /* To grouping result, our assumption is samegroup of shortgun sequence must have same outGroup                 */
-        /* outGroup is ArrayList that contain the index on distance vector that have distant value above the threshold  */
+        /* Create inGroup and outGroup which is important for clustering purpose (For this shortgun Sequence)                                       */
+        /* To grouping result, our assumption is: samegroup of shortgun sequence must have same outGroup                 */
+        /* outGroup is ArrayList that contain the index of distance vector that have distant value above the threshold  */
         /* Ex:  we have 4 shortgunsequence (R0SS0,R0SS1,R1SS0,R1SS1)                                                    */ 
         /* R0SS0 : inGroup = 4  outGroup = 2 3                                                                          */
         /* R0SS1 : inGroup = 3  outGroup = 1 4                                                                          */
         /* R1SS0 : inGroup = 2  outGroup = 1 4                                                                          */
         /* R1SS1 : inGroup = 1  outGroup = 2 3                                                                          */
         /*                                                                                                              */
-        /* You can see that we can group it to 2 group by obseving the outGroup value                                   */    
+        /* You can see that we can group it to 2 group by observing the outGroup value                                   */    
         /*                                                                                                              */
         
         for(int i =0;i<this.distanceVector.length;i++){
-            double dValue = this.distanceVector[i];
+            double dValue = this.distanceVector[i]; 
             if (dValue <= th){
                 inGroup.add(i);
             }else{
@@ -317,11 +330,21 @@ public class ShortgunSequence {
 //                        }
 //                        
 //                    }
-                    /* Special part create lost of chr and pos for clustering propose */
+                    /******************************************************************/
+                    /* Special part create list of chr and pos for clustering propose */
                     if(this.countResult.get(selectKey)[0]>=this.threshold && this.countResult.get(selectKey)[1]<=this.threshold){
                         this.countResultSortedCut.put((long)selectKey, this.countResult.get(selectKey));
                         long chr = ((long)selectKey)>>29;
                         long pos = ((long)selectKey&this.mask);
+                        
+                        String strandNot = "no";
+                        if(((((long)selectKey)>>29)&1) == 1){
+                            strandNot = "+";
+                        }else if(((((long)selectKey)>>29)&1) == 0){
+                            strandNot = "-";
+                        }  
+                        
+                        listStrand.add(strandNot);
                         listChr.add(chr);
                         listPos.add(pos);
                         listResultCode.add(selectKey);
@@ -339,6 +362,9 @@ public class ShortgunSequence {
     }
     
     public void countAlignmentData(){
+        /************** Key function to create Report ***************/
+        /************************************************************/
+        
         System.out.println("");
         System.out.println("");
         System.out.println("Do countAlignmentData on " + readName);
@@ -349,9 +375,12 @@ public class ShortgunSequence {
         long green,yellow,red,orange,redInt,yellowInt,greenInt,orangeInt;
         
         for (int i=0;i<this.mers.size();i++){           // Loop Mer by Mer
-//            System.out.println("Loop Mer by Mer :" + this.mers.get(i).getMerCode() + "Index : " + this.mers.get(i).getMerIndex());
+//            System.out.println("\nLoop Mer by Mer :" + this.mers.get(i).getMerCode() + "Index : " + this.mers.get(i).getMerIndex());
             MerRead dummyMer = this.mers.get(i);
-            dummyMer.createAlignmentResultStrand();
+            /*** investigate this function ********/
+            /* May cause from minus index part */
+            dummyMer.createAlignmentResultStrandV2();
+            /**********/
             ArrayList<Long> algnResult = dummyMer.getAlignmentResultStrand();
             
             for (int j=0;j<algnResult.size();j++){      // Loop Alignment Result
@@ -367,7 +396,7 @@ public class ShortgunSequence {
                     
                 if (this.countResult.containsKey(algnCode)){
 
-//                    System.out.println("Align At: " + algnCode);
+                    System.out.println("Align At: " + algnCode);
                     countAndColor = this.countResult.get(algnCode);                       
                     count = countAndColor[0];
                     red = countAndColor[1];
@@ -414,7 +443,7 @@ public class ShortgunSequence {
                     this.countResult.put(algnCode, countAndColor);  
                 }else{
 //                    System.out.println("Do first time");
-//                       System.out.println("First time Align At: " + alignPosV2);
+//                    System.out.println("First time Align At: " + algnCode);
                     count = 1;
                     countAndColor[0] = count;
                     countAndColor[1] = colorCode[0]; // Red
@@ -486,4 +515,13 @@ public class ShortgunSequence {
 
         return colorCode;
     }
+    
+    public void reconstructAlignment(){
+        
+//        for(int ii =0; ii<this.listChr.size();ii++){
+//            
+//        }
+//        this.listChr.
+
+    }    
 }

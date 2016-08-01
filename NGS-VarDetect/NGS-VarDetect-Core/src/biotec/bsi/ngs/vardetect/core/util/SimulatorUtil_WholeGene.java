@@ -6,10 +6,17 @@
 package biotec.bsi.ngs.vardetect.core.util;
 
 import biotec.bsi.ngs.vardetect.core.ChromosomeSequence;
+import biotec.bsi.ngs.vardetect.core.ConcatenateCut;
 import biotec.bsi.ngs.vardetect.core.InputSequence;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.Vector;
 
 /**
@@ -221,7 +228,10 @@ public class SimulatorUtil_WholeGene {
         return is;
     }
     
-    public static InputSequence simulateComplexWholeGeneRandom(ReferenceSequence ref, int num_read, int ln_read, int num_shortgun){
+    public static InputSequence simulateComplexWholeGeneRandom(ReferenceSequence ref, int num_read, int ln_read, int num_shortgun) throws FileNotFoundException{
+        PrintStream ps = new PrintStream(ref.getPath()+"_Simulatedata.txt");
+        ps.println("Simulated Data\n");
+        
         /* num_read is number of read per random time */
         InputSequence is = new InputSequence();
         Random rand1 = new Random(); /* For random chromosome */
@@ -276,7 +286,12 @@ public class SimulatorUtil_WholeGene {
                 }
             }
             System.out.println("concatenate");
-            CharSequence iniTemplate = SequenceUtil.concatenateComplexChromosome(chrA, chrB, ln_read-1, ln_read-1);
+            ConcatenateCut concatenateSequence = SequenceUtil.concatenateComplexChromosome(chrA, chrB, ln_read-1, ln_read-1);
+            CharSequence iniTemplate = concatenateSequence.getSequence();
+            
+            ps.println("Random cut of " + concatenateSequence.getchrA() + " at position " + String.valueOf(concatenateSequence.getiniA()) + " : " + concatenateSequence.getcutA().toString());
+            ps.println("Random cut of " + concatenateSequence.getchrB() + " at position " + String.valueOf(concatenateSequence.getiniB()) + " : " + concatenateSequence.getcutB().toString());
+            ps.println("Type is " + concatenateSequence.getType());
             
             chrA.lazyLoad();
             chrB.lazyLoad();
@@ -296,6 +311,7 @@ public class SimulatorUtil_WholeGene {
 
                 System.out.println("iniread : "+iniread);
                 System.out.println("ln_read : "+ln_read);
+                
                 read = iniTemplate.subSequence(iniread, iniread+ln_read).toString();
 
 
@@ -310,6 +326,15 @@ public class SimulatorUtil_WholeGene {
                 is.addRead(ss);
                 ss = null;
                 chrs =null;
+                
+                ps.println("Read name : "+ readName);
+                ps.println("iniread : "+iniread);
+                ps.println("ln_read : "+ln_read);
+                ps.println("Initial position: " + iniread);
+                ps.println("Number of base from " + namechrA + " : " + ((ln_read-iniread)-1));
+                ps.println("Number of base from " + namechrB + " : " + (iniread+1));
+                ps.println(read);
+                ps.println();
                 
                 System.gc();
             }
@@ -335,4 +360,5 @@ public class SimulatorUtil_WholeGene {
                
         return is;
     }
+  
 }

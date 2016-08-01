@@ -6,6 +6,7 @@
 package biotec.bsi.ngs.vardetect.core.util;
 
 import biotec.bsi.ngs.vardetect.core.ChromosomeSequence;
+import biotec.bsi.ngs.vardetect.core.ConcatenateCut;
 import biotec.bsi.ngs.vardetect.core.EncodedSequence;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.ExonIntron;
@@ -1294,10 +1295,11 @@ public class SequenceUtil {
         return concatenateCut;
     }
     
-    public static CharSequence concatenateComplexChromosome(ChromosomeSequence chrA,ChromosomeSequence chrB, int cutLengthA, int cutLengthB){
+    public static ConcatenateCut concatenateComplexChromosome(ChromosomeSequence chrA,ChromosomeSequence chrB, int cutLengthA, int cutLengthB){
         //chrA.getsequence
         int check,checkA = 1,checkB = 1;
-        CharSequence cutA,cutB,concatenateCut;
+        CharSequence cutA,cutB,dummyConcatenateCut;
+        ConcatenateCut concatenateCut = new ConcatenateCut(); 
         CharSequence checkN = "N";
         
         int lengthA = chrA.getSequence().length();
@@ -1331,13 +1333,16 @@ public class SequenceUtil {
                 cutB = chrB.getSequence().subSequence(iniB, iniB+cutLengthB);
             }else checkB = 0;
         }
-        
+        concatenateCut.addBasicInfo(chrA.getName(), chrB.getName(), iniA, iniB);
         Random fusionType = new Random();
         int type = fusionType.nextInt(4);
         
         if(type == 0){
             /* strand ++ */
-            concatenateCut = cutA.toString()+cutB.toString();
+            dummyConcatenateCut = cutA.toString()+cutB.toString();
+            concatenateCut.addSequence(dummyConcatenateCut);
+            concatenateCut.addType(type);
+            concatenateCut.addCutInfo(cutA, cutB);
             
             System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
             System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
@@ -1348,7 +1353,10 @@ public class SequenceUtil {
             String invCutB = SequenceUtil.inverseSequence(cutB.toString());
             String compCutB = SequenceUtil.createComplimentV2(invCutB);
             
-            concatenateCut = cutA.toString()+compCutB;
+            dummyConcatenateCut = cutA.toString()+compCutB;
+            concatenateCut.addSequence(dummyConcatenateCut);
+            concatenateCut.addType(type);
+            concatenateCut.addCutInfo(cutA, cutB);
             
             System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
             System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
@@ -1359,7 +1367,10 @@ public class SequenceUtil {
             String invCutA = SequenceUtil.inverseSequence(cutA.toString());
             String compCutA = SequenceUtil.createComplimentV2(invCutA);
             
-            concatenateCut = compCutA + cutB.toString();
+            dummyConcatenateCut = compCutA + cutB.toString();
+            concatenateCut.addSequence(dummyConcatenateCut);
+            concatenateCut.addType(type);
+            concatenateCut.addCutInfo(cutA, cutB);
             
             System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
             System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
@@ -1372,7 +1383,10 @@ public class SequenceUtil {
             String invCutB = SequenceUtil.inverseSequence(cutB.toString());
             String compCutB = SequenceUtil.createComplimentV2(invCutB);
         
-            concatenateCut = compCutA + compCutB;
+            dummyConcatenateCut = compCutA + compCutB;
+            concatenateCut.addSequence(dummyConcatenateCut);
+            concatenateCut.addType(type);
+            concatenateCut.addCutInfo(cutA, cutB);
             
             System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
             System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);

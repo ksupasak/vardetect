@@ -38,8 +38,13 @@ public class Clustering {
                     if(j!=i){
                         ShortgunSequence subDummySS = listSS.get(j);
                         ArrayList subOutGroup = subDummySS.getOutGroup();
-                        
+                       
                         if(mainOutGroup.equals(subOutGroup)){
+                            
+                            
+                            
+                            
+                            
                             group.addShortgunRead(subDummySS);
                             checkList.add(j);
                         }

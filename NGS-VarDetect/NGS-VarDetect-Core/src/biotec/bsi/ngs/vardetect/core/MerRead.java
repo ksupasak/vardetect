@@ -14,16 +14,19 @@ import java.util.ArrayList;
 public class MerRead {
     
     private long merCode;
-    private int index;
+    private long merCodeComp;
+    private int index,indexComp;
     private ArrayList<Long> chrPos;
     private ArrayList<Long> chrAlgn;
-    private ArrayList<Long> chrStrandPos;
-    private ArrayList<Long> chrStrandAlgn;
+    private ArrayList<Long> chrStrandPos;   // (Arraylist that store all code that align on thisMerRead (can have more than one if it repeat sequence)
+    private ArrayList<Long> chrStrandPosComp; 
+    private ArrayList<Long> chrStrandAlgn;  // 
     
     public MerRead(){
         this.chrPos = new ArrayList();
         this.chrAlgn = new ArrayList();
         this.chrStrandPos = new ArrayList();
+        this.chrStrandPosComp = new ArrayList();
         this.chrStrandAlgn = new ArrayList();
     
     }
@@ -43,6 +46,29 @@ public class MerRead {
 //                    System.out.println("This is strand check (must be 1) : " + ((code[i]>>28)&1));
 //                    System.out.println();
                     this.chrStrandPos.add(code[i]);
+                    
+//                    System.out.println("***** Do Add strand+ round chr " + chrNumber + "*****" );
+                }
+            }
+        }                
+    }
+    
+    public void addMatchResultStrandCompliment(long mer,long[] pos, int idx, long chrNumber){
+        
+        long[] code = pos;
+        this.merCodeComp = mer;
+        this.indexComp = idx;
+        
+        if(pos!=null&&pos.length>0){
+            int len = pos.length;
+            if(pos[0] > 0){
+                for(int i=0;i<len;i++){
+                    code[i] = (chrNumber<<29)+pos[i]; // leftshift 29 bit because pos is 29 bit length [strand:position]
+//                    System.out.println();
+//                    System.out.println("This is strand check (must be 1) : " + ((code[i]>>28)&1));
+//                    System.out.println();
+                    this.chrStrandPosComp.add(code[i]);
+//                    System.out.println("***** Do Add strand- round chr " + chrNumber + "*****" );
                 }
             }
         }                
@@ -76,14 +102,55 @@ public class MerRead {
             }else if(((chrStrandPos.get(i)>>28)&1) == 0){
                 strandNot = "-";
             }        
-            System.out.println();
-            System.out.println("Check chrPos " + chrStrandPos.get(i));
-            System.out.println("Check strand : " + strandNot);
-            System.out.println("Check chrPos tranform to chrnumber" + (chrStrandPos.get(i)>>29));
-            System.out.println();
+//            System.out.println();
+//            System.out.println("Check chrPos " + chrStrandPos.get(i));
+//            System.out.println("Check strand : " + strandNot);
+//            System.out.println("Check chrPos tranform to chrnumber" + (chrStrandPos.get(i)>>29));
+//            System.out.println();
             chrStrandAlgn.add(newAlignResult);
             
         }        
+    }
+    
+    public void createAlignmentResultStrandV2(){
+        
+        /* First round non compliment */
+        String strandNot = "no value";
+        for(int i =0;i<this.chrStrandPos.size();i++){
+            
+            long newAlignResult = (chrStrandPos.get(i)-this.index);
+            if(((chrStrandPos.get(i)>>28)&1) == 1){
+                strandNot = "+";
+            }else if(((chrStrandPos.get(i)>>28)&1) == 0){
+                strandNot = "-";
+            }        
+//            System.out.println();
+//            System.out.println("Check chrPos " + chrStrandPos.get(i));
+//            System.out.println("Check strand : " + strandNot);
+//            System.out.println("Check chrPos tranform to chrnumber" + (chrStrandPos.get(i)>>29));
+//            System.out.println();
+            chrStrandAlgn.add(newAlignResult);
+            
+        }
+        
+        /* Second round compliment */
+        strandNot = "no value";
+        for(int i =0;i<this.chrStrandPosComp.size();i++){
+            
+            long newAlignResult = (chrStrandPosComp.get(i)-this.indexComp);
+            if(((chrStrandPosComp.get(i)>>28)&1) == 1){
+                strandNot = "+";
+            }else if(((chrStrandPosComp.get(i)>>28)&1) == 0){
+                strandNot = "-";
+            }        
+//            System.out.println();
+//            System.out.println("Check chrPos " + chrStrandPos.get(i));
+//            System.out.println("Check strand : " + strandNot);
+//            System.out.println("Check chrPos tranform to chrnumber" + (chrStrandPos.get(i)>>29));
+//            System.out.println();
+            chrStrandAlgn.add(newAlignResult);
+            
+        } 
     }
     
     public void createAlignmentResult(){
@@ -109,6 +176,10 @@ public class MerRead {
 
     public long getMerCode(){
         return this.merCode;
+    }
+    
+    public long getMerCodeComp(){
+        return this.merCodeComp;
     }
     
     public int getMerIndex(){
