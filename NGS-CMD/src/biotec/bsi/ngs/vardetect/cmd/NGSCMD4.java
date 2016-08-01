@@ -48,12 +48,12 @@ public class NGSCMD4 {
         //ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
         System.out.println("Simulate Data");
         //InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGene(ref, 5, 100, "20", "21");
-        InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandom(ref, 1, 100, 1);
+        InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandom(ref, 5, 100, 5);
         
         
-        Aligner aligner = AlignerFactory.getAligner();
+        Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
           
-        AlignmentResultRead align = aligner.align(ref, input);
+        AlignmentResultRead align = aligner.align(ref, input);  // function align is located in binary aligner
         
         
 //        Map<String,ArrayList<Map>> result = new HashMap();
@@ -87,7 +87,7 @@ public class NGSCMD4 {
         System.out.println(" ****** Check cluster result: " + align.getclusterResult().size());
         */
         
-        align.calculateEuclidientdistance();
+        align.calculateEuclidientdistance(); // Must have this order before clustering
         VisualizeResult.visualizeDistanceTable(align);
         align.writeDistanceTableToPath(ref.getPath(), "txt");
         
