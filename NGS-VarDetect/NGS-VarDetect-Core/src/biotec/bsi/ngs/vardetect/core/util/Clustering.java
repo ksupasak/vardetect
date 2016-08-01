@@ -42,7 +42,7 @@ public class Clustering {
                         if(mainOutGroup.equals(subOutGroup)){
                             
                             
-                            
+                           
                             
                             
                             group.addShortgunRead(subDummySS);
@@ -54,6 +54,10 @@ public class Clustering {
             }     
         }
         return listGroup;   
+    }
+    
+    public void checkStrand(){
+        
     }
     
 }
