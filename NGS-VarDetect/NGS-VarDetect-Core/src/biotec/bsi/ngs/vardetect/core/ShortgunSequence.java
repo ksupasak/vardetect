@@ -26,10 +26,10 @@ public class ShortgunSequence {
     private double[] distanceVector;
     
     ArrayList<MerRead> mers;
-    ArrayList listChr;
-    ArrayList listPos;
-    ArrayList listStrand;
-    ArrayList listResultCode;
+    ArrayList listChr;                          // [long] ArrayList of align chromosome )already sort and cut with threshold [match>5 & red<5]
+    ArrayList listPos;                          // [long] ArrayList of align chromosome )already sort and cut with threshold [match>5 & red<5]
+    ArrayList listStrand;                       // [String] ArrayList of align chromosome )already sort and cut with threshold [match>5 & red<5]
+    ArrayList listResultCode;                   // [object should cast to long (chr 5bit|strand 1bit|position 28bit)] ArrayList of align chromosome )already sort and cut with threshold [match>5 & red<5]
     ArrayList inGroup;
     ArrayList outGroup;        
     ArrayList<VectorResult> listVector;

@@ -21,9 +21,9 @@ import java.util.Set;
 public class AlignmentResultRead {
     private ArrayList<ShortgunSequence> shrtRead;
     private ArrayList<ClusterGroup> clusterResult;
-    long[] allClusterCodeSorted;
-    long[] allClusterCode;
-    double[][] distanceTable;
+    private long[] allClusterCodeSorted;
+    private long[] allClusterCode;
+    private double[][] distanceTable;
     private static long mask = 268435455;
     private ClusterGroup group;
     
@@ -36,6 +36,10 @@ public class AlignmentResultRead {
     
     public void addResult(ShortgunSequence inRead){
         this.shrtRead.add(inRead);
+    }
+    
+    public void addGroupReult(ArrayList<ClusterGroup> inGroupResult){
+        this.clusterResult = inGroupResult;
     }
     
     public ArrayList<ShortgunSequence> getResult(){
@@ -380,5 +384,21 @@ public class AlignmentResultRead {
         }   
     }    
         
-    
+    public void writeClusterGroupToPath(String path, String fa) throws FileNotFoundException, IOException {
+
+       
+        PrintStream ps = new PrintStream(path+"_ClusterGroup."+ fa);
+       
+        for(int i=0;i<this.clusterResult.size();i++){
+            ClusterGroup dummyCG = this.clusterResult.get(i);
+            ps.print("Group" + i + ":");
+            ArrayList<ShortgunSequence> listSS = dummyCG.getShortgunRead();
+            for(int j=0;j<listSS.size();j++){
+                ShortgunSequence dummySS = listSS.get(j);
+                ps.print("\t"+dummySS.getReadName());
+            }
+            ps.println();
+        }  
+    }
+  
 }
