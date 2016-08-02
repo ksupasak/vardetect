@@ -93,8 +93,12 @@ public class NGSCMD4 {
         
         
         ArrayList<ClusterGroup> groupResult = Clustering.clusteringGroup(align, 100);
+        align.addGroupReult(groupResult);
+        align.writeClusterGroupToPath(ref.getPath(), "txt");
+        
         System.out.println(" check number of group : " + groupResult.size());
         VisualizeResult.visualizeClusterGoup(groupResult);
+        
         
         // Create save result path by just plugin AlignmentResult
         
