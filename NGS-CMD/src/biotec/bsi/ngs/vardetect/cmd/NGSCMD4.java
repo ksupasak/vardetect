@@ -47,8 +47,8 @@ public class NGSCMD4 {
        
         //ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
         System.out.println("Simulate Data");
-        //InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGene(ref, 5, 100, "20", "21");
-        InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandom(ref, 5, 100, 5);
+        InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGene(ref, 5, 100, "20", "21");
+        //InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandom(ref,1, 100, 1);
         
         
         Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
@@ -99,6 +99,7 @@ public class NGSCMD4 {
         System.out.println(" check number of group : " + groupResult.size());
         VisualizeResult.visualizeClusterGoup(groupResult);
         
+        align.enableReconstruct();
         
         // Create save result path by just plugin AlignmentResult
         
