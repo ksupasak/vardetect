@@ -33,10 +33,14 @@ public class ShortgunSequence {
     ArrayList inGroup;
     ArrayList outGroup;        
     ArrayList<VectorResult> listVector;
+    ArrayList<Long> frontAlgnCode;
+    ArrayList<Long> backAlgnCode;
+    ArrayList<ReconstructSequence> listReconSeq;
     //ArrayList<AlignmentData> algns;
     Map<Long,long[]> countResult;
     Map<Long,long[]> countResultSorted;
     Map<Long,long[]> countResultSortedCut;
+    Map<Long,int[]> algnCodeIndex;             // map store the align code as key and start index , last index as value
     
     public ShortgunSequence(String seq){
         this.seq = seq;
@@ -45,6 +49,7 @@ public class ShortgunSequence {
         this.countResult = new LinkedHashMap();
         this.countResultSorted = new LinkedHashMap();
         this.countResultSortedCut = new LinkedHashMap();
+        this.algnCodeIndex = new LinkedHashMap();
         this.listChr = new ArrayList();
         this.listPos = new ArrayList();
         this.listStrand = new ArrayList();
@@ -53,6 +58,9 @@ public class ShortgunSequence {
         this.distanceVector = new double[24];
         this.inGroup = new ArrayList();
         this.outGroup = new ArrayList();
+        this.frontAlgnCode = new ArrayList();
+        this.backAlgnCode = new ArrayList();
+        this.listReconSeq = new ArrayList();
         
     }
     
@@ -516,8 +524,122 @@ public class ShortgunSequence {
         return colorCode;
     }
     
+    public void detectStrandPattern(){
+        System.out.println("Detect possible pattern of " + this.readName);
+        ArrayList containCheck = new ArrayList();
+        
+        /*  Extract beginIndex and LstIndex of each alignCode  */
+        for(int i=0;i<this.mers.size();i++){                                                            // Loop Mer
+            MerRead dummyMerRead = this.mers.get(i);
+            ArrayList<Long> chrStrandAlgn = dummyMerRead.getAlignmentResultStrand();
+            
+            for(int ii=0;ii<chrStrandAlgn.size();ii++){                                                 // Loop over align code of mer
+                long algnCode = chrStrandAlgn.get(ii);                                                  // get align code of mer
+                
+                for(int iii=0;iii<this.listResultCode.size();iii++){                                    // Loop over code cut of this shortgun Sequence
+                    long algnCodeCut = (long)listResultCode.get(iii);                                   // algn code cut of shortgun sequence
+                    
+                    if (algnCode == algnCodeCut){                                                       // Check this mer is align or not
+                        /* Match case */
+                        long[] dummyCountResult = this.countResultSortedCut.get(algnCode);
+                        int count = (int)dummyCountResult[0];       // get count number of this algnCode
+                        
+                        if (containCheck.contains(algnCode)){ 
+                            
+                        }else{                                                                          // First time
+                            int[] Index = new int[2];
+                            int beginIndex = dummyMerRead.getMerIndex();                                // calculate first and last index for this algnCode
+                            int lastIndex = (beginIndex + count)-1;
+                            Index[0] = beginIndex;
+                            Index[1] = lastIndex;
+                            
+                            this.algnCodeIndex.put(algnCode, Index);                                    // put algncode and Index infomation to hashmap
+                            containCheck.add(algnCode);
+                        }       
+                    }
+                }
+            }
+        }
+        
+        /*  Possible combination pattern check  */
+        Set set = this.algnCodeIndex.keySet();
+        Iterator mainAlgnCodeIter = set.iterator();
+            
+        while(mainAlgnCodeIter.hasNext()){                                                              
+            Object mainAlgnCode = mainAlgnCodeIter.next();
+            int mainBeginIdx = this.algnCodeIndex.get(mainAlgnCode)[0];
+            int mainLastIdx = this.algnCodeIndex.get(mainAlgnCode)[1];
+            
+            Iterator subAlgnCodeIter = set.iterator();
+            while(subAlgnCodeIter.hasNext()){
+                Object subAlgnCode = subAlgnCodeIter.next();
+                int subBeginIdx = this.algnCodeIndex.get(subAlgnCode)[0];
+                int subLastIdx = this.algnCodeIndex.get(subAlgnCode)[1];
+                
+                if (mainLastIdx < subBeginIdx){                                                             // check for create new possible combination 
+                    ReconstructSequence newRecon = new ReconstructSequence(this.mers,(long)mainAlgnCode,(long)subAlgnCode,mainBeginIdx,mainLastIdx,subBeginIdx,subLastIdx); 
+                    
+                    this.listReconSeq.add(newRecon);
+                }               
+            }    
+        }               
+    }
+                    
     public void reconstructAlignment(){
         
+        ArrayList containCheck = new ArrayList();
+        
+        for(int i=0;i<this.mers.size();i++){                                                            // Loop Mer
+            MerRead dummyMerRead = this.mers.get(i);
+            ArrayList<Long> chrStrandAlgn = dummyMerRead.getAlignmentResultStrand();
+            
+            for(int ii=0;ii<chrStrandAlgn.size();ii++){                                                 // Loop over align code of mer
+                long algnCode = chrStrandAlgn.get(ii);                                                  // get align code of mer
+                
+                for(int iii=0;iii<this.listResultCode.size();iii++){                                    // Loop over code cut of this shortgun Sequence
+                    long algnCodeCut = (long)listResultCode.get(iii);                                   // algn code cut of shortgun sequence
+                    
+                    if (algnCode == algnCodeCut){                                                       // Check this mer is align or not
+                        /* Match case */
+                        long[] dummyCountResult = this.countResultSortedCut.get(algnCode);
+                        long count = dummyCountResult[0];       // get count number of this algnCode
+                        
+                        dummyMerRead.addAlignSymbol("1");
+                        if (containCheck.contains(algnCode)){                                           // Check for first time found (if true it is second time)
+                            
+                           for(int idx=0;i<listReconSeq.size();idx++){                                  // Loop in the reconstruct list to pick the right ReconstructSequence object that already be create
+              
+                               ReconstructSequence dummyRecon = listReconSeq.get(idx);
+                               if(dummyRecon.getAlignCode().contains(algnCode)){                        // Check for the object ReconstructSequence to pick the right one (in case that they will have many object in it)
+                                   
+                                   ReconstructSequence selectRecon = dummyRecon;
+                                   selectRecon.addMer(dummyMerRead);
+                                   
+                                   this.listReconSeq.add(idx, selectRecon);
+                               }
+                           }                                                       
+                        }else{                                                                          // First time
+                            /* Problen here : distingush between not contain in check because it new or not contain because it a second part */
+                            ReconstructSequence selectRecon = new ReconstructSequence();
+                            selectRecon.addAlignCode(algnCode);                                         // add align code to object ReconstructSequence   
+                            selectRecon.addMer(dummyMerRead);                                           // add Mer
+                            
+                            containCheck.add(algnCode);
+                            this.listReconSeq.add(selectRecon);
+                        }
+                        
+                    }else{
+                        /* non match case*/
+                        dummyMerRead.addAlignSymbol("0");
+                        
+                        
+                        
+                    }
+                    /* Follow note card add break point during alignment  */
+                }
+                
+            }
+        }
 //        for(int ii =0; ii<this.listChr.size();ii++){
 //            
 //        }

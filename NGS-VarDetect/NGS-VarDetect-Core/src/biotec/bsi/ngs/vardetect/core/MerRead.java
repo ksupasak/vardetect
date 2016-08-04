@@ -18,9 +18,10 @@ public class MerRead {
     private int index,indexComp;
     private ArrayList<Long> chrPos;
     private ArrayList<Long> chrAlgn;
-    private ArrayList<Long> chrStrandPos;   // (Arraylist that store all code that align on thisMerRead (can have more than one if it repeat sequence)
+    private ArrayList<Long> chrStrandPos;       // (Arraylist that store all code that align on thisMerRead (can have more than one if it repeat sequence)
     private ArrayList<Long> chrStrandPosComp; 
-    private ArrayList<Long> chrStrandAlgn;  // 
+    private ArrayList<Long> chrStrandAlgn;      // (Arraylist that store the position minus mer index of all code that align on thisMerRead (can have more than one if it repeat sequence)
+    private String alignSymbol;
     
     public MerRead(){
         this.chrPos = new ArrayList();
@@ -29,6 +30,12 @@ public class MerRead {
         this.chrStrandPosComp = new ArrayList();
         this.chrStrandAlgn = new ArrayList();
     
+    }
+    
+    public void addAlignSymbol(String symbol){
+        // This function will be call when reconstruct
+        
+        this.alignSymbol = symbol;      // alignSymbol = 1 mean align | alignSymbol = 0 mean not align
     }
     
     public void addMatchResultStrand(long mer,long[] pos, int idx, long chrNumber){

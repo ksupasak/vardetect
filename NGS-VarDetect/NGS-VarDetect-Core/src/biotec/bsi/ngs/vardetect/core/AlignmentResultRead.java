@@ -86,6 +86,12 @@ public class AlignmentResultRead {
         return this.distanceTable;
     }
     
+    public void enableReconstruct(){
+        for(int i =0;i<shrtRead.size();i++){
+            shrtRead.get(i).detectStrandPattern();
+        }
+    }
+    
     public void createGroupCharacteristic(double threshold){
         /* Create grouping characteristic of each shortgun sequence(store in shrtRead) */
         for(int i=0;i<this.shrtRead.size();i++){
