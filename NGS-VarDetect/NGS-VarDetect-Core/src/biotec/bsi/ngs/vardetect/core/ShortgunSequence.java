@@ -552,7 +552,9 @@ public class ShortgunSequence {
                             int lastIndex = (beginIndex + count)-1;
                             Index[0] = beginIndex;
                             Index[1] = lastIndex;
-                            
+                            System.out.println("Check beginIndex :" + Index[0]);
+                            System.out.println("Check lastIndex :" + Index[1]);
+                            System.out.println("algnCode " + algnCode +" chr: "+(algnCode>>29)+"Strand: " + ((algnCode>>28)&1));
                             this.algnCodeIndex.put(algnCode, Index);                                    // put algncode and Index infomation to hashmap
                             containCheck.add(algnCode);
                         }       
@@ -567,21 +569,64 @@ public class ShortgunSequence {
             
         while(mainAlgnCodeIter.hasNext()){                                                              
             Object mainAlgnCode = mainAlgnCodeIter.next();
-            int mainBeginIdx = this.algnCodeIndex.get(mainAlgnCode)[0];
-            int mainLastIdx = this.algnCodeIndex.get(mainAlgnCode)[1];
+            int mainLastIdx = 0;
+            int mainBeginIdx = 0;
+            int subBeginIdx = 0;
+            int subLastIdx = 0;
+            /* Check strand type part (in order to consider the right index)*/
+            String strandMainType =null;        
+            if(((((long)mainAlgnCode)>>29)&1) == 1){
+                strandMainType = "+";
+            }else if(((((long)mainAlgnCode)>>29)&1) == 0){
+                strandMainType = "-";
+            }
+
+            if(strandMainType.equals("+")){
+                mainBeginIdx = this.algnCodeIndex.get(mainAlgnCode)[0];
+                mainLastIdx = this.algnCodeIndex.get(mainAlgnCode)[1];
+            }else if(strandMainType.equals("-")){
+                mainBeginIdx = (this.mers.size() - this.algnCodeIndex.get(mainAlgnCode)[0])-1;
+                mainLastIdx = (this.mers.size() - this.algnCodeIndex.get(mainAlgnCode)[1])-1;
+            } 
+                
+//            int mainBeginIdx = this.algnCodeIndex.get(mainAlgnCode)[0];
+//            int mainLastIdx = this.algnCodeIndex.get(mainAlgnCode)[1];
             
             Iterator subAlgnCodeIter = set.iterator();
+            int checkFlag = 0;
             while(subAlgnCodeIter.hasNext()){
                 Object subAlgnCode = subAlgnCodeIter.next();
-                int subBeginIdx = this.algnCodeIndex.get(subAlgnCode)[0];
-                int subLastIdx = this.algnCodeIndex.get(subAlgnCode)[1];
-                
+//                int subBeginIdx = this.algnCodeIndex.get(subAlgnCode)[0];
+//                int subLastIdx = this.algnCodeIndex.get(subAlgnCode)[1];
+
+                /* Check strand type part (in order to consider the right index)*/
+                String strandType =null;        
+                if(((((long)subAlgnCode)>>29)&1) == 1){
+                    strandType = "+";
+                }else if(((((long)subAlgnCode)>>29)&1) == 0){
+                    strandType = "-";
+                }
+                        
+                if(strandType.equals("+")){
+                    subBeginIdx = this.algnCodeIndex.get(subAlgnCode)[0];
+                    subLastIdx = this.algnCodeIndex.get(subAlgnCode)[1];
+                }else if(strandType.equals("-")){
+                    subBeginIdx = (this.mers.size() - this.algnCodeIndex.get(subAlgnCode)[0])-1;
+                    subLastIdx = (this.mers.size() - this.algnCodeIndex.get(subAlgnCode)[1])-1;
+                } 
+                /* ------------------------------ */
                 if (mainLastIdx < subBeginIdx){                                                             // check for create new possible combination 
                     ReconstructSequence newRecon = new ReconstructSequence(this.mers,(long)mainAlgnCode,(long)subAlgnCode,mainBeginIdx,mainLastIdx,subBeginIdx,subLastIdx); 
                     
                     this.listReconSeq.add(newRecon);
-                }               
-            }    
+                    checkFlag = 1;
+                }
+            }
+            if(checkFlag == 0){             // checkFlag = 0 mean it's maybe single align 
+                ReconstructSequence newRecon = new ReconstructSequence(this.mers,(long)mainAlgnCode,mainBeginIdx,mainLastIdx); 
+   
+                this.listReconSeq.add(newRecon);
+            }
         }               
     }
                     

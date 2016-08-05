@@ -27,6 +27,7 @@ public class ReconstructSequence {
     }
     
     public ReconstructSequence(ArrayList<MerRead> inListMer, long inAlgnCodeF, long inAlgnCodeB, int inBeginIdxF, int inLastIdxF, int inBeginIdxB, int inLastIdxB){
+        this.listMer = new ArrayList();
         this.listMer.equals(inListMer);
         this.listAlgnCode = new ArrayList();
         this.beginIdxF = inBeginIdxF;
@@ -62,6 +63,28 @@ public class ReconstructSequence {
         
     }
     
+    public ReconstructSequence(ArrayList<MerRead> inListMer, long inAlgnCodeF, int inBeginIdxF, int inLastIdxF){
+        this.listMer = new ArrayList();
+        //this.listMer = inListMer;
+        this.listMer.equals(inListMer);
+        this.listAlgnCode = new ArrayList();
+        this.beginIdxF = inBeginIdxF;
+        this.lastIdxF = inLastIdxF;
+        this.algnCodeF = inAlgnCodeF;      
+        
+        this.chrF = ((long)this.algnCodeF)>>29;
+        this.posF = ((long)this.algnCodeF&this.mask);
+        if(((((long)this.algnCodeF)>>29)&1) == 1){
+            this.strandNotF = "+";
+        }else if(((((long)this.algnCodeF)>>29)&1) == 0){
+            this.strandNotF = "-";
+        }
+        
+        System.out.println("Possible pattern : chr"+ chrF + ":chr"+chrB+"\t Strand " + strandNotF + strandNotB + "\tstartIdxF: " + beginIdxF + " StopIdxF: "+lastIdxF+"\tStartIdxB: "+beginIdxB+" StopIdxB: "+lastIdxB);
+        
+        generateReconSequence();
+        
+    }
     
     public void addAlignCode(long input){
         this.listAlgnCode.add(input);
