@@ -48,7 +48,7 @@ public class NGSCMD4 {
         //ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
         System.out.println("Simulate Data");
         //InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGene(ref, 5, 100, "20", "21");
-        InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandom(ref,1, 100, 5);
+        InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandom(ref,5, 100, 5);
         
         
         Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
@@ -67,7 +67,7 @@ public class NGSCMD4 {
         
         //System.out.println("Size of Result: " + align.getAlignmentCount().size());
         
-        VisualizeResult.visualizeAlignmentCountMatchCutPlusColor(align,100);
+//        VisualizeResult.visualizeAlignmentCountMatchCutPlusColor(align,100);
         
         align.writeSortedResultToPath(ref.getPath(), "txt");
         align.writeUnSortedResultToPath(ref.getPath(), "txt");
@@ -88,7 +88,7 @@ public class NGSCMD4 {
         */
         
         align.calculateEuclidientdistance(); // Must have this order before clustering
-        VisualizeResult.visualizeDistanceTable(align);
+//        VisualizeResult.visualizeDistanceTable(align);
         align.writeDistanceTableToPath(ref.getPath(), "txt");
         
         
@@ -100,6 +100,7 @@ public class NGSCMD4 {
         VisualizeResult.visualizeClusterGoup(groupResult);
         
         align.enableReconstruct();
+        align.writePatternReport(ref.getPath(), "txt");
         
         // Create save result path by just plugin AlignmentResult
         
