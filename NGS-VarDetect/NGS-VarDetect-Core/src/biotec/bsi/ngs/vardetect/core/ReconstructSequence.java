@@ -5,6 +5,7 @@
  */
 package biotec.bsi.ngs.vardetect.core;
 
+import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import java.util.ArrayList;
 
 /**
@@ -20,6 +21,7 @@ public class ReconstructSequence {
     private long mask = 268435455;
     private long chrF,chrB, posF, posB;
     private String strandNotF,strandNotB;
+    private String resultString;
     
     public ReconstructSequence(){
         this.listMer = new ArrayList();
@@ -41,24 +43,28 @@ public class ReconstructSequence {
                 
         this.chrF = ((long)this.algnCodeF)>>29;
         this.posF = ((long)this.algnCodeF&this.mask);
-        if(((((long)this.algnCodeF)>>29)&1) == 1){
+        if(((((long)this.algnCodeF)>>28)&1) == 1){
             this.strandNotF = "+";
-        }else if(((((long)this.algnCodeF)>>29)&1) == 0){
+        }else if(((((long)this.algnCodeF)>>28)&1) == 0){
             this.strandNotF = "-";
+//            this.beginIdxF = inLastIdxF;                        // Strand -  index will switch 
+//            this.lastIdxF = inBeginIdxF;
         }
         
         
         
         this.chrB = ((long)this.algnCodeB)>>29;
         this.posB = ((long)this.algnCodeB&this.mask);
-        if(((((long)this.algnCodeB)>>29)&1) == 1){
+        if(((((long)this.algnCodeB)>>28)&1) == 1){
             this.strandNotB = "+";
-        }else if(((((long)this.algnCodeB)>>29)&1) == 0){
+        }else if(((((long)this.algnCodeB)>>28)&1) == 0){
             this.strandNotB = "-";
+//            this.beginIdxB = inLastIdxB;                             // Strand -  index will switch 
+//            this.lastIdxB = inBeginIdxB;
         }
         
         System.out.println("Possible pattern : chr"+ chrF + ":chr"+chrB+"\t Strand " + strandNotF + strandNotB + "\tstartIdxF: " + beginIdxF + " StopIdxF: "+lastIdxF+"\tStartIdxB: "+beginIdxB+" StopIdxB: "+lastIdxB);
-        
+        this.resultString = "Possible pattern : chr"+ chrF + ":chr"+chrB+"\t Strand " + strandNotF + strandNotB + "\tstartIdxF: " + beginIdxF + " StopIdxF: "+lastIdxF+"\tStartIdxB: "+beginIdxB+" StopIdxB: "+lastIdxB;
         generateReconSequence();
         
     }
@@ -74,14 +80,16 @@ public class ReconstructSequence {
         
         this.chrF = ((long)this.algnCodeF)>>29;
         this.posF = ((long)this.algnCodeF&this.mask);
-        if(((((long)this.algnCodeF)>>29)&1) == 1){
+        if(((((long)this.algnCodeF)>>28)&1) == 1){
             this.strandNotF = "+";
-        }else if(((((long)this.algnCodeF)>>29)&1) == 0){
+        }else if(((((long)this.algnCodeF)>>28)&1) == 0){
             this.strandNotF = "-";
+//            this.beginIdxF = inLastIdxF;                             // Strand -  index will switch 
+//            this.lastIdxF = inBeginIdxF;        
         }
         
         System.out.println("Possible pattern : chr"+ chrF + ":chr"+chrB+"\t Strand " + strandNotF + strandNotB + "\tstartIdxF: " + beginIdxF + " StopIdxF: "+lastIdxF+"\tStartIdxB: "+beginIdxB+" StopIdxB: "+lastIdxB);
-        
+        this.resultString = "Possible pattern : chr"+ chrF + ":chr"+chrB+"\t Strand " + strandNotF + strandNotB + "\tstartIdxF: " + beginIdxF + " StopIdxF: "+lastIdxF+"\tStartIdxB: "+beginIdxB+" StopIdxB: "+lastIdxB;
         generateReconSequence();
         
     }
@@ -106,7 +114,19 @@ public class ReconstructSequence {
         this.listMer.equals(inListMer);
     }
     
+    public String getResultString(){
+        return this.resultString;
+    }
     public void generateReconSequence(){
-         
+        for(int i=0;i<listMer.size();i++){
+            MerRead dummyMerRead = listMer.get(i);
+            int kMer = dummyMerRead.getMeLength();
+            long code = dummyMerRead.getMerCode();
+            String dnaSequence = SequenceUtil.decodeMer(code, kMer);
+            // Combind every mer together to long sequence
+            // read index of mer math with start and last 
+            // get only first character of string and concatenate all the way to the end
+        }
+        
     }
 }

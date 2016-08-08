@@ -406,5 +406,25 @@ public class AlignmentResultRead {
             ps.println();
         }  
     }
+    
+    public void writePatternReport(String path, String fa) throws FileNotFoundException, IOException {
+        
+        PrintStream ps = new PrintStream(path+"_PossiblePattern."+ fa);
+        ps.println("Possible Fusion Pattern");
+        ps.println();
+        for(int i =0;i<this.shrtRead.size();i++){
+        
+            ShortgunSequence dummySS = this.shrtRead.get(i);
+            ArrayList<ReconstructSequence> dummyListRecon = dummySS.getListReconSeq();
+            ps.println("Read Name: " + dummySS.getReadName());
+            
+            for(int j=0;j<dummyListRecon.size();j++){
+                ReconstructSequence dummyRecon = dummyListRecon.get(j);
+                ps.println(""+dummyRecon.getResultString());
+            }
+            ps.println();
+        }
+        
+    }
   
 }

@@ -67,7 +67,7 @@ public class Clustering {
         int check = 0;
         int similarity = 0;
         int sizeMatchMainSS = mainSS.getListChrMatch().size();
-        int sizeMatchSubSS = mainSS.getListChrMatch().size();
+        int sizeMatchSubSS = subSS.getListChrMatch().size();
         
         ArrayList matchMainChr = mainSS.getListChrMatch();
         ArrayList matchMainStrand = mainSS.getListStrand();

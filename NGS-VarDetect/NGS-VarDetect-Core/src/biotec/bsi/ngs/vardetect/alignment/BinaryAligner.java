@@ -27,10 +27,11 @@ import java.util.logging.Logger;
  *
  * @author soup
  */
+
 public class BinaryAligner implements Aligner{
 
     ReferenceSequence ref;
-    
+    int mer = 18;
     
     public void setReferenceSequence(ReferenceSequence ref){
         this.ref = ref;
@@ -52,7 +53,7 @@ public class BinaryAligner implements Aligner{
         AlignmentResult res = new AlignmentResult(input);
         AlignmentResultRead alinResult = new AlignmentResultRead();
         
-        int mer = 18;
+        this.mer = 18;
         
         
         Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
@@ -123,7 +124,7 @@ public class BinaryAligner implements Aligner{
                             if (seq.getMerReadSize() < totalMer){                                   // Check selected ShortgunSequence has all possible caontain in it or not 
                                 MerRead merRead = new MerRead();                                    // Create merRead object
                                 
-                                merRead.addMatchResultStrand(m, pos2, index, chr.getChrNumber());   // add mer code(36 bit), align result(64 bit [mer|pos]), index and chromosome number into MerRead
+                                merRead.addMatchResultStrand(m, pos2, index, chr.getChrNumber(),this.mer);   // add mer code(36 bit), align result(64 bit [mer|pos]), index and chromosome number into MerRead
                                 seq.addMerRead(merRead);                                            // add object MerRead into ShortgunSequence
 //                                System.out.println("(First Time) Size Mer Read check: " + seq.getMerReadSize());
                             }else{
@@ -131,7 +132,7 @@ public class BinaryAligner implements Aligner{
                                 if (index<seq.getMerReadSize()){
 //                                    System.out.println("Check Index: " + index);
                                     MerRead merRead = seq.getMerRead().get(index);                  // call back existing merRead to update
-                                    merRead.addMatchResultStrand(m, pos2, index, chr.getChrNumber()); // add mer code(36 bit), align result(64 bit [mer|pos]), index and chromosome number into MerRead 
+                                    merRead.addMatchResultStrand(m, pos2, index, chr.getChrNumber(),this.mer); // add mer code(36 bit), align result(64 bit [mer|pos]), index and chromosome number into MerRead 
                                     seq.addMerReadByIndex(index,merRead);                           // add MerRead into SgortgunSequence by index
                                     
 //                                    System.out.println("(Other time) Should be constant: Size Mer Read check: " + seq.getMerReadSize());
@@ -213,7 +214,7 @@ public class BinaryAligner implements Aligner{
                             if (seq.getMerReadSize() < totalMer){
                                 MerRead merRead = new MerRead();
                                 
-                                merRead.addMatchResultStrandCompliment(m, pos2, index, chr.getChrNumber());             // add infomation into MerRead
+                                merRead.addMatchResultStrandCompliment(m, pos2, index, chr.getChrNumber(),this.mer);             // add infomation into MerRead
                                 seq.addMerRead(merRead);
                                 System.out.println("*********** This word should not apear ***************");
                             }else{
@@ -222,7 +223,7 @@ public class BinaryAligner implements Aligner{
                                     int compIndex = (seq.getMerReadSize()-1) - index;
 //                                    System.out.println("Check Index: " + index);
                                     MerRead merRead = seq.getMerRead().get(index);
-                                    merRead.addMatchResultStrandCompliment(m, pos2, index, chr.getChrNumber());
+                                    merRead.addMatchResultStrandCompliment(m, pos2, index, chr.getChrNumber(),this.mer);
                                     seq.addMerReadByIndex(index,merRead);
 //                                    MerRead merRead = seq.getMerRead().get(compIndex); // call back existing merRead to update                                    
 //                                    merRead.addMatchResultStrand(pos2, chr.getChrNumber());

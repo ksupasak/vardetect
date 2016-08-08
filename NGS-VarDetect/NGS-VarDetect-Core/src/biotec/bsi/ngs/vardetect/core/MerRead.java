@@ -15,7 +15,7 @@ public class MerRead {
     
     private long merCode;
     private long merCodeComp;
-    private int index,indexComp;
+    private int index,indexComp,merLen;
     private ArrayList<Long> chrPos;
     private ArrayList<Long> chrAlgn;
     private ArrayList<Long> chrStrandPos;       // (Arraylist that store all code that align on thisMerRead (can have more than one if it repeat sequence)
@@ -38,8 +38,9 @@ public class MerRead {
         this.alignSymbol = symbol;      // alignSymbol = 1 mean align | alignSymbol = 0 mean not align
     }
     
-    public void addMatchResultStrand(long mer,long[] pos, int idx, long chrNumber){
+    public void addMatchResultStrand(long mer,long[] pos, int idx, long chrNumber,int inMerLen){
         
+        this.merLen = inMerLen;
         long[] code = pos;
         this.merCode = mer;
         this.index = idx;
@@ -60,8 +61,9 @@ public class MerRead {
         }                
     }
     
-    public void addMatchResultStrandCompliment(long mer,long[] pos, int idx, long chrNumber){
+    public void addMatchResultStrandCompliment(long mer,long[] pos, int idx, long chrNumber,int inMerLen){
         
+        this.merLen = inMerLen;
         long[] code = pos;
         this.merCodeComp = mer;
         this.indexComp = idx;
@@ -193,4 +195,7 @@ public class MerRead {
         return this.index;
     }
     
+    public int getMeLength(){
+        return this.merLen;
+    }
 }

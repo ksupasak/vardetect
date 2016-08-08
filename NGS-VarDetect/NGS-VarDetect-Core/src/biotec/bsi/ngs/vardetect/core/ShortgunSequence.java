@@ -92,6 +92,10 @@ public class ShortgunSequence {
         distanceVector = a;
     }
     
+    public ArrayList<ReconstructSequence> getListReconSeq(){
+        return this.listReconSeq;
+    }
+    
     public double[] getDistanceVector(){
         return distanceVector;
     }
@@ -346,9 +350,9 @@ public class ShortgunSequence {
                         long pos = ((long)selectKey&this.mask);
                         
                         String strandNot = "no";
-                        if(((((long)selectKey)>>29)&1) == 1){
+                        if(((((long)selectKey)>>28)&1) == 1){
                             strandNot = "+";
-                        }else if(((((long)selectKey)>>29)&1) == 0){
+                        }else if(((((long)selectKey)>>28)&1) == 0){
                             strandNot = "-";
                         }  
                         
@@ -575,9 +579,9 @@ public class ShortgunSequence {
             int subLastIdx = 0;
             /* Check strand type part (in order to consider the right index)*/
             String strandMainType =null;        
-            if(((((long)mainAlgnCode)>>29)&1) == 1){
+            if(((((long)mainAlgnCode)>>28)&1) == 1){
                 strandMainType = "+";
-            }else if(((((long)mainAlgnCode)>>29)&1) == 0){
+            }else if(((((long)mainAlgnCode)>>28)&1) == 0){
                 strandMainType = "-";
             }
 
@@ -585,8 +589,9 @@ public class ShortgunSequence {
                 mainBeginIdx = this.algnCodeIndex.get(mainAlgnCode)[0];
                 mainLastIdx = this.algnCodeIndex.get(mainAlgnCode)[1];
             }else if(strandMainType.equals("-")){
-                mainBeginIdx = (this.mers.size() - this.algnCodeIndex.get(mainAlgnCode)[0])-1;
-                mainLastIdx = (this.mers.size() - this.algnCodeIndex.get(mainAlgnCode)[1])-1;
+                // Begin and Last must be switch
+                mainLastIdx = (this.mers.size() - this.algnCodeIndex.get(mainAlgnCode)[0])-1;
+                mainBeginIdx = (this.mers.size() - this.algnCodeIndex.get(mainAlgnCode)[1])-1;
             } 
                 
 //            int mainBeginIdx = this.algnCodeIndex.get(mainAlgnCode)[0];
@@ -601,30 +606,31 @@ public class ShortgunSequence {
 
                 /* Check strand type part (in order to consider the right index)*/
                 String strandType =null;        
-                if(((((long)subAlgnCode)>>29)&1) == 1){
+                if(((((long)subAlgnCode)>>28)&1) == 1){
                     strandType = "+";
-                }else if(((((long)subAlgnCode)>>29)&1) == 0){
+                }else if(((((long)subAlgnCode)>>28)&1) == 0){
                     strandType = "-";
                 }
-                        
+                       
                 if(strandType.equals("+")){
                     subBeginIdx = this.algnCodeIndex.get(subAlgnCode)[0];
                     subLastIdx = this.algnCodeIndex.get(subAlgnCode)[1];
                 }else if(strandType.equals("-")){
-                    subBeginIdx = (this.mers.size() - this.algnCodeIndex.get(subAlgnCode)[0])-1;
-                    subLastIdx = (this.mers.size() - this.algnCodeIndex.get(subAlgnCode)[1])-1;
+                    // Begin and Last must be switch
+                    subLastIdx = (this.mers.size() - this.algnCodeIndex.get(subAlgnCode)[0])-1;
+                    subBeginIdx = (this.mers.size() - this.algnCodeIndex.get(subAlgnCode)[1])-1;
                 } 
                 /* ------------------------------ */
+                System.out.println("Index Check before create new group : mainBeginIdx: "+ mainBeginIdx + "\tmainLastIdx: " + mainLastIdx + "\tsubBeginIdx: " + subBeginIdx + "\tsubLastId: " +subLastIdx);
                 if (mainLastIdx < subBeginIdx){                                                             // check for create new possible combination 
-                    ReconstructSequence newRecon = new ReconstructSequence(this.mers,(long)mainAlgnCode,(long)subAlgnCode,mainBeginIdx,mainLastIdx,subBeginIdx,subLastIdx); 
-                    
+                    ReconstructSequence newRecon = new ReconstructSequence(this.mers,(long)mainAlgnCode,(long)subAlgnCode,mainBeginIdx,mainLastIdx,subBeginIdx,subLastIdx);                     
                     this.listReconSeq.add(newRecon);
                     checkFlag = 1;
                 }
             }
+            
             if(checkFlag == 0){             // checkFlag = 0 mean it's maybe single align 
-                ReconstructSequence newRecon = new ReconstructSequence(this.mers,(long)mainAlgnCode,mainBeginIdx,mainLastIdx); 
-   
+                ReconstructSequence newRecon = new ReconstructSequence(this.mers,(long)mainAlgnCode,mainBeginIdx,mainLastIdx);    
                 this.listReconSeq.add(newRecon);
             }
         }               
