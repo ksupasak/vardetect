@@ -22,6 +22,8 @@ public class ReconstructSequence {
     private long chrF,chrB, posF, posB;
     private String strandNotF,strandNotB;
     private String resultString;
+    private String fullReconSequence;
+    private int patternType;                            // Pattern Type indicate the type of posible reconstruct sequence: 0 mean no fusion just sungle align and 1 mean have fusion
     
     public ReconstructSequence(){
         this.listMer = new ArrayList();
@@ -30,7 +32,7 @@ public class ReconstructSequence {
     
     public ReconstructSequence(ArrayList<MerRead> inListMer, long inAlgnCodeF, long inAlgnCodeB, int inBeginIdxF, int inLastIdxF, int inBeginIdxB, int inLastIdxB){
         this.listMer = new ArrayList();
-        this.listMer.equals(inListMer);
+        this.listMer.addAll(inListMer);
         this.listAlgnCode = new ArrayList();
         this.beginIdxF = inBeginIdxF;
         this.lastIdxF = inLastIdxF;
@@ -38,7 +40,8 @@ public class ReconstructSequence {
         this.lastIdxB = inLastIdxB;
         this.algnCodeF = inAlgnCodeF;
         this.algnCodeB = inAlgnCodeB;
-        
+        this.patternType = 1;
+        this.fullReconSequence = "";
         
                 
         this.chrF = ((long)this.algnCodeF)>>29;
@@ -72,11 +75,13 @@ public class ReconstructSequence {
     public ReconstructSequence(ArrayList<MerRead> inListMer, long inAlgnCodeF, int inBeginIdxF, int inLastIdxF){
         this.listMer = new ArrayList();
         //this.listMer = inListMer;
-        this.listMer.equals(inListMer);
+        this.listMer.addAll(inListMer);
         this.listAlgnCode = new ArrayList();
         this.beginIdxF = inBeginIdxF;
         this.lastIdxF = inLastIdxF;
         this.algnCodeF = inAlgnCodeF;      
+        this.patternType = 0;
+        this.fullReconSequence = "";
         
         this.chrF = ((long)this.algnCodeF)>>29;
         this.posF = ((long)this.algnCodeF&this.mask);
@@ -84,7 +89,7 @@ public class ReconstructSequence {
             this.strandNotF = "+";
         }else if(((((long)this.algnCodeF)>>28)&1) == 0){
             this.strandNotF = "-";
-//            this.beginIdxF = inLastIdxF;                             // Strand -  index will switch 
+//            this.beginIdxF = inLastIdxF;                             // Strand -  index will switch (Already switch at ShortgunSequence layer) 
 //            this.lastIdxF = inBeginIdxF;        
         }
         
@@ -117,16 +122,84 @@ public class ReconstructSequence {
     public String getResultString(){
         return this.resultString;
     }
+    
+    public String getFullReconSequence(){
+        return this.fullReconSequence;
+    }
+    
     public void generateReconSequence(){
-        for(int i=0;i<listMer.size();i++){
-            MerRead dummyMerRead = listMer.get(i);
-            int kMer = dummyMerRead.getMeLength();
-            long code = dummyMerRead.getMerCode();
-            String dnaSequence = SequenceUtil.decodeMer(code, kMer);
+        System.out.println("Generate Reconstruct Sequence in ReconstructSequence");
+        this.fullReconSequence = "";
+        
+        if(this.patternType == 1){
+            for(int i=0;i<this.listMer.size();i++){
+                MerRead dummyMerRead = this.listMer.get(i);
+                int kMer = dummyMerRead.getMeLength();
+                int merIdx = dummyMerRead.getMerIndex();
+                long code = (dummyMerRead.getMerCode()>>28); // right shift or do and operation with minus 36 bit
+                
+//                if((this.beginIdxB-this.lastIdxF) < kMer){
+//                    int breakPointF = this.lastIdxF + ((this.beginIdxB - this.lastIdxF)-1);
+//                    
+//                }else{
+//                    int breakPointF = this.lastIdxF + (kMer-1);
+//                }   
+                
+//                int breakPointF = this.lastIdxF + ((this.beginIdxB - this.lastIdxF)-1);
+                int breakPointF = this.lastIdxF + (kMer-1);
+                int breakPointB = this.beginIdxB;
+                String dnaSequence = SequenceUtil.decodeMer(code, kMer);
+                System.out.println("idx : " +merIdx);
+                
+                
+                
+                
+                if(merIdx >= this.beginIdxF & merIdx <= this.lastIdxB){
+                    System.out.println("Full Recon Sequence : " + this.fullReconSequence);
+                    
+                    if (merIdx == breakPointF){
+                        this.fullReconSequence = this.fullReconSequence.concat(dnaSequence.substring(0, 1)).concat("//~");
+                    }else if(merIdx == this.beginIdxB){
+                        this.fullReconSequence = this.fullReconSequence.concat("~//").concat(dnaSequence.substring(0, 1));
+                    }else if(merIdx == this.lastIdxB){
+                        this.fullReconSequence = this.fullReconSequence.concat(dnaSequence);
+                    }else{
+                        this.fullReconSequence = this.fullReconSequence.concat(dnaSequence.substring(0, 1));
+                    }
+                    
+                }else{
+                    if (merIdx == breakPointF){
+                        this.fullReconSequence = this.fullReconSequence.concat(dnaSequence.substring(0, 1)).concat("//~");
+                    }else if (merIdx < breakPointF){
+                        this.fullReconSequence = this.fullReconSequence.concat(dnaSequence.substring(0, 1));
+                    }
+                }
+                
             // Combind every mer together to long sequence
             // read index of mer math with start and last 
             // get only first character of string and concatenate all the way to the end
+            }   
+        }else if(this.patternType == 0){
+             for(int i=0;i<listMer.size();i++){
+                MerRead dummyMerRead = listMer.get(i);
+                int kMer = dummyMerRead.getMeLength();
+                int merIdx = dummyMerRead.getMerIndex();
+                long code = (dummyMerRead.getMerCode()>>28);
+                int breakPointF = this.lastIdxF + (kMer-1);
+                String dnaSequence = SequenceUtil.decodeMer(code, kMer);
+                System.out.println("idx : " +merIdx);
+                if(merIdx >= this.beginIdxF & merIdx <= this.lastIdxF){
+                    System.out.println("Full Recon Sequence : " + this.fullReconSequence);
+                    if (merIdx == this.lastIdxF){
+                        this.fullReconSequence = this.fullReconSequence.concat(dnaSequence);
+                    }else{
+                        this.fullReconSequence = this.fullReconSequence.concat(dnaSequence.substring(0, 1));
+                    }
+                }
+             }
         }
+               
+        System.out.println("Full Recon Sequence : " + this.fullReconSequence);
         
     }
 }

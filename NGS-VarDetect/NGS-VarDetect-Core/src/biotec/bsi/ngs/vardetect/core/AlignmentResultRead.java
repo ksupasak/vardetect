@@ -420,11 +420,12 @@ public class AlignmentResultRead {
             
             for(int j=0;j<dummyListRecon.size();j++){
                 ReconstructSequence dummyRecon = dummyListRecon.get(j);
-                ps.println(""+dummyRecon.getResultString());
+                ps.println(dummyRecon.getResultString());
+                ps.println("Reconstruct Sequence: " + dummyRecon.getFullReconSequence());
+                ps.println();
             }
             ps.println();
-        }
-        
+        }     
     }
-  
+    
 }

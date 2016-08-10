@@ -2063,8 +2063,9 @@ public class SequenceUtil {
 
     public static String decodeMer(long inCode, int kmer){
         
-        
-        String binaryCode = Long.toBinaryString(inCode);/// transform wrong
+        long template = 68719476735L;
+        long dummyInCode = inCode&template;
+        String binaryCode = Long.toBinaryString(dummyInCode);/// transform wrong
         long lengthBinary = binaryCode.length();
         long fullLen = kmer*2;
         

@@ -408,7 +408,7 @@ public class ShortgunSequence {
                     
                 if (this.countResult.containsKey(algnCode)){
 
-                    System.out.println("Align At: " + algnCode);
+//                    System.out.println("Align At: " + algnCode);
                     countAndColor = this.countResult.get(algnCode);                       
                     count = countAndColor[0];
                     red = countAndColor[1];
