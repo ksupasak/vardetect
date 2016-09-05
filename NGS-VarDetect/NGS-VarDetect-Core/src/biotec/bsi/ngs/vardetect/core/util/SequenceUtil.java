@@ -377,7 +377,7 @@ public class SequenceUtil {
 
             is.close();
             
-            /* Compliment Part */
+            /* Compliment Part *//*
             if(compF.exists()){
                 is = new DataInputStream(new BufferedInputStream(new FileInputStream(compF)));
                 size = is.readInt();
@@ -423,7 +423,7 @@ public class SequenceUtil {
                 
                 complist=null;
                 System.gc();
-            }
+            }*/
             
 //            seq.setMers(list);
    
@@ -521,7 +521,7 @@ public class SequenceUtil {
 //       long[] listComp = createComplimentStrand(list);
 //       seq.setMersComp(listComp);
 
-    /* Compliment Part */
+    /* Compliment Part *//*
             if(compF.exists()){
                 DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(compF)));
                 int size = is.readInt();
@@ -564,7 +564,7 @@ public class SequenceUtil {
                 
                 complist=null;
                 System.gc();
-            }
+            }*/
 
 
  
@@ -2185,4 +2185,190 @@ public class SequenceUtil {
         return invSeq;
     }
     
+    public static ShortgunSequence readInputFile(String filename) throws IOException {
+        ShortgunSequence inSS = new ShortgunSequence(null);
+        int count = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(filename);
+        String name = null;
+    //    String seq = "";
+
+        StringBuffer seq = new StringBuffer();
+
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;
+                   
+            while ((line = reader.readLine()) != null) {
+                String[] aon = line.split("\t");
+                //if(line.charAt(0)=='>'){
+
+    //                if(name!=null){
+    //
+    //                    System.out.println("Header name : "+name+" Size : "+seq.length());
+    //
+    //                    ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+    //
+    //                    ref.addChromosomeSequence(c);
+    //
+    //                }
+                    //seq = new StringBuffer();
+                    //name = line.substring(1,line.length());
+
+                //}else{
+
+                    //seq.append(line.trim());
+
+
+                //}
+                System.out.println("check: " + aon[7]);
+                inSS = new ShortgunSequence(aon[7]);
+                name = "Unmapped_Test_Sample_" + count++;
+                inSS.addReadName(name);
+            }
+
+            if(seq.length()>0){
+
+        //        System.out.println("CHR : "+chr+" Size : "+seq.length());
+                inSS = new ShortgunSequence(seq.toString());
+                inSS.addReadName(name);
+
+
+            }          
+            
+
+            return inSS;
+        }
+    }
+    
+    public static InputSequence readSampleFile(String filename) throws IOException {
+        ShortgunSequence inSS = new ShortgunSequence(null);
+        InputSequence tempInSS = new InputSequence();
+        int count = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(filename);
+        String name = null;
+    //    String seq = "";
+
+        StringBuffer seq = new StringBuffer();
+
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;
+                   
+            while ((line = reader.readLine()) != null) {
+                String[] aon = line.split("\t");
+                //if(line.charAt(0)=='>'){
+
+    //                if(name!=null){
+    //
+    //                    System.out.println("Header name : "+name+" Size : "+seq.length());
+    //
+    //                    ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+    //
+    //                    ref.addChromosomeSequence(c);
+    //
+    //                }
+                    //seq = new StringBuffer();
+                    //name = line.substring(1,line.length());
+
+                //}else{
+
+                    //seq.append(line.trim());
+
+
+                //}
+                System.out.println("check: " + aon[7]);
+                inSS = new ShortgunSequence(aon[7]);
+                name = "Unmapped_Test_Sample_" + count++;
+                inSS.addReadName(name);
+                tempInSS.addRead(inSS);
+            }
+
+            if(seq.length()>0){
+
+        //        System.out.println("CHR : "+chr+" Size : "+seq.length());
+                inSS = new ShortgunSequence(seq.toString());
+                inSS.addReadName(name);
+
+
+            }          
+            
+
+            return tempInSS;
+        }
+    }
+    
+    public static InputSequence readSampleFileV2(String filename, int readStart, int readLimit) throws IOException {
+        ShortgunSequence inSS = new ShortgunSequence(null);
+        InputSequence tempInSS = new InputSequence();
+        int count = 0;
+        int count2 = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(filename);
+        String name = null;
+        int actStart = readStart*2;     //this is actual start of line in file (compatible only specific file 3661 and 3662 .fasta file)
+        int actStop = readLimit*2;
+    //    String seq = "";
+
+        StringBuffer seq = new StringBuffer();
+
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;
+                   
+            while ((line = reader.readLine()) != null) {
+                String[] aon = line.split("\t");
+                if(line.charAt(0)=='>'){
+                    
+                    name = line.substring(1);
+                    
+                }else{
+                    count++;
+                    if(count >= readStart){
+                        inSS = new ShortgunSequence(line.toString());
+                        inSS.addReadName(name);
+                        tempInSS.addRead(inSS);
+                    }     
+                }
+                if(count==readLimit){
+                    break;
+                }
+                
+
+    //                if(name!=null){
+    //
+    //                    System.out.println("Header name : "+name+" Size : "+seq.length());
+    //
+    //                    ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+    //
+    //                    ref.addChromosomeSequence(c);
+    //
+    //                }
+                    //seq = new StringBuffer();
+                    //name = line.substring(1,line.length());
+
+                //}else{
+
+                    //seq.append(line.trim());
+
+
+                //}
+//                System.out.println("check: " + aon[7]);
+//                inSS = new ShortgunSequence(aon[7]);
+//                name = "Unmapped_Test_Sample_" + count++;
+//                inSS.addReadName(name);
+//                tempInSS.addRead(inSS);
+            }
+
+            if(seq.length()>0){
+
+        //        System.out.println("CHR : "+chr+" Size : "+seq.length());
+                inSS = new ShortgunSequence(seq.toString());
+                inSS.addReadName(name);
+
+
+            }          
+            
+
+            return tempInSS;
+        }
+    }
 }

@@ -33,9 +33,9 @@ public class ChromosomeSequence {
 
     public void writeToPath(String path, String fa) throws FileNotFoundException {
 
-       PrintStream ps = new PrintStream(path+".fa");
+       PrintStream ps = new PrintStream(path+".fa");            
        ps.println(">"+name);
-       ps.println(seq);
+       ps.println(seq);                                     // Write DNA Sequence to file
 
     }
     
@@ -60,7 +60,7 @@ public class ChromosomeSequence {
     }
     
     public StringBuffer getSequence() {
-        if(this.seq==null){
+        if(this.seq==null){                     // Check seq have value or not
         try{
             BufferedReader chr_reader = new BufferedReader(new InputStreamReader(new FileInputStream(this.getFilePath()+".fa")));
             System.out.println(chr_reader.readLine());

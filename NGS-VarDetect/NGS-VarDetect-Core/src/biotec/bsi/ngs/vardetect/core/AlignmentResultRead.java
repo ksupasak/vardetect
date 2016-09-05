@@ -154,96 +154,96 @@ public class AlignmentResultRead {
         return Math.sqrt(diff_square_sum);
     }
     
-    public void createGroupingResult(){
-        long dummyCode = 0;
-        long oldDummyCode = 0;
-        
-        this.group = new ClusterGroup();
-        for(int i = 0;i<this.allClusterCodeSorted.length;i++){
-            dummyCode = this.allClusterCodeSorted[i];
-            for(int j =0;j<this.shrtRead.size();j++){
-                ShortgunSequence dummySS = shrtRead.get(j);
-                if(dummySS.getClusterCode() == dummyCode){
-                    if(i == 0){
-                        System.out.println(" Check : Do adding in first group (First time) i = " + i+ " : j =  "+j );
-                        this.group.addShortgunRead(dummySS);
-                        oldDummyCode = dummyCode;
-                    }else if(i!=0 && Math.abs(dummyCode-oldDummyCode)<=100){
-                        System.out.println(" Check : Do adding in group : i = " + i+ " : j =  "+j);
-                        this.group.addShortgunRead(dummySS);
-                        oldDummyCode = dummyCode;
-                    }else if(i!=0 && Math.abs(dummyCode-oldDummyCode)>100){
-                        this.clusterResult.add(this.group); // adding to array before renew it
-                        System.out.println(" Check : Do create new group and add to new group : i = " + i+ " : j =  "+j);
-                        
-                        this.group = new ClusterGroup();
-                        this.group.addShortgunRead(dummySS);
-                        oldDummyCode = dummyCode;
-                    }
-                    
-                    System.out.println(dummyCode + "\t" + dummySS.getReadName());
-                }
-            }
-        }
-        this.clusterResult.add(this.group); // adding to array (for last group)
-    }
+//    public void createGroupingResult(){
+//        long dummyCode = 0;
+//        long oldDummyCode = 0;
+//        
+//        this.group = new ClusterGroup();
+//        for(int i = 0;i<this.allClusterCodeSorted.length;i++){
+//            dummyCode = this.allClusterCodeSorted[i];
+//            for(int j =0;j<this.shrtRead.size();j++){
+//                ShortgunSequence dummySS = shrtRead.get(j);
+//                if(dummySS.getClusterCode() == dummyCode){
+//                    if(i == 0){
+//                        System.out.println(" Check : Do adding in first group (First time) i = " + i+ " : j =  "+j );
+//                        this.group.addShortgunRead(dummySS);
+//                        oldDummyCode = dummyCode;
+//                    }else if(i!=0 && Math.abs(dummyCode-oldDummyCode)<=100){
+//                        System.out.println(" Check : Do adding in group : i = " + i+ " : j =  "+j);
+//                        this.group.addShortgunRead(dummySS);
+//                        oldDummyCode = dummyCode;
+//                    }else if(i!=0 && Math.abs(dummyCode-oldDummyCode)>100){
+//                        this.clusterResult.add(this.group); // adding to array before renew it
+//                        System.out.println(" Check : Do create new group and add to new group : i = " + i+ " : j =  "+j);
+//                        
+//                        this.group = new ClusterGroup();
+//                        this.group.addShortgunRead(dummySS);
+//                        oldDummyCode = dummyCode;
+//                    }
+//                    
+//                    System.out.println(dummyCode + "\t" + dummySS.getReadName());
+//                }
+//            }
+//        }
+//        this.clusterResult.add(this.group); // adding to array (for last group)
+//    }
     
-    public void createAllClusterCode(){
-        this.allClusterCode = new long[this.shrtRead.size()];
-        for(int i =0;i<this.shrtRead.size();i++){
-            long dummyCode = shrtRead.get(i).getClusterCode();
-            this.allClusterCode[i] = dummyCode;
-        }
-    }
+//    public void createAllClusterCode(){
+//        this.allClusterCode = new long[this.shrtRead.size()];
+//        for(int i =0;i<this.shrtRead.size();i++){
+//            long dummyCode = shrtRead.get(i).getClusterCode();
+//            this.allClusterCode[i] = dummyCode;
+//        }
+//    }
     
-    public void createAllClusterCodeSorted(){
-        this.allClusterCodeSorted = new long[this.shrtRead.size()];
-        for(int i =0;i<this.shrtRead.size();i++){
-            long dummyCode = shrtRead.get(i).getClusterCode();
-            this.allClusterCodeSorted[i] = dummyCode;
-        }
-        Arrays.sort(this.allClusterCodeSorted);
-    }
+//    public void createAllClusterCodeSorted(){
+//        this.allClusterCodeSorted = new long[this.shrtRead.size()];
+//        for(int i =0;i<this.shrtRead.size();i++){
+//            long dummyCode = shrtRead.get(i).getClusterCode();
+//            this.allClusterCodeSorted[i] = dummyCode;
+//        }
+//        Arrays.sort(this.allClusterCodeSorted);
+//    }
     
-    public ArrayList<ClusterGroup> getclusterResult(){
-        
-        return this.clusterResult;
-    }
+//    public ArrayList<ClusterGroup> getclusterResult(){
+//        
+//        return this.clusterResult;
+//    }
     
-    public long[] getAllClusterCode(){
-        
-        //Arrays.sort(this.allClusterCode);
-        return this.allClusterCode;
-    }
+//    public long[] getAllClusterCode(){
+//        
+//        //Arrays.sort(this.allClusterCode);
+//        return this.allClusterCode;
+//    }
     
-    public long[] getAllClusterCodeSorted(){
-        
-        return this.allClusterCodeSorted;
-    }
+//    public long[] getAllClusterCodeSorted(){
+//        
+//        return this.allClusterCodeSorted;
+//    }
     
     public void writeSortedResultToPath(String path, String fa) throws FileNotFoundException, IOException {
 
        
-        PrintStream ps = new PrintStream(path+"_AlignSortedResult."+ fa);
+        PrintStream ps = new PrintStream(path+"_AlignSortedResult."+ fa);           // Create file object
         
         
-        for (int i=0;i<this.shrtRead.size();i++){           // Loop Mer by Mer
+        for (int i=0;i<this.shrtRead.size();i++){           // Loop each ShortgunSequence
             
             ShortgunSequence dummySS = this.shrtRead.get(i);
         //--------------------------    
 
         //---------------------------------
             
-            Map<Long,long[]> countMap =  dummySS.getAlignmentCountSorted();
+            Map<Long,long[]> countMap =  dummySS.getAlignmentCountSorted();         // get alignmentCountSorted (HashMap of sorted alignment result Map<positionCode,numCountPlusColor>)
             ps.println(">Alignment result of "+ dummySS.getReadName());
             ps.printf("%-35s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","Strand","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
             Set allPos = countMap.keySet();
             Iterator iterPos = allPos.iterator();
-            while(iterPos.hasNext()){
+            while(iterPos.hasNext()){                                               // loop all align positionCode (contain in HashMap)
                 long positionCode = (long)iterPos.next();
-                long alignPos = positionCode&mask;
-                long chrNumber = positionCode>>29; // 29 bit because positionCode have this structure [chr|strand|position]
-                long[] numCountPlusColor = countMap.get(positionCode);
+                long alignPos = positionCode&mask;                                  // And with 28bit binary to get position
+                long chrNumber = positionCode>>29;                                  // Shift left 29 bit because positionCode have this structure [chr|strand|position] in order to get chromosome number
+                long[] numCountPlusColor = countMap.get(positionCode);              // get array long which contain number of count and other color code and color code intensity
                 long numCount = numCountPlusColor[0];
                 long red = numCountPlusColor[1];
                 long yellow = numCountPlusColor[2];
@@ -254,7 +254,7 @@ public class AlignmentResultRead {
                 long orangeInt = numCountPlusColor[7];
                 long greenInt = numCountPlusColor[8];
                 
-                String strandNot = "no";
+                String strandNot = "no";                                            // Identify the strand type of this align Position
                 if(((positionCode>>28)&1) == 1){
                     strandNot = "+";
                 }else if(((positionCode>>28)&1) == 0){
@@ -262,7 +262,7 @@ public class AlignmentResultRead {
                 }   
                 
                 
-                ps.format("Chr %2d : Position %12d|\t%8s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                ps.format("Chr %2d : Position %12d|\t%8s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt); // print to file by this format
             }
             ps.println();
         }
@@ -271,26 +271,26 @@ public class AlignmentResultRead {
     public void writeUnSortedResultToPath(String path, String fa) throws FileNotFoundException, IOException {
 
        
-        PrintStream ps = new PrintStream(path+"_AlignUnSortedResult."+ fa);
+        PrintStream ps = new PrintStream(path+"_AlignUnSortedResult."+ fa);     // Create file object
         
         
-        for (int i=0;i<this.shrtRead.size();i++){           // Loop Mer by Mer
+        for (int i=0;i<this.shrtRead.size();i++){                               // Loop each ShortgunSequence
             
             ShortgunSequence dummySS = this.shrtRead.get(i);
         //--------------------------    
 
         //---------------------------------
             
-            Map<Long,long[]> countMap =  dummySS.getAlignmentCount();
+            Map<Long,long[]> countMap =  dummySS.getAlignmentCount();           // get alignmentCount (HashMap of unsorted alignment result Map<positionCode,numCountPlusColor>)
             ps.println(">Alignment result of "+ dummySS.getReadName());
             ps.printf("%-35s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","Strand","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
             Set allPos = countMap.keySet();
             Iterator iterPos = allPos.iterator();
-            while(iterPos.hasNext()){
+            while(iterPos.hasNext()){                                           // loop all align positionCode (contain in HashMap)
                 long positionCode = (long)iterPos.next();
-                long alignPos = positionCode&mask;
-                long chrNumber = positionCode>>29;
-                long[] numCountPlusColor = countMap.get(positionCode);
+                long alignPos = positionCode&mask;                              // And with 28bit binary to get position
+                long chrNumber = positionCode>>29;                              // Shift left 29 bit because positionCode have this structure [chr|strand|position] in order to get chromosome number
+                long[] numCountPlusColor = countMap.get(positionCode);          // get array long which contain number of count and other color code and color code intensity
                 long numCount = numCountPlusColor[0];
                 long red = numCountPlusColor[1];
                 long yellow = numCountPlusColor[2];
@@ -301,14 +301,14 @@ public class AlignmentResultRead {
                 long orangeInt = numCountPlusColor[7];
                 long greenInt = numCountPlusColor[8];
                 
-                String strandNot = "no";
+                String strandNot = "no";                                        // Identify the strand type of this align Position
                 if(((positionCode>>28)&1) == 1){
                     strandNot = "+";
                 }else if(((positionCode>>28)&1) == 0){
                     strandNot = "-";
                 }   
                 
-                ps.format("Chr %2d : Position %12d|\t%8s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                ps.format("Chr %2d : Position %12d|\t%8s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);    // print to file by this format
             }
             ps.println();
         }
@@ -317,27 +317,33 @@ public class AlignmentResultRead {
     public void writeSortedCutResultToPath(String path, String fa, int threshold) throws FileNotFoundException, IOException {
 
         /* Must specify threshold for cut result (The result that less than threshold will be cut out)*/
-        PrintStream ps = new PrintStream(path+"_AlignSortedCutResult."+ fa);
+        PrintStream ps = new PrintStream(path+"_AlignSortedCutResult."+ fa);            // Create file object
         
         
-        for (int i=0;i<this.shrtRead.size();i++){           // Loop Mer by Mer
+        for (int i=0;i<this.shrtRead.size();i++){                                       // Loop each ShortgunSequence
             
             ShortgunSequence dummySS = this.shrtRead.get(i);
         //--------------------------    
 
         //---------------------------------
             
-            Map<Long,long[]> countMap =  dummySS.getAlignmentCountSortedCut(threshold);
-            ps.println(">Alignment result of "+ dummySS.getReadName());
+            Map<Long,long[]> countMap =  dummySS.getAlignmentCountSortedCut(threshold); // get alignmentCountSortedCut (HashMap of sorted and cut with specific threshold of alignment result Map<positionCode,numCountPlusColor>)
+            
 //            ps.printf("%-30s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
-            ps.printf("%-35s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","Strand","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
             Set allPos = countMap.keySet();
             Iterator iterPos = allPos.iterator();
-            while(iterPos.hasNext()){
+            if(allPos.isEmpty() == false){
+                ps.println(">Alignment result of "+ dummySS.getReadName());
+                ps.printf("%-35s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","Strand","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
+            }
+            
+//            Set allPos = countMap.keySet();
+//            Iterator iterPos = allPos.iterator();
+            while(iterPos.hasNext()){                                                   // loop all align positionCode (contain in HashMap)
                 long positionCode = (long)iterPos.next();
-                long alignPos = positionCode&mask;
-                long chrNumber = positionCode>>29;
-                long[] numCountPlusColor = countMap.get(positionCode);
+                long alignPos = positionCode&mask;                                      // And with 28bit binary to get position
+                long chrNumber = positionCode>>29;                                      // Shift left 29 bit because positionCode have this structure [chr|strand|position] in order to get chromosome number
+                long[] numCountPlusColor = countMap.get(positionCode);                  // get array long which contain number of count and other color code and color code intensity
                 long numCount = numCountPlusColor[0];
                 long red = numCountPlusColor[1];
                 long yellow = numCountPlusColor[2];
@@ -348,7 +354,7 @@ public class AlignmentResultRead {
                 long orangeInt = numCountPlusColor[7];
                 long greenInt = numCountPlusColor[8];
                 
-                String strandNot = "no";
+                String strandNot = "no";                                                // Identify the strand type of this align Position
                 if(((positionCode>>28)&1) == 1){
                     strandNot = "+";
                 }else if(((positionCode>>28)&1) == 0){
@@ -358,18 +364,20 @@ public class AlignmentResultRead {
 //                ps.format("Chr %d : Position %d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
                 ps.format("Chr %2d : Position %12d|\t%8s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
             }
-            ps.println();
+            if(allPos.isEmpty() == false){
+                ps.println();
+            }
         }
     }
 
     public void writeDistanceTableToPath(String path, String fa) throws FileNotFoundException, IOException {
 
        /* Must specify threshold for cut result (The result that less than threshold will be cut out)*/
-        PrintStream ps = new PrintStream(path+"_DistanceTable."+ fa);
+        PrintStream ps = new PrintStream(path+"_DistanceTable."+ fa);           // Create file object
         
         ps.println("Distance Table");
         ps.format("Reads Name");
-        for (int i=0;i<this.shrtRead.size();i++){           // Loop Mer by Mer
+        for (int i=0;i<this.shrtRead.size();i++){                               // Loop each ShortgunSequence (Loop for create title of first line)
             
             ShortgunSequence dummySS = this.shrtRead.get(i);
         //--------------------------    
@@ -379,11 +387,11 @@ public class AlignmentResultRead {
             ps.format("\t%10s",dummySS.getReadName());
         }
         ps.println();
-        for (int i=0;i<this.shrtRead.size();i++){ 
+        for (int i=0;i<this.shrtRead.size();i++){                               // Loop each ShortgunSequence (First Loop for create read name title for begin of line)   
             ShortgunSequence dummySS = this.shrtRead.get(i);
             ps.print("Name: "+dummySS.getReadName());
             
-            for(int j=0;j<this.shrtRead.size();j++){
+            for(int j=0;j<this.shrtRead.size();j++){                            // Loop each ShortgunSequence (Second Loop for all distance value of this read name)
                 ps.format("\t%10.2f", dummySS.getDistanceVector()[j]);
             }
             ps.println();
@@ -393,13 +401,13 @@ public class AlignmentResultRead {
     public void writeClusterGroupToPath(String path, String fa) throws FileNotFoundException, IOException {
 
        
-        PrintStream ps = new PrintStream(path+"_ClusterGroup."+ fa);
+        PrintStream ps = new PrintStream(path+"_ClusterGroup."+ fa);            // Create file object
        
-        for(int i=0;i<this.clusterResult.size();i++){
-            ClusterGroup dummyCG = this.clusterResult.get(i);
+        for(int i=0;i<this.clusterResult.size();i++){                           // Loop on clusterResult (ArrayList)
+            ClusterGroup dummyCG = this.clusterResult.get(i);                   // clusterResult contain object ClusterGroup which contain bunch of ShortgunSequence in the same group 
             ps.print("Group" + i + ":");
-            ArrayList<ShortgunSequence> listSS = dummyCG.getShortgunRead();
-            for(int j=0;j<listSS.size();j++){
+            ArrayList<ShortgunSequence> listSS = dummyCG.getShortgunRead();     // get ArryList of ShortgunSequence
+            for(int j=0;j<listSS.size();j++){                                   // Loop each ShortgunSequence contained in ArrayList
                 ShortgunSequence dummySS = listSS.get(j);
                 ps.print("\t"+dummySS.getReadName());
             }
@@ -409,22 +417,26 @@ public class AlignmentResultRead {
     
     public void writePatternReport(String path, String fa) throws FileNotFoundException, IOException {
         
-        PrintStream ps = new PrintStream(path+"_PossiblePattern."+ fa);
+        PrintStream ps = new PrintStream(path+"_PossiblePattern."+ fa);         // Create file object
         ps.println("Possible Fusion Pattern");
         ps.println();
-        for(int i =0;i<this.shrtRead.size();i++){
+        for(int i =0;i<this.shrtRead.size();i++){                               // Loop each ShortgunSequence
         
             ShortgunSequence dummySS = this.shrtRead.get(i);
-            ArrayList<ReconstructSequence> dummyListRecon = dummySS.getListReconSeq();
-            ps.println("Read Name: " + dummySS.getReadName());
+            ArrayList<ReconstructSequence> dummyListRecon = dummySS.getListReconSeq();  // Get ArrayList of object ReconStructSequence
             
-            for(int j=0;j<dummyListRecon.size();j++){
-                ReconstructSequence dummyRecon = dummyListRecon.get(j);
-                ps.println(dummyRecon.getResultString());
-                ps.println("Reconstruct Sequence: " + dummyRecon.getFullReconSequence());
+            if (dummyListRecon.size() != 0){
+                ps.println("Read Name: " + dummySS.getReadName());
+            
+            
+                for(int j=0;j<dummyListRecon.size();j++){                           // Loop on each ReconStructSequence
+                    ReconstructSequence dummyRecon = dummyListRecon.get(j);
+                    ps.println(dummyRecon.getResultString());                       // get ResultString whic is String of pattern Report that already generate via build in function of ReconStructSequence
+                    ps.println("Reconstruct Sequence: " + dummyRecon.getFullReconSequence());   // get FullReconSequence which is a String of DNA sequence of this ReconStructSequence 
+                    ps.println();
+                }
                 ps.println();
             }
-            ps.println();
         }     
     }
     

@@ -164,11 +164,11 @@ public class ShortgunSequence {
     public long[] getClusterVector(){ 
         /* Return vector of top two high match position of this short sequence Vector has 24 dimension equal to number of chromosome)*/
         createVectorTopTwo();
-        System.out.print(readName + ": This is clusterVector vector check:\t");
+//        System.out.print(readName + ": This is clusterVector vector check:\t");
         for (int i = 0; i<clusterVector.length;i++){
-            System.out.print(clusterVector[i] + "\t");
+//            System.out.print(clusterVector[i] + "\t");
         }
-        System.out.println();
+//        System.out.println();
         return clusterVector; 
     }
     
@@ -377,11 +377,11 @@ public class ShortgunSequence {
         /************** Key function to create Report ***************/
         /************************************************************/
         
-        System.out.println("");
-        System.out.println("");
+//        System.out.println("");
+//        System.out.println("");
         System.out.println("Do countAlignmentData on " + readName);
-        System.out.println("");
-        System.out.println("");
+//        System.out.println("");
+//        System.out.println("");
         
         long count;
         long green,yellow,red,orange,redInt,yellowInt,greenInt,orangeInt;
@@ -622,7 +622,7 @@ public class ShortgunSequence {
                 } 
                 /* ------------------------------ */
                 System.out.println("Index Check before create new group : mainBeginIdx: "+ mainBeginIdx + "\tmainLastIdx: " + mainLastIdx + "\tsubBeginIdx: " + subBeginIdx + "\tsubLastId: " +subLastIdx);
-                if (mainLastIdx < subBeginIdx){                                                             // check for create new possible combination 
+                if (mainLastIdx < subBeginIdx){    // Case check to make sure that the front part and back part doesn't overlap                                                         // check for create new possible combination 
                     ReconstructSequence newRecon = new ReconstructSequence(this.mers,(long)mainAlgnCode,(long)subAlgnCode,mainBeginIdx,mainLastIdx,subBeginIdx,subLastIdx);                     
                     this.listReconSeq.add(newRecon);
                     checkFlag = 1;

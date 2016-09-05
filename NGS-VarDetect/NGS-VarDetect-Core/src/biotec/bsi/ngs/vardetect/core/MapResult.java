@@ -27,7 +27,7 @@ import java.util.Map;
 
 
 
-public class MapResult {
+public class MapResult {            // Curently unused (Use on old implementation hashmap version)
     long alignPos;
     long key;
     long chrnumber;

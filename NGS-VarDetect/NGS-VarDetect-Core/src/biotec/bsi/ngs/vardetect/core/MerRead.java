@@ -16,11 +16,11 @@ public class MerRead {
     private long merCode;
     private long merCodeComp;
     private int index,indexComp,merLen;
-    private ArrayList<Long> chrPos;
-    private ArrayList<Long> chrAlgn;
+    private ArrayList<Long> chrPos;             // store align chr and position of this MerRead [chr|position]
+    private ArrayList<Long> chrAlgn;            // store align chr and align position(position - index) [chr|align position]
     private ArrayList<Long> chrStrandPos;       // (Arraylist that store all code that align on thisMerRead (can have more than one if it repeat sequence)
-    private ArrayList<Long> chrStrandPosComp; 
-    private ArrayList<Long> chrStrandAlgn;      // (Arraylist that store the position minus mer index of all code that align on thisMerRead (can have more than one if it repeat sequence)
+    private ArrayList<Long> chrStrandPosComp;   // (Arraylist that store all code that align on thisMerRead compliment strand (can have more than one if it repeat sequence) [chr|Strnd|align Position]
+    private ArrayList<Long> chrStrandAlgn;      // (Arraylist that store the position minus mer index of all code that align on thisMerRead (can have more than one if it repeat sequence) [chr|Strnd|align Position]
     private String alignSymbol;
     
     public MerRead(){
@@ -84,7 +84,7 @@ public class MerRead {
     }
     
     // pos must be a compose number of chr:position and array of long (long[])
-    public void addMatchResult(long mer,long[] pos, int idx, long chrNumber){
+    public void addMatchResult(long mer,long[] pos, int idx, long chrNumber){       // Currently not use
         
         long[] code = pos;
         this.merCode = mer;
@@ -101,7 +101,7 @@ public class MerRead {
         }                
     }
     
-    public void createAlignmentResultStrand(){
+    public void createAlignmentResultStrand(){                                      // Currently not use
         String strandNot = "no value";
         for(int i =0;i<this.chrStrandPos.size();i++){
             
@@ -127,7 +127,7 @@ public class MerRead {
         String strandNot = "no value";
         for(int i =0;i<this.chrStrandPos.size();i++){
             
-            long newAlignResult = (chrStrandPos.get(i)-this.index);
+            long newAlignResult = (chrStrandPos.get(i)-this.index);     // alignment positiom code come from chrStrandPos - index (strand +) [different strand have their own aligncode and index]
             if(((chrStrandPos.get(i)>>28)&1) == 1){
                 strandNot = "+";
             }else if(((chrStrandPos.get(i)>>28)&1) == 0){
@@ -146,7 +146,7 @@ public class MerRead {
         strandNot = "no value";
         for(int i =0;i<this.chrStrandPosComp.size();i++){
             
-            long newAlignResult = (chrStrandPosComp.get(i)-this.indexComp);
+            long newAlignResult = (chrStrandPosComp.get(i)-this.indexComp); // alignment positiom code come from chrStrandPosComp - indexComp (strand -) [different strand have their own aligncode and index]
             if(((chrStrandPosComp.get(i)>>28)&1) == 1){
                 strandNot = "+";
             }else if(((chrStrandPosComp.get(i)>>28)&1) == 0){
@@ -162,13 +162,13 @@ public class MerRead {
         } 
     }
     
-    public void createAlignmentResult(){
+    public void createAlignmentResult(){                        // Currently not use
         for(int i =0;i<this.chrPos.size();i++){
             
             long newAlignResult = (chrPos.get(i)-this.index);
             System.out.println();
             System.out.println("Check chrPos " + chrPos.get(i));
-            System.out.println("Check chrPos tranform to chrnumber" + (chrPos.get(i)>>28));
+            System.out.println("Check chrPos transform to chrnumber" + (chrPos.get(i)>>28));
             System.out.println();
             chrAlgn.add(newAlignResult);
             
@@ -179,7 +179,7 @@ public class MerRead {
         return this.chrStrandAlgn;
     }
     
-    public ArrayList<Long> getAlignmentResult(){
+    public ArrayList<Long> getAlignmentResult(){                // Currently not use
         return this.chrAlgn;
     }
 

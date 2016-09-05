@@ -50,7 +50,7 @@ public class BinaryAligner implements Aligner{
     public AlignmentResultRead align(InputSequence input){
         
         
-        AlignmentResult res = new AlignmentResult(input);
+        //AlignmentResult res = new AlignmentResult(input);
         AlignmentResultRead alinResult = new AlignmentResultRead();
         
         this.mer = 18;
@@ -75,7 +75,7 @@ public class BinaryAligner implements Aligner{
                     
                     String s = seq.getSequence();                                           // get String sequence of selected ShortgunSequence
                     
-                    System.out.print(chr.getName()+" + strand\t");           
+//                    System.out.print(chr.getName()+" + strand\t");           
                     
                     
                     for(int i=0;i<(s.length()-mer)+1;i++){                                  // (Windowing with one stepping) for loop over String sequence which has limit round at (string length - mer length) + one [maximum possible mer sequence]
@@ -102,7 +102,7 @@ public class BinaryAligner implements Aligner{
                             }
 //                            System.out.println(""+chr.getName()+" "+sub+" "+sub.length()+" : "+m+" pos : "+pos+" idx : "+idx);
                             
-                            System.out.print("\t"+pos);
+//                            System.out.print("\t"+pos);
 //                            if(pos2!=null){
 //                                    System.out.println();
 //                                    System.out.println("Before Mermap this is pos2 Check: before add to mer read = " + pos2[0]);
@@ -133,7 +133,7 @@ public class BinaryAligner implements Aligner{
 //                                    System.out.println("Check Index: " + index);
                                     MerRead merRead = seq.getMerRead().get(index);                  // call back existing merRead to update
                                     merRead.addMatchResultStrand(m, pos2, index, chr.getChrNumber(),this.mer); // add mer code(36 bit), align result(64 bit [mer|pos]), index and chromosome number into MerRead 
-                                    seq.addMerReadByIndex(index,merRead);                           // add MerRead into SgortgunSequence by index
+                                    seq.addMerReadByIndex(index,merRead);                           // add MerRead into ShortgunSequence by index
                                     
 //                                    System.out.println("(Other time) Should be constant: Size Mer Read check: " + seq.getMerReadSize());
                                 }                                   
@@ -143,9 +143,9 @@ public class BinaryAligner implements Aligner{
                             
                         }
                     //System.out.println(" This mer Map check: "+ (merMap == null));
-                    res.createMap(seq.getReadName(), merMap);                    
+                    //res.createMap(seq.getReadName(), merMap);                    
                     }
-                     System.out.println();
+//                     System.out.println();
                     /* New Implement Part */
                     //seq.countAlignmentData(); // Create Alignment count data before change ShortgunSequence
                     
@@ -164,8 +164,8 @@ public class BinaryAligner implements Aligner{
                     String s = seq.getSequence();                                                   // get sequence form ShortgunSequence
                     String invSeq = SequenceUtil.inverseSequence(s);                                // Do invert sequence (ATCG => GCTA)
                     String compSeq = SequenceUtil.createComplimentV2(invSeq);                       // Do compliment on invert sequence (GCTA => CGAT)  
-                    System.out.println("******Input Sequence check " + compSeq);
-                    System.out.print(chr.getName()+" - strand\t"); 
+//                    System.out.println("******Input Sequence check " + compSeq);
+//                    System.out.print(chr.getName()+" - strand\t"); 
                     
                     
                     for(int i=0;i<(compSeq.length()-mer)+1;i++){                                    // Windowing
@@ -192,7 +192,7 @@ public class BinaryAligner implements Aligner{
                             }
 //                            System.out.println(""+chr.getName()+" "+sub+" "+sub.length()+" : "+m+" pos : "+pos+" idx : "+idx);
                             
-                            System.out.print("\t"+pos);
+//                            System.out.print("\t"+pos);
 //                            if(pos2!=null){
 //                                    System.out.println();
 //                                    System.out.println("Before Mermap this is pos2 Check: before add to mer read = " + pos2[0]);
@@ -236,9 +236,9 @@ public class BinaryAligner implements Aligner{
                             
                         }
                     //System.out.println(" This mer Map check: "+ (merMap == null));
-                    res.createMap(seq.getReadName(), merMap);                    
+                    //res.createMap(seq.getReadName(), merMap);                    
                     }
-                     System.out.println();
+//                     System.out.println();
                     /* New Implement Part */
                     //seq.countAlignmentData(); // Create Alignment count data before change ShortgunSequence
                     

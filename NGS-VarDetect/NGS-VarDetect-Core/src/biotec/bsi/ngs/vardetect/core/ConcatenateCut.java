@@ -9,7 +9,7 @@ package biotec.bsi.ngs.vardetect.core;
  *
  * @author worawich
  */
-public class ConcatenateCut {
+public class ConcatenateCut {                                                       // Act as a storage for concatenate cut for easy get data
     private CharSequence sequence,cutA,cutB;
     private String type,chrA,chrB;
     private int iniA,iniB; // initial position on each chrmosome

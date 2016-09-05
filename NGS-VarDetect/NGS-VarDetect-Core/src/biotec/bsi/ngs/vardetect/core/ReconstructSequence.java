@@ -40,7 +40,7 @@ public class ReconstructSequence {
         this.lastIdxB = inLastIdxB;
         this.algnCodeF = inAlgnCodeF;
         this.algnCodeB = inAlgnCodeB;
-        this.patternType = 1;
+        this.patternType = 1;               // pattern type 1 mean have fusion
         this.fullReconSequence = "";
         
                 
@@ -80,7 +80,7 @@ public class ReconstructSequence {
         this.beginIdxF = inBeginIdxF;
         this.lastIdxF = inLastIdxF;
         this.algnCodeF = inAlgnCodeF;      
-        this.patternType = 0;
+        this.patternType = 0;               // pattern type 0 mean no fusion
         this.fullReconSequence = "";
         
         this.chrF = ((long)this.algnCodeF)>>29;
@@ -147,33 +147,64 @@ public class ReconstructSequence {
                 
 //                int breakPointF = this.lastIdxF + ((this.beginIdxB - this.lastIdxF)-1);
                 int breakPointF = this.lastIdxF + (kMer-1);
-                int breakPointB = this.beginIdxB;
+                int breakPointB = this.lastIdxB + (kMer-1);
                 String dnaSequence = SequenceUtil.decodeMer(code, kMer);
-                System.out.println("idx : " +merIdx);
-                
-                
-                
-                
-                if(merIdx >= this.beginIdxF & merIdx <= this.lastIdxB){
+//                System.out.println("idx : " +merIdx);
+//                if(breakPointF>this.lastIdxB){
+//                    if(merIdx >= this.beginIdxF & merIdx <= th){
+//                    
+//                }else{
+                   if(merIdx >= this.beginIdxF & merIdx <= breakPointB){
                     System.out.println("Full Recon Sequence : " + this.fullReconSequence);
                     
+                        if (merIdx == breakPointF){
+                            this.fullReconSequence = this.fullReconSequence.concat(dnaSequence.substring(0, 1)).concat("//F//");
+                        }else if(merIdx == this.beginIdxB){
+                            this.fullReconSequence = this.fullReconSequence.concat("//B//").concat(dnaSequence.substring(0, 1));
+                        }else if(merIdx >= this.lastIdxB && merIdx <= breakPointB){
+                            if(merIdx == this.listMer.size()-1){
+                                this.fullReconSequence = this.fullReconSequence.concat(dnaSequence).concat("//B//");
+                            }else if(merIdx == breakPointB){
+                                this.fullReconSequence = this.fullReconSequence.concat(dnaSequence.substring(0, 1)).concat("//B//"); 
+                            }else{
+                                this.fullReconSequence = this.fullReconSequence.concat(dnaSequence.substring(0, 1));
+                            }                            
+                        }else if(merIdx == this.beginIdxF){
+                            this.fullReconSequence = this.fullReconSequence.concat("//F//").concat(dnaSequence.substring(0, 1));
+                        }else{
+                            this.fullReconSequence = this.fullReconSequence.concat(dnaSequence.substring(0, 1));
+                        }
+                    
+                    } 
+//                }
+                /*************************/
+//                if(merIdx >= this.beginIdxF & merIdx <= this.lastIdxB)
+//                    
+//                this.fullReconSequence = this.fullReconSequence.concat(dnaSequence.substring(0, 1));
+                
+                /*if(merIdx >= this.beginIdxF & merIdx <= this.lastIdxB){
+//                    System.out.println("Full Recon Sequence : " + this.fullReconSequence);
+                    
                     if (merIdx == breakPointF){
-                        this.fullReconSequence = this.fullReconSequence.concat(dnaSequence.substring(0, 1)).concat("//~");
+                        this.fullReconSequence = this.fullReconSequence.concat(dnaSequence.substring(0, 1)).concat("//F//");
                     }else if(merIdx == this.beginIdxB){
-                        this.fullReconSequence = this.fullReconSequence.concat("~//").concat(dnaSequence.substring(0, 1));
+                        this.fullReconSequence = this.fullReconSequence.concat("//B//").concat(dnaSequence.substring(0, 1));
                     }else if(merIdx == this.lastIdxB){
-                        this.fullReconSequence = this.fullReconSequence.concat(dnaSequence);
+                        this.fullReconSequence = this.fullReconSequence.concat(dnaSequence).concat("//B//");
+                    }else if(merIdx == this.beginIdxF){
+                        this.fullReconSequence = this.fullReconSequence.concat("//F//").concat(dnaSequence.substring(0, 1));
                     }else{
                         this.fullReconSequence = this.fullReconSequence.concat(dnaSequence.substring(0, 1));
                     }
                     
-                }else{
-                    if (merIdx == breakPointF){
-                        this.fullReconSequence = this.fullReconSequence.concat(dnaSequence.substring(0, 1)).concat("//~");
-                    }else if (merIdx < breakPointF){
-                        this.fullReconSequence = this.fullReconSequence.concat(dnaSequence.substring(0, 1));
-                    }
-                }
+                }*/
+//                else{
+//                    if (merIdx == breakPointF){
+//                        this.fullReconSequence = this.fullReconSequence.concat(dnaSequence.substring(0, 1)).concat("//~");
+//                    }else if (merIdx < breakPointF){
+//                        this.fullReconSequence = this.fullReconSequence.concat(dnaSequence.substring(0, 1));
+//                    }
+//                }
                 
             // Combind every mer together to long sequence
             // read index of mer math with start and last 
@@ -187,9 +218,9 @@ public class ReconstructSequence {
                 long code = (dummyMerRead.getMerCode()>>28);
                 int breakPointF = this.lastIdxF + (kMer-1);
                 String dnaSequence = SequenceUtil.decodeMer(code, kMer);
-                System.out.println("idx : " +merIdx);
+//                System.out.println("idx : " +merIdx);
                 if(merIdx >= this.beginIdxF & merIdx <= this.lastIdxF){
-                    System.out.println("Full Recon Sequence : " + this.fullReconSequence);
+//                    System.out.println("Full Recon Sequence : " + this.fullReconSequence);
                     if (merIdx == this.lastIdxF){
                         this.fullReconSequence = this.fullReconSequence.concat(dnaSequence);
                     }else{

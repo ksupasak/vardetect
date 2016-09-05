@@ -40,8 +40,8 @@ public class EncodedSequence {
     Map<Long,Long> map;
     String name;
     
-    public long mask = -268435456; // Do and operation to get mer 
-    public long mask2 = 268435455; // Do and operation to get position
+    public long mask = -268435456; // Do & operation to get mer  
+    public long mask2 = 268435455; // Do & operation to get position
     public long mask36Bit = 68719476735L;
     
     
@@ -52,12 +52,12 @@ public class EncodedSequence {
     
     public long addStrandNotation(long in, int strand){
         
-        long pos_strand = (strand<<28)+in;
+        long pos_strand = (strand<<28)+in;      // add 1 bit to indicate strand notation 0(-) or 1(+) infront of the 28 position bit
         
         return pos_strand;
     }
     
-    public long[] fullAlign(long mer){
+    public long[] fullAlign(long mer){  // now this function is unuse
                
         long[] listResult = align2(mer);
 //        System.out.println("This is listResult check: " + listResult.length);
@@ -98,7 +98,7 @@ public class EncodedSequence {
     public long[] align2ComplimentV2(long mer){
         int strand = 0; // notation for strand -
 //        createComplimentStrand(); // Caution this function will change value in mers
-        int index = alignComp(mer, 0, mers.length-1);
+        int index = alignComp(mer, 0, mers.length-1);       // Call function for compliment align 
         
         int start = -1;
         int stop = -1;
@@ -155,10 +155,10 @@ public class EncodedSequence {
     
     
     
-    public long[] align2Compliment(long mer){
+    public long[] align2Compliment(long mer){           // this function is unuse
         int strand = 0; // notation for strand -
 //        createComplimentStrand(); // Caution this function will change value in mers
-        int index = alignComp(mer, 0, mersComp.length-1);
+        int index = alignComp(mer, 0, mersComp.length-1);       // call binary search function with initial left and right with 0 and maximum index point
         
         int start = -1;
         int stop = -1;
@@ -216,7 +216,7 @@ public class EncodedSequence {
     public long[] align2(long mer){
 //        System.out.println("\n Do Strand + Alignment");
         int strand = 1; // Notation for strand +
-        int index = align(mer, 0, mers.length-1);
+        int index = align(mer, 0, mers.length-1); // call binary search function with initial left and right with 0 and maximum index point
         
         int start = -1;
         int stop = -1;
@@ -272,7 +272,7 @@ public class EncodedSequence {
         return null;
     }
     
-    public long align(long mer){
+    public long align(long mer){        // Curectly unuse
         
         int index = align(mer, 0, mers.length-1);
         if(index>0)return mers[index]&mask2;
@@ -280,27 +280,27 @@ public class EncodedSequence {
     }
     
     public int align(long mer, int left, int right){
+        // Core of Binary Search Function (normal strand(+))
+        int mid = (left+right)/2;       // Find middle point between left and right
+        long i = mers[mid]&mask;        // get reference mers code at that middle point for matching purpose  !! Important reference mer must be sorted 
         
-        int mid = (left+right)/2;
-        long i = mers[mid]&mask;
-        
-        if(left>right)return -1;
+        if(left>right)return -1;        // in case that left value higher than right that mean this mer not match
         else
-            if(i<mer){
-                return align(mer, mid+1,right);
+            if(i<mer){                  // if selected reference mers code less than input mer
+                return align(mer, mid+1,right);     // adjust to new index by subtitude left position to mid+1 
             }else
-                if(i>mer){
-                    return align(mer, left,mid-1);
+                if(i>mer){              // if selected reference mers code higher than input mer
+                    return align(mer, left,mid-1);  // adjust to new index by subtitude right position to mid-1
                 }else
-                    if(i==mer){
+                    if(i==mer){         // if equal mean this position is match
 //                        long j = mers[mid];
-                        return mid;
+                        return mid;     // return match position
                     }
         
         return -1;
     }
     
-    public long alignComp(long mer){
+    public long alignComp(long mer){        // Currently not use
         
         int index = alignComp(mer, 0, mers.length-1);
         if(index>0)return mers[index]&mask2;
@@ -308,7 +308,7 @@ public class EncodedSequence {
     }
     
     public int alignComp(long mer, int left, int right){
-        
+        // Core of Binary Search Function (compliment strand(-))
         int mid = (left+right)/2;
         long i = mers[mid]&mask;
         
@@ -328,13 +328,7 @@ public class EncodedSequence {
         return -1;
     }
     
-    
-    
-    
-    
-    
-    
-    public void setMersComp(long mers[]){
+    public void setMersComp(long mers[]){       // Curently not use mersComp (Use on old Implementation)
         this.mersComp = mers;     
     }
     
@@ -343,7 +337,7 @@ public class EncodedSequence {
     }
     
     public long [] getMersComp(){
-        return this.mers;
+        return this.mersComp;
     }
     
     public long [] getMers(){
@@ -351,24 +345,24 @@ public class EncodedSequence {
     }
     
     
-    public void setMap(Map<Long, Long> map) {
+    public void setMap(Map<Long, Long> map) {       //Currently not use (Use on old implementation hashmap version)
         this.map = map;
         //this.name = chrName;
     }
     
-    public void setReadMap(Map<Long,Long> map){
+    public void setReadMap(Map<Long,Long> map){     //Currently not use (Use on old implementation hashmap version)
         this.map = map;
     }
     
-    public Map getEncodeMap(){
+    public Map getEncodeMap(){                      //Currently not use (Use on old implementation hashmap version)
         return this.map;
     }
     
-    public String getEncodeChrName(){
+    public String getEncodeChrName(){               //Currently not use 
         return this.name;
     }
     
-    public void readFromPath(String file_path, String fa) throws FileNotFoundException, IOException {
+    public void readFromPath(String file_path, String fa) throws FileNotFoundException, IOException {       // Currently not use (use in old implementation)
         
         map = new HashMap<Long,Long>();
         
@@ -453,7 +447,7 @@ public class EncodedSequence {
     }
     
     
-    public void writeToPath(String path, String fa) throws FileNotFoundException, IOException {
+    public void writeToPath(String path, String fa) throws FileNotFoundException, IOException {         //Currently not use (Use on old implementation hashmap version)
 
        
        
@@ -500,7 +494,7 @@ public class EncodedSequence {
 
     }
     
-    public void createComplimentStrand(){
+    public void createComplimentStrand(){           // Currently not use (use on do complement reference version)
         
         System.out.println("\n Create compliment strand ");
         this.mersComp = Arrays.copyOf(mers, mers.length);
