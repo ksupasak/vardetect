@@ -7,59 +7,54 @@ package biotec.bsi.ngs.vardetect.cmd;
 
 import biotec.bsi.ngs.vardetect.alignment.AlignerFactory;
 import biotec.bsi.ngs.vardetect.core.Aligner;
+import biotec.bsi.ngs.vardetect.core.AlignmentResult;
 import biotec.bsi.ngs.vardetect.core.AlignmentResultRead;
+import biotec.bsi.ngs.vardetect.core.ChromosomeSequence;
 import biotec.bsi.ngs.vardetect.core.ClusterGroup;
+import biotec.bsi.ngs.vardetect.core.EncodedSequence;
 import biotec.bsi.ngs.vardetect.core.InputSequence;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import biotec.bsi.ngs.vardetect.core.util.Clustering;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
+import static biotec.bsi.ngs.vardetect.core.util.SequenceUtil.encodeSerialChromosomeSequenceV3;
+import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil;
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_WholeGene;
 import biotec.bsi.ngs.vardetect.core.util.VisualizeResult;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
  * @author worawich
  */
-public class NGSCMD6 {
-    public static void main(String[] args) throws IOException {
+
+public class NGSCMD8 {
+    
+     public static void main(String[] args) throws IOException {
+        // TODO code application logic here
+      
+//       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
+        Map<String,ArrayList<Map>> aon = new HashMap();
+        System.out.println(aon==null);
+        System.out.println(aon!=null);
         
         System.out.println("Get reference sequence");
         ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0]); //runFile hg19.fa
-        
+        //^^^^
         //ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
-        System.out.println("Read Data");
+        System.out.println("Simulate Data");
         //InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGene(ref, 5, 100, "20", "21");
-//        ShortgunSequence tempSS = SequenceUtil.readInputFile(args[1]);
-       
-        String sequence = "ATGGCACATGCAGCGCAAGTAGGTCTACAAGACGCTACTTCCCCTATCATAGAAGAGCTTATCACCTTTCATGAT" +
-"CACGCCCTCATAATCATTTTCCTTATCTGCTTCCTAGTCCTGTATGCCCTTTTCCTAACACTCACAACAAAACTA" +
-"ACTAATACTAACATCTCAGACGCTCAGGAAATAGAAACCGTCTGAACTATCCTGCCCGCCATCATCCTAGTCCTC" +
-"ATCGCCCTCCCATCCCTACGCATCCTTTACATAACAGACGAGGTCAACGATCCCTCCCTTACCATCAAATCAATT" +
-"GGCCACCAATGGTACTGAACCTACGAGTACACCGACTACGGCGGACTAATCTTCAACTCCTACATACTTCCCCCA" +
-"TTATTCCTAGAACCAGGCGACCTGCGACTCCTTGACGTTGACAATCGAGTAGTACTCCCGATTGAAGCCCCCATT" +
-"CGTATAATAATTACATCACAAGACGTCTTGCACTCATGAGCTGTCCCCACATTAGGCTTAAAAACAGATGCAATT" +
-"CCCGGACGTCTAAACCAAACCACTTTCACCGCTACACGACCGGGGGTATACTACGGTCAATGCTCTGAAATCTGT" +
-"GGAGCAAACCACAGTTTCATGCCCATCGTCCTAGAATTAATTCCCCTAAAAATCTTTGAAATAGGGCCCGTATTT" +
-"ACCCTATAG"; // got this Sequence from http://molevol.lysine.umiacs.umd.edu/resources/fileformats on the fasta unAlign Example file.
-        ShortgunSequence inSS = new ShortgunSequence(sequence);
-        inSS.addReadName("Un_Align_EX");
-        InputSequence input = new InputSequence();
-//        input.addRead(inSS);
-        //input = SequenceUtil.readSampleFile(args[1]);
-        String fixPath = "/Users/worawich/VMdev/3661/output.fa";
-        input = SequenceUtil.readSampleFileV2(fixPath,100000,200000);
-//        InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandom(ref,5, 100, 5);
+        InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandom(ref,5, 100, 5);
         
-        System.out.println("********** Do Alignment *********");
+        
         Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
           
         AlignmentResultRead align = aligner.align(ref, input);  // function align is located in binary aligner
         
-        
-        AlignmentResultRead cutAlign = align.generateSortedCutResult(5);
         
 //        Map<String,ArrayList<Map>> result = new HashMap();
 //        result = align.getAlignmentResultV2();
@@ -73,16 +68,17 @@ public class NGSCMD6 {
         //System.out.println("Size of Result: " + align.getAlignmentCount().size());
         
 //        VisualizeResult.visualizeAlignmentCountMatchCutPlusColor(align,100);
-        System.out.println("********** Do Write Result SortedResult *********");
+        AlignmentResultRead cutAlign = align.generateSortedCutResult(5);
+        
+//        align.writeSortedResultToPath(ref.getPath(), "txt");
+//        align.writeUnSortedResultToPath(ref.getPath(), "txt");
+//        align.writeSortedCutResultToPath(ref.getPath(), "txt", 5);
+        
         cutAlign.writeSortedResultToPath(ref.getPath(), "txt");
-        System.out.println("********** Do Write Result UnSortedResult *********");
         cutAlign.writeUnSortedResultToPath(ref.getPath(), "txt");
-        System.out.println("********** Do Write Result CutResult *********");
         cutAlign.writeSortedCutResultToPath(ref.getPath(), "txt", 5);
-        
         cutAlign.writeSortedCutResultToPathInFormat(ref.getPath(), "txt", 5);
-        
-        AlignmentResultRead readAlign = SequenceUtil.readAlignmentReport("/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/hg19_Format_AlignSortedCutResult.txt");
+        //^^^^
         /* Old Grouping algorithm
         align.createAllClusterCode();
         align.createAllClusterCodeSorted();
@@ -97,27 +93,40 @@ public class NGSCMD6 {
         align.createGroupingResult();
         System.out.println(" ****** Check cluster result: " + align.getclusterResult().size());
         */
-        System.out.println("********** Do Calculate Euclidient Distance *********");
+        AlignmentResultRead readAlign = SequenceUtil.readAlignmentReport("/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/hg19_Format_AlignSortedCutResult.txt");
+        
+        readAlign.calculateEuclidientdistance(); // Must have this order before clustering
+//        VisualizeResult.visualizeDistanceTable(align);
+        readAlign.writeDistanceTableToPath(ref.getPath(), "txt");
+        
+        
+        ArrayList<ClusterGroup> groupResult = Clustering.clusteringGroup(readAlign, 100);
+        readAlign.addGroupReult(groupResult);
+        readAlign.writeClusterGroupToPath(ref.getPath(), "txt");
+        
+        System.out.println(" check number of group : " + groupResult.size());
+        VisualizeResult.visualizeClusterGoup(groupResult);
+        
+        
+        
+        /*
         cutAlign.calculateEuclidientdistance(); // Must have this order before clustering
 //        VisualizeResult.visualizeDistanceTable(align);
-        System.out.println("********** Do Write Result DistanceTable *********");
         cutAlign.writeDistanceTableToPath(ref.getPath(), "txt");
         
-        System.out.println("********** Do Clustering Group *********");
-        System.out.println("Number of Read in consider : "+ cutAlign.getResult().size());
+        
         ArrayList<ClusterGroup> groupResult = Clustering.clusteringGroup(cutAlign, 100);
         cutAlign.addGroupReult(groupResult);
-        System.out.println("********** Do Write Group Result *********");
         cutAlign.writeClusterGroupToPath(ref.getPath(), "txt");
         
         System.out.println(" check number of group : " + groupResult.size());
         VisualizeResult.visualizeClusterGoup(groupResult);
         
-        System.out.println("********** Do Reconstruct Sequence *********");
-        cutAlign.enableReconstruct();
-        System.out.println("********** Do Write Pattern Report *********");
-        cutAlign.writePatternReport(ref.getPath(), "txt");
         
+        
+        cutAlign.enableReconstruct();
+        cutAlign.writePatternReport(ref.getPath(), "txt");
+        */
         // Create save result path by just plugin AlignmentResult
         
 //        System.out.println(" Size new resutl check " + align.getResult().size());
@@ -149,5 +158,5 @@ public class NGSCMD6 {
         }*/
     
     }
-    
+
 }

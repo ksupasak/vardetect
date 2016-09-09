@@ -68,10 +68,16 @@ public class NGSCMD4 {
         //System.out.println("Size of Result: " + align.getAlignmentCount().size());
         
 //        VisualizeResult.visualizeAlignmentCountMatchCutPlusColor(align,100);
+        AlignmentResultRead cutAlign = align.generateSortedCutResult(5);
         
         align.writeSortedResultToPath(ref.getPath(), "txt");
         align.writeUnSortedResultToPath(ref.getPath(), "txt");
         align.writeSortedCutResultToPath(ref.getPath(), "txt", 5);
+        
+//        cutAlign.writeSortedResultToPath(ref.getPath(), "txt");
+//        cutAlign.writeUnSortedResultToPath(ref.getPath(), "txt");
+//        cutAlign.writeSortedCutResultToPath(ref.getPath(), "txt", 5);
+        
         /* Old Grouping algorithm
         align.createAllClusterCode();
         align.createAllClusterCodeSorted();
