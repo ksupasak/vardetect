@@ -8,6 +8,7 @@ package biotec.bsi.ngs.vardetect.core;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -18,8 +19,9 @@ import java.util.Set;
  *
  * @author worawich
  */
-public class AlignmentResultRead {
+public class AlignmentResultRead implements Serializable{
     private ArrayList<ShortgunSequence> shrtRead;
+    private ArrayList<ShortgunSequence> shrtReadCut;
     private ArrayList<ClusterGroup> clusterResult;
     private long[] allClusterCodeSorted;
     private long[] allClusterCode;
@@ -124,15 +126,15 @@ public class AlignmentResultRead {
 //                System.out.println();
             }
 //            System.out.println("Check before add to "+dummyMainSS.getReadName());
-            for(int a=0;a<distanceVector.length;a++){
-//                System.out.print("\t"+distanceVector[a]);
-            }
+//            for(int a=0;a<distanceVector.length;a++){
+////                System.out.print("\t"+distanceVector[a]);
+//            }
 //            System.out.println();
             dummyMainSS.addDistanceVector(distanceVector); // store distance value in to main shrtgun sequence
 //            System.out.println("Check after add to "+dummyMainSS.getReadName());
-            for(int a=0;a<distanceVector.length;a++){
-//                System.out.print("\t"+distanceVector[a]);
-            }
+//            for(int a=0;a<distanceVector.length;a++){
+////                System.out.print("\t"+distanceVector[a]);
+//            }
 //            System.out.println();
             
         }
@@ -440,4 +442,122 @@ public class AlignmentResultRead {
         }     
     }
     
+    public AlignmentResultRead generateSortedCutResult(int threshold) {
+
+        /* Must specify threshold for cut result (The result that less than threshold will be cut out)*/
+        //PrintStream ps = new PrintStream(path+"_AlignSortedCutResult."+ fa);            // Create file object
+        AlignmentResultRead cutAlnRes = new AlignmentResultRead();
+        
+        for (int i=0;i<this.shrtRead.size();i++){                                       // Loop each ShortgunSequence
+            
+            ShortgunSequence dummySS = this.shrtRead.get(i);
+        //--------------------------    
+
+        //---------------------------------
+            
+            Map<Long,long[]> countMap =  dummySS.getAlignmentCountSortedCut(threshold); // get alignmentCountSortedCut (HashMap of sorted and cut with specific threshold of alignment result Map<positionCode,numCountPlusColor>)
+            
+//            ps.printf("%-30s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
+            Set allPos = countMap.keySet();
+            Iterator iterPos = allPos.iterator();
+            if(allPos.isEmpty() == false){
+                cutAlnRes.addResult(dummySS);
+                //ps.println(">Alignment result of "+ dummySS.getReadName());
+                //ps.printf("%-35s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","Strand","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
+            }
+            
+//            Set allPos = countMap.keySet();
+//            Iterator iterPos = allPos.iterator();
+//            while(iterPos.hasNext()){                                                   // loop all align positionCode (contain in HashMap)
+//                long positionCode = (long)iterPos.next();
+//                long alignPos = positionCode&mask;                                      // And with 28bit binary to get position
+//                long chrNumber = positionCode>>29;                                      // Shift left 29 bit because positionCode have this structure [chr|strand|position] in order to get chromosome number
+//                long[] numCountPlusColor = countMap.get(positionCode);                  // get array long which contain number of count and other color code and color code intensity
+//                long numCount = numCountPlusColor[0];
+//                long red = numCountPlusColor[1];
+//                long yellow = numCountPlusColor[2];
+//                long orange = numCountPlusColor[3];
+//                long green = numCountPlusColor[4];
+//                long redInt = numCountPlusColor[5];
+//                long yellowInt = numCountPlusColor[6];
+//                long orangeInt = numCountPlusColor[7];
+//                long greenInt = numCountPlusColor[8];
+//                
+//                String strandNot = "no";                                                // Identify the strand type of this align Position
+//                if(((positionCode>>28)&1) == 1){
+//                    strandNot = "+";
+//                }else if(((positionCode>>28)&1) == 0){
+//                    strandNot = "-";
+//                }   
+//                
+////                ps.format("Chr %d : Position %d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+//                //ps.format("Chr %2d : Position %12d|\t%8s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+//            }
+//            if(allPos.isEmpty() == false){
+//                //ps.println();
+//            }
+        }
+        return cutAlnRes;
+    }
+    
+    public void writeSortedCutResultToPathInFormat(String path, String fa, int threshold) throws FileNotFoundException, IOException {
+
+        /* Must specify threshold for cut result (The result that less than threshold will be cut out)*/
+        PrintStream ps = new PrintStream(path+"_Format_AlignSortedCutResult."+ fa);            // Create file object
+        
+        
+        for (int i=0;i<this.shrtRead.size();i++){                                       // Loop each ShortgunSequence
+            
+            ShortgunSequence dummySS = this.shrtRead.get(i);
+        //--------------------------    
+
+        //---------------------------------
+            
+            Map<Long,long[]> countMap =  dummySS.getAlignmentCountSortedCut(threshold); // get alignmentCountSortedCut (HashMap of sorted and cut with specific threshold of alignment result Map<positionCode,numCountPlusColor>)
+            
+//            ps.printf("%-30s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
+            Set allPos = countMap.keySet();
+            Iterator iterPos = allPos.iterator();
+            if(allPos.isEmpty() == false){
+                ps.println(">"+ dummySS.getReadName());
+                //ps.printf("%-35s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","Strand","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
+            }
+            
+//            Set allPos = countMap.keySet();
+//            Iterator iterPos = allPos.iterator();
+            while(iterPos.hasNext()){                                                   // loop all align positionCode (contain in HashMap)
+                long positionCode = (long)iterPos.next();
+                long alignPos = positionCode&mask;                                      // And with 28bit binary to get position
+                long chrNumber = positionCode>>29;                                      // Shift left 29 bit because positionCode have this structure [chr|strand|position] in order to get chromosome number
+                long[] numCountPlusColor = countMap.get(positionCode);                  // get array long which contain number of count and other color code and color code intensity
+                long numCount = numCountPlusColor[0];
+                long red = numCountPlusColor[1];
+                long yellow = numCountPlusColor[2];
+                long orange = numCountPlusColor[3];
+                long green = numCountPlusColor[4];
+                long redInt = numCountPlusColor[5];
+                long yellowInt = numCountPlusColor[6];
+                long orangeInt = numCountPlusColor[7];
+                long greenInt = numCountPlusColor[8];
+                
+                String strandNot = "no";                                                // Identify the strand type of this align Position
+                if(((positionCode>>28)&1) == 1){
+                    strandNot = "+";
+                }else if(((positionCode>>28)&1) == 0){
+                    strandNot = "-";
+                }   
+                
+//                ps.format("Chr %d : Position %d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                ps.format("%d,%d,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d", chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+                if (iterPos.hasNext()){
+                    ps.format(";");
+                }
+                //ps.format("Chr %2d : Position %12d|\t%8s\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d\t%8d%n",chrNumber,alignPos,strandNot,numCount,green,yellow,orange,red,greenInt,yellowInt,orangeInt,redInt);
+            }
+            ps.format("\n");
+            if(allPos.isEmpty() == false){
+                //ps.println();
+            }
+        }
+    }
 }

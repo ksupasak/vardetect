@@ -76,6 +76,21 @@ public class ShortgunSequence {
         this.mers.set(idx, mer);
     }
 
+    public void addListChr(ArrayList input){
+        this.listChr = input;
+    }
+    
+    public void addListPos(ArrayList input){
+        this.listPos = input;
+    }
+    
+    public void addListStrand(ArrayList input){
+        this.listStrand = input;
+    }
+    
+    public void addListResultCode(ArrayList input){
+        this.listResultCode = input;
+    }
 //    public void addAlignmentData(AlignmentData algn){
 //        this.algns.add(algn);
 //    }
@@ -223,10 +238,10 @@ public class ShortgunSequence {
         listVector = new ArrayList();
         VectorResult vectorResult = new VectorResult();
         
-        if(listResultCode.size()==1){
+        if(listChr.size()==1){
             int index = Math.toIntExact((long)listChr.get(0));
             clusterVector[index-1] = (long)listPos.get(0);          //index-1 because index in java start from 0 
-        }else if(listResultCode.size()>1){                          //So for chr 24 it must be index 23 of array
+        }else if(listChr.size()>1){                          //So for chr 24 it must be index 23 of array
             int index = Math.toIntExact((long)listChr.get(0));
             clusterVector[index-1] = (long)listPos.get(0);
             index = Math.toIntExact((long)listChr.get(1));
@@ -532,7 +547,7 @@ public class ShortgunSequence {
         System.out.println("Detect possible pattern of " + this.readName);
         ArrayList containCheck = new ArrayList();
         
-        /*  Extract beginIndex and LstIndex of each alignCode  */
+        /*  Extract beginIndex and LstIndex of each alignCode  EX this shortgun sequence is fusion of 2 chromosome that mean we must have at least two aligncode */
         for(int i=0;i<this.mers.size();i++){                                                            // Loop Mer
             MerRead dummyMerRead = this.mers.get(i);
             ArrayList<Long> chrStrandAlgn = dummyMerRead.getAlignmentResultStrand();

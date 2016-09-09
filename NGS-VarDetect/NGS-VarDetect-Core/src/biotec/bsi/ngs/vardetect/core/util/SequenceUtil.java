@@ -5,6 +5,7 @@
  */
 package biotec.bsi.ngs.vardetect.core.util;
 
+import biotec.bsi.ngs.vardetect.core.AlignmentResultRead;
 import biotec.bsi.ngs.vardetect.core.ChromosomeSequence;
 import biotec.bsi.ngs.vardetect.core.ConcatenateCut;
 import biotec.bsi.ngs.vardetect.core.EncodedSequence;
@@ -2371,4 +2372,60 @@ public class SequenceUtil {
             return tempInSS;
         }
     }
+    
+    public static AlignmentResultRead readAlignmentReport(String filename) throws IOException {
+        ArrayList listChr = new ArrayList();
+        ArrayList listPos = new ArrayList();
+        ArrayList listStrand = new ArrayList();
+        ArrayList listResultCode = new ArrayList();
+        ShortgunSequence inSS = new ShortgunSequence(null);
+        AlignmentResultRead alnResult = new AlignmentResultRead();
+        int count = 0;
+        int count2 = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(filename);
+        String name = null;
+//        int actStart = readStart*2;     //this is actual start of line in file (compatible only specific file 3661 and 3662 .fasta file)
+//        int actStop = readLimit*2;
+    //    String seq = "";
+        
+        StringBuffer seq = new StringBuffer();
+
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;
+            String[] data = null;      
+            while ((line = reader.readLine()) != null) {
+                
+                if(line.charAt(0)=='>'){
+                    inSS = new ShortgunSequence(null);
+                    name = line.substring(1);
+                    System.out.println("Read name got : " + name);
+                    listChr = new ArrayList();
+                    listPos = new ArrayList();
+                    listStrand = new ArrayList();
+                    listResultCode = new ArrayList();
+                }else{
+                    data = line.split(";");
+                
+                
+                    for(int i=0;i<data.length;i++){
+                        String[] dummyData = data[i].split(",");
+                        System.out.println("data check : "+dummyData[0] + " "+ dummyData[1] +" "+dummyData[2]);
+                        listChr.add(Long.parseLong(dummyData[0]));
+                        listPos.add(Long.parseLong(dummyData[1]));
+                        listStrand.add(dummyData[2]);
+                    }
+                    inSS.addReadName(name);
+                    inSS.addListChr(listChr);
+                    inSS.addListPos(listPos);
+                    inSS.addListStrand(listStrand);
+                    alnResult.addResult(inSS);
+                }
+                
+            }
+            
+            return alnResult;
+        }
+    }
+    
 }

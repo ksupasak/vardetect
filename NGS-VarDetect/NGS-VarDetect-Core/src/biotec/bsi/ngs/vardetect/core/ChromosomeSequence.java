@@ -23,12 +23,14 @@ public class ChromosomeSequence {
     String name;
     StringBuffer seq;
     Long chrNum;
+    String refPath;
     
     
     public ChromosomeSequence(ReferenceSequence ref, String name, StringBuffer seq){
-        this.ref = ref;
+        //this.ref = ref;
         this.name = name;
         this.seq = seq;
+        refPath = ref.getPath();
     }
 
     public void writeToPath(String path, String fa) throws FileNotFoundException {
@@ -80,7 +82,8 @@ public class ChromosomeSequence {
     }
 
     public String getFilePath() {
-        return ref.getPath()+File.separator+name;
+        //return ref.getPath()+File.separator+name;
+        return refPath+File.separator+name;
     }
 
     public void writeToFile(String fa) throws FileNotFoundException {

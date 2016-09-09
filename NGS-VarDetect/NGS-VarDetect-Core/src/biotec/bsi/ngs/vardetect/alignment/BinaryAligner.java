@@ -122,8 +122,7 @@ public class BinaryAligner implements Aligner{
                             /*************************************************************************************************************/
                             /* -------------------------New Implement Part (Stroe in object)---------------------------------------------*/
                             if (seq.getMerReadSize() < totalMer){                                   // Check selected ShortgunSequence has all possible caontain in it or not 
-                                MerRead merRead = new MerRead();                                    // Create merRead object
-                                
+                                MerRead merRead = new MerRead();                                    // Create merRead object                                
                                 merRead.addMatchResultStrand(m, pos2, index, chr.getChrNumber(),this.mer);   // add mer code(36 bit), align result(64 bit [mer|pos]), index and chromosome number into MerRead
                                 seq.addMerRead(merRead);                                            // add object MerRead into ShortgunSequence
 //                                System.out.println("(First Time) Size Mer Read check: " + seq.getMerReadSize());
@@ -131,7 +130,7 @@ public class BinaryAligner implements Aligner{
 //                                System.out.println("(Other time) Size Mer Read check: " + seq.getMerReadSize());
                                 if (index<seq.getMerReadSize()){
 //                                    System.out.println("Check Index: " + index);
-                                    MerRead merRead = seq.getMerRead().get(index);                  // call back existing merRead to update
+                                    MerRead merRead = seq.getMerRead().get(index);                  // call back existing merRead to update                                   
                                     merRead.addMatchResultStrand(m, pos2, index, chr.getChrNumber(),this.mer); // add mer code(36 bit), align result(64 bit [mer|pos]), index and chromosome number into MerRead 
                                     seq.addMerReadByIndex(index,merRead);                           // add MerRead into ShortgunSequence by index
                                     

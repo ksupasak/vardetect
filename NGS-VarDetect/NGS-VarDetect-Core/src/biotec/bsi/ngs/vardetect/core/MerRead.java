@@ -121,7 +121,7 @@ public class MerRead {
         }        
     }
     
-    public void createAlignmentResultStrandV2(){
+    public void createAlignmentResultStrandV2(){ // Consider both compliment and not compliment
         
         /* First round non compliment */
         String strandNot = "no value";
@@ -193,6 +193,10 @@ public class MerRead {
     
     public int getMerIndex(){
         return this.index;
+    }
+    
+    public int getMerCompIndex(){
+        return this.indexComp;
     }
     
     public int getMeLength(){
