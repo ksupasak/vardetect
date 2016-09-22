@@ -11,7 +11,11 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -19,7 +23,7 @@ import java.util.Set;
  *
  * @author worawich
  */
-public class AlignmentResultRead implements Serializable{
+public class AlignmentResultRead {
     private ArrayList<ShortgunSequence> shrtRead;
     private ArrayList<ShortgunSequence> shrtReadCut;
     private ArrayList<ClusterGroup> clusterResult;
@@ -27,17 +31,32 @@ public class AlignmentResultRead implements Serializable{
     private long[] allClusterCode;
     private double[][] distanceTable;
     private static long mask = 268435455;
+    private static long mask_Count = 4380866641920L;    // Do & operation to get count number from value contain in alignmentResultMap
+    //private static long mask_Chr =
+    private static long mask_chrStrandAln = 17179869183L;   // Do & operation to get aligncode compose of chr|strand|alignposition from value contain in alignmentResultMap
     private ClusterGroup group;
+    private Map<String,ArrayList<Long>> alignmentResultMap;
+    private Map<String,ArrayList<Long>> alignmentSortedCutResultMap;
+    private Map<Long,long[]> countResultSortedCut;
     
     public AlignmentResultRead(){
         
        this.shrtRead = new ArrayList();
        this.group = new ClusterGroup();
        this.clusterResult = new ArrayList();
+       this.alignmentResultMap = new HashMap();
+       this.alignmentSortedCutResultMap = new LinkedHashMap();
+       this.mask = 268435455;
+       this.mask_Count = 4380866641920L;    // Do & operation to get count number from value contain in alignmentResultMap
+       this.mask_chrStrandAln = 17179869183L;   // Do & operation to get aligncode compose of chr|strand|alignposition from value contain in alignmentResultMap
     }
     
     public void addResult(ShortgunSequence inRead){
         this.shrtRead.add(inRead);
+    }
+    
+    public void addMapResult(Map inMap){
+        this.alignmentResultMap = inMap; 
     }
     
     public void addGroupReult(ArrayList<ClusterGroup> inGroupResult){
@@ -100,6 +119,27 @@ public class AlignmentResultRead implements Serializable{
             shrtRead.get(i).createInGroupOutGroup(threshold);
         }
     }
+    
+    public void countSortedCutMapResult(long inTh){
+        
+        long threshold = inTh;
+        Set readSet = this.alignmentResultMap.keySet();
+        Iterator readIter = readSet.iterator();
+        while(readIter.hasNext()){
+            String readName = (String) readIter.next();
+            ArrayList<Long> countChrStrandPosList = (ArrayList<Long>) this.alignmentResultMap.get(readName);
+            for(int i=0;i<countChrStrandPosList.size();i++){
+                long countChrStrandPos = countChrStrandPosList.get(i);
+                long count = countChrStrandPos&mask_Count;
+                long chrStrandPos = countChrStrandPos&mask_chrStrandAln;
+                
+                
+            }
+        }
+        
+    }
+    
+    
     
     public void calculateEuclidientdistance(){
         
@@ -560,4 +600,165 @@ public class AlignmentResultRead implements Serializable{
             }
         }
     }
+    
+      public void writeSortedCutResultMapToPathInFormat(String path,String nameFile, String fa) throws FileNotFoundException, IOException {
+
+        /* Must specify threshold for cut result (The result that less than threshold will be cut out)*/
+//        PrintStream ps = new PrintStream(path+"_Format_AlignSortedCutResultMap."+ fa);            // Create file object
+        PrintStream ps = new PrintStream(path+nameFile+"."+ fa);            // Create file object
+        
+        
+        Set set = this.alignmentSortedCutResultMap.keySet();
+        Iterator readNameIter = set.iterator();
+       
+        while(readNameIter.hasNext()){ 
+            String readName = (String) readNameIter.next();
+            ArrayList dummyResList = this.alignmentSortedCutResultMap.get(readName);
+            
+            if(dummyResList.isEmpty() == false){
+                ps.println(">"+ readName);
+                //ps.printf("%-35s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","Strand","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
+            }
+            
+            Iterator codeIter = dummyResList.iterator();
+            while(codeIter.hasNext()){
+                long code = (long) codeIter.next();                                     // code has structure like this [count|Chr|strand|alignPosition]
+                long numCount = code>>34;                                               //Shift 34 bit to get count number
+                long chrStrandAln = code&this.mask_chrStrandAln;
+                long alignPos = chrStrandAln&mask;                                      // And with 28bit binary to get position
+                long chrNumber = chrStrandAln>>29;
+                
+                String strandNot = "no";                                                // Identify the strand type of this align Position
+                if(((chrStrandAln>>28)&1) == 1){
+                    strandNot = "+";
+                }else if(((chrStrandAln>>28)&1) == 0){
+                    strandNot = "-";
+                }
+                
+                ps.format("%d,%d,%s,%d", chrNumber,alignPos,strandNot,numCount);
+                if (codeIter.hasNext()){
+                    ps.format(";");
+                }
+            }
+            
+            if(dummyResList.isEmpty() == false){
+                ps.format("\n");
+            }
+            
+        }
+    }
+    
+    public void sortCountCutResultForMap(long inTh){
+        /* Contain special part that create preriquisit data for cluster propose*/
+        long threshold = inTh;
+        long oldCount = 0;
+        long newCount = 0;
+        long containCheck = 0;
+        long selectCode = 0;
+        int i =0;
+        Object selectKey = null;
+        int numKey = this.alignmentResultMap.size();
+
+//        Iterator roundIter = this.countResult.keySet().iterator();
+//        Iterator keyIter = this.countResult.keySet().iterator();
+        
+        Set set = this.alignmentResultMap.keySet();
+        Iterator readNameIter = set.iterator();
+        
+//        System.out.println("Check Key Size: "+ set.size());
+        
+        while(readNameIter.hasNext()){ 
+            ArrayList<Long> dummySortedList = new ArrayList();
+            String readName = (String) readNameIter.next();
+            ArrayList<Long> readList = this.alignmentResultMap.get(readName);
+            
+//            System.out.println("Do sorting round: "+ i);
+            Iterator roundIter = readList.iterator();
+            while(roundIter.hasNext()){
+                roundIter.next();
+                
+                Iterator codeIter = readList.iterator();
+                while(codeIter.hasNext()){   
+                    long code = (long) codeIter.next();
+                    long numCount = code>>34; ;
+                    long chrStrandAln = code&this.mask_chrStrandAln;
+                    
+                    if(dummySortedList.contains(code)||numCount < threshold){
+
+                    }else{
+                        newCount = numCount;
+//                        System.out.println("Check newCount: "+newCount);
+//                        System.out.println("Check oldCount: "+oldCount);
+
+                        if(newCount > oldCount){
+                            oldCount = newCount;
+                            selectCode = code;
+//                            System.out.println("New>Old (Not Exist) Check OldCount: " + oldCount);
+//                            System.out.println("New>Old (Not Exist) Check Key: " + selectKey);
+                        }else if(newCount == oldCount){
+                            oldCount = newCount;
+                            selectCode = code;
+//                            System.out.println("New=Old (Not Exist) Check OldCount: " + oldCount);
+//                            System.out.println("New=Old (Not Exist) Check Key: " + selectKey);
+                        }
+                    }      
+                }
+                if(selectCode != 0){
+                    dummySortedList.add(selectCode);
+                }
+                selectCode = 0;
+                oldCount = 0;
+            }
+            this.alignmentSortedCutResultMap.put(readName, dummySortedList);
+            selectCode = 0;
+            oldCount = 0;
+        }
+        
+    }
+    
+    public void sortCountCutResultForMapV2(long inTh){
+        /* Contain special part that create preriquisit data for cluster propose*/
+        long threshold = inTh;
+        long oldCount = 0;
+        long newCount = 0;
+        long containCheck = 0;
+        long selectCode = 0;
+        int i =0;
+        Object selectKey = null;
+        int numKey = this.alignmentResultMap.size();
+
+//        Iterator roundIter = this.countResult.keySet().iterator();
+//        Iterator keyIter = this.countResult.keySet().iterator();
+        
+        Set set = this.alignmentResultMap.keySet();
+        Iterator readNameIter = set.iterator();
+        
+//        System.out.println("Check Key Size: "+ set.size());
+        
+        while(readNameIter.hasNext()){ 
+            ArrayList<Long> dummySortedList = new ArrayList();
+            String readName = (String) readNameIter.next();
+            ArrayList<Long> readList = this.alignmentResultMap.get(readName);
+            
+            Collections.sort(readList);
+//            System.out.println("Do sorting round: "+ i);
+            Iterator elementIter = readList.iterator();
+            while(elementIter.hasNext()){
+                long code = (long) elementIter.next();
+                long numCount = code>>34;
+                
+                if(numCount<threshold){
+                    
+                }else{
+                    dummySortedList.add(code);   
+                }
+            }
+            Collections.reverse(dummySortedList);
+            this.alignmentSortedCutResultMap.put(readName, dummySortedList);
+        }
+                
+                
+        
+    }
+    
 }

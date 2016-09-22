@@ -27,6 +27,7 @@ public class InputSequence {
    public void addRead(ShortgunSequence in){
        this.seqs.add(in);
    }
+   
    public String getChrName(){
        return this.name;
    }
@@ -34,6 +35,7 @@ public class InputSequence {
    public Vector getInputSequence(){
        return this.seqs;
    }
+   
    public int getNumberShortgunSequence(){
        return this.seqs.size();
    }

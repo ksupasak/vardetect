@@ -1237,8 +1237,6 @@ public class SequenceUtil {
 
     }
     
- 
-
     public static CharSequence concatenateChromosome(ChromosomeSequence chrA,ChromosomeSequence chrB, int cutLengthA, int cutLengthB){
         //chrA.getsequence
         int check,checkA = 1,checkB = 1;
@@ -2298,7 +2296,32 @@ public class SequenceUtil {
         }
     }
     
+    public static int getNumberSample(String filename) throws IOException {
+        /* for specific input file 3661 3662 */
+        
+        int count = 0;
+        int count2 = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(filename);
+        
+
+        StringBuffer seq = new StringBuffer();
+
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;
+                   
+            while ((line = reader.readLine()) != null) {
+                String[] aon = line.split("\t");
+                if(line.charAt(0)=='>'){
+                    count++;   
+                } 
+            }
+        }
+        return count;
+    }
+    
     public static InputSequence readSampleFileV2(String filename, int readStart, int readLimit) throws IOException {
+        /* for specific input file 3661 3662 */
         ShortgunSequence inSS = new ShortgunSequence(null);
         InputSequence tempInSS = new InputSequence();
         int count = 0;
@@ -2373,6 +2396,82 @@ public class SequenceUtil {
         }
     }
     
+    public static InputSequence readSampleFileV2(String filename) throws IOException {
+        /* for specific input file 3661 3662 (Whole file)*/
+        ShortgunSequence inSS = new ShortgunSequence(null);
+        InputSequence tempInSS = new InputSequence();
+        int count = 0;
+        int count2 = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(filename);
+        String name = null;
+//        int actStart = readStart*2;     //this is actual start of line in file (compatible only specific file 3661 and 3662 .fasta file)
+//        int actStop = readLimit*2;
+    //    String seq = "";
+
+        StringBuffer seq = new StringBuffer();
+
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;
+                   
+            while ((line = reader.readLine()) != null) {
+                String[] aon = line.split("\t");
+                if(line.charAt(0)=='>'){
+                    
+                    name = line.substring(1);
+                    
+                }else{
+                    //count++;
+//                    if(count >= readStart){
+                    inSS = new ShortgunSequence(line.toString());
+                    inSS.addReadName(name);
+                    tempInSS.addRead(inSS);
+//                    }     
+                }
+//                if(count==readLimit){
+//                    break;
+//                }
+                
+
+    //                if(name!=null){
+    //
+    //                    System.out.println("Header name : "+name+" Size : "+seq.length());
+    //
+    //                    ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+    //
+    //                    ref.addChromosomeSequence(c);
+    //
+    //                }
+                    //seq = new StringBuffer();
+                    //name = line.substring(1,line.length());
+
+                //}else{
+
+                    //seq.append(line.trim());
+
+
+                //}
+//                System.out.println("check: " + aon[7]);
+//                inSS = new ShortgunSequence(aon[7]);
+//                name = "Unmapped_Test_Sample_" + count++;
+//                inSS.addReadName(name);
+//                tempInSS.addRead(inSS);
+            }
+
+            if(seq.length()>0){
+
+        //        System.out.println("CHR : "+chr+" Size : "+seq.length());
+                inSS = new ShortgunSequence(seq.toString());
+                inSS.addReadName(name);
+
+
+            }          
+            
+
+            return tempInSS;
+        }
+    }
+    
     public static AlignmentResultRead readAlignmentReport(String filename) throws IOException {
         ArrayList listChr = new ArrayList();
         ArrayList listPos = new ArrayList();
@@ -2399,7 +2498,7 @@ public class SequenceUtil {
                 if(line.charAt(0)=='>'){
                     inSS = new ShortgunSequence(null);
                     name = line.substring(1);
-                    System.out.println("Read name got : " + name);
+//                    System.out.println("Read name got : " + name);
                     listChr = new ArrayList();
                     listPos = new ArrayList();
                     listStrand = new ArrayList();
@@ -2410,7 +2509,7 @@ public class SequenceUtil {
                 
                     for(int i=0;i<data.length;i++){
                         String[] dummyData = data[i].split(",");
-                        System.out.println("data check : "+dummyData[0] + " "+ dummyData[1] +" "+dummyData[2]);
+//                        System.out.println("data check : "+dummyData[0] + " "+ dummyData[1] +" "+dummyData[2]);
                         listChr.add(Long.parseLong(dummyData[0]));
                         listPos.add(Long.parseLong(dummyData[1]));
                         listStrand.add(dummyData[2]);

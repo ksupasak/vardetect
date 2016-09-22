@@ -61,6 +61,50 @@ public class Clustering {
         return listGroup;   
     }
     
+    public static ArrayList<ClusterGroup> clusteringGroupV2(AlignmentResultRead inAlnRead, double threshold){
+        /* New implementation cluster without create ClusterGroup but use Map instead */
+        /*  In process  */
+        ArrayList<ClusterGroup> listGroup = new ArrayList();
+        ArrayList checkList = new ArrayList();
+        inAlnRead.createGroupCharacteristic(threshold); // create significant data for clustering purpose
+        ArrayList<ShortgunSequence> listSS = inAlnRead.getResult();
+        ClusterGroup group = new ClusterGroup();
+        for(int i=0;i<listSS.size();i++){
+            ShortgunSequence mainDummySS = listSS.get(i);
+            ArrayList mainOutGroup = mainDummySS.getOutGroup();
+            
+            if(checkList.contains(i)){
+                
+            }else{
+                group = new ClusterGroup();
+                group.addShortgunRead(mainDummySS);
+                checkList.add(i);
+                
+                for(int j=0;j<listSS.size();j++){
+                    
+                    if(j!=i){
+                        ShortgunSequence subDummySS = listSS.get(j);
+                        ArrayList subOutGroup = subDummySS.getOutGroup();
+                        
+                        if(mainOutGroup.equals(subOutGroup)){
+                            
+                            
+                            int strandCheck = checkStrand(mainDummySS,subDummySS);
+                            
+                            if(strandCheck == 1){
+                                group.addShortgunRead(subDummySS);
+                                checkList.add(j);
+                            }
+                            
+                        }
+                    }
+                }
+                listGroup.add(group);
+            }     
+        }
+        return listGroup;   
+    }
+    
     public static int checkStrand(ShortgunSequence mainSS, ShortgunSequence subSS){
         // Check strand of match result protect from miss group classified in case that both read are align in same chromosome and align position but different strand
         // similarity = 0 mean not the same || similarity = 1 mean it the same

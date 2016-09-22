@@ -45,20 +45,20 @@ public class MerRead {
         this.merCode = mer;
         this.index = idx;
         
-        if(pos!=null&&pos.length>0){
-            int len = pos.length;
-            if(pos[0] > 0){
-                for(int i=0;i<len;i++){
-                    code[i] = (chrNumber<<29)+pos[i]; // leftshift 29 bit because pos is 29 bit length [strand:position]
-//                    System.out.println();
-//                    System.out.println("This is strand check (must be 1) : " + ((code[i]>>28)&1));
-//                    System.out.println();
-                    this.chrStrandPos.add(code[i]);
-                    
-//                    System.out.println("***** Do Add strand+ round chr " + chrNumber + "*****" );
-                }
-            }
-        }                
+//        if(pos!=null&&pos.length>0){
+//            int len = pos.length;
+//            if(pos[0] > 0){
+//                for(int i=0;i<len;i++){
+//                    code[i] = (chrNumber<<29)+pos[i]; // leftshift 29 bit because pos is 29 bit length [strand:position]
+////                    System.out.println();
+////                    System.out.println("This is strand check (must be 1) : " + ((code[i]>>28)&1));
+////                    System.out.println();
+//                    this.chrStrandPos.add(code[i]);
+//                    
+////                    System.out.println("***** Do Add strand+ round chr " + chrNumber + "*****" );
+//                }
+//            }
+//        }                
     }
     
     public void addMatchResultStrandCompliment(long mer,long[] pos, int idx, long chrNumber,int inMerLen){
@@ -83,7 +83,7 @@ public class MerRead {
         }                
     }
     
-    // pos must be a compose number of chr:position and array of long (long[])
+    // pos must be a compose number of chr:position and array of long (or long[])
     public void addMatchResult(long mer,long[] pos, int idx, long chrNumber){       // Currently not use
         
         long[] code = pos;

@@ -14,6 +14,8 @@ public interface Aligner {
     public void setReferenceSequence(ReferenceSequence ref);
     public AlignmentResultRead align(ReferenceSequence ref, InputSequence input);
     public AlignmentResultRead align(InputSequence input);
+    public AlignmentResultRead alignV2(ReferenceSequence ref, InputSequence input);
+    public AlignmentResultRead alignV2(InputSequence input);
     
     
 }

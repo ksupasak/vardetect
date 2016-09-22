@@ -131,7 +131,7 @@ public class ReconstructSequence {
         System.out.println("Generate Reconstruct Sequence in ReconstructSequence");
         this.fullReconSequence = "";
         
-        if(this.patternType == 1){
+        if(this.patternType == 1){                  // pattern type 1 mean fusion
             for(int i=0;i<this.listMer.size();i++){
                 MerRead dummyMerRead = this.listMer.get(i);
                 int kMer = dummyMerRead.getMeLength();
@@ -210,7 +210,7 @@ public class ReconstructSequence {
             // read index of mer math with start and last 
             // get only first character of string and concatenate all the way to the end
             }   
-        }else if(this.patternType == 0){
+        }else if(this.patternType == 0){                // pattern type 0 mean no fusion
              for(int i=0;i<listMer.size();i++){
                 MerRead dummyMerRead = listMer.get(i);
                 int kMer = dummyMerRead.getMeLength();
