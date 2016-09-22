@@ -6,6 +6,7 @@
 package biotec.bsi.ngs.vardetect.cmd;
 
 import biotec.bsi.ngs.vardetect.alignment.AlignerFactory;
+import biotec.bsi.ngs.vardetect.alignment.ThreadBinaryAligner;
 import biotec.bsi.ngs.vardetect.core.Aligner;
 import biotec.bsi.ngs.vardetect.core.AlignmentResultRead;
 import biotec.bsi.ngs.vardetect.core.ClusterGroup;
@@ -23,7 +24,7 @@ import java.util.ArrayList;
  *
  * @author worawich
  */
-public class NGSCMD6 {
+public class NGSCMD10 {
     public static void main(String[] args) throws IOException {
         
         System.out.println("Get reference sequence");
@@ -51,8 +52,7 @@ public class NGSCMD6 {
         //input = SequenceUtil.readSampleFile(args[1]);
         
         String fixPath = "/Users/worawich/VMdev/3661/output.fa";
-        //input = SequenceUtil.readSampleFileV2(fixPath,100000,200000);
-        input = SequenceUtil.readSampleFileV2(fixPath);
+        input = SequenceUtil.readSampleFileV2(fixPath,100000,200000);
 //        InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandom(ref,5, 100, 5);
         
         System.out.println("********** Do Alignment *********");
@@ -62,6 +62,14 @@ public class NGSCMD6 {
         
         
         AlignmentResultRead cutAlign = align.generateSortedCutResult(5);
+        
+        
+        
+        
+        //ThreadBinaryAligner test = new ThreadBinaryAligner("aon");
+        
+        
+        
         
 //        Map<String,ArrayList<Map>> result = new HashMap();
 //        result = align.getAlignmentResultV2();

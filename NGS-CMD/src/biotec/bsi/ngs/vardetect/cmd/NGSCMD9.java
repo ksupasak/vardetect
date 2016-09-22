@@ -23,7 +23,7 @@ import java.util.ArrayList;
  *
  * @author worawich
  */
-public class NGSCMD6 {
+public class NGSCMD9 {
     public static void main(String[] args) throws IOException {
         
         System.out.println("Get reference sequence");
@@ -49,9 +49,8 @@ public class NGSCMD6 {
         InputSequence input = new InputSequence();
 //        input.addRead(inSS);
         //input = SequenceUtil.readSampleFile(args[1]);
-        
-        String fixPath = "/Users/worawich/VMdev/3661/output.fa";
-        //input = SequenceUtil.readSampleFileV2(fixPath,100000,200000);
+        String fixPath = args[1]; // input file path
+        //String fixPath = "/Users/worawich/VMdev/3661/output.fa";
         input = SequenceUtil.readSampleFileV2(fixPath);
 //        InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandom(ref,5, 100, 5);
         
