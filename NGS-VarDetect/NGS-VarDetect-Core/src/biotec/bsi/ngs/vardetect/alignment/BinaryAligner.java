@@ -296,8 +296,7 @@ public class BinaryAligner extends Thread implements Aligner {
         AlignmentResultRead alinResult = new AlignmentResultRead();
         
         this.mer = 18;
-        
-        
+
         Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
 
         while(chrs.hasMoreElements()){                                                      // Loop chromosome contain in ReferenceSequence
@@ -312,19 +311,21 @@ public class BinaryAligner extends Thread implements Aligner {
                 long chrnumber = chr.getChrNumber();
                 /*********/
                 int inputSize = input.getInputSequence().size();
-                int numPerPartition = inputSize/this.numberOfThread;
+                double dummyNum = (double)inputSize/this.numberOfThread;
+                int numPerPartition = (int)Math.ceil(dummyNum);
                 
                 /* Create thread object follow by specific numThread */
                 /*  Separate case In order to use existing thread object or create new for first time*/
                 
                 if(threadList.isEmpty()){
                  
-                    for(int i = 0 ; i < inputSize ; i+= numPerPartition){
+                    for(int i = 0 ; i < inputSize ; i+= numPerPartition){                        
                         List splitInputSequence = input.getInputSequence().subList(i, Math.min(inputSize, i+numPerPartition));
                         String threadName = "Thread_"+count; 
                         ThreadBinaryAligner newThread = new ThreadBinaryAligner(threadName,splitInputSequence,encoded,chr.getChrNumber(),mer);
                         newThread.start();
                         threadList.add(newThread);
+                        count++;
                     }
                 }else{
                     int dummynum = 0;
@@ -336,8 +337,7 @@ public class BinaryAligner extends Thread implements Aligner {
                         dummynum++;
                     }
                 }
-                
-               
+                              
 //                    for(int i = 0 ; i < inputSize ; i+= numPerPartition){
 //                        List splitInputSequence = input.getInputSequence().subList(i, Math.min(inputSize, i+numPerPartition));
 //                        String threadName = "Thread_"+count; 
@@ -347,12 +347,12 @@ public class BinaryAligner extends Thread implements Aligner {
 //                        threadList.add(newThread);
 //                        count++;
 //                   
-                
-                
-                System.out.println("Number of thread check : " + threadList.size());
+                              
+                System.out.println("Number of thread check : " + threadList.size() + " Must equal to " + numThread);
                 for(int i=0;i<threadList.size();i++){
-                    threadList.get(i).join();
-                    alnRes.putAll(threadList.get(i).getMapResult());
+                    /* Wait for specific thread to finish execute (finish method run()) */ 
+                    /* After run() method is finish thread stop execute but the thread object that we overwrite run() in it is still exist */
+                    threadList.get(i).join();                    
                 }
                 
                 /* End */
@@ -361,24 +361,26 @@ public class BinaryAligner extends Thread implements Aligner {
                 encoded = null;
                 
                 System.gc();
-                
-                
-                
+
             } catch (IOException ex) {
                 Logger.getLogger(BinaryAligner.class.getName()).log(Level.SEVERE, null, ex);
             }
             
         }
-        /* After Alignment we will loop over ShortgunSequence and do the Alignmentcount */
-        //AlignmentResultRead alinResult = new AlignmentResultRead();  
-        Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
-        while(seqs.hasMoreElements()){
-                    ShortgunSequence seq = seqs.nextElement();
-                    seq.countAlignmentData();                                       // count alignment data (this function must be call after information is ready)
-                    alinResult.addResult(seq);                                      // add ShortgunSequence into AlignmentResultRead  
+        
+        for(int i=0;i<threadList.size();i++){
+            /* Loop to get align result map from each thread object */
+            /* Put all align map result into one Map result */
+            if(i==0){
+                this.alnRes = threadList.get(i).getMapResult();
+            }else{
+                this.alnRes.putAll(threadList.get(i).getMapResult());
+            }
         }
         
-        //return res;
+        
+        alinResult.addMapResult(this.alnRes);
+ 
         return alinResult;
     }
     

@@ -21,6 +21,23 @@ import java.util.Set;
 /**
  *
  * @author worawich
+ * 
+ * Multi-Thread Instruction:
+ * 
+ * This object will be call in BinaryAlingner on function alignMultithread()
+ * 
+ * The point that we must separately define new object for multi-thread implement is:
+ *  we want to store result or some variable and make it capable to access later 
+ *  So we store the result in this object
+ *  in order to give the potential of this object to be run in multi-thread 
+ *  we Implement Runnable and over ride method run() by put your code tat you want to run it in multi-thread
+ *  Next, we have to create some method like start() to create a thread object and start it 
+ *  Keep note that when you want to re-run the thread again you have to make sure that the old thread is finish running
+ *  by using join() method (the program will stuck at the join() method until all code in run() have done execute)
+ *  After that you have to re create the new thread object and start it again.
+ *  Don;t forget to access the same object that in case that you have some relative result that you want to store it continuously 
+ *  
+ * 
  */
 public class ThreadBinaryAligner implements Runnable {
     private Thread t;
@@ -32,6 +49,7 @@ public class ThreadBinaryAligner implements Runnable {
     private Map<Long,Long> alignMap;
     private Map<Long,ArrayList<Long>> alnMerMap;     // Key is align code [strand|alignposition] and value is mer code
     private Map<String,ArrayList<Long>> alnRes;      // Key is ReadName and value is array of long [count|chr|strand|Pos]
+    String flag;
             
     
     public ThreadBinaryAligner(String name,List inSeq, EncodedSequence inEncodeRef,long inchr, int inMer){
@@ -54,6 +72,7 @@ public class ThreadBinaryAligner implements Runnable {
     
     @Override
     public void run(){
+        
         System.out.println("Start " + threadName);
         System.out.println("Number of read : " + inputSequence.size());
         /* Alignment algorithm */
@@ -315,21 +334,23 @@ public class ThreadBinaryAligner implements Runnable {
             /*--------------------*/
         }
         
-        System.out.println("Thread-"+this.threadName+" : stop");
+        //System.out.println("Thread-"+this.threadName+" : stop");
+        this.flag = "run() is Done";
                 
     }
     
     public void start(){
-        System.out.println("Starting " + threadName);
-        if (t==null)
-        {
-            t = new Thread (this,threadName);
-            t.start();
-        }
+        
+        t = new Thread (this,threadName);
+        t.start();
+        this.flag = "run() is running";
+        System.out.println("Starting " + threadName + " : " + this.flag);
+       
     }
     
-    public void join() throws InterruptedException{
+    public void join() throws InterruptedException{ 
         t.join();
+        System.out.println("Thread-"+this.threadName+" : stop" + " : " + this.flag); 
     }
     
     public Map<String,ArrayList<Long>> getMapResult(){
