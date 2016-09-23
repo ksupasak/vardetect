@@ -58,11 +58,11 @@ public class RunMultiThread {
         
         String fixPath = "/Users/worawich/VMdev/3661/output.fa";
         int numSample = SequenceUtil.getNumberSample(fixPath);
-        int numpart = 1;
+        int numpart = 3;
         
      
         String savefilename = "MultiThread_Format_AlignSortedCutResultMap_part"+numpart;
-        InputSequence input = SequenceUtil.readSampleFileV2(fixPath,100000,200000);
+        InputSequence input = SequenceUtil.readSampleFileV2(fixPath,200000,300000);
         //input = SequenceUtil.readSampleFileV2(fixPath);
 
 
@@ -70,7 +70,7 @@ public class RunMultiThread {
 
 //        AlignmentResultRead align = aligner.alignV2(ref, input);  // function align is located in binary aligner
         
-        AlignmentResultRead align = aligner.alignMultithread(ref, input,2);  // function align is located in binary aligner
+        AlignmentResultRead align = aligner.alignMultithread(ref, input,4);  // function align is located in binary aligner
 
 //        Map<String,ArrayList<Map>> result = new HashMap();
 //        result = align.getAlignmentResultV2();
