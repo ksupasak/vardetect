@@ -34,9 +34,9 @@ import java.util.Map;
  * Clone of NGSCMD 4 (Test bed for new align implement)
  */
 
-public class NGSCMD11 {
+public class RunMultiThread {
     
-     public static void main(String[] args) throws IOException {
+     public static void main(String[] args) throws IOException, InterruptedException {
         // TODO code application logic here
         
 //       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
@@ -61,16 +61,16 @@ public class NGSCMD11 {
         int numpart = 1;
         
      
-        String savefilename = "_Format_AlignSortedCutResultMap_part"+numpart;
-        InputSequence input = SequenceUtil.readSampleFileV2(fixPath,0,100000);
+        String savefilename = "MultiThread_Format_AlignSortedCutResultMap_part"+numpart;
+        InputSequence input = SequenceUtil.readSampleFileV2(fixPath,100000,200000);
         //input = SequenceUtil.readSampleFileV2(fixPath);
 
 
         Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
 
-        AlignmentResultRead align = aligner.alignV2(ref, input);  // function align is located in binary aligner
+//        AlignmentResultRead align = aligner.alignV2(ref, input);  // function align is located in binary aligner
         
-       
+        AlignmentResultRead align = aligner.alignMultithread(ref, input,2);  // function align is located in binary aligner
 
 //        Map<String,ArrayList<Map>> result = new HashMap();
 //        result = align.getAlignmentResultV2();
