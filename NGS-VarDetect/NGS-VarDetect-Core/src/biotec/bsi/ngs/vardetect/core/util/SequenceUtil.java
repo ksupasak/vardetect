@@ -2352,7 +2352,7 @@ public class SequenceUtil {
                         tempInSS.addRead(inSS);
                     }     
                 }
-                if(count==readLimit){
+                if(count==readLimit-1){
                     break;
                 }
                 

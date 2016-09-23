@@ -289,7 +289,16 @@ public class BinaryAligner extends Thread implements Aligner {
     }
     
     public AlignmentResultRead alignMultithread(InputSequence input, int numThread) throws InterruptedException{
-       
+        
+        /**
+        * This method will create object that implement multi-thread capability in it
+        * This function will split input sequence into number of portion relate to number of user specify thread number 
+        * Then it will loop to create a set of thread and store in threadList
+        * Each portion of split input will be pass into each thread implement object and do there job
+        * At last we will wait for each thread finish there job and merge the result together
+        * 
+        */
+        
         threadList = new ArrayList();
         this.numberOfThread = numThread;
         //AlignmentResult res = new AlignmentResult(input);
