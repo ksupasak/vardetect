@@ -38,6 +38,8 @@ public class AlignmentResultRead {
     private Map<String,ArrayList<Long>> alignmentResultMap;
     private Map<String,ArrayList<Long>> alignmentSortedCutResultMap;
     private Map<Long,long[]> countResultSortedCut;
+    private ArrayList<String> unMapList;                    // Store readname of unmap read (use in local alignment part)
+    private ArrayList<String> mapList;                      // Store readname of map read (use in local alignment part)  
     
     public AlignmentResultRead(){
         
@@ -49,6 +51,8 @@ public class AlignmentResultRead {
        this.mask = 268435455;
        this.mask_Count = 4380866641920L;    // Do & operation to get count number from value contain in alignmentResultMap
        this.mask_chrStrandAln = 17179869183L;   // Do & operation to get aligncode compose of chr|strand|alignposition from value contain in alignmentResultMap
+       this.unMapList = new ArrayList();
+       this.mapList = new ArrayList();
     }
     
     public void addResult(ShortgunSequence inRead){
@@ -105,6 +109,14 @@ public class AlignmentResultRead {
     
     public double[][] getDistanceTable(){
         return this.distanceTable;
+    }
+    
+    public ArrayList<String> getUnMapList(){
+        return this.unMapList;
+    }
+    
+    public ArrayList<String> getMapList(){
+        return this.mapList;
     }
     
     public void enableReconstruct(){
@@ -751,6 +763,52 @@ public class AlignmentResultRead {
                     
                 }else{
                     dummySortedList.add(code);   
+                }
+            }
+            Collections.reverse(dummySortedList);
+            this.alignmentSortedCutResultMap.put(readName, dummySortedList);
+        }
+                
+                
+        
+    }
+    
+    public void sortCountCutLocalResultForMap(long inTh){
+        /* Contain special part that create preriquisit data for cluster propose*/
+        long threshold = inTh;
+        long oldCount = 0;
+        long newCount = 0;
+        long containCheck = 0;
+        long selectCode = 0;
+        int i =0;
+        Object selectKey = null;
+        int numKey = this.alignmentResultMap.size();
+
+//        Iterator roundIter = this.countResult.keySet().iterator();
+//        Iterator keyIter = this.countResult.keySet().iterator();
+        
+        Set set = this.alignmentResultMap.keySet();
+        Iterator readNameIter = set.iterator();
+        
+//        System.out.println("Check Key Size: "+ set.size());
+        
+        while(readNameIter.hasNext()){ 
+            ArrayList<Long> dummySortedList = new ArrayList();
+            String readName = (String) readNameIter.next();
+            ArrayList<Long> readList = this.alignmentResultMap.get(readName);
+            
+            Collections.sort(readList);
+//            System.out.println("Do sorting round: "+ i);
+            Iterator elementIter = readList.iterator();
+            while(elementIter.hasNext()){
+                long code = (long) elementIter.next();
+                long numCount = code>>56;
+                
+                if(numCount<threshold){
+                    this.unMapList.add(readName);
+                }else{
+                    dummySortedList.add(code);
+                    this.mapList.add(readName);
                 }
             }
             Collections.reverse(dummySortedList);

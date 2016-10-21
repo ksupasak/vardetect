@@ -28,6 +28,9 @@ public class InputSequence {
        this.seqs.add(in);
    }
    
+   public void addListOfRead(Vector<ShortgunSequence> inVector){
+       this.seqs.addAll(inVector);
+   }
    public String getChrName(){
        return this.name;
    }

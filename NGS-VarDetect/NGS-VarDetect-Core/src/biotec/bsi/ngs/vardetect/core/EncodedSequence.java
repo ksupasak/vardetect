@@ -272,6 +272,65 @@ public class EncodedSequence {
         return null;
     }
     
+        public long[] alignLocal(long mer){
+//        System.out.println("\n Do Strand + Alignment");
+        int strand = 1; // Notation for strand +
+        int index = align(mer, 0, mers.length-1); // call binary search function with initial left and right with 0 and maximum index point
+        
+        int start = -1;
+        int stop = -1;
+        
+        if(index>0){
+            for(int i=index;i>=0&&i>=index-200;i--){
+                long imer = mers[i]&mask;
+                
+                if(imer!=mer){
+                    start = i+1;
+                    break;
+                }else{
+                    
+                }
+            }
+            
+            for(int i=index;i<mers.length&&i<index+200;i++){
+                long imer = mers[i]&mask;
+                
+                if(imer!=mer){
+                    stop = i;
+                    break;
+                }else{
+                    
+                }
+            }
+            if(start<stop&&stop-start<500){
+//            System.out.println(" size "+(stop-start));
+            long j[] = new long[stop-start]; 
+            
+                for(int i =start;i<stop;i++){
+                    if(i-start>=0&&i>=0)
+//                    j[i-start] = mers[i]&mask2;
+                    j[i-start] = addStrandNotation(mers[i]&mask2,strand);
+//                    System.out.println();
+//                    System.out.println("Check mers the value should be 64 bit : " + mers[i] );
+//                    System.out.println("Check j the value should be 28 bit : " + j[i-start]);
+//                    System.out.println();
+                }
+
+
+                return j;
+            }
+            else
+                return null;
+//            System.out.println("start : "+start+" stop : "+stop+" length :"+(stop-start));
+            
+            
+            
+        }
+        
+        //createComplimentStrand();
+        return null;
+    }
+    
     public long align(long mer){        // Curectly unuse
         
         int index = align(mer, 0, mers.length-1);

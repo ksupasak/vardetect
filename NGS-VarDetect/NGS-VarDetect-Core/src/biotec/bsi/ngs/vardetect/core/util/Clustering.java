@@ -12,6 +12,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  *
@@ -60,6 +62,51 @@ public class Clustering {
         }
         return listGroup;   
     }
+    
+    public static Map<Long,ArrayList<String>> createChrMatchMap(AlignmentResultRead inAlnRead){
+        /* 
+            Create chromosome table (P' nung guide)
+        */
+        
+        ArrayList<ShortgunSequence> listSS = inAlnRead.getResult();
+        Map<Long,ArrayList<String>> classMap = new HashMap(); 
+        
+        for(int i=0;i<listSS.size();i++){
+            ShortgunSequence dummySS = listSS.get(i);
+            
+            ArrayList chrMatch = dummySS.getListChrMatch();
+            
+            if(i==0){
+                for(long j=1;j<25;j++){
+                    if(chrMatch.contains(j)){
+                        ArrayList<String> dummyReadList = new ArrayList();
+                        dummyReadList.add(dummySS.getReadName());
+                        classMap.put(j, dummyReadList);  
+                    }else{
+                        ArrayList<String> dummyReadList = new ArrayList();
+                        classMap.put(j, dummyReadList); 
+                    }
+                }
+                
+            }else{
+                
+                for(long j=1;j<25;j++){
+                    if(chrMatch.contains(j)){
+                        ArrayList<String> dummyReadList = classMap.get(j);
+                        dummyReadList.add(dummySS.getReadName());
+                        classMap.put(j, dummyReadList);
+
+                    }
+
+                }
+            }
+            
+        }
+        
+        return classMap;
+    }
+    
+    
     
     public static ArrayList<ClusterGroup> clusteringGroupV2(AlignmentResultRead inAlnRead, double threshold){
         /* New implementation cluster without create ClusterGroup but use Map instead */

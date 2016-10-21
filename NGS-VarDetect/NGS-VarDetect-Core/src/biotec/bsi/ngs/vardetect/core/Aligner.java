@@ -18,5 +18,6 @@ public interface Aligner {
     public AlignmentResultRead alignV2(InputSequence input);
     public AlignmentResultRead alignMultithread(ReferenceSequence ref, InputSequence input, int numThread)throws InterruptedException;
     public AlignmentResultRead alignMultithread(InputSequence input, int numThread)throws InterruptedException;
+    public AlignmentResultRead localAlign(EncodedSequence ref, InputSequence input, int kmer, long numberOflocalRef);
     
 }

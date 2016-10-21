@@ -5,6 +5,8 @@
  */
 package biotec.bsi.ngs.vardetect.core.util;
 
+import biotec.bsi.ngs.vardetect.alignment.AlignerFactory;
+import biotec.bsi.ngs.vardetect.core.Aligner;
 import biotec.bsi.ngs.vardetect.core.AlignmentResultRead;
 import biotec.bsi.ngs.vardetect.core.ChromosomeSequence;
 import biotec.bsi.ngs.vardetect.core.ConcatenateCut;
@@ -2396,6 +2398,44 @@ public class SequenceUtil {
         }
     }
     
+    public static InputSequence readSamFile(String filename, ArrayList<String> inCriteria) throws IOException {
+    /* for specific input file .sam file */
+        ShortgunSequence inSS = new ShortgunSequence(null);
+        InputSequence tempInSS = new InputSequence();
+        int count = 0;
+        int count2 = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(filename);
+        String name = null;
+//        int actStart = readStart*2;     //this is actual start of line in file (compatible only specific file 3661 and 3662 .fasta file)
+//        int actStop = readLimit*2;
+    //    String seq = "";
+
+        StringBuffer seq = new StringBuffer();
+
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;
+                   
+            while ((line = reader.readLine()) != null) {
+                String[] aon = line.split("\t");
+                //System.out.println("check data "+aon[9]);
+                String dummySeq = aon[9];
+                if (dummySeq.toLowerCase().contains("n")){
+
+                }else{
+                    name = aon[0];
+                    if(inCriteria.contains(name)){
+                        inSS = new ShortgunSequence(dummySeq);
+                        inSS.addReadName(name);
+                        tempInSS.addRead(inSS);
+                    } 
+                }       
+            }
+        }
+    
+        return tempInSS;
+    }
+     
     public static InputSequence readSampleFileV2(String filename) throws IOException {
         /* for specific input file 3661 3662 (Whole file)*/
         ShortgunSequence inSS = new ShortgunSequence(null);
@@ -2525,6 +2565,180 @@ public class SequenceUtil {
             
             return alnResult;
         }
+    }
+    
+    public static InputSequence readSamFile(String filename) throws IOException {
+        /* for specific input file .sam file */
+        ShortgunSequence inSS = new ShortgunSequence(null);
+        InputSequence tempInSS = new InputSequence();
+        int count = 0;
+        int count2 = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(filename);
+        String name = null;
+//        int actStart = readStart*2;     //this is actual start of line in file (compatible only specific file 3661 and 3662 .fasta file)
+//        int actStop = readLimit*2;
+    //    String seq = "";
+
+        StringBuffer seq = new StringBuffer();
+
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;
+                   
+            while ((line = reader.readLine()) != null) {
+               String[] aon = line.split("\t");
+               //System.out.println("check data "+aon[9]);
+               String dummySeq = aon[9];
+               if (dummySeq.toLowerCase().contains("n")){
+                   
+               }else{
+                   name = aon[0];
+                   inSS = new ShortgunSequence(dummySeq);
+                   inSS.addReadName(name);
+                   tempInSS.addRead(inSS);
+               }       
+            }
+        }
+    
+        return tempInSS;
+    }
+    
+    public static EncodedSequence createLocalAlignmentReference(ShortgunSequence inSS,int kmer,int sliding){
+        EncodedSequence refSS = new EncodedSequence();  
+        
+        String sb = inSS.getSequence();
+
+
+        int n = (sb.length()-kmer)/sliding;       
+        long cmer = -1;
+        long mask = 0; 
+        int count = 0;
+
+        long list[] = new long[n]; // Pre - allocate Array by n
+
+
+        for(int i =0;i<kmer;i++)mask=mask*4+3;
+
+//        System.out.println(mask);
+
+
+        for(int i =0;i<n;i++){
+
+            long pos = i*sliding;
+            char chx = sb.charAt(i*sliding+kmer-1);
+            if(chx!='N'){
+                if(cmer==-1){
+                    String s = sb.substring(i*sliding,i*sliding+kmer);
+                    cmer = encodeMer(s,kmer);
+                }else{
+
+                    int t =-1;
+                    switch(chx){
+                        case 'A':
+                        case 'a':
+                            t=0; // 00
+                            break;
+                        case 'T':
+                        case 't': 
+                            t=3; // 11
+                            break;
+                        case 'C':
+                        case 'c':
+                            t=1; // 01 
+                            break;
+                        case 'G':
+                        case 'g':
+                            t=2; // 10 
+                            break;
+                        default : 
+                            t=-1;
+                        break;
+
+                    }
+                    if(t>=0){
+
+                        cmer *= 4;
+                        cmer &= mask;
+                        cmer += t;
+
+                    }else{
+                        cmer = -1;
+                        i+=kmer;
+                    }  
+                }     
+//            if(i%1000000==0)System.out.println("Encode "+inSS.getReadName()+" "+i*sliding);
+
+            if(cmer>=0){  
+                long x = (cmer<<(64- kmer*2))|pos;
+                list[count++] = x;
+            }
+
+            }
+        }
+
+
+        Arrays.sort(list);
+
+        refSS.setMers(list);
+
+        list=null;
+        System.gc();
+
+        return refSS;
+    }
+
+    public static AlignmentResultRead localAlignment(InputSequence inSeq,int kmer,int sliding){
+        ArrayList<String> checkList = new ArrayList();
+        Map<String,ArrayList<String>> preGroupMap = new HashMap();
+        AlignmentResultRead align = new AlignmentResultRead();
+        Vector<ShortgunSequence> listSS = inSeq.getInputSequence();
+        
+        for(int mainLoop=0;mainLoop<listSS.size();mainLoop++){
+                        
+            ShortgunSequence dummyMainSS = listSS.get(mainLoop);
+            if(checkList.contains(dummyMainSS.getReadName())!=true){
+                
+               
+                EncodedSequence localRef = createLocalAlignmentReference(dummyMainSS,kmer,sliding);
+                //inSeq.getInputSequence().remove(mainLoop)
+                InputSequence localInput = new InputSequence();
+                for(int minorLoop=mainLoop+1;minorLoop<listSS.size();minorLoop++){
+                    
+                    ShortgunSequence dummySubSS = listSS.get(minorLoop);
+                    if(checkList.contains(dummySubSS.getReadName())!=true){
+                        localInput.addRead(listSS.get(minorLoop));
+                    } 
+                }   
+
+                Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
+                align = aligner.localAlign(localRef, localInput, kmer, mainLoop);  // function align is located in binary aligner
+
+                /**
+                 * Bring align to analyze unMap read for this dummyMainSS
+                 */
+                if(align != null){
+                    align.sortCountCutLocalResultForMap(5);
+                    ArrayList<String> dummyMapList = align.getMapList();
+                    ArrayList<String> dummyUnMapList = align.getUnMapList();
+
+                    preGroupMap.put(dummyMainSS.getReadName(), dummyUnMapList);
+
+                    /***********************************************************/
+                    checkList.add(dummyMainSS.getReadName());
+                    checkList.addAll(dummyMapList);
+                }
+            }
+            
+        }
+        
+        /**
+         * At this point preGroupMap is successfully fill
+         * Next step, bring preGroupMap to classify for group and store group in list
+         */
+        
+        
+
+        return align; 
     }
     
 }
