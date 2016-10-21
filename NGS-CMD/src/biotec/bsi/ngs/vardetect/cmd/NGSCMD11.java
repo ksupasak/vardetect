@@ -56,21 +56,22 @@ public class NGSCMD11 {
 //        input.addRead(inSS);
         //input = SequenceUtil.readSampleFile(args[1]);
         
-        String fixPath = "/Users/worawich/VMdev/3661/output.fa";
+        //String fixPath = "/Users/worawich/VMdev/3661/output.fa";
+        String fixPath = "/Users/worawich/VMdev/Siriraj/JT/JT.unmapped.sam";
         int numSample = SequenceUtil.getNumberSample(fixPath);
         int numpart = 1;
         
      
-        String savefilename = "_Format_AlignSortedCutResultMap_part"+numpart;
-        InputSequence input = SequenceUtil.readSampleFileV2(fixPath,0,100000);
+        String savefilename = "JT_unalign_Format_AlignSortedCutResultMap_part"+numpart;
+        InputSequence input = SequenceUtil.readSamFile(fixPath);
+        //InputSequence input = SequenceUtil.readSampleFileV2(fixPath,0,100000);
         //input = SequenceUtil.readSampleFileV2(fixPath);
 
 
         Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
 
         AlignmentResultRead align = aligner.alignV2(ref, input);  // function align is located in binary aligner
-        
-       
+          
 
 //        Map<String,ArrayList<Map>> result = new HashMap();
 //        result = align.getAlignmentResultV2();

@@ -34,9 +34,9 @@ import java.util.Map;
  * Clone of NGSCMD 4 (Test bed for new align implement)
  */
 
-public class RunMultiThread {
+public class NGSCMD13 {
     
-     public static void main(String[] args) throws IOException, InterruptedException {
+     public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
 //       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
@@ -56,48 +56,48 @@ public class RunMultiThread {
 //        input.addRead(inSS);
         //input = SequenceUtil.readSampleFile(args[1]);
         
-        String fixPath = "/Users/worawich/VMdev/3661/output.fa";
+        //String fixPath = "/Users/worawich/VMdev/3661/output.fa";
+        String fixPath = "/Users/worawich/VMdev/Siriraj/JT/JT.unmapped.sam";
         int numSample = SequenceUtil.getNumberSample(fixPath);
         int numpart = 1;
         
      
-        String savefilename = "MultiThread_Format_AlignSortedCutResultMap_part"+numpart;
-        InputSequence input = SequenceUtil.readSampleFileV2(fixPath,0,100000);
+        String savefilename = "_JT_unalign_Format_AlignSortedCutResultMap_part"+numpart;
+        InputSequence input = SequenceUtil.readSamFile(fixPath);
+        //InputSequence input = SequenceUtil.readSampleFileV2(fixPath,0,100000);
         //input = SequenceUtil.readSampleFileV2(fixPath);
 
 
         Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
 
-//        AlignmentResultRead align = aligner.alignV2(ref, input);  // function align is located in binary aligner
-        
-        AlignmentResultRead align = aligner.alignMultithread(ref, input,4);  // function align is located in binary aligner
+        AlignmentResultRead align = aligner.align(ref, input);  // function align is located in binary aligner
+          
 
+
+        AlignmentResultRead cutAlign = align.generateSortedCutResult(5);
+        
 //        Map<String,ArrayList<Map>> result = new HashMap();
 //        result = align.getAlignmentResultV2();
         //ArrayList test = new ArrayList();
         //test = result.get("Read0");
         //System.out.print("/n");
         //System.out.print("Test represent Result: " + test.size());
-
+        
 //        VisualizeResult.visualizeAlignmentResultV2(align);
-
+        
         //System.out.println("Size of Result: " + align.getAlignmentCount().size());
-
+        
 //        VisualizeResult.visualizeAlignmentCountMatchCutPlusColor(align,100);
-        System.out.println("Do sortCountCutResult");
-        align.sortCountCutResultForMapV2(5);
-        System.out.println("Do write Report");
-        align.writeSortedCutResultMapToPathInFormat(ref.getPath(),savefilename, "txt");
-        System.out.println("Done part " + numpart);
+        System.out.println("********** Do Write Result SortedResult *********");
+        cutAlign.writeSortedResultToPath(ref.getPath(),"txt");
+        System.out.println("********** Do Write Result UnSortedResult *********");
+        cutAlign.writeUnSortedResultToPath(ref.getPath(), "txt");
+        System.out.println("********** Do Write Result CutResult *********");
+        cutAlign.writeSortedCutResultToPath(ref.getPath(), "txt", 5);
         
-//        align.writeSortedResultToPath(ref.getPath(), "txt");
-//        align.writeUnSortedResultToPath(ref.getPath(), "txt");
-//        align.writeSortedCutResultToPath(ref.getPath(), "txt", 5);
+        cutAlign.writeSortedCutResultToPathInFormat(ref.getPath(), "txt", 5);
         
-//        cutAlign.writeSortedResultToPath(ref.getPath(), "txt");
-//        cutAlign.writeUnSortedResultToPath(ref.getPath(), "txt");
-//        cutAlign.writeSortedCutResultToPath(ref.getPath(), "txt", 5);
-        
+        AlignmentResultRead readAlign = SequenceUtil.readAlignmentReport("/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/hg19_Format_AlignSortedCutResult.txt");
         /* Old Grouping algorithm
         align.createAllClusterCode();
         align.createAllClusterCodeSorted();
@@ -112,51 +112,26 @@ public class RunMultiThread {
         align.createGroupingResult();
         System.out.println(" ****** Check cluster result: " + align.getclusterResult().size());
         */
-        
-//        align.calculateEuclidientdistance(); // Must have this order before clustering
+        System.out.println("********** Do Calculate Euclidient Distance *********");
+        cutAlign.calculateEuclidientdistance(); // Must have this order before clustering
 //        VisualizeResult.visualizeDistanceTable(align);
-//        align.writeDistanceTableToPath(ref.getPath(), "txt");
-//        
-//        
-//        ArrayList<ClusterGroup> groupResult = Clustering.clusteringGroup(align, 100);
-//        align.addGroupReult(groupResult);
-//        align.writeClusterGroupToPath(ref.getPath(), "txt");
-//        
-//        System.out.println(" check number of group : " + groupResult.size());
-//        VisualizeResult.visualizeClusterGoup(groupResult);
-//        
-//        align.enableReconstruct();
-//        align.writePatternReport(ref.getPath(), "txt");
+        System.out.println("********** Do Write Result DistanceTable *********");
+        cutAlign.writeDistanceTableToPath(ref.getPath(), "txt");
         
-        // Create save result path by just plugin AlignmentResult
+        System.out.println("********** Do Clustering Group *********");
+        System.out.println("Number of Read in consider : "+ cutAlign.getResult().size());
+        ArrayList<ClusterGroup> groupResult = Clustering.clusteringGroup(cutAlign, 100);
+        cutAlign.addGroupReult(groupResult);
+        System.out.println("********** Do Write Group Result *********");
+        cutAlign.writeClusterGroupToPath(ref.getPath(), "txt");
         
-//        System.out.println(" Size new resutl check " + align.getResult().size());
-//        System.out.println(" Data check "+align.getResult().get(0).getReadName());
-//        System.out.println(" Data check "+align.getResult().get(0).getSequence());
-//        
-//        System.out.println(" Data check align result map empty or not : "+align.getResult().get(0).getAlignmentCount().isEmpty());
-        //VisualizeResult.visualizeAlignmentResult(align);
+        System.out.println(" check number of group : " + groupResult.size());
+        VisualizeResult.visualizeClusterGoup(groupResult);
         
-        // Pass!! Next create represent data part //
-        
-       /* ChromosomeSequence aon = ref.getChromosomeSequenceByName("chr21");
-      // alignment
-        EncodedSequence test = SequenceUtil.getEncodeSequenceV2(aon);
-        System.out.println(test.getMers());*/
-      
-        /*Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
-
-        while(chrs.hasMoreElements()){
-            ChromosomeSequence chr = chrs.nextElement();
-            Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
-            EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr);
-            while(seqs.hasMoreElements()){
-                ShortgunSequence seq = seqs.nextElement();
-                System.out.println(""+chr.getName()+" ");
-            }
-            System.gc();
-            
-        }*/
+        System.out.println("********** Do Reconstruct Sequence *********");
+        cutAlign.enableReconstruct();
+        System.out.println("********** Do Write Pattern Report *********");
+        cutAlign.writePatternReport(ref.getPath(), "txt");
     
     }
 

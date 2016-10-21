@@ -1,11 +1,15 @@
 
 import biotec.bsi.ngs.vardetect.core.AlignmentResultRead;
 import biotec.bsi.ngs.vardetect.core.ClusterGroup;
+import biotec.bsi.ngs.vardetect.core.InputSequence;
 import biotec.bsi.ngs.vardetect.core.util.Clustering;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import biotec.bsi.ngs.vardetect.core.util.VisualizeResult;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -23,8 +27,12 @@ public class NGSCMD12 {
 
     public static void main(String[] args) throws IOException {
         
-        String filename = "hg19_Format_AlignSortedCutResultMap(100k-200k)";
+//        String filename = "hg19_Format_AlignSortedCutResultMap(100k-200k)";
+        String inputFileName = "/Users/worawich/VMdev/Siriraj/JT/JT.unmapped.sam";
+        String filename = "hg19JT_unalign_Format_AlignSortedCutResultMap_part1";
         AlignmentResultRead readAlign = SequenceUtil.readAlignmentReport("/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/"+filename+".txt");
+        AlignmentResultRead localAlignRes = new AlignmentResultRead();
+        ArrayList alnResList = new ArrayList();
         
         String path = "/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/"+filename;
         /* Old Grouping algorithm
@@ -41,6 +49,28 @@ public class NGSCMD12 {
         align.createGroupingResult();
         System.out.println(" ****** Check cluster result: " + align.getclusterResult().size());
         */
+        Map<Long,ArrayList<String>> chrMatchMap = Clustering.createChrMatchMap(readAlign);
+        Set set = chrMatchMap.keySet();
+        Iterator chrNumberIter = set.iterator();
+       
+        while(chrNumberIter.hasNext()){
+            ArrayList<String> readNameList = chrMatchMap.get(chrNumberIter.next());
+            InputSequence inSeq = SequenceUtil.readSamFile(inputFileName, readNameList);
+            localAlignRes = SequenceUtil.localAlignment(inSeq, 18, 1);
+            if(localAlignRes==null){
+                alnResList.add(0);
+            }else{
+                alnResList.add(localAlignRes);
+            }
+            System.out.println("done");
+        } 
+        /* 
+        Do local alignment between readin the same group in Map
+        */
+        
+        
+        
+        
         System.out.println("********** Do Calculate Euclidient Distance *********");
         readAlign.calculateEuclidientdistance(); // Must have this order before clustering
 //        VisualizeResult.visualizeDistanceTable(align);

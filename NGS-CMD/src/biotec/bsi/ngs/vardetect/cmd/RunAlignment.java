@@ -38,9 +38,9 @@ public class RunAlignment {
     
      public static void main(String[] args) throws IOException {
         // TODO code application logic here
-        String refPath = args[0];
-        String inputPath = args[1];
-        int propotion = Integer.valueOf(args[2]);
+        String refPath = args[0];                                       // First argument; indicate reference  file (include it path if it not in the current directory)
+        String inputPath = args[1];                                     // Second argument; indicate input file (include it path if it not in the current directory)
+        int propotion = Integer.valueOf(args[2]);                       // Third argument; indicate the number of read per time
         
 //       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
         Map<String,ArrayList<Map>> aon = new HashMap();
@@ -65,7 +65,7 @@ public class RunAlignment {
         int count = 0;
         System.out.println("Total Sample: " + numSample);
         System.out.println("Propotion " + propotion + " read per part");
-        for (int i = 0 ; i < numSample ; i += propotion){
+        for (int i = 0 ; i < numSample ; i += propotion){                       // loop over the input sample ( number of loop is up to the number of read per time )
             count++;
             String savefilename = "_Format_AlignSortedCutResultMap_part"+count;
             InputSequence input = SequenceUtil.readSampleFileV2(inputPath,i,Math.min(numSample, i+propotion));

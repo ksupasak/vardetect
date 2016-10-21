@@ -51,8 +51,10 @@ public class NGSCMD10 {
 //        input.addRead(inSS);
         //input = SequenceUtil.readSampleFile(args[1]);
         
-        String fixPath = "/Users/worawich/VMdev/3661/output.fa";
-        input = SequenceUtil.readSampleFileV2(fixPath,100000,200000);
+//        String fixPath = "/Users/worawich/VMdev/3661/output.fa";
+        String fixPath = "/Users/worawich/VMdev/Siriraj/JT/JT.unmapped.sam";
+//        input = SequenceUtil.readSampleFileV2(fixPath,100000,200000);
+        input = SequenceUtil.readSamFile(fixPath);
 //        InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandom(ref,5, 100, 5);
         
         System.out.println("********** Do Alignment *********");
