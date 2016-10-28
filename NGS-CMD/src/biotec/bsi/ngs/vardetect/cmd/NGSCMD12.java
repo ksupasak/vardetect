@@ -7,6 +7,7 @@ import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import biotec.bsi.ngs.vardetect.core.util.VisualizeResult;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -21,7 +22,7 @@ import java.util.Set;
  *
  * @author worawich
  * 
- * Use for clustering test
+ * Use for clustering test (local map implementation)
  */
 public class NGSCMD12 {
 
@@ -31,10 +32,13 @@ public class NGSCMD12 {
         String inputFileName = "/Users/worawich/VMdev/Siriraj/JT/JT.unmapped.sam";
         String filename = "hg19JT_unalign_Format_AlignSortedCutResultMap_part1";
         AlignmentResultRead readAlign = SequenceUtil.readAlignmentReport("/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/"+filename+".txt");
-        AlignmentResultRead localAlignRes = new AlignmentResultRead();
-        ArrayList alnResList = new ArrayList();
+        ArrayList<AlignmentResultRead> localAlignRes = new ArrayList();
+        Map<Integer,ArrayList<String>> groupMap = new HashMap();
+        ArrayList<Map<Integer,ArrayList<String>>> groupList = new ArrayList();
         
         String path = "/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/"+filename;
+        String savePath = "/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/";
+        String saveFilename = filename+"_clusterGroup_th74";
         /* Old Grouping algorithm
         align.createAllClusterCode();
         align.createAllClusterCodeSorted();
@@ -52,45 +56,51 @@ public class NGSCMD12 {
         Map<Long,ArrayList<String>> chrMatchMap = Clustering.createChrMatchMap(readAlign);
         Set set = chrMatchMap.keySet();
         Iterator chrNumberIter = set.iterator();
-       
-        while(chrNumberIter.hasNext()){
+        
+        System.out.println("Try to class Group");
+        int num = 0;
+        while(chrNumberIter.hasNext()){                                                     // Loop over chromosome group which has 24 group
             ArrayList<String> readNameList = chrMatchMap.get(chrNumberIter.next());
             InputSequence inSeq = SequenceUtil.readSamFile(inputFileName, readNameList);
-            localAlignRes = SequenceUtil.localAlignment(inSeq, 18, 1);
-            if(localAlignRes==null){
-                alnResList.add(0);
+            groupMap = SequenceUtil.localAlignment(inSeq, 18, 1, 74);                      // inside localAlignment will have loop over member in this chromosome group (all possible pair of each member)
+            if(groupMap.isEmpty()){
+                //groupList.add(0);
             }else{
-                alnResList.add(localAlignRes);
+                groupList.add(groupMap);
             }
-            System.out.println("done");
+            num++;
+            System.out.println("Done "+num+"/24");
         } 
         /* 
         Do local alignment between readin the same group in Map
         */
-        
-        
-        
-        
-        System.out.println("********** Do Calculate Euclidient Distance *********");
-        readAlign.calculateEuclidientdistance(); // Must have this order before clustering
-//        VisualizeResult.visualizeDistanceTable(align);
-//        System.out.println("********** Do Write Result DistanceTable *********");
-//        readAlign.writeDistanceTableToPath(path, "txt");
-        
-        System.out.println("********** Do Clustering Group *********");
-        System.out.println("Number of Read in consider : "+ readAlign.getResult().size());
-        ArrayList<ClusterGroup> groupResult = Clustering.clusteringGroup(readAlign, 100);
-        readAlign.addGroupReult(groupResult);
-        System.out.println("********** Do Write Group Result *********");
-        readAlign.writeClusterGroupToPath(path, "txt");
-        
-        System.out.println(" check number of group : " + groupResult.size());
-        VisualizeResult.visualizeClusterGoup(groupResult);
-        
-        System.out.println("********** Do Reconstruct Sequence *********");
-        readAlign.enableReconstruct();
-        System.out.println("********** Do Write Pattern Report *********");
-        readAlign.writePatternReport(path, "txt");
+        System.out.println("Filter Group");
+        int minCoverage = 2;
+        Map<Integer,ArrayList<String>> groupResult = new HashMap();
+        groupResult = Clustering.filterClusterGroupLocalAlignment(groupList, minCoverage);
+        System.out.println("Save cluster Result");
+        Clustering.writeLocalAlignmentInFile(groupResult, savePath, saveFilename);
+        System.out.println("Done");
+//        System.out.println("********** Do Calculate Euclidient Distance *********");
+//        readAlign.calculateEuclidientdistance(); // Must have this order before clustering
+////        VisualizeResult.visualizeDistanceTable(align);
+////        System.out.println("********** Do Write Result DistanceTable *********");
+////        readAlign.writeDistanceTableToPath(path, "txt");
+//        
+//        System.out.println("********** Do Clustering Group *********");
+//        System.out.println("Number of Read in consider : "+ readAlign.getResult().size());
+//        ArrayList<ClusterGroup> groupResult = Clustering.clusteringGroup(readAlign, 100);
+//        readAlign.addGroupReult(groupResult);
+//        System.out.println("********** Do Write Group Result *********");
+//        readAlign.writeClusterGroupToPath(path, "txt");
+//        
+//        System.out.println(" check number of group : " + groupResult.size());
+//        VisualizeResult.visualizeClusterGoup(groupResult);
+//        
+//        System.out.println("********** Do Reconstruct Sequence *********");
+//        readAlign.enableReconstruct();
+//        System.out.println("********** Do Write Pattern Report *********");
+//        readAlign.writePatternReport(path, "txt");
     
     }
 }
