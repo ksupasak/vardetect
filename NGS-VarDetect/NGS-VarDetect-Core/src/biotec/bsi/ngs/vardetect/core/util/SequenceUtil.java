@@ -2687,13 +2687,16 @@ public class SequenceUtil {
         return refSS;
     }
 
-    public static AlignmentResultRead localAlignment(InputSequence inSeq,int kmer,int sliding){
+    public static Map<Integer,ArrayList<String>> localAlignment(InputSequence inSeq,int kmer,int sliding, int matchQuality){
+        int numMatchQ = matchQuality;
         ArrayList<String> checkList = new ArrayList();
-        Map<String,ArrayList<String>> preGroupMap = new HashMap();
+        Map<Integer,ArrayList<String>> preGroupMap = new HashMap();
+        Map<String,ArrayList<String>> preGroupUnMap = new HashMap();
         AlignmentResultRead align = new AlignmentResultRead();
         Vector<ShortgunSequence> listSS = inSeq.getInputSequence();
-        
-        for(int mainLoop=0;mainLoop<listSS.size();mainLoop++){
+        ArrayList<AlignmentResultRead> listAlignmentResultRead = new ArrayList();
+        int numGroup = 0;
+        for(int mainLoop=0;mainLoop<listSS.size();mainLoop++){                  // loop over shortgun sequence which alternate to be reference
                         
             ShortgunSequence dummyMainSS = listSS.get(mainLoop);
             if(checkList.contains(dummyMainSS.getReadName())!=true){
@@ -2717,18 +2720,28 @@ public class SequenceUtil {
                  * Bring align to analyze unMap read for this dummyMainSS
                  */
                 if(align != null){
-                    align.sortCountCutLocalResultForMap(5);
+                    align.sortCountCutLocalResultForMap(numMatchQ);
                     ArrayList<String> dummyMapList = align.getMapList();
                     ArrayList<String> dummyUnMapList = align.getUnMapList();
-
-                    preGroupMap.put(dummyMainSS.getReadName(), dummyUnMapList);
+                    
+                    if(dummyUnMapList.isEmpty()!=true){
+                        preGroupUnMap.put(dummyMainSS.getReadName(), dummyUnMapList);
+                    }
+                    if(dummyMapList.isEmpty()!=true){
+                        numGroup++;
+                        dummyMapList.add(dummyMainSS.getReadName());
+                        preGroupMap.put(numGroup, dummyMapList);
+                    }
+                    
 
                     /***********************************************************/
                     checkList.add(dummyMainSS.getReadName());
                     checkList.addAll(dummyMapList);
                 }
             }
-            
+            if(align.getUnMapList().isEmpty()!=true&&align.getMapList().isEmpty()!=true){
+                listAlignmentResultRead.add(align);
+            }
         }
         
         /**
@@ -2738,7 +2751,7 @@ public class SequenceUtil {
         
         
 
-        return align; 
+        return preGroupMap; 
     }
     
 }

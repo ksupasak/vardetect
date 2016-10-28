@@ -13,7 +13,9 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -106,7 +108,51 @@ public class Clustering {
         return classMap;
     }
     
+    public static Map<Integer,ArrayList<String>> filterClusterGroupLocalAlignment(ArrayList<Map<Integer,ArrayList<String>>> indata, int minCoverage){
+        Map dummyMap = new HashMap();
+        Map<Integer,ArrayList<String>> mainGroupMap = new HashMap();
+        int numGroup = 0;
+        
+        for(int i=0 ; i<indata.size() ;i++){
+            dummyMap = indata.get(i);
+            
+            if(dummyMap.isEmpty()!=true){
+                
+                Set dummySet = dummyMap.keySet();
+                Iterator dummyIter = dummySet.iterator();
+                while(dummyIter.hasNext()){
+                    Integer dummyKey = (Integer) dummyIter.next();
+                    ArrayList<String> group = (ArrayList<String>) dummyMap.get(dummyKey);
+                    
+                    if(group.size()>minCoverage && mainGroupMap.containsValue(group)!=true){
+                        numGroup++;
+                        mainGroupMap.put(numGroup, group);
+                    }
+                }
+            }
+        }
+        
+        
+        
+        return mainGroupMap;
+    }
     
+    public static void writeLocalAlignmentInFile(Map<Integer,ArrayList<String>> inData, String path, String filename) throws FileNotFoundException{
+        
+        PrintStream ps = new PrintStream(path+filename+".txt");            // Create file object
+        
+        for(Map.Entry<Integer,ArrayList<String>> entry : inData.entrySet()){
+            Integer numGroup = entry.getKey();
+            ArrayList<String> group = entry.getValue();
+            
+            ps.print("Group" + numGroup + ":");
+            
+            for(int i=0;i<group.size();i++){
+                ps.print("\t"+group.get(i));
+            }
+            ps.println();
+        }
+    }
     
     public static ArrayList<ClusterGroup> clusteringGroupV2(AlignmentResultRead inAlnRead, double threshold){
         /* New implementation cluster without create ClusterGroup but use Map instead */

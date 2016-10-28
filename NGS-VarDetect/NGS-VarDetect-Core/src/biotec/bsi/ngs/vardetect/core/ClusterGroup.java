@@ -14,9 +14,11 @@ import java.util.ArrayList;
 public class ClusterGroup {
     
     private ArrayList<ShortgunSequence> clusterRead;
+    private ArrayList<String> readNameList;                             // use for local alignment
     
     public ClusterGroup(){
         this.clusterRead = new ArrayList();
+        this.readNameList = new ArrayList();
     }
     
     public void addShortgunRead(ShortgunSequence readSS){
@@ -27,4 +29,7 @@ public class ClusterGroup {
         return this.clusterRead;
     }
     
+    public void addReadName(String inName){
+        this.readNameList.add(inName);
+    }
 }

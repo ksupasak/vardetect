@@ -643,7 +643,7 @@ public class BinaryAligner extends Thread implements Aligner {
                         while(keyIter.hasNext()){
                             long strandAln = (long)keyIter.next();                      // strandAln has 29 bit compose of [strand|alignPosition]
                             long count = this.alnMerMap.get(strandAln).size();          // we can get number of count from number of member in merList
-                            long chrStrandAln = (chr.getChrNumber()<<29)+strandAln;     // shift left 29 bit beacause we want to add count number on the front of strandAln which has 29 bit
+                            long chrStrandAln = (chr.getChrNumber()<<29)+strandAln;     // shift left 29 bit beacause we want to add chr number on the front of strandAln which has 29 bit
                             long countChrStrandAln = (count<<34)+chrStrandAln;          // shift left 34 bit beacause we want to add count number on the front of chrStrandAln which has 34 bit
                             
                             countChrStrandAlnList.add(countChrStrandAln);
@@ -656,7 +656,7 @@ public class BinaryAligner extends Thread implements Aligner {
                         while(keyIter.hasNext()){
                             long strandAln = (long)keyIter.next();                      // strandAln has 29 bit compose of [strand|alignPosition]
                             long count = this.alnMerMap.get(strandAln).size();          // we can get number of count from number of member in merList
-                            long chrStrandAln = (chr.getChrNumber()<<29)+strandAln;     // shift left 29 bit beacause we want to add count number on the front of strandAln which has 29 bit
+                            long chrStrandAln = (chr.getChrNumber()<<29)+strandAln;     // shift left 29 bit beacause we want to add chr number on the front of strandAln which has 29 bit
                             long countChrStrandAln = (count<<34)+chrStrandAln;          // shift left 34 bit beacause we want to add count number on the front of chrStrandAln which has 34 bit 
                             countChrStrandAlnList.add(countChrStrandAln);
                         }

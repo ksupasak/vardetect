@@ -38,6 +38,7 @@ public class AlignmentResultRead {
     private Map<String,ArrayList<Long>> alignmentResultMap;
     private Map<String,ArrayList<Long>> alignmentSortedCutResultMap;
     private Map<Long,long[]> countResultSortedCut;
+    private Map<String,Map<Long,ArrayList<Long>>> newAlignmentResultMap;    // Hash Map that store alignment result togather with 
     private ArrayList<String> unMapList;                    // Store readname of unmap read (use in local alignment part)
     private ArrayList<String> mapList;                      // Store readname of map read (use in local alignment part)  
     
@@ -810,6 +811,9 @@ public class AlignmentResultRead {
                     dummySortedList.add(code);
                     this.mapList.add(readName);
                 }
+            }
+            if(readList.isEmpty()){
+                this.unMapList.add(readName);
             }
             Collections.reverse(dummySortedList);
             this.alignmentSortedCutResultMap.put(readName, dummySortedList);
