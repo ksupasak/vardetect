@@ -234,5 +234,43 @@ public class Clustering {
         
         return similarity;
     }
+    
+    public static void createColorArray(AlignmentResultRead inRes, long rLen, long merLen){
+        int numMer = (int) (rLen-merLen)+1;
+        int[] matchArray = new int[numMer];
+        ArrayList<ShortgunSequence> listRead = inRes.getResult();
+        ArrayList<int[]> listMatchArray = new ArrayList();
+        Map<String,ArrayList<int[]>> colorPatternMap = new HashMap();
+        
+        for(int i =0;i<listRead.size();i++){ // Loop all Read
+            ShortgunSequence dummySS = listRead.get(i);            
+            
+            ArrayList<Long> listChr = dummySS.getListChrMatch();
+            ArrayList<Long> listPos = dummySS.getListPosMatch();
+            ArrayList<String> listStrand = dummySS.getListStrand();
+            ArrayList<Long> listNumMatch = dummySS.getListNumMatch();
+            ArrayList<Long> listIniIdx = dummySS.getListIniIdx();
+            long numPattern = listChr.size();
+            /**
+             * Start create match Array of each pattern
+             *      integer array size numMer
+             *  code 1 = match ; code 0 = not match
+             */
+            
+            for(int numP=0;numP<numPattern;numP++){
+                matchArray = new int[numMer];
+                
+                long numMatch = listNumMatch.get(numP);
+                long iniIdx = listIniIdx.get(numP);
+                
+                for(int merIdx = (int)iniIdx;merIdx<numMatch;merIdx++){
+                    matchArray[merIdx] = 1;      
+                }
+                listMatchArray.add(matchArray);
+            }
+            colorPatternMap.put(dummySS.getReadName(), listMatchArray);
+        }
+        
+    }
 
 }

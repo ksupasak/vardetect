@@ -26,9 +26,11 @@ public class ShortgunSequence {
     private double[] distanceVector;
     
     ArrayList<MerRead> mers;
-    ArrayList listChr;                          // [long] ArrayList of align chromosome )already sort and cut with threshold [match>5 & red<5]
-    ArrayList listPos;                          // [long] ArrayList of align chromosome )already sort and cut with threshold [match>5 & red<5]
-    ArrayList listStrand;                       // [String] ArrayList of align chromosome )already sort and cut with threshold [match>5 & red<5]
+    ArrayList listChr;                          // [long] ArrayList of align chromosome already sort and cut with threshold [match>5]
+    ArrayList listPos;                          // [long] ArrayList of align Position already sort and cut with threshold [match>5]
+    ArrayList listStrand;                       // [String] ArrayList of strand type already sort and cut with threshold [match>5]
+    ArrayList listNumMatch;                       // [long] ArrayList of number match already sort and cut with threshold [match>5] 
+    ArrayList listIniIdx;                       // [long] ArrayList of initial index already sort and cut with threshold [match>5] 
     ArrayList listResultCode;                   // [object should cast to long (chr 5bit|strand 1bit|position 28bit)] ArrayList of align chromosome )already sort and cut with threshold [match>5 & red<5]
     ArrayList inGroup;
     ArrayList outGroup;        
@@ -53,6 +55,8 @@ public class ShortgunSequence {
         this.listChr = new ArrayList();
         this.listPos = new ArrayList();
         this.listStrand = new ArrayList();
+        this.listNumMatch= new ArrayList();
+        this.listIniIdx = new ArrayList();
         this.listResultCode = new ArrayList();
         this.clusterVector = new long[24];
         this.distanceVector = new double[24];
@@ -76,16 +80,24 @@ public class ShortgunSequence {
         this.mers.set(idx, mer);
     }
 
-    public void addListChr(ArrayList input){
+    public void addListChr(ArrayList<Long> input){
         this.listChr = input;
     }
     
-    public void addListPos(ArrayList input){
+    public void addListPos(ArrayList<Long> input){
         this.listPos = input;
     }
     
-    public void addListStrand(ArrayList input){
+    public void addListStrand(ArrayList<String> input){
         this.listStrand = input;
+    }
+    
+    public void addListNumMatch(ArrayList<Long> input){
+        this.listNumMatch = input;
+    }
+    
+    public void addListIniIdx(ArrayList<Long> input){
+        this.listIniIdx = input;
     }
     
     public void addListResultCode(ArrayList input){
@@ -164,16 +176,24 @@ public class ShortgunSequence {
         return this.clusterCode;
     }
     
-    public ArrayList getListChrMatch(){        
+    public ArrayList<Long> getListChrMatch(){        
         return this.listChr;
     }
     
-    public ArrayList getListPosMatch(){
+    public ArrayList<Long> getListPosMatch(){
         return this.listPos;
     }
     
-    public ArrayList getListStrand(){
+    public ArrayList<String> getListStrand(){
         return this.listStrand;
+    }
+    
+    public ArrayList<Long> getListNumMatch(){
+        return this.listNumMatch;
+    }
+    
+    public ArrayList<Long> getListIniIdx(){
+        return this.listIniIdx;
     }
     
     public long[] getClusterVector(){ 

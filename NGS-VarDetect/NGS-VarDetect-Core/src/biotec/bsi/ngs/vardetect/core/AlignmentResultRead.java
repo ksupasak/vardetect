@@ -34,6 +34,7 @@ public class AlignmentResultRead {
     private static long mask_Count = 4380866641920L;    // Do & operation to get count number from value contain in alignmentResultMap
     //private static long mask_Chr =
     private static long mask_chrStrandAln = 17179869183L;   // Do & operation to get aligncode compose of chr|strand|alignposition from value contain in alignmentResultMap
+    private static long mask_chrIdxStrandAln = 4398046511103L;      //  Do & operation to get aligncode compose of chr|Idx|strand|alignposition from value contain in alignmentResultMap
     private ClusterGroup group;
     private Map<String,ArrayList<Long>> alignmentResultMap;
     private Map<String,ArrayList<Long>> alignmentSortedCutResultMap;
@@ -52,6 +53,7 @@ public class AlignmentResultRead {
        this.mask = 268435455;
        this.mask_Count = 4380866641920L;    // Do & operation to get count number from value contain in alignmentResultMap
        this.mask_chrStrandAln = 17179869183L;   // Do & operation to get aligncode compose of chr|strand|alignposition from value contain in alignmentResultMap
+       this.mask_chrIdxStrandAln = 4398046511103L;      //  Do & operation to get aligncode compose of chr|Idx|strand|alignposition from value contain in alignmentResultMap
        this.unMapList = new ArrayList();
        this.mapList = new ArrayList();
     }
@@ -614,10 +616,8 @@ public class AlignmentResultRead {
         }
     }
     
-      public void writeSortedCutResultMapToPathInFormat(String path,String nameFile, String fa) throws FileNotFoundException, IOException {
+    public void writeSortedCutResultMapToPathInFormat(String path,String nameFile, String fa) throws FileNotFoundException, IOException {
 
-        /* Must specify threshold for cut result (The result that less than threshold will be cut out)*/
-//        PrintStream ps = new PrintStream(path+"_Format_AlignSortedCutResultMap."+ fa);            // Create file object
         PrintStream ps = new PrintStream(path+nameFile+"."+ fa);            // Create file object
         
         
@@ -629,8 +629,7 @@ public class AlignmentResultRead {
             ArrayList dummyResList = this.alignmentSortedCutResultMap.get(readName);
             
             if(dummyResList.isEmpty() == false){
-                ps.println(">"+ readName);
-                //ps.printf("%-35s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s\t%8s%n","Result","Strand","NumMatch","Green","Yellow","Orange","Red","GreenInt","YellowInt","OrangeInt","RedInt");
+                ps.println(">"+ readName);               
             }
             
             Iterator codeIter = dummyResList.iterator();
@@ -661,6 +660,51 @@ public class AlignmentResultRead {
         }
     }
     
+    public void writeSortedCutResultMapToPathInFormatV3(String path,String nameFile, String fa) throws FileNotFoundException, IOException {
+
+        PrintStream ps = new PrintStream(path+nameFile+"."+ fa);            // Create file object
+        
+        
+        Set set = this.alignmentSortedCutResultMap.keySet();
+        Iterator readNameIter = set.iterator();
+       
+        while(readNameIter.hasNext()){ 
+            String readName = (String) readNameIter.next();
+            ArrayList dummyResList = this.alignmentSortedCutResultMap.get(readName);
+            
+            if(dummyResList.isEmpty() == false){
+                ps.println(">"+ readName);               
+            }
+            
+            Iterator codeIter = dummyResList.iterator();
+            while(codeIter.hasNext()){
+                long code = (long) codeIter.next();                                     // code has structure like this [count|Chr|strand|alignPosition]
+                long numCount = code>>42;                                               //Shift 34 bit to get count number
+                long chrIdxStrandAln = code&this.mask_chrIdxStrandAln;
+                long alignPos = chrIdxStrandAln&mask;                                      // And with 28bit binary to get position
+                long chrNumber = chrIdxStrandAln>>37;
+                long iniIdx = (chrIdxStrandAln>>29)&255;
+                
+                String strandNot = "no";                                                // Identify the strand type of this align Position
+                if(((chrIdxStrandAln>>28)&1) == 1){
+                    strandNot = "+";
+                }else if(((chrIdxStrandAln>>28)&1) == 0){
+                    strandNot = "-";
+                }
+                
+                ps.format("%d,%d,%s,%d,%d", chrNumber,alignPos,strandNot,numCount,iniIdx);
+                if (codeIter.hasNext()){
+                    ps.format(";");
+                }
+            }
+            
+            if(dummyResList.isEmpty() == false){
+                ps.format("\n");
+            }
+            
+        }
+    }
+       
     public void sortCountCutResultForMap(long inTh){
         /* Contain special part that create preriquisit data for cluster propose*/
         long threshold = inTh;
@@ -693,7 +737,7 @@ public class AlignmentResultRead {
                 Iterator codeIter = readList.iterator();
                 while(codeIter.hasNext()){   
                     long code = (long) codeIter.next();
-                    long numCount = code>>34; ;
+                    long numCount = code>>34; 
                     long chrStrandAln = code&this.mask_chrStrandAln;
                     
                     if(dummySortedList.contains(code)||numCount < threshold){
@@ -772,6 +816,34 @@ public class AlignmentResultRead {
                 
                 
         
+    }
+    
+    public void sortCountCutResultForMapV3(long inTh){
+        /* Contain special part that create preriquisit data for cluster propose*/
+        long threshold = inTh;
+       
+        for(Map.Entry<String,ArrayList<Long>> entry : this.alignmentResultMap.entrySet()){
+            String readName = entry.getKey();
+            ArrayList<Long> readList = entry.getValue();        
+            ArrayList<Long> dummySortedList = new ArrayList();
+            System.out.println("Read name : " + readName);
+            Collections.sort(readList);
+//            System.out.println("Do sorting round: "+ i);
+            Iterator elementIter = readList.iterator();
+            while(elementIter.hasNext()){
+                long code = (long) elementIter.next();
+                long numCount = code>>42;
+                System.out.println("code: "+code+" numcount: " + numCount);
+                if(numCount<threshold){
+                    
+                }else{
+                    dummySortedList.add(code);   
+                }
+            }
+            Collections.reverse(dummySortedList);
+            this.alignmentSortedCutResultMap.put(readName, dummySortedList);
+        }
+ 
     }
     
     public void sortCountCutLocalResultForMap(long inTh){
