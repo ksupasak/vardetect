@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
@@ -236,39 +237,102 @@ public class Clustering {
     }
     
     public static void createColorArray(AlignmentResultRead inRes, long rLen, long merLen){
+        /**
+         *  Use for create colorArray 
+         *  please make sure that your inRes must implement iniIndex in its
+         *  
+         */
+        long iniIdx;
+        long numMatch;
         int numMer = (int) (rLen-merLen)+1;
         int[] matchArray = new int[numMer];
         ArrayList<ShortgunSequence> listRead = inRes.getResult();
         ArrayList<int[]> listMatchArray = new ArrayList();
-        Map<String,ArrayList<int[]>> colorPatternMap = new HashMap();
+        Map<String,String[]> colorPatternMap = new HashMap();
         
         for(int i =0;i<listRead.size();i++){ // Loop all Read
             ShortgunSequence dummySS = listRead.get(i);            
             
-            ArrayList<Long> listChr = dummySS.getListChrMatch();
+            ArrayList<Long> listChr = dummySS.getListChrMatch();                // all of Array below has same size (size indicate the number of match pattern)
             ArrayList<Long> listPos = dummySS.getListPosMatch();
             ArrayList<String> listStrand = dummySS.getListStrand();
             ArrayList<Long> listNumMatch = dummySS.getListNumMatch();
             ArrayList<Long> listIniIdx = dummySS.getListIniIdx();
             long numPattern = listChr.size();
             /**
-             * Start create match Array of each pattern
+             * Start create match Array of each pattern of this read
              *      integer array size numMer
              *  code 1 = match ; code 0 = not match
              */
-            
-            for(int numP=0;numP<numPattern;numP++){
+            listMatchArray = new ArrayList();
+            for(int numP=0;numP<numPattern;numP++){             // loop over match pattern
                 matchArray = new int[numMer];
+               
+                numMatch = listNumMatch.get(numP);
+                String strand = listStrand.get(numP);
                 
-                long numMatch = listNumMatch.get(numP);
-                long iniIdx = listIniIdx.get(numP);
+                if(strand.equals("-")){                          // check for strand type (the iniIndx of type - must have recalculate with the equation in this case
+                    long dummyIniIdx = listIniIdx.get(numP);
+                    iniIdx = rLen - (dummyIniIdx + ((merLen+numMatch)-1));
+                    System.out.println("iniIdx check" + iniIdx);
+                }else{
+                    iniIdx = listIniIdx.get(numP);
+                }
                 
-                for(int merIdx = (int)iniIdx;merIdx<numMatch;merIdx++){
+                
+                for(int merIdx = (int)iniIdx; merIdx<(iniIdx+numMatch); merIdx++){
                     matchArray[merIdx] = 1;      
                 }
-                listMatchArray.add(matchArray);
+                listMatchArray.add(matchArray);                 // At the end, this array should be the same size as number of match pattern         
             }
-            colorPatternMap.put(dummySS.getReadName(), listMatchArray);
+            
+            /**
+             * Start create color array of this read
+             * 
+             */
+            String[] colorArray = new String[numMer];
+            for(int index=0;index<numMer;index++){                  // Loop over index of possible mer (100-18)+1 = 83 (max index)
+                               
+                ArrayList<Long> chrCheckList = new ArrayList();
+                for(int p=0;p<listMatchArray.size();p++){           // Loop over listMatchArray size it is seemlessly as we loop over match pattern
+                    int[] dummyMatchArray = listMatchArray.get(p);
+                    
+                    if(dummyMatchArray[index]==1){
+                        chrCheckList.add(listChr.get(p));
+                    }  
+                }
+                
+                if(chrCheckList.isEmpty()){
+                    colorArray[index] = "u";    // chrCheckList is empty, his mean no match at this index. we assign "u" to colorArray
+                }else{
+                    /**
+                     *  check duplicate from chrCheckList
+                     *  and assign color string to each mer index
+                     */
+                    Set<Long> chrCheckSet = new HashSet<Long>(chrCheckList);
+                    if(chrCheckSet.size()<chrCheckList.size()){         // check case if this true that mean chrCheckList has duplicate element in it
+                        if(chrCheckSet.size() == 1){    // Has duplicate and size is 1, this mean it match only one chr but various position
+                            colorArray[index] = "o";
+                        }else{                          // Has duplicate and size is more than 1, this mean it match at same chr and other chr
+                            colorArray[index] = "r";
+                        }
+                    }else{
+                        if(chrCheckList.size()>1){      // Has no duplicate and size is more than 1, this mean it match at different chr
+                            colorArray[index] = "y";
+                        }else if(chrCheckList.size()==1){   // Has no duplicate and size is 1, this mean it unique
+                            colorArray[index] = "g";
+                        }
+                    }
+                }
+ 
+            }
+           
+            /**
+             *  Store colorArray in Map which has key=read name and value=colorArray (has size equal to number of possible mer)
+             */
+            colorPatternMap.put(dummySS.getReadName(), colorArray);
+            
+            dummySS.addColorArray(colorArray);      // store colorArray in Shortgun sequence (not sur with his one hope that store in the AlignmentResultRead that we feed as input when this function finish)
         }
         
     }

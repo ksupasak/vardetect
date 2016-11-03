@@ -44,6 +44,8 @@ public class ShortgunSequence {
     Map<Long,long[]> countResultSortedCut;
     Map<Long,int[]> algnCodeIndex;             // map store the align code as key and start index , last index as value
     
+    String[] colorArray;
+    
     public ShortgunSequence(String seq){
         this.seq = seq;
         this.mers = new ArrayList();
@@ -98,6 +100,10 @@ public class ShortgunSequence {
     
     public void addListIniIdx(ArrayList<Long> input){
         this.listIniIdx = input;
+    }
+    
+    public void addColorArray(String[] input){
+        this.colorArray = input;
     }
     
     public void addListResultCode(ArrayList input){
@@ -194,6 +200,10 @@ public class ShortgunSequence {
     
     public ArrayList<Long> getListIniIdx(){
         return this.listIniIdx;
+    }
+    
+    public String[] getColorArray(){
+        return this.colorArray;
     }
     
     public long[] getClusterVector(){ 

@@ -2620,7 +2620,7 @@ public class SequenceUtil {
                     inSS.addListChr(listChr);
                     inSS.addListPos(listPos);
                     inSS.addListStrand(listStrand);
-                    inSS.addListNumMatch(listPos);
+                    inSS.addListNumMatch(listNumCount);
                     inSS.addListIniIdx(listIniIdx);
                     alnResult.addResult(inSS);
                 } 
