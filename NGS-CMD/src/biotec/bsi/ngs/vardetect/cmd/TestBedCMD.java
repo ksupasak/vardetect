@@ -39,14 +39,14 @@ public class TestBedCMD {
       
 //       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
         
-        String savefilename = "test_New_structure_with_iniIndex";
+        String savefilename = "_test_New_structure_with_iniIndex";
         System.out.println("Get reference sequence");
         ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0]); //runFile hg19.fa
         //^^^^
         //ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
         System.out.println("Simulate Data");
         //InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGene(ref, 5, 100, "20", "21");
-        InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandom(ref,5, 100, 5);
+        InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandom(ref,1, 100, 1);
         
         
         Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
@@ -59,6 +59,10 @@ public class TestBedCMD {
         align.writeSortedCutResultMapToPathInFormatV3(ref.getPath(),savefilename, "txt");
         System.out.println("Done");
     
+        AlignmentResultRead readAlign = SequenceUtil.readAlignmentReportV2("/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/hg19"+savefilename+".txt");
+        System.out.println("Begin create color array");
+        Clustering.createColorArray(readAlign, 100, 18);
+        System.out.println("Done create color array");
     }
 
 }
