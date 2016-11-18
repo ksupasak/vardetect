@@ -6,6 +6,7 @@
 package biotec.bsi.ngs.vardetect.core;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -26,11 +27,16 @@ public class ShortgunSequence {
     private double[] distanceVector;
     
     ArrayList<MerRead> mers;
-    ArrayList listChr;                          // [long] ArrayList of align chromosome already sort and cut with threshold [match>5]
-    ArrayList listPos;                          // [long] ArrayList of align Position already sort and cut with threshold [match>5]
-    ArrayList listStrand;                       // [String] ArrayList of strand type already sort and cut with threshold [match>5]
-    ArrayList listNumMatch;                       // [long] ArrayList of number match already sort and cut with threshold [match>5] 
-    ArrayList listIniIdx;                       // [long] ArrayList of initial index already sort and cut with threshold [match>5] 
+    ArrayList<Integer> listChr;                          // [long] ArrayList of align chromosome already sort and cut with threshold [match>5]
+    ArrayList<Long> listPos;                          // [long] ArrayList of align Position already sort and cut with threshold [match>5]
+    ArrayList<Long> listLastPos;
+    ArrayList<String> listStrand;                       // [String] ArrayList of strand type already sort and cut with threshold [match>5]
+    ArrayList<Integer> listNumMatch;                       // [long] ArrayList of number match already sort and cut with threshold [match>5] 
+    ArrayList<Integer> listIniIdx;                       // [long] ArrayList of initial index already sort and cut with threshold [match>5]
+    ArrayList<Integer> listGreen;
+    ArrayList<Integer> listYellow;
+    ArrayList<Integer> listOrange;
+    ArrayList<Integer> listRed;
     ArrayList listResultCode;                   // [object should cast to long (chr 5bit|strand 1bit|position 28bit)] ArrayList of align chromosome )already sort and cut with threshold [match>5 & red<5]
     ArrayList inGroup;
     ArrayList outGroup;        
@@ -44,7 +50,11 @@ public class ShortgunSequence {
     Map<Long,long[]> countResultSortedCut;
     Map<Long,int[]> algnCodeIndex;             // map store the align code as key and start index , last index as value
     
-    String[] colorArray;
+    byte[] colorArray;
+    
+    int numPattern;
+    int readLength;
+    int merLength;
     
     public ShortgunSequence(String seq){
         this.seq = seq;
@@ -56,6 +66,7 @@ public class ShortgunSequence {
         this.algnCodeIndex = new LinkedHashMap();
         this.listChr = new ArrayList();
         this.listPos = new ArrayList();
+        this.listLastPos = new ArrayList();
         this.listStrand = new ArrayList();
         this.listNumMatch= new ArrayList();
         this.listIniIdx = new ArrayList();
@@ -67,6 +78,10 @@ public class ShortgunSequence {
         this.frontAlgnCode = new ArrayList();
         this.backAlgnCode = new ArrayList();
         this.listReconSeq = new ArrayList();
+        this.listGreen = new ArrayList();
+        this.listYellow = new ArrayList();
+        this.listOrange = new ArrayList();
+        this.listRed = new ArrayList();
         
     }
     
@@ -82,28 +97,42 @@ public class ShortgunSequence {
         this.mers.set(idx, mer);
     }
 
-    public void addListChr(ArrayList<Long> input){
+    public void addListChr(ArrayList<Integer> input){
         this.listChr = input;
+        this.numPattern = this.listChr.size();
     }
     
     public void addListPos(ArrayList<Long> input){
         this.listPos = input;
     }
     
+    public void addListLastPos(ArrayList<Long> input){
+        this.listLastPos = input;
+    }
+    
     public void addListStrand(ArrayList<String> input){
         this.listStrand = input;
     }
     
-    public void addListNumMatch(ArrayList<Long> input){
+    public void addListNumMatch(ArrayList<Integer> input){
         this.listNumMatch = input;
     }
     
-    public void addListIniIdx(ArrayList<Long> input){
+    public void addListIniIdx(ArrayList<Integer> input){
         this.listIniIdx = input;
     }
     
-    public void addColorArray(String[] input){
+    public void addColorArray(byte[] input){
         this.colorArray = input;
+        extractColorArray();
+    }
+    
+    public void addReadLength(int input){
+        this.readLength = input;
+    }
+    
+    public void addMerLength(int input){
+        this.merLength = input;
     }
     
     public void addListResultCode(ArrayList input){
@@ -182,7 +211,7 @@ public class ShortgunSequence {
         return this.clusterCode;
     }
     
-    public ArrayList<Long> getListChrMatch(){        
+    public ArrayList<Integer> getListChrMatch(){        
         return this.listChr;
     }
     
@@ -190,20 +219,40 @@ public class ShortgunSequence {
         return this.listPos;
     }
     
+    public ArrayList<Long> getListLastPosMatch(){
+        return this.listLastPos;
+    }
+    
     public ArrayList<String> getListStrand(){
         return this.listStrand;
     }
     
-    public ArrayList<Long> getListNumMatch(){
+    public ArrayList<Integer> getListNumMatch(){
         return this.listNumMatch;
     }
     
-    public ArrayList<Long> getListIniIdx(){
+    public ArrayList<Integer> getListIniIdx(){
         return this.listIniIdx;
     }
     
-    public String[] getColorArray(){
+    public byte[] getColorArray(){
         return this.colorArray;
+    }
+    
+    public ArrayList<Integer> gerListGreen(){
+        return this.listGreen;
+    }
+    
+    public ArrayList<Integer> gerListYellow(){
+        return this.listYellow;
+    }
+    
+    public ArrayList<Integer> gerListOrange(){
+        return this.listOrange;
+    }
+    
+    public ArrayList<Integer> gerListRed(){
+        return this.listRed;
     }
     
     public long[] getClusterVector(){ 
@@ -391,7 +440,7 @@ public class ShortgunSequence {
                     /* Special part create list of chr and pos for clustering propose */
                     if(this.countResult.get(selectKey)[0]>=this.threshold && this.countResult.get(selectKey)[1]<=this.threshold){
                         this.countResultSortedCut.put((long)selectKey, this.countResult.get(selectKey));
-                        long chr = ((long)selectKey)>>29;
+                        int chr = (int)(((long)selectKey)>>29);
                         long pos = ((long)selectKey&this.mask);
                         
                         String strandNot = "no";
@@ -680,7 +729,45 @@ public class ShortgunSequence {
             }
         }               
     }
-                    
+    
+    public void detectStrandPatternV2(){
+        
+        for(int mainNumP=0;mainNumP<this.numPattern;mainNumP++){
+            String strand = this.listStrand.get(mainNumP);
+            long dummyIniIndex = this.listIniIdx.get(mainNumP);
+            long numMatch = this.listNumMatch.get(mainNumP);
+            long mainIniIdx,mainLastIdx;
+            
+            /**
+             * Indicate initial index
+             */
+            if(strand.equals("-")){                          // check for strand type (the iniIndx of type - must have recalculate with the equation in this case
+                long dummyIniIdx = listIniIdx.get(mainNumP);
+                mainIniIdx = this.readLength - (dummyIniIdx + ((this.merLength+numMatch)-1));
+                mainLastIdx = (mainIniIdx + numMatch)-1;
+                //System.out.println("iniIdx check" + iniIdx);
+            }else{
+                mainIniIdx= listIniIdx.get(mainNumP);
+                mainLastIdx = (mainIniIdx + numMatch)-1;
+            }
+            
+            for(int subNumP=(mainNumP-1);subNumP<this.numPattern;subNumP++){
+                strand = this.listStrand.get(mainNumP);
+                dummyIniIndex = this.listIniIdx.get(mainNumP);
+                numMatch = this.listNumMatch.get(mainNumP);
+                long subIniIdx,subLastIdx;
+            }
+            
+            /**
+             * Deletion pattern check
+             */
+            
+            
+            
+        }
+    }
+            
+    
     public void reconstructAlignment(){
         
         ArrayList containCheck = new ArrayList();
@@ -741,5 +828,48 @@ public class ShortgunSequence {
 //        }
 //        this.listChr.
 
-    }    
+    }
+
+    public void extractColorArray(){
+        /**
+         * Suitable for version 3 data structure (data structure that has iniIdx in its)
+         */
+         
+        for(int numP=0;numP<this.numPattern;numP++){
+            
+            String dummyStrand = this.listStrand.get(numP);
+            int iniIdx = this.listIniIdx.get(numP);
+            int numMatch = this.listNumMatch.get(numP);
+            
+            if(dummyStrand.equals("-")){                          // check for strand type (the iniIndx of type - must have recalculate with the equation in this case
+                    int dummyIniIdx = listIniIdx.get(numP);
+                    iniIdx = this.readLength - (dummyIniIdx + ((this.merLength+numMatch)-1));      
+            }
+            
+            byte[] dummyColorArray = Arrays.copyOfRange(colorArray, iniIdx, (iniIdx+numMatch));
+            int countGreen = 0;
+            int countYellow = 0;
+            int countOrange = 0;
+            int countRed = 0;
+            
+            for(int i=0;i<dummyColorArray.length;i++){
+                byte color = dummyColorArray[i];
+                if(color == 1){
+                    countGreen++;
+                }else if(color == 2){
+                    countYellow++;
+                }else if(color == 3){
+                    countOrange++;
+                }else if(color == 4){
+                    countRed++;
+                }
+            }
+            
+            this.listGreen.add(countGreen);
+            this.listYellow.add(countYellow);
+            this.listOrange.add(countOrange);
+            this.listRed.add(countRed);
+            
+        }
+    }
 }

@@ -2567,12 +2567,17 @@ public class SequenceUtil {
         }
     }
     
-    public static AlignmentResultRead readAlignmentReportV2(String filename) throws IOException {
-        ArrayList<Long> listChr = new ArrayList();
+    public static AlignmentResultRead readAlignmentReportV2(String filename, int readLength, int mer) throws IOException {
+        /**
+         *  Suitable for version 3 data structure (data structure that has iniIdx in its)
+         */
+        
+        ArrayList<Integer> listChr = new ArrayList();
         ArrayList<Long> listPos = new ArrayList();
+        ArrayList<Long> listLastPos = new ArrayList();
         ArrayList<String> listStrand = new ArrayList();
-        ArrayList<Long> listNumCount = new ArrayList();
-        ArrayList<Long> listIniIdx = new ArrayList();
+        ArrayList<Integer> listNumCount = new ArrayList();
+        ArrayList<Integer> listIniIdx = new ArrayList();
         ArrayList listResultCode = new ArrayList();
         ShortgunSequence inSS = new ShortgunSequence(null);
         AlignmentResultRead alnResult = new AlignmentResultRead();
@@ -2598,6 +2603,7 @@ public class SequenceUtil {
 //                    System.out.println("Read name got : " + name);
                     listChr = new ArrayList();
                     listPos = new ArrayList();
+                    listLastPos = new ArrayList();
                     listStrand = new ArrayList();
                     listNumCount = new ArrayList();
                     listIniIdx = new ArrayList();
@@ -2609,16 +2615,22 @@ public class SequenceUtil {
                     for(int i=0;i<data.length;i++){
                         String[] dummyData = data[i].split(",");
 //                        System.out.println("data check : "+dummyData[0] + " "+ dummyData[1] +" "+dummyData[2]);                      
-                        listChr.add(Long.parseLong(dummyData[0]));
+                        listChr.add(Integer.parseInt(dummyData[0]));
                         listPos.add(Long.parseLong(dummyData[1]));
                         listStrand.add(dummyData[2]);
-                        listNumCount.add(Long.parseLong(dummyData[3]));
-                        listIniIdx.add(Long.parseLong(dummyData[4]));
+                        listNumCount.add(Integer.parseInt(dummyData[3]));
+                        listIniIdx.add(Integer.parseInt(dummyData[4]));
+                        
+                        int numBase = (mer+Integer.parseInt(dummyData[3]))-1;
+                        long lastPos = Long.parseLong(dummyData[1]) + numBase;
+                        
+                        listLastPos.add(lastPos);
                         
                     }
                     inSS.addReadName(name);
                     inSS.addListChr(listChr);
                     inSS.addListPos(listPos);
+                    inSS.addListLastPos(listLastPos);
                     inSS.addListStrand(listStrand);
                     inSS.addListNumMatch(listNumCount);
                     inSS.addListIniIdx(listIniIdx);
@@ -2816,5 +2828,8 @@ public class SequenceUtil {
 
         return preGroupMap; 
     }
+    
+  
+   
     
 }

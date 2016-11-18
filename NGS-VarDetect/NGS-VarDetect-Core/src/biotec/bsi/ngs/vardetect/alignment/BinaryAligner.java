@@ -39,6 +39,7 @@ public class BinaryAligner extends Thread implements Aligner {
     int mer = 18;
     int numberOfThread = 1;
     ArrayList<ThreadBinaryAligner> threadList;
+    ArrayList<ThreadBinaryAlignerV3> threadListV3;
     Map<Long,ArrayList<Long>> alnMerMap;     // Key is align code [strand|alignposition] and value is mer code
     Map<String,ArrayList<Long>> alnRes;      // Key is ReadName and value is array of long [count|chr|strand|Pos]
             
@@ -393,6 +394,120 @@ public class BinaryAligner extends Thread implements Aligner {
         return alinResult;
     }
     
+    public AlignmentResultRead alignMultithreadV3(ReferenceSequence ref, InputSequence input, int numThread) throws InterruptedException {
+        /**
+         * This version 3 function give the v3 data structure of result
+         */
+        this.setReferenceSequence(ref);
+        return alignMultithreadV3(input,numThread);
+        
+    }
+    
+    public AlignmentResultRead alignMultithreadV3(InputSequence input, int numThread) throws InterruptedException{
+        
+        /**
+        * This method will create object that implement multi-thread capability in it
+        * This function will split input sequence into number of portion relate to number of user specify thread number 
+        * Then it will loop to create a set of thread and store in threadList
+        * Each portion of split input will be pass into each thread implement object and do there job
+        * At last we will wait for each thread finish there job and merge the result together
+        * 
+        * This version 3 function give the v3 data structure of result
+        */
+        
+        threadListV3 = new ArrayList();
+        this.numberOfThread = numThread;
+        //AlignmentResult res = new AlignmentResult(input);
+        AlignmentResultRead alinResult = new AlignmentResultRead();
+        
+        this.mer = 18;
+
+        Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
+
+        while(chrs.hasMoreElements()){                                                      // Loop chromosome contain in ReferenceSequence
+            try {
+                
+                int count = 0;
+                ChromosomeSequence chr = chrs.nextElement();
+                Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
+                System.out.println("reading .. "+chr.getName()+"");
+
+                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr);            // encoded selected chromosome (just for sure it is encode)
+                long chrnumber = chr.getChrNumber();
+                /*********/
+                int inputSize = input.getInputSequence().size();
+                double dummyNum = (double)inputSize/this.numberOfThread;
+                int numPerPartition = (int)Math.ceil(dummyNum);
+                
+                /* Create thread object follow by specific numThread */
+                /*  Separate case In order to use existing thread object or create new for first time*/
+                
+                if(threadListV3.isEmpty()){
+                 
+                    for(int i = 0 ; i < inputSize ; i+= numPerPartition){                        
+                        List splitInputSequence = input.getInputSequence().subList(i, Math.min(inputSize, i+numPerPartition));
+                        String threadName = "Thread_"+count; 
+                        ThreadBinaryAlignerV3 newThread = new ThreadBinaryAlignerV3(threadName,splitInputSequence,encoded,chr.getChrNumber(),mer);
+                        newThread.start();                        
+                        threadListV3.add(newThread);
+                        count++;
+                    }
+                }else{
+                    int dummynum = 0;
+                    for(int i = 0 ; i < inputSize ; i+= numPerPartition){
+                        List splitInputSequence = input.getInputSequence().subList(i, Math.min(inputSize, i+numPerPartition));
+                        ThreadBinaryAlignerV3 dummythread = threadListV3.get(dummynum);
+                        dummythread.setdata(splitInputSequence, encoded, chrnumber, mer);
+                        dummythread.start();
+                        dummynum++;
+                    }
+                }
+                              
+//                    for(int i = 0 ; i < inputSize ; i+= numPerPartition){
+//                        List splitInputSequence = input.getInputSequence().subList(i, Math.min(inputSize, i+numPerPartition));
+//                        String threadName = "Thread_"+count; 
+//                        ThreadBinaryAligner newThread = new ThreadBinaryAligner(threadName,splitInputSequence,encoded,chr.getChrNumber(),mer);
+//                        newThread.start();
+//
+//                        threadList.add(newThread);
+//                        count++;
+//                   
+                              
+                System.out.println("Number of thread check : " + threadListV3.size() + " Must equal to " + numThread);
+                for(int i=0;i<threadListV3.size();i++){
+                    /* Wait for specific thread to finish execute (finish method run()) */ 
+                    /* After run() method is finish thread stop execute but the thread object that we overwrite run() in it is still exist */
+                    threadListV3.get(i).join();                    
+                }
+                
+                /* End */
+                
+                encoded.lazyLoad();         // clear memmory
+                encoded = null;
+                
+                System.gc();
+
+            } catch (IOException ex) {
+                Logger.getLogger(BinaryAligner.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        }
+        
+        for(int i=0;i<threadListV3.size();i++){
+            /* Loop to get align result map from each thread object */
+            /* Put all align map result into one Map result */
+            if(i==0){
+                this.alnRes = threadListV3.get(i).getMapResult();
+            }else{
+                this.alnRes.putAll(threadListV3.get(i).getMapResult());
+            }
+        }
+        
+        
+        alinResult.addMapResult(this.alnRes);
+ 
+        return alinResult;
+    }
     
     public AlignmentResultRead alignV2(ReferenceSequence ref, InputSequence input) {
         
@@ -950,7 +1065,11 @@ public class BinaryAligner extends Thread implements Aligner {
     }
     
     public AlignmentResultRead alignV3(InputSequence input){
-        
+        /**
+         * The different between alignV2 and V3 is we add initial match of read index (iniIdx) 
+         * So all sorting or other old version function may not suitable for this new data structure
+         * Please use the version of it;
+         */
         alnRes = new LinkedHashMap();                                     // initialize this hashmap one time per alinment job
         //AlignmentResult res = new AlignmentResult(input);
         AlignmentResultRead alinResult = new AlignmentResultRead();
@@ -1023,6 +1142,7 @@ public class BinaryAligner extends Thread implements Aligner {
                             
                             /*************************************************************************************************************/
                             /* -------------------------New Implement Part (Not Stroe in object)---------------------------------------------*/
+                            /*------------------------------- add iniIndex in front of 29 bit [strand|position] -----------------------------*/ 
                             if(pos2 != null){
                                 //if(pos2.length == 1){                // (Not work) already check for repeat in same chromosome by checking alignment result must have one match result in this chromosome
                                 for(int j=0;j<pos2.length;j++){
@@ -1164,6 +1284,7 @@ public class BinaryAligner extends Thread implements Aligner {
                             
                             /*************************************************************************************************************/
                             /* -------------------------New Implement Part (Not Stroe in object)---------------------------------------------*/
+                            /*------------------------------- add iniIndex in front of 29 bit [strand|position] -----------------------------*/
                             if(pos2 != null){
 //                                if(pos2.length == 1){           // (Not work) already check for repeat in same chromosome by checking alignment result must have one match result in this chromosome
                                 for(int j=0;j<pos2.length;j++){

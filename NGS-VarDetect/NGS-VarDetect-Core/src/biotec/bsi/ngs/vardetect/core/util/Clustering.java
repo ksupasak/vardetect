@@ -8,9 +8,17 @@ package biotec.bsi.ngs.vardetect.core.util;
 import biotec.bsi.ngs.vardetect.core.AlignmentResultRead;
 import biotec.bsi.ngs.vardetect.core.ClusterGroup;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
+import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -236,14 +244,18 @@ public class Clustering {
         return similarity;
     }
     
-    public static void createColorArray(AlignmentResultRead inRes, long rLen, long merLen){
+    public static void createColorArray(AlignmentResultRead inRes, int rLen, int merLen){
         /**
          *  Use for create colorArray 
          *  please make sure that your inRes must implement iniIndex in its
          *  
+         *  Suitable for version 3 data structure (data structure that has iniIdx in its)
          */
-        long iniIdx;
-        long numMatch;
+        
+        
+        int iniIdx;
+        int lastIdx;
+        int numMatch;
         int numMer = (int) (rLen-merLen)+1;
         int[] matchArray = new int[numMer];
         ArrayList<ShortgunSequence> listRead = inRes.getResult();
@@ -253,12 +265,14 @@ public class Clustering {
         for(int i =0;i<listRead.size();i++){ // Loop all Read
             ShortgunSequence dummySS = listRead.get(i);            
             
-            ArrayList<Long> listChr = dummySS.getListChrMatch();                // all of Array below has same size (size indicate the number of match pattern)
+            ArrayList<Integer> listChr = dummySS.getListChrMatch();                // all of Array below has same size (size indicate the number of match pattern)
             ArrayList<Long> listPos = dummySS.getListPosMatch();
             ArrayList<String> listStrand = dummySS.getListStrand();
-            ArrayList<Long> listNumMatch = dummySS.getListNumMatch();
-            ArrayList<Long> listIniIdx = dummySS.getListIniIdx();
+            ArrayList<Integer> listNumMatch = dummySS.getListNumMatch();
+            ArrayList<Integer> listIniIdx = dummySS.getListIniIdx();
             long numPattern = listChr.size();
+            int[] iniIdxArray = new int[(int)numPattern];
+            int[] lastIdxArray = new int[(int)numPattern];
             /**
              * Start create match Array of each pattern of this read
              *      integer array size numMer
@@ -272,12 +286,19 @@ public class Clustering {
                 String strand = listStrand.get(numP);
                 
                 if(strand.equals("-")){                          // check for strand type (the iniIndx of type - must have recalculate with the equation in this case
-                    long dummyIniIdx = listIniIdx.get(numP);
+                    int dummyIniIdx = listIniIdx.get(numP);
                     iniIdx = rLen - (dummyIniIdx + ((merLen+numMatch)-1));
-                    System.out.println("iniIdx check" + iniIdx);
+                    lastIdx = (iniIdx + numMatch)-1;
+//                    System.out.println("iniIdx check" + iniIdx);
                 }else{
                     iniIdx = listIniIdx.get(numP);
+                    lastIdx = (iniIdx + numMatch)-1;
                 }
+                /**
+                 * add initial index and last index of each pattern for future use
+                 */
+                iniIdxArray[numP] = iniIdx;
+                lastIdxArray[numP] = lastIdx;
                 
                 
                 for(int merIdx = (int)iniIdx; merIdx<(iniIdx+numMatch); merIdx++){
@@ -290,10 +311,10 @@ public class Clustering {
              * Start create color array of this read
              * 
              */
-            String[] colorArray = new String[numMer];
+            byte[] colorArray = new byte[numMer];                   // We reconsider to store in byte(8bit) not char(16bit) to save memory cousumpsion
             for(int index=0;index<numMer;index++){                  // Loop over index of possible mer (100-18)+1 = 83 (max index)
                                
-                ArrayList<Long> chrCheckList = new ArrayList();
+                ArrayList<Integer> chrCheckList = new ArrayList();
                 for(int p=0;p<listMatchArray.size();p++){           // Loop over listMatchArray size it is seemlessly as we loop over match pattern
                     int[] dummyMatchArray = listMatchArray.get(p);
                     
@@ -303,24 +324,24 @@ public class Clustering {
                 }
                 
                 if(chrCheckList.isEmpty()){
-                    colorArray[index] = "u";    // chrCheckList is empty, his mean no match at this index. we assign "u" to colorArray
+                    colorArray[index] = 0;    // chrCheckList is empty, this mean no match at this index. we assign 0 to colorArray
                 }else{
                     /**
                      *  check duplicate from chrCheckList
                      *  and assign color string to each mer index
                      */
-                    Set<Long> chrCheckSet = new HashSet<Long>(chrCheckList);
+                    Set<Integer> chrCheckSet = new HashSet<Integer>(chrCheckList);
                     if(chrCheckSet.size()<chrCheckList.size()){         // check case if this true that mean chrCheckList has duplicate element in it
                         if(chrCheckSet.size() == 1){    // Has duplicate and size is 1, this mean it match only one chr but various position
-                            colorArray[index] = "o";
+                            colorArray[index] = 3;
                         }else{                          // Has duplicate and size is more than 1, this mean it match at same chr and other chr
-                            colorArray[index] = "r";
+                            colorArray[index] = 4;
                         }
                     }else{
                         if(chrCheckList.size()>1){      // Has no duplicate and size is more than 1, this mean it match at different chr
-                            colorArray[index] = "y";
+                            colorArray[index] = 2;
                         }else if(chrCheckList.size()==1){   // Has no duplicate and size is 1, this mean it unique
-                            colorArray[index] = "g";
+                            colorArray[index] = 1;
                         }
                     }
                 }
@@ -330,11 +351,180 @@ public class Clustering {
             /**
              *  Store colorArray in Map which has key=read name and value=colorArray (has size equal to number of possible mer)
              */
-            colorPatternMap.put(dummySS.getReadName(), colorArray);
+            //colorPatternMap.put(dummySS.getReadName(), colorArray);
+            dummySS.addReadLength(rLen);
+            dummySS.addMerLength(merLen);
+            dummySS.addColorArray(colorArray);      // store colorArray in Shortgun sequence (not sure with this one hope that store in the AlignmentResultRead that we feed as input when this function finish)
             
-            dummySS.addColorArray(colorArray);      // store colorArray in Shortgun sequence (not sur with his one hope that store in the AlignmentResultRead that we feed as input when this function finish)
         }
         
     }
+    
+    public static ArrayList<ClusterGroup> clusterFromFile(String filename, int maxBaseDiff, int minCoverage) throws IOException{
+        /**
+         * Suitable for linux sort format only
+         */
+        ClusterGroup group = new ClusterGroup();
+        ArrayList<ClusterGroup> listGroup = new ArrayList();
+        Charset charset = Charset.forName("US-ASCII");
+        //String[] ddSS = filename.split(".");
+        String saveFileName = filename.split("\\.")[0] + "_ClusterGroup.txt";
+        Path path = Paths.get(filename);
 
+        StringBuffer seq = new StringBuffer();
+
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;
+            String[] data = null;
+            long oldIniPos = 0;
+            long diff = 0;
+            byte oldNumChr = 0;
+            int count = 0;
+            
+            while ((line = reader.readLine()) != null) {
+                data = line.split(",");
+                
+                byte numChr = Byte.parseByte(data[0]);
+                long iniPos = Long.parseLong(data[1]);
+//                long lastPos = Long.parseLong(data[2]);
+//                byte numG = Byte.parseByte(data[3]);
+//                byte numY = Byte.parseByte(data[4]);
+//                byte numO = Byte.parseByte(data[5]);
+//                byte numR = Byte.parseByte(data[6]);
+//                String strand = data[7];
+//                byte iniIdx = Byte.parseByte(data[8]);
+                String readName = data[9];
+                diff = iniPos - oldIniPos;
+                
+                if(oldNumChr == numChr){            // same Group check first criteria
+                    if(diff <= maxBaseDiff){        // same Group check second criteria
+                        if(group.getListReadname().contains(readName)!=true){
+                            group.addReadName(readName);
+                            group.addChromosomeNumber(numChr);
+                            group.addIniPos(iniPos);
+//                            group.addLastPos(lastPos);
+//                            group.addNumGreen(numG);
+//                            group.addNumYellow(numY);
+//                            group.addNumOrange(numO);
+//                            group.addNumRed(numR);
+//                            group.addStrand(strand);
+//                            group.addIniIndex(iniIdx);
+                        }
+                        
+                    }else{
+                        
+                        if(group.getNumMember() > minCoverage){
+                            listGroup.add(group);
+                        }else{
+                            group = null;
+                            System.gc();
+                        }
+                            
+                        group = new ClusterGroup();
+                        
+                        group.addReadName(readName);
+                        group.addChromosomeNumber(numChr);
+                        group.addIniPos(iniPos);
+//                        group.addLastPos(lastPos);
+//                        group.addNumGreen(numG);
+//                        group.addNumYellow(numY);
+//                        group.addNumOrange(numO);
+//                        group.addNumRed(numR);
+//                        group.addStrand(strand);
+//                        group.addIniIndex(iniIdx);                       
+                    }
+                }else{
+                    
+                    if(group.getNumMember() > minCoverage){
+                        listGroup.add(group);
+                        
+                    }else{
+                        group = null;
+                        System.gc();
+                    }
+                    
+                    group = new ClusterGroup();
+
+                    group.addReadName(readName);
+                    group.addChromosomeNumber(numChr);
+                    group.addIniPos(iniPos);
+//                    group.addLastPos(lastPos);
+//                    group.addNumGreen(numG);
+//                    group.addNumYellow(numY);
+//                    group.addNumOrange(numO);
+//                    group.addNumRed(numR);
+//                    group.addStrand(strand);
+//                    group.addIniIndex(iniIdx);
+                }
+                
+                oldNumChr = numChr;
+                oldIniPos = iniPos;
+                count++;
+                if(count%1000000==0){
+                    System.out.println(count + " line past");
+                    System.out.println("Recent chromosome: " + numChr);
+                }
+                
+            }
+            writeClusterGroupToFile(filename,listGroup);
+        }
+        
+        return listGroup;
+    }
+   
+    public static void writeClusterGroupToFile(String filename,ArrayList<ClusterGroup> input) throws IOException{
+        ArrayList<String> readNameList;                             // use for local alignment and other stuff
+        ArrayList<Byte> listChr;
+        ArrayList<Long> listIniPos;
+        ArrayList<Long> listLastPos;
+        ArrayList<Byte> listNumG;
+        ArrayList<Byte> listNumY;
+        ArrayList<Byte> listNumO;
+        ArrayList<Byte> listNumR;       
+        ArrayList<String> listStrand;       
+        ArrayList<Byte> listIniIndex;
+        
+        
+        File file = new File(filename);
+        
+        FileWriter writer;
+        /**
+         * Check File existing
+         */
+        
+        File f = new File(filename); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(filename,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(filename);
+        }
+        
+        for(int i=0; i<input.size();i++){                   // loop over each group
+            ClusterGroup dummyGroup = input.get(i);
+            
+            readNameList = dummyGroup.getListReadname();
+            listChr = dummyGroup.getListChromosome();
+            listIniPos = dummyGroup.getListIniPos();
+            listLastPos = dummyGroup.getListLastPos();
+            listNumG = dummyGroup.getListNumGreen();
+            listNumY = dummyGroup.getListNumYellow();
+            listNumO = dummyGroup.getListNumOrange();
+            listNumR = dummyGroup.getListNumRed();
+            listStrand = dummyGroup.getListStrand();
+            listIniIndex = dummyGroup.getListIniIndex();            
+            
+            writer.write("Group=");
+            for(int j=0; j<dummyGroup.getNumMember();j++){
+//                writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", listChr.get(i),listIniPos.get(i),listLastPos.get(i),listNumG.get(i),listNumY.get(i),listNumO.get(i),listNumR.get(i),listStrand.get(i),listIniIndex.get(i),readNameList.get(i)));
+                writer.write(String.format("%s",readNameList.get(i)));
+                writer.write(";");
+            }
+            writer.write("\n");
+        }
+        
+        writer.flush();
+        writer.close();
+    }
 }
