@@ -59,7 +59,7 @@ public class TestBedCMD {
         align.writeSortedCutResultMapToPathInFormatV3(ref.getPath(),savefilename, "txt");
         System.out.println("Done");
     
-        AlignmentResultRead readAlign = SequenceUtil.readAlignmentReportV2("/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/hg19"+savefilename+".txt");
+        AlignmentResultRead readAlign = SequenceUtil.readAlignmentReportV2("/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/hg19"+savefilename+".txt",100,18);
         System.out.println("Begin create color array");
         Clustering.createColorArray(readAlign, 100, 18);
         System.out.println("Done create color array");
