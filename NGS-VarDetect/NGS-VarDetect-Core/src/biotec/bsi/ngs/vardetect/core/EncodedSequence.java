@@ -331,7 +331,7 @@ public class EncodedSequence {
         return null;
     }
     
-    public long align(long mer){        // Curectly unuse
+    public long align(long mer){        // Curently unuse
         
         int index = align(mer, 0, mers.length-1);
         if(index>0)return mers[index]&mask2;

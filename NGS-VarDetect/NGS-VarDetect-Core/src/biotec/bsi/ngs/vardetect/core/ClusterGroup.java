@@ -24,6 +24,8 @@ public class ClusterGroup {
     private ArrayList<Byte> listNumR;       
     private ArrayList<String> listStrand;       
     private ArrayList<Byte> listIniIndex;
+    private ArrayList<String> listHighlightRead;
+    private boolean significantFlag;
     private int numMember;
            
             
@@ -39,6 +41,8 @@ public class ClusterGroup {
         this.listNumO = new ArrayList();
         this.listNumR = new ArrayList();
         this.listStrand = new ArrayList();
+        this.significantFlag = false;
+        this.listHighlightRead = new ArrayList();
     }
     
     public void addShortgunRead(ShortgunSequence readSS){
@@ -51,6 +55,10 @@ public class ClusterGroup {
     
     public void addReadName(String inName){
         this.readNameList.add(inName);
+    }
+    
+    public void addListReadName(ArrayList<String> input){
+        this.readNameList.addAll(input);
     }
     
     public void addChromosomeNumber(Byte input){
@@ -87,6 +95,18 @@ public class ClusterGroup {
     
     public void addStrand(String input){
         this.listStrand.add(input);
+    }
+    
+    public void addHighlightRead(String input){
+        this.listHighlightRead.add(input);
+    }
+    
+    public void significantSetTrue(){
+        this.significantFlag = true;
+    }
+    
+    public boolean checkSignificantFlag(){
+        return this.significantFlag;
     }
     
     public int getNumMember(){
@@ -132,6 +152,10 @@ public class ClusterGroup {
     
     public ArrayList<String> getListReadname(){
         return this.readNameList;
+    }
+    
+    public ArrayList<String> getHighlightRead(String input){
+        return this.listHighlightRead;
     }
 //    public void addGroupCharacteristic(long inChr, ){
 //        

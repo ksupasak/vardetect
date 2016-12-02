@@ -780,6 +780,77 @@ public class AlignmentResultRead {
         writer.close();
     }
     
+    public void writeSortedCutColorResultToPathInFormatForLinuxSort(String path, String nameFile, String fileFormat, String option) throws FileNotFoundException, IOException{
+    
+        /**
+         * Suitable for version 3 data structure (data structure that has iniIdx in its)
+         * write result to file format for linux sort purpose
+         */
+        
+        String filename = path+nameFile+"."+fileFormat;
+        PrintStream ps;
+        FileWriter writer;
+        /**
+         * Check File existing
+         */
+        
+        File f = new File(filename); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(filename,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(filename);
+        }
+        
+        /**
+         * Begin extract data to write
+         */
+        for(int i=0;i<this.shrtRead.size();i++){
+            ShortgunSequence dummySS = this.shrtRead.get(i);
+            String readName = dummySS.getReadName();
+            ArrayList<Integer> listChr = dummySS.getListChrMatch();
+            ArrayList<Long> listIniPos = dummySS.getListPosMatch();
+            ArrayList<Long> listLastPos = dummySS.getListLastPosMatch();
+            ArrayList<Integer> listIniIndex = dummySS.getListIniIdx();
+            ArrayList<String> listStrand = dummySS.getListStrand();
+            ArrayList<Integer> listGreen = dummySS.gerListGreen();
+            ArrayList<Integer> listYellow = dummySS.gerListYellow();
+            ArrayList<Integer> listOrange = dummySS.gerListOrange();
+            ArrayList<Integer> listRed = dummySS.gerListRed();
+            
+            for(int numP=0;numP<listChr.size();numP++){
+                int numChr = listChr.get(numP);
+                long iniPos = listIniPos.get(numP);
+                long lastPos = listLastPos.get(numP);
+                int iniIndex = listIniIndex.get(numP);
+                int green = listGreen.get(numP);
+                int yellow = listYellow.get(numP);
+                int orange = listOrange.get(numP);
+                int red = listRed.get(numP);
+                
+                String strand = listStrand.get(numP);
+                
+//                ps.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName);
+//                ps.format("\n");
+                if(option.equals("gy")){
+                    if(orange==0&&red==0){
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName));
+                        writer.write("\n");
+                    }
+                }else if(option.equals("g")){
+                    if(orange==0&&red==0&&yellow==0){
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName));
+                        writer.write("\n");
+                    }
+                }
+                
+            }
+        }
+        writer.flush();
+        writer.close();
+    }
+    
     public void sortCountCutResultForMap(long inTh){
         /* Contain special part that create preriquisit data for cluster propose*/
         long threshold = inTh;

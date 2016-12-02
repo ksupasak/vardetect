@@ -15,14 +15,17 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
+import static java.lang.Long.min;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -364,6 +367,7 @@ public class Clustering {
         /**
          * Suitable for linux sort format only
          */
+        
         ClusterGroup group = new ClusterGroup();
         ArrayList<ClusterGroup> listGroup = new ArrayList();
         Charset charset = Charset.forName("US-ASCII");
@@ -372,7 +376,7 @@ public class Clustering {
         Path path = Paths.get(filename);
 
         StringBuffer seq = new StringBuffer();
-
+        ArrayList<String> inData = new ArrayList();    
         try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
             String line = null;
             String[] data = null;
@@ -381,97 +385,271 @@ public class Clustering {
             byte oldNumChr = 0;
             int count = 0;
             
+            System.out.println("reading");
             while ((line = reader.readLine()) != null) {
-                data = line.split(",");
                 
-                byte numChr = Byte.parseByte(data[0]);
-                long iniPos = Long.parseLong(data[1]);
-//                long lastPos = Long.parseLong(data[2]);
-//                byte numG = Byte.parseByte(data[3]);
-//                byte numY = Byte.parseByte(data[4]);
-//                byte numO = Byte.parseByte(data[5]);
-//                byte numR = Byte.parseByte(data[6]);
-//                String strand = data[7];
-//                byte iniIdx = Byte.parseByte(data[8]);
-                String readName = data[9];
-                diff = iniPos - oldIniPos;
+                inData.add(line);
+                count++;
+                if(count%1000000==0){
+                    System.out.println(count + " line past");
+                    //System.out.println("Recent chromosome: " + numChr);
+                }       
                 
-                if(oldNumChr == numChr){            // same Group check first criteria
-                    if(diff <= maxBaseDiff){        // same Group check second criteria
-                        if(group.getListReadname().contains(readName)!=true){
-                            group.addReadName(readName);
-                            group.addChromosomeNumber(numChr);
-                            group.addIniPos(iniPos);
-//                            group.addLastPos(lastPos);
-//                            group.addNumGreen(numG);
-//                            group.addNumYellow(numY);
-//                            group.addNumOrange(numO);
-//                            group.addNumRed(numR);
-//                            group.addStrand(strand);
-//                            group.addIniIndex(iniIdx);
-                        }
-                        
-                    }else{
-                        
-                        if(group.getNumMember() > minCoverage){
-                            listGroup.add(group);
-                        }else{
-                            group = null;
-                            System.gc();
-                        }
-                            
-                        group = new ClusterGroup();
-                        
+            }
+//            writeClusterGroupToFile(filename,listGroup);
+        }
+        
+        System.out.println("Done reading");
+        System.out.println("Grouping");
+        
+        long oldIniPos = 0;
+        long diff = 0;
+        byte oldNumChr = 0;
+        int count = 0;
+        String data = null;
+        String[] splitData = new String[10]; 
+        for(int i=0;i<inData.size();i++){                       // loop get each data
+            data = inData.get(i);
+            byte numChr = 0;
+            long iniPos = 0;
+            String readName = null;
+            int field = 0;
+                
+            int lastIndex = 0;
+            for(int index=0;index<data.length();index++){       // loop split data 
+                char c = data.charAt(index);
+
+                if(c == ','){
+                    field++;
+                    switch(field)
+                    {
+                        case 1:
+                            numChr = Byte.parseByte(data.substring(lastIndex, index));
+                            break;
+                        case 2:
+                            iniPos = Long.parseLong(data.substring(lastIndex, index));
+                            break;
+                        case 9:
+                            readName = data.substring(index+1,data.length());         // get the last string                            
+                            break;
+                    }                    
+
+                    lastIndex = index + 1;  
+                }
+            }
+                
+            diff = iniPos - oldIniPos;
+
+            if(oldNumChr == numChr){            // same Group check first criteria
+                if(diff <= maxBaseDiff){        // same Group check second criteria
+                    if(group.getListReadname().contains(readName)!=true){
                         group.addReadName(readName);
                         group.addChromosomeNumber(numChr);
                         group.addIniPos(iniPos);
-//                        group.addLastPos(lastPos);
-//                        group.addNumGreen(numG);
-//                        group.addNumYellow(numY);
-//                        group.addNumOrange(numO);
-//                        group.addNumRed(numR);
-//                        group.addStrand(strand);
-//                        group.addIniIndex(iniIdx);                       
                     }
+
                 }else{
-                    
+
                     if(group.getNumMember() > minCoverage){
                         listGroup.add(group);
-                        
                     }else{
                         group = null;
                         System.gc();
                     }
-                    
+
                     group = new ClusterGroup();
 
                     group.addReadName(readName);
                     group.addChromosomeNumber(numChr);
-                    group.addIniPos(iniPos);
-//                    group.addLastPos(lastPos);
-//                    group.addNumGreen(numG);
-//                    group.addNumYellow(numY);
-//                    group.addNumOrange(numO);
-//                    group.addNumRed(numR);
-//                    group.addStrand(strand);
-//                    group.addIniIndex(iniIdx);
+                    group.addIniPos(iniPos);                 
                 }
-                
-                oldNumChr = numChr;
-                oldIniPos = iniPos;
-                count++;
-                if(count%1000000==0){
-                    System.out.println(count + " line past");
-                    System.out.println("Recent chromosome: " + numChr);
+            }else{
+
+                if(group.getNumMember() > minCoverage){
+                    listGroup.add(group);
+
+                }else{
+                    group = null;
+                    System.gc();
                 }
-                
+
+                group = new ClusterGroup();
+
+                group.addReadName(readName);
+                group.addChromosomeNumber(numChr);
+                group.addIniPos(iniPos);
             }
-            writeClusterGroupToFile(filename,listGroup);
+
+            oldNumChr = numChr;
+            oldIniPos = iniPos;
+            count++;
+            if(count%1000000==0){
+                System.out.println(count + " match pattern past");
+                System.out.println("Recent chromosome: " + numChr);
+            }
+                
+            
+                
+//                byte numChr = Byte.parseByte(data[0]);
+//                long iniPos = Long.parseLong(data[1]);
+////                long lastPos = Long.parseLong(data[2]);
+////                byte numG = Byte.parseByte(data[3]);
+////                byte numY = Byte.parseByte(data[4]);
+////                byte numO = Byte.parseByte(data[5]);
+////                byte numR = Byte.parseByte(data[6]);
+////                String strand = data[7];
+////                byte iniIdx = Byte.parseByte(data[8]);
+//                String readName = data[9];
+//                diff = iniPos - oldIniPos;
+//                
+//                if(oldNumChr == numChr){            // same Group check first criteria
+//                    if(diff <= maxBaseDiff){        // same Group check second criteria
+//                        if(group.getListReadname().contains(readName)!=true){
+//                            group.addReadName(readName);
+//                            group.addChromosomeNumber(numChr);
+//                            group.addIniPos(iniPos);
+////                            group.addLastPos(lastPos);
+////                            group.addNumGreen(numG);
+////                            group.addNumYellow(numY);
+////                            group.addNumOrange(numO);
+////                            group.addNumRed(numR);
+////                            group.addStrand(strand);
+////                            group.addIniIndex(iniIdx);
+//                        }
+//                        
+//                    }else{
+//                        
+//                        if(group.getNumMember() > minCoverage){
+//                            listGroup.add(group);
+//                        }else{
+//                            group = null;
+//                            System.gc();
+//                        }
+//                            
+//                        group = new ClusterGroup();
+//                        
+//                        group.addReadName(readName);
+//                        group.addChromosomeNumber(numChr);
+//                        group.addIniPos(iniPos);
+////                        group.addLastPos(lastPos);
+////                        group.addNumGreen(numG);
+////                        group.addNumYellow(numY);
+////                        group.addNumOrange(numO);
+////                        group.addNumRed(numR);
+////                        group.addStrand(strand);
+////                        group.addIniIndex(iniIdx);                       
+//                    }
+//                }else{
+//                    
+//                    if(group.getNumMember() > minCoverage){
+//                        listGroup.add(group);
+//                        
+//                    }else{
+//                        group = null;
+//                        System.gc();
+//                    }
+//                    
+//                    group = new ClusterGroup();
+//
+//                    group.addReadName(readName);
+//                    group.addChromosomeNumber(numChr);
+//                    group.addIniPos(iniPos);
+////                    group.addLastPos(lastPos);
+////                    group.addNumGreen(numG);
+////                    group.addNumYellow(numY);
+////                    group.addNumOrange(numO);
+////                    group.addNumRed(numR);
+////                    group.addStrand(strand);
+////                    group.addIniIndex(iniIdx);
+//                }
+//                
+//                oldNumChr = numChr;
+//                oldIniPos = iniPos;
+//                count++;
+//                if(count%1000000==0){
+//                    System.out.println(count + " match pattern past");
+//                    System.out.println("Recent chromosome: " + numChr);
+//                }  
         }
         
+        System.out.println("Done Grouping");
+        System.out.println("Writing");
+        writeClusterGroupToFile(filename,listGroup);
+        System.out.println("Done Writing");
         return listGroup;
     }
-   
+    
+    public static ArrayList<ClusterGroup> clusterFromFileBinarySearch(String filename, int maxBaseDiff, int minCoverage, int significantCluster) throws IOException{
+    /**
+     * Suitable for linux sort format only
+     */
+
+    ClusterGroup group = new ClusterGroup();
+    ArrayList<ClusterGroup> listGroup = new ArrayList();
+    Charset charset = Charset.forName("US-ASCII");
+    //String[] ddSS = filename.split(".");
+    String saveFileName = filename.split("\\.")[0] + "_ClusterGroup.txt";
+    Path path = Paths.get(filename);
+
+    StringBuffer seq = new StringBuffer();
+    ArrayList<String> inData = new ArrayList();    
+    try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+        String line = null;
+        String[] data = null;
+        long oldIniPos = 0;
+        long diff = 0;
+        byte oldNumChr = 0;
+        int count = 0;
+
+        System.out.println("reading");
+        while ((line = reader.readLine()) != null) {
+
+            inData.add(line);
+            count++;
+            if(count%1000000==0){
+                System.out.println(count + " line past");
+                //System.out.println("Recent chromosome: " + numChr);
+            }       
+
+        }
+//            writeClusterGroupToFile(filename,listGroup);
+    }
+
+    System.out.println("Done reading");
+    System.out.println("Grouping");
+
+    listGroup = clusterBinaryImplement(inData,maxBaseDiff,minCoverage,significantCluster);
+    
+    inData.clear();
+    System.gc();
+    
+    System.out.println("Done Grouping");
+    System.out.println("Writing");
+    writeClusterGroupToFile(filename.split("\\.")[0] + "_ClusterGroup_first_Phase.txt",listGroup);
+    System.out.println("Done Writing");
+    System.out.println("Start second Grouping");
+    System.out.println("extract and save signifcant group");
+    ArrayList<ClusterGroup> sigGroup = clusterPhaseTwo_groupBySignificant(listGroup);
+    writeClusterGroupToFile(filename.split("\\.")[0] + "_ClusterGroup_second_Phase_sig.txt",sigGroup);
+    //ArrayList<ClusterGroup> secondListGroup = createGroupIntersect(listGroup);
+    System.out.println("Done extract and save significant Group");
+    System.out.println("Start extract common peak");
+    Map<String,ArrayList<Integer>> readMap = clusterPhaseTwo_createReadMap(sigGroup);
+    ArrayList<ClusterGroup> lastListGroup = clusterPhaseTwo_extractCommon(sigGroup,readMap);
+    System.out.println("Done extract common peak");
+    System.out.println("Save extract common peak");
+    writeClusterGroupToFile(filename.split("\\.")[0] + "_ClusterGroup_second_Phase_CommonPeaks.txt",lastListGroup);
+    System.out.println("Done save extract common peak");
+//    System.out.println("Start group intersect");
+//    ArrayList<ClusterGroup> secondListGroup = createGroupIntersect(sigGroup);
+//    System.out.println("Done group intersect");
+//    System.out.println("Writing");
+//    writeClusterGroupToFile(saveFileName,secondListGroup);
+//    System.out.println("Done Writing");
+    return lastListGroup;
+}
+
+    
     public static void writeClusterGroupToFile(String filename,ArrayList<ClusterGroup> input) throws IOException{
         ArrayList<String> readNameList;                             // use for local alignment and other stuff
         ArrayList<Byte> listChr;
@@ -515,16 +693,367 @@ public class Clustering {
             listStrand = dummyGroup.getListStrand();
             listIniIndex = dummyGroup.getListIniIndex();            
             
-            writer.write("Group=");
+            writer.write(">Group "+i);
+            writer.write("\n");
             for(int j=0; j<dummyGroup.getNumMember();j++){
 //                writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", listChr.get(i),listIniPos.get(i),listLastPos.get(i),listNumG.get(i),listNumY.get(i),listNumO.get(i),listNumR.get(i),listStrand.get(i),listIniIndex.get(i),readNameList.get(i)));
-                writer.write(String.format("%s",readNameList.get(i)));
-                writer.write(";");
+                writer.write(String.format("%s",readNameList.get(j)));
+                writer.write("\n");
             }
-            writer.write("\n");
+            
         }
         
         writer.flush();
         writer.close();
     }
+    
+    public static ArrayList<ClusterGroup> clusterBinaryImplement(ArrayList<String> inData,int maxBaseDiff, int minCoverage, int threshold){     // thrshold use in criteria for extract significant read from bunct of read
+       
+        ArrayList<String> listData = inData; 
+        int dataIdx = 0;
+        int lowIdx = 0;
+        int highIdx = listData.size()-1;
+        int lastIdx = 0;
+        ClusterGroup group = new ClusterGroup();
+        ArrayList<ClusterGroup> listGroup = new ArrayList();
+        int count = 0;
+        while(true){
+
+            String compareData = listData.get(lowIdx);
+            /***    Extract data    ****/
+            String[] data = compareData.split(",");
+            byte numChr = Byte.parseByte(data[0]);
+            long iniPos = Long.parseLong(data[1]);
+            long lastPos = Long.parseLong(data[2]);
+            byte numG = Byte.parseByte(data[3]);
+            byte numY = Byte.parseByte(data[4]);
+            byte numO = Byte.parseByte(data[5]);
+            byte numR = Byte.parseByte(data[6]);
+            String strand = data[7];
+            byte iniIdx = Byte.parseByte(data[8]);
+            String readName = data[9];
+            /*******/
+            
+            /***********    Do binary search ***********/
+            int dummyHighIdx = binarySearch(lowIdx, highIdx, listData, numChr, iniPos, maxBaseDiff);
+            
+            /*********  Do scanning down 200 line **********/
+            
+            if(dummyHighIdx > 0){
+                for(int i=dummyHighIdx+1;i<=min(highIdx,dummyHighIdx+200);i++){
+                     
+                    String[] refData = listData.get(i).split(",");
+                    byte refNumChr = Byte.parseByte(refData[0]);
+                    long refIniPos = Long.parseLong(refData[1]);
+                    long refLastPos = Long.parseLong(refData[2]);
+                    byte refNumG = Byte.parseByte(refData[3]);
+                    byte refNumY = Byte.parseByte(refData[4]);
+                    byte refNumO = Byte.parseByte(refData[5]);
+                    byte refNumR = Byte.parseByte(refData[6]);
+                    String RefStrand = refData[7];
+                    byte refIniIdx = Byte.parseByte(refData[8]);
+                    String refReadName = refData[9];
+                    
+                    long diff = iniPos - refIniPos;
+                    
+                    if(diff>maxBaseDiff||diff<maxBaseDiff*-1){
+                        lastIdx = i-1;
+                        break;
+                    }else{
+                        lastIdx = i;
+                    }                         
+                }
+                
+                /******* create cluster group and add group *******/
+                group = new ClusterGroup();
+                for(int idx=lowIdx;idx<=lastIdx;idx++){
+                    String[] realData = listData.get(idx).split(",");
+                    numChr = Byte.parseByte(realData[0]);
+                    iniPos = Long.parseLong(realData[1]);
+                    lastPos = Long.parseLong(realData[2]);
+                    numG = Byte.parseByte(realData[3]);
+                    numY = Byte.parseByte(realData[4]);
+                    numO = Byte.parseByte(realData[5]);
+                    numR = Byte.parseByte(realData[6]);
+                    strand = realData[7];
+                    iniIdx = Byte.parseByte(realData[8]);
+                    readName = realData[9];
+                    if(group.getListReadname().contains(readName)!=true){
+                        group.addReadName(readName);
+                        group.addChromosomeNumber(numChr);
+                        group.addIniPos(iniPos);
+                        
+                        int numMerMatch = numG+numY;
+                        
+                        if(numMerMatch >= threshold){
+                            group.significantSetTrue();
+                            group.addHighlightRead(readName);
+                        }
+                    } 
+                }
+                /***********/
+            }else{
+                // no coverage ignore create new group
+                lastIdx = dummyHighIdx;
+//                group = new ClusterGroup();
+//                group.addReadName(readName);
+//                group.addChromosomeNumber(numChr);
+//                group.addIniPos(iniPos);  
+            }
+            
+            if(group.getNumMember() > minCoverage){       // check case for add only high coverage
+                listGroup.add(group);
+            }
+            
+            lowIdx = lastIdx+1;
+            if(lastIdx==highIdx||lowIdx==highIdx){
+                break;
+            }
+            count++;
+            if(count%100000==0){
+                System.out.println(count + " round past");
+                System.out.println("Current next index is : "+lowIdx);
+                //System.out.println("Recent chromosome: " + numChr);
+            }  
+        }
+        
+        listData.clear();
+        System.gc();
+        
+        return listGroup;
+    }
+    
+    public static int binarySearch(int lowIdx, int highIdx, ArrayList<String> listRefData,byte inChr,long inIniPos,int threshold){
+        
+        while(lowIdx <= highIdx){
+            
+            int middle = (lowIdx + highIdx)/2;
+            if(middle == lowIdx){
+                //middle++;
+            }
+            /***    Extract data    ****/
+            String[] refData = listRefData.get(middle).split(",");       
+            byte numChr = Byte.parseByte(refData[0]);
+            long iniPos = Long.parseLong(refData[1]);
+            long lastPos = Long.parseLong(refData[2]);
+            byte numG = Byte.parseByte(refData[3]);
+            byte numY = Byte.parseByte(refData[4]);
+            byte numO = Byte.parseByte(refData[5]);
+            byte numR = Byte.parseByte(refData[6]);
+            String strand = refData[7];
+            byte iniIdx = Byte.parseByte(refData[8]);
+            String readName = refData[9];
+            /*******/
+            
+            long diff = inIniPos - iniPos;
+            
+            
+            if(numChr == inChr){
+                if(diff>=(threshold*-1)&&diff<=threshold){
+                    return middle;
+                }else if(diff > threshold){
+                    lowIdx = middle;
+                    middle = (lowIdx + highIdx)/2;
+                }else if(diff < (threshold*-1)){
+                    highIdx = middle;
+                    middle = (lowIdx + highIdx)/2;
+                }
+
+            }else if(numChr > inChr){
+                highIdx = middle;
+                middle = (lowIdx + highIdx)/2;
+            }else if(numChr < inChr){
+                lowIdx = middle;
+                middle = (lowIdx + highIdx)/2;            
+            }
+        }
+        
+        return -1;
+    }
+    
+    public static ArrayList<ClusterGroup> createGroupIntersect(ArrayList<ClusterGroup> inListGroup){
+
+        /**
+         *  First part (create characteristic)
+         */
+        
+        Map<String,boolean[]> groupMap = new HashMap();
+        boolean[] groupChar = new boolean[inListGroup.size()];                  // initialize boolean array as group characteristic for each read
+        ArrayList<String> checkList = new ArrayList();
+        int count = 0;
+        
+        for(int mainG=0;mainG<inListGroup.size();mainG++){                      // Loop over each group
+            ClusterGroup dummyGroup = inListGroup.get(mainG);
+            ArrayList<String> dummyListRead = dummyGroup.getListReadname();
+            
+            for(int numMainRead=0;numMainRead<dummyListRead.size();numMainRead++){  // Loop over each read in selected group
+                String mainRead = dummyListRead.get(numMainRead);
+                
+                if(checkList.contains(mainRead)!=true){
+                    groupChar = new boolean[inListGroup.size()];
+                    for(int subG=0;subG<inListGroup.size();subG++){                     // Loop over all group to check containment of selected read
+                        ClusterGroup subGroup = inListGroup.get(subG);
+                        ArrayList<String> subListRead = subGroup.getListReadname();
+
+                        if(subListRead.contains(mainRead)){
+                            groupChar[subG]=true;
+                        }else{
+                            groupChar[subG]=false;
+                        }
+                    }
+                    groupMap.put(mainRead, groupChar);
+                    checkList.add(mainRead);
+                }   
+            }
+            
+            count++;
+              if(count%50000==0){
+                System.out.println("Create characteristic "+count + " round past");
+            }
+        }
+        
+        
+        /**
+         * Second part (reGroup with intersect characteristic)
+         */
+        ArrayList<ClusterGroup> listGroup = new ArrayList();
+        checkList = new ArrayList();
+        count = 0;
+        for(Map.Entry<String,boolean[]> mainEntry : groupMap.entrySet()){       // main Loop for each read
+            String mainKey = mainEntry.getKey();
+            boolean[] mainValue = mainEntry.getValue();
+            ClusterGroup group = new ClusterGroup();
+            
+            if(checkList.contains(mainKey)!=true){
+                group.addReadName(mainKey);
+                checkList.add(mainKey);
+                
+                for(Map.Entry<String,boolean[]> subEntry : groupMap.entrySet()){    // minor loop for check intersect
+                    String subKey = subEntry.getKey();
+                    boolean[] subValue = subEntry.getValue();
+                    if(checkList.contains(subKey)!=true){
+                        if(Arrays.equals(mainValue, subValue)){
+                            group.addReadName(subKey);
+                        }
+                    }   
+                }
+            }
+            
+            listGroup.add(group);
+            count++;
+            if(count%50000==0){
+                System.out.println("Regroup with intersect characteristic "+count + " round past");
+            }
+        }         
+        return listGroup;
+    }
+    
+    public static void clusterPhaseTwo(ArrayList<ClusterGroup> inListGroup){
+        
+        Map<String,ArrayList<Integer>> readNameMap = clusterPhaseTwo_createReadMap(inListGroup);
+        
+    }
+    
+    public static Map<String,ArrayList<Integer>> clusterPhaseTwo_createReadMap(ArrayList<ClusterGroup> inListGroup){
+        
+        /**
+         * Create second map for cluster phase two purpose
+         */
+        
+        ArrayList<Integer> dummyListNumGroup;
+        Map<String,ArrayList<Integer>> readNameMap = new HashMap();
+        for(int numG=0;numG<inListGroup.size();numG++){
+            ClusterGroup group = inListGroup.get(numG);
+            ArrayList<String> readList = group.getListReadname();
+            for(int numR=0;numR<readList.size();numR++){
+                String readName = readList.get(numR);
+                if(readNameMap.containsKey(readName)){
+                    dummyListNumGroup = readNameMap.get(readName);
+                    dummyListNumGroup.add(numG);
+                }else{
+                    dummyListNumGroup = new ArrayList();
+                    dummyListNumGroup.add(numG);
+                }
+                readNameMap.put(readName, dummyListNumGroup);
+            }    
+        }
+        
+        return readNameMap;
+    }
+    
+    public static ArrayList<ClusterGroup> clusterPhaseTwo_extractCommon(ArrayList<ClusterGroup> inListGroup, Map<String,ArrayList<Integer>> inReadNameMap){
+        ArrayList<ClusterGroup> listCommonGroup = new ArrayList();
+        ArrayList<Integer> checkList = new ArrayList();
+        for(int numG=0;numG<inListGroup.size();numG++){
+            
+            if(checkList.contains(numG)!=true){
+                ClusterGroup group = inListGroup.get(numG);
+                ArrayList<String> listRead = group.getListReadname();
+                Map<Integer,ArrayList<String>> temporaryGroupMap = new HashMap();
+                for(int numR=0;numR<listRead.size();numR++){
+                    String dummyRead = listRead.get(numR);
+
+                    /**
+                     * Start using read name as key to get number of group from inReadNameMap
+                     * and create temporary group map for each numG Group
+                     */
+
+                    ArrayList<Integer> listNumG = inReadNameMap.get(dummyRead);
+                    for(int idx=0;idx<listNumG.size();idx++){
+                        int dummyNumG = listNumG.get(idx);
+
+                        if(temporaryGroupMap.containsKey(dummyNumG)){
+                            ArrayList<String> dummyReadList = temporaryGroupMap.get(dummyNumG);
+                            dummyReadList.add(dummyRead);
+                            temporaryGroupMap.put(dummyNumG, dummyReadList);
+                        }else{
+                            ArrayList<String> dummyReadList = new ArrayList();
+                            dummyReadList.add(dummyRead);
+                            temporaryGroupMap.put(dummyNumG, dummyReadList);
+                        }
+                    }
+                }
+
+                /**
+                 * Find common peaks
+                 */
+                int oldCountRead = 0;
+                ArrayList<String> selectList = new ArrayList();
+                for(Map.Entry<Integer,ArrayList<String>> subEntry : temporaryGroupMap.entrySet()){    // minor loop for check intersect
+                    Integer numGroup = subEntry.getKey();
+                    ArrayList<String> listOfRead = subEntry.getValue();
+                    int newCountRead = listOfRead.size();
+
+                    if(numGroup!=numG && newCountRead>oldCountRead){
+                        selectList = listOfRead;
+                        oldCountRead = newCountRead;
+                    }
+                }
+            
+                checkList.add(numG);
+                checkList.add(oldCountRead);
+                ClusterGroup newGroup = new ClusterGroup();
+                newGroup.addListReadName(selectList);
+
+                listCommonGroup.add(newGroup);
+            }
+            
+        }
+        return listCommonGroup;
+        
+    }
+    
+    public static ArrayList<ClusterGroup> clusterPhaseTwo_groupBySignificant(ArrayList<ClusterGroup> inListGroup){
+        ArrayList<ClusterGroup> significantListGroup = new ArrayList();
+        for(int numG=0;numG<inListGroup.size();numG++){
+            ClusterGroup dummyGroup = inListGroup.get(numG);
+            if(dummyGroup.checkSignificantFlag()==true){
+                significantListGroup.add(dummyGroup);
+            }
+        }
+        return significantListGroup;
+    }
+    
+    
+            
 }
