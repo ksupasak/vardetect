@@ -780,11 +780,14 @@ public class AlignmentResultRead {
         writer.close();
     }
     
-    public void writeSortedCutColorResultToPathInFormatForLinuxSort(String path, String nameFile, String fileFormat, String option) throws FileNotFoundException, IOException{
+    public void writeSortedCutColorResultToPathInFormatForLinuxSort(String path, String nameFile, String fileFormat, String option1) throws FileNotFoundException, IOException{
     
         /**
          * Suitable for version 3 data structure (data structure that has iniIdx in its)
          * write result to file format for linux sort purpose
+         * 
+         * String option1 filter option code "gy" mean we cut out the read match result that has orange and red count
+         *                                   "g"  mean we cut out the read match result contain yellow orange and red count
          */
         
         String filename = path+nameFile+"."+fileFormat;
@@ -833,12 +836,89 @@ public class AlignmentResultRead {
                 
 //                ps.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName);
 //                ps.format("\n");
-                if(option.equals("gy")){
+                if(option1.equals("gy")){
                     if(orange==0&&red==0){
                         writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName));
                         writer.write("\n");
                     }
-                }else if(option.equals("g")){
+                }else if(option1.equals("g")){
+                    if(orange==0&&red==0&&yellow==0){
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName));
+                        writer.write("\n");
+                    }
+                }
+                
+            }
+        }
+        writer.flush();
+        writer.close();
+    }
+    
+    public void writeSortedCutColorResultToPathInFormatForLinuxSort(String path, String nameFile, String fileFormat, String option1, int option2) throws FileNotFoundException, IOException{
+    
+        /**
+         * Suitable for version 3 data structure (data structure that has iniIdx in its)
+         * write result to file format for linux sort purpose
+         * 
+         * String option1 filter option code "gy" mean we filter out the read match result that has orange and red count
+         *                                   "g"  mean we filter out the read match result contain yellow orange and red count
+         *
+         * int option2 filter option threshold indicate the maximum mer count. If read match result have mer count equal or more than this threshold the result has been filter out.
+         * 
+         */
+        
+        String filename = path+nameFile+"."+fileFormat;
+        PrintStream ps;
+        FileWriter writer;
+        /**
+         * Check File existing
+         */
+        
+        File f = new File(filename); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(filename,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(filename);
+        }
+        
+        /**
+         * Begin extract data to write
+         */
+        for(int i=0;i<this.shrtRead.size();i++){
+            ShortgunSequence dummySS = this.shrtRead.get(i);
+            String readName = dummySS.getReadName();
+            ArrayList<Integer> listChr = dummySS.getListChrMatch();
+            ArrayList<Long> listIniPos = dummySS.getListPosMatch();
+            ArrayList<Long> listLastPos = dummySS.getListLastPosMatch();
+            ArrayList<Integer> listIniIndex = dummySS.getListIniIdx();
+            ArrayList<String> listStrand = dummySS.getListStrand();
+            ArrayList<Integer> listGreen = dummySS.gerListGreen();
+            ArrayList<Integer> listYellow = dummySS.gerListYellow();
+            ArrayList<Integer> listOrange = dummySS.gerListOrange();
+            ArrayList<Integer> listRed = dummySS.gerListRed();
+            
+            for(int numP=0;numP<listChr.size();numP++){
+                int numChr = listChr.get(numP);
+                long iniPos = listIniPos.get(numP);
+                long lastPos = listLastPos.get(numP);
+                int iniIndex = listIniIndex.get(numP);
+                int green = listGreen.get(numP);
+                int yellow = listYellow.get(numP);
+                int orange = listOrange.get(numP);
+                int red = listRed.get(numP);
+                
+                String strand = listStrand.get(numP);
+                int merMatch = green+yellow+orange+red;
+//                ps.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName);
+//                ps.format("\n");
+                if(merMatch<option2 && option1.equals("gy")){
+                    if(orange==0&&red==0){
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName));
+                        writer.write("\n");
+                    }
+                }else if(merMatch<option2 && option1.equals("g")){
                     if(orange==0&&red==0&&yellow==0){
                         writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName));
                         writer.write("\n");

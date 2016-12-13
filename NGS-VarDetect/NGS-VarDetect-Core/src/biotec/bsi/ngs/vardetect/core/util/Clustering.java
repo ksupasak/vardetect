@@ -225,11 +225,11 @@ public class Clustering {
         
         if(sizeMatchMainSS == sizeMatchSubSS){
             for(int i=0;i<sizeMatchMainSS;i++){
-                long mainChr = (long)matchMainChr.get(i);
+                int mainChr = (int)matchMainChr.get(i);
                 String mainStrand = (String)matchMainStrand.get(i);
                     
                 for(int j=0;j<sizeMatchMainSS;j++){
-                    long subChr = (long)matchSubChr.get(j);
+                    int subChr = (int)matchSubChr.get(j);
                     String subStrand = (String)matchSubStrand.get(j);
 
                     if(mainChr == subChr & mainStrand.equals(subStrand)){
@@ -696,9 +696,13 @@ public class Clustering {
             writer.write(">Group "+i);
             writer.write("\n");
             for(int j=0; j<dummyGroup.getNumMember();j++){
-//                writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", listChr.get(i),listIniPos.get(i),listLastPos.get(i),listNumG.get(i),listNumY.get(i),listNumO.get(i),listNumR.get(i),listStrand.get(i),listIniIndex.get(i),readNameList.get(i)));
-                writer.write(String.format("%s",readNameList.get(j)));
-                writer.write("\n");
+                if(listChr.isEmpty()){
+                    writer.write(String.format("%s",readNameList.get(j)));
+                    writer.write("\n");
+                }else{
+                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", listChr.get(j),listIniPos.get(j),listLastPos.get(j),listNumG.get(j),listNumY.get(j),listNumO.get(j),listNumR.get(j),listStrand.get(j),listIniIndex.get(j),readNameList.get(j)));
+                    writer.write("\n");
+                }   
             }
             
         }
@@ -765,6 +769,7 @@ public class Clustering {
                 }
                 
                 /******* create cluster group and add group *******/
+                 
                 group = new ClusterGroup();
                 for(int idx=lowIdx;idx<=lastIdx;idx++){
                     String[] realData = listData.get(idx).split(",");
@@ -782,15 +787,27 @@ public class Clustering {
                         group.addReadName(readName);
                         group.addChromosomeNumber(numChr);
                         group.addIniPos(iniPos);
-                        
+
+                        /* Additional information */
+                        group.addIniIndex(iniIdx);
+                        group.addLastPos(lastPos);
+                        group.addNumGreen(numG);
+                        group.addNumOrange(numO);
+                        group.addNumRed(numR);
+                        group.addNumYellow(numY);
+                        group.addStrand(strand);
+
+
+
                         int numMerMatch = numG+numY;
-                        
+
                         if(numMerMatch >= threshold){
                             group.significantSetTrue();
                             group.addHighlightRead(readName);
                         }
                     } 
                 }
+                
                 /***********/
             }else{
                 // no coverage ignore create new group
@@ -990,9 +1007,44 @@ public class Clustering {
                 ClusterGroup group = inListGroup.get(numG);
                 ArrayList<String> listRead = group.getListReadname();
                 Map<Integer,ArrayList<String>> temporaryGroupMap = new HashMap();
+                
+                /*** Additional information ***/
+                ArrayList<Byte> listNumChr = group.getListChromosome();
+                ArrayList<Long> listIniPos = group.getListIniPos();
+                ArrayList<Long> listLastPos = group.getListLastPos();
+                ArrayList<Byte> listNumGreen = group.getListNumGreen();
+                ArrayList<Byte> listNumY = group.getListNumYellow();
+                ArrayList<Byte> listNumO = group.getListNumOrange();
+                ArrayList<Byte> listNumR = group.getListNumRed();
+                ArrayList<String> listStrand = group.getListStrand();
+                ArrayList<Byte> listIniIdx = group.getListIniIndex();
+                
+                Map<Integer,ArrayList<Byte>> temporaryNumChrMap = new HashMap();
+                Map<Integer,ArrayList<Long>> temporaryIniPosMap = new HashMap();
+                Map<Integer,ArrayList<Long>> temporaryLastPosMap = new HashMap();
+                Map<Integer,ArrayList<Byte>> temporaryNumGreenMap = new HashMap();
+                Map<Integer,ArrayList<Byte>> temporaryNumYMap = new HashMap();
+                Map<Integer,ArrayList<Byte>> temporaryNumOMap = new HashMap();
+                Map<Integer,ArrayList<Byte>> temporaryNumRMap = new HashMap();
+                Map<Integer,ArrayList<String>> temporaryStrandMap = new HashMap();
+                Map<Integer,ArrayList<Byte>> temporaryIniIdxMap = new HashMap();
+                /**********************************************************************/
+                
                 for(int numR=0;numR<listRead.size();numR++){
                     String dummyRead = listRead.get(numR);
 
+                    /*** Additional information ***/
+                    byte dummyNumChr = listNumChr.get(numR);
+                    long dummyIniPos = listIniPos.get(numR);
+                    long dummyLastPos = listLastPos.get(numR);
+                    byte dummyNumGreen = listNumGreen.get(numR);
+                    byte dummyNumY = listNumY.get(numR);
+                    byte dummyNumO = listNumO.get(numR);        
+                    byte dummyNumR = listNumR.get(numR);
+                    String dummyStrand = listStrand.get(numR);
+                    byte dummyIniIdx = listIniIdx.get(numR);                                
+                    /**********************************************************************/
+                    
                     /**
                      * Start using read name as key to get number of group from inReadNameMap
                      * and create temporary group map for each numG Group
@@ -1006,10 +1058,74 @@ public class Clustering {
                             ArrayList<String> dummyReadList = temporaryGroupMap.get(dummyNumG);
                             dummyReadList.add(dummyRead);
                             temporaryGroupMap.put(dummyNumG, dummyReadList);
+                            
+                            /*** Additional information ***/
+                            ArrayList<Byte> dummyNumChrList = temporaryNumChrMap.get(dummyNumG);
+                            ArrayList<Long> dummyIniPosList = temporaryIniPosMap.get(dummyNumG);
+                            ArrayList<Long> dummyLastPosList = temporaryLastPosMap.get(dummyNumG);
+                            ArrayList<Byte> dummyNumGreenList = temporaryNumGreenMap.get(dummyNumG);
+                            ArrayList<Byte> dummyNumYList = temporaryNumYMap.get(dummyNumG);
+                            ArrayList<Byte> dummyNumOList = temporaryNumOMap.get(dummyNumG);
+                            ArrayList<Byte> dummyNumRList = temporaryNumRMap.get(dummyNumG);
+                            ArrayList<String> dummyStrandList = temporaryStrandMap.get(dummyNumG);
+                            ArrayList<Byte> dummyIniIdxList = temporaryIniIdxMap.get(dummyNumG);
+                            
+                            dummyNumChrList.add(dummyNumChr);
+                            dummyIniPosList.add(dummyIniPos);
+                            dummyLastPosList.add(dummyLastPos);
+                            dummyNumGreenList.add(dummyNumGreen);
+                            dummyNumYList.add(dummyNumY);
+                            dummyNumOList.add(dummyNumO);
+                            dummyNumRList.add(dummyNumR);
+                            dummyStrandList.add(dummyStrand);
+                            dummyIniIdxList.add(dummyIniIdx);
+                            
+                            temporaryNumChrMap.put(dummyNumG, dummyNumChrList);
+                            temporaryIniPosMap.put(dummyNumG, dummyIniPosList);
+                            temporaryLastPosMap.put(dummyNumG, dummyLastPosList);
+                            temporaryNumGreenMap.put(dummyNumG, dummyNumGreenList);
+                            temporaryNumYMap.put(dummyNumG, dummyNumYList);
+                            temporaryNumOMap.put(dummyNumG, dummyNumOList);
+                            temporaryNumRMap.put(dummyNumG, dummyNumRList);
+                            temporaryStrandMap.put(dummyNumG, dummyStrandList);
+                            temporaryIniIdxMap.put(dummyNumG, dummyIniIdxList);
+                            /**********************************************************************/
                         }else{
                             ArrayList<String> dummyReadList = new ArrayList();
                             dummyReadList.add(dummyRead);
                             temporaryGroupMap.put(dummyNumG, dummyReadList);
+                            
+                            /*** Additional information ***/
+                            ArrayList<Byte> dummyNumChrList = new ArrayList();
+                            ArrayList<Long> dummyIniPosList = new ArrayList();
+                            ArrayList<Long> dummyLastPosList = new ArrayList();
+                            ArrayList<Byte> dummyNumGreenList = new ArrayList();
+                            ArrayList<Byte> dummyNumYList = new ArrayList();
+                            ArrayList<Byte> dummyNumOList = new ArrayList();
+                            ArrayList<Byte> dummyNumRList = new ArrayList();
+                            ArrayList<String> dummyStrandList = new ArrayList();
+                            ArrayList<Byte> dummyIniIdxList = new ArrayList();
+                            
+                            dummyNumChrList.add(dummyNumChr);
+                            dummyIniPosList.add(dummyIniPos);
+                            dummyLastPosList.add(dummyLastPos);
+                            dummyNumGreenList.add(dummyNumGreen);
+                            dummyNumYList.add(dummyNumY);
+                            dummyNumOList.add(dummyNumO);
+                            dummyNumRList.add(dummyNumR);
+                            dummyStrandList.add(dummyStrand);
+                            dummyIniIdxList.add(dummyIniIdx);
+                            
+                            temporaryNumChrMap.put(dummyNumG, dummyNumChrList);
+                            temporaryIniPosMap.put(dummyNumG, dummyIniPosList);
+                            temporaryLastPosMap.put(dummyNumG, dummyLastPosList);
+                            temporaryNumGreenMap.put(dummyNumG, dummyNumGreenList);
+                            temporaryNumYMap.put(dummyNumG, dummyNumYList);
+                            temporaryNumOMap.put(dummyNumG, dummyNumOList);
+                            temporaryNumRMap.put(dummyNumG, dummyNumRList);
+                            temporaryStrandMap.put(dummyNumG, dummyStrandList);
+                            temporaryIniIdxMap.put(dummyNumG, dummyIniIdxList);
+                            /**********************************************************************/
                         }
                     }
                 }
@@ -1019,6 +1135,7 @@ public class Clustering {
                  */
                 int oldCountRead = 0;
                 ArrayList<String> selectList = new ArrayList();
+                int selectNumGroup = 0;
                 for(Map.Entry<Integer,ArrayList<String>> subEntry : temporaryGroupMap.entrySet()){    // minor loop for check intersect
                     Integer numGroup = subEntry.getKey();
                     ArrayList<String> listOfRead = subEntry.getValue();
@@ -1027,15 +1144,51 @@ public class Clustering {
                     if(numGroup!=numG && newCountRead>oldCountRead){
                         selectList = listOfRead;
                         oldCountRead = newCountRead;
+                        
+                        selectNumGroup = numGroup;
                     }
                 }
             
                 checkList.add(numG);
-                checkList.add(oldCountRead);
+                checkList.add(selectNumGroup);
+                
+                if(selectList.isEmpty()!=true){
+                    ClusterGroup newGroup = new ClusterGroup();
+                    newGroup.addReadName(selectList);
+
+                    /*** Additional information ***/
+                    newGroup.addChromosomeNumber(temporaryNumChrMap.get(selectNumGroup));
+                    newGroup.addIniPos(temporaryIniPosMap.get(selectNumGroup));
+                    newGroup.addLastPos(temporaryLastPosMap.get(selectNumGroup));
+                    newGroup.addNumGreen(temporaryNumGreenMap.get(selectNumGroup));
+                    newGroup.addNumYellow(temporaryNumYMap.get(selectNumGroup));
+                    newGroup.addNumOrange(temporaryNumOMap.get(selectNumGroup));
+                    newGroup.addNumRed(temporaryNumRMap.get(selectNumGroup));
+                    newGroup.addStrand(temporaryStrandMap.get(selectNumGroup));
+                    newGroup.addIniIndex(temporaryIniIdxMap.get(selectNumGroup));
+                    /**********************************************************************/
+                    
+                    listCommonGroup.add(newGroup);
+                }
+                
+                /**** Create new group for numG group (the numG group is always one of the common peak group ****/
                 ClusterGroup newGroup = new ClusterGroup();
-                newGroup.addListReadName(selectList);
+                newGroup.addReadName(temporaryGroupMap.get(numG));
+
+                /*** Additional information ***/
+                newGroup.addChromosomeNumber(temporaryNumChrMap.get(numG));
+                newGroup.addIniPos(temporaryIniPosMap.get(numG));
+                newGroup.addLastPos(temporaryLastPosMap.get(numG));
+                newGroup.addNumGreen(temporaryNumGreenMap.get(numG));
+                newGroup.addNumYellow(temporaryNumYMap.get(numG));
+                newGroup.addNumOrange(temporaryNumOMap.get(numG));
+                newGroup.addNumRed(temporaryNumRMap.get(numG));
+                newGroup.addStrand(temporaryStrandMap.get(numG));
+                newGroup.addIniIndex(temporaryIniIdxMap.get(numG));
+                /**********************************************************************/
 
                 listCommonGroup.add(newGroup);
+                /**********************************/
             }
             
         }

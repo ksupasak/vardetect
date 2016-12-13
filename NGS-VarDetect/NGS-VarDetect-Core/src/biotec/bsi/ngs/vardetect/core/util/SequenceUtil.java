@@ -2622,7 +2622,7 @@ public class SequenceUtil {
                         listIniIdx.add(Integer.parseInt(dummyData[4]));
                         
                         int numBase = (mer+Integer.parseInt(dummyData[3]))-1;
-                        long lastPos = Long.parseLong(dummyData[1]) + numBase;
+                        long lastPos = (Long.parseLong(dummyData[1]) + numBase)-1;
                         
                         listLastPos.add(lastPos);
                         

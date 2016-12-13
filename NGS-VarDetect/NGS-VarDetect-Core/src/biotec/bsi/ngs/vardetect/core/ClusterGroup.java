@@ -57,7 +57,7 @@ public class ClusterGroup {
         this.readNameList.add(inName);
     }
     
-    public void addListReadName(ArrayList<String> input){
+    public void addReadName(ArrayList<String> input){
         this.readNameList.addAll(input);
     }
     
@@ -65,36 +65,72 @@ public class ClusterGroup {
         this.listChr.add(input);
     }
     
+    public void addChromosomeNumber(ArrayList<Byte> input){
+        this.listChr.addAll(input);
+    }
+    
     public void addIniIndex(Byte input){
         this.listIniIndex.add(input);
     }
     
+    public void addIniIndex(ArrayList<Byte> input){
+        this.listIniIndex.addAll(input);
+    }
+        
     public void addIniPos(long input){
         this.listIniPos.add(input);
+    }
+    
+    public void addIniPos(ArrayList<Long> input){
+        this.listIniPos.addAll(input);
     }
     
     public void addLastPos(long input){
         this.listLastPos.add(input);
     }
     
+    public void addLastPos(ArrayList<Long> input){
+        this.listLastPos.addAll(input);
+    }
+    
     public void addNumGreen(Byte input){
         this.listNumG.add(input);
+    }
+    
+    public void addNumGreen(ArrayList<Byte> input){
+        this.listNumG.addAll(input);
     }
     
     public void addNumYellow(Byte input){
         this.listNumY.add(input);
     }
     
+    public void addNumYellow(ArrayList<Byte> input){
+        this.listNumY.addAll(input);
+    }
+    
     public void addNumOrange(Byte input){
         this.listNumO.add(input);
+    }
+    
+    public void addNumOrange(ArrayList<Byte> input){
+        this.listNumO.addAll(input);
     }
     
     public void addNumRed(Byte input){
         this.listNumR.add(input);
     }
     
+    public void addNumRed(ArrayList<Byte> input){
+        this.listNumR.addAll(input);
+    }
+    
     public void addStrand(String input){
         this.listStrand.add(input);
+    }
+    
+    public void addStrand(ArrayList<String> input){
+        this.listStrand.addAll(input);
     }
     
     public void addHighlightRead(String input){

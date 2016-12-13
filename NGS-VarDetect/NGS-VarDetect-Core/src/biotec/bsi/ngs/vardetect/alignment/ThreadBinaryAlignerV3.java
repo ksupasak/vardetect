@@ -89,6 +89,12 @@ public class ThreadBinaryAlignerV3 implements Runnable {
 //                    System.out.print(chr.getName()+" + strand\t");           
 
             Map<Long,Long> alnCodeCheckList = new HashMap();                    // This map is a checklist for alncode to indicate the iniIndex Map<Long,Long> => Map<alnCode,iniIndex>
+            /* NewPart */
+            long oldIniIdx = 0;
+            long newIniIdx = 0;
+            long iniIndex = 0;
+            boolean firstMatchCheck = false;
+            /************/
             for(int i=0;i<(s.length()-numMer)+1;i++){                                  // (Windowing with one stepping) for loop over String sequence which has limit round at (string length - mer length) + one [maximum possible mer sequence]
                 int index = i;
                 String sub = s.substring(i, i+numMer);                                 // cut String sequence into sub string sequence (mer length long) 
@@ -119,6 +125,7 @@ public class ThreadBinaryAlignerV3 implements Runnable {
                     
                     if(pos2 != null){
                         //if(pos2.length == 1){                // (Not work) already check for repeat in same chromosome by checking alignment result must have one match result in this chromosome
+                        /* Old Part *//*
                         for(int j=0;j<pos2.length;j++){
                             long alnCode = pos2[j] - index;     // pos is 29 bit [strand|position] ; algncode is 29 bit [strand|alignPosition]
 
@@ -145,7 +152,44 @@ public class ThreadBinaryAlignerV3 implements Runnable {
                             }
 //                                    merList = null;
 //                                    System.gc();                                       
-                        }    
+                        }
+                        */
+                        /******** New Part **********/
+                                
+                        /* Specify iniIdx check from continueously of index */
+                        newIniIdx = index;
+                        if(firstMatchCheck==false){
+                            // it's first time
+                            iniIndex = index;
+                            oldIniIdx = index;
+                            firstMatchCheck = true;
+                        }else{
+                            if(newIniIdx-oldIniIdx==1){
+                                iniIndex = oldIniIdx;
+                            }else{
+                                iniIndex = index;
+                                oldIniIdx = index;
+                            }
+                        }
+
+                        for(int j=0;j<pos2.length;j++){
+                            long alnCode = pos2[j] - index;     // pos is 29 bit [strand|position] ; algncode is 29 bit [strand|alignPosition]
+                            long indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                            //** Line 1202 got strange result it shoul produce 24477283769
+                            if(alnMerMap.containsKey(indexAlnCode)){
+                                ArrayList<Long> merList = this.alnMerMap.get(indexAlnCode);
+                                merList.add(m);
+                                this.alnMerMap.put(indexAlnCode, merList);
+
+                            }else{
+                                ArrayList<Long> merList = new ArrayList();
+                                merList.add(m);
+                                this.alnMerMap.put(indexAlnCode,merList);                                        
+                            }   
+                        }
+
+                        /****************************/
+                                
                     }
 
                     /*-----------------------------------------------------------------------------------------------------------*/
