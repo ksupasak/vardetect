@@ -32,9 +32,10 @@ public class RunPostProcess {
             System.out.println("Begin create color array");
             Clustering.createColorArray(readAlign, 100, 18);        
             System.out.println("Done create color array");
-            readAlign.writeSortedCutColorResultToPathInFormatForLinuxSort(savePath, outputFileName, "txt");
+            readAlign.writeSortedCutColorResultToPathInFormatForLinuxSort(savePath, outputFileName, "txt","gy",83);
             readAlign = null;
             System.gc();
+
        }
     }
 }

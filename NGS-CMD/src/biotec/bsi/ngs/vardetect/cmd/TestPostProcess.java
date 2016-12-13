@@ -23,11 +23,11 @@ public class TestPostProcess {
        public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "hg193661_alignmentResult_part";       
+        String filename = "hg38_full_3661_mul_alignmentResult_th5_part";       
         String path = "/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/";
-        String saveFileName = "hg19_3661_alignmentResult_forLinuxSort";
-        String filename3661 = "hg19_3661_mul_alignmentResult_th5_part";
-        String saveFileName3661 = "hg19_3661_mul_alignmentResult_th5_forLinuxSort";
+        String saveFileName = "hg38_3661_alignmentResult_forLinuxSort";
+        String filename3661 = "hg38_full_3661_mul_alignmentResult_th5_part";
+        String saveFileName3661 = "hg38_full_3661_mul_alignmentResult_th5_forLinuxSort";
     
         for(int i=1;i<=26;i++){
             
@@ -35,7 +35,7 @@ public class TestPostProcess {
             System.out.println("Begin create color array");
             Clustering.createColorArray(readAlign, 100, 18);        
             System.out.println("Done create color array");
-            readAlign.writeSortedCutColorResultToPathInFormatForLinuxSort(path, saveFileName3661, "txt","gy");
+            readAlign.writeSortedCutColorResultToPathInFormatForLinuxSort(path, saveFileName3661, "txt","gy",83);
             readAlign = null;
             System.gc();
        }

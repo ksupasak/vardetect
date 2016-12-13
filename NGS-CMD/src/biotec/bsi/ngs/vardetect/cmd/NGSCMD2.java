@@ -5,10 +5,14 @@
  */
 package biotec.bsi.ngs.vardetect.cmd;
 
+import biotec.bsi.ngs.vardetect.alignment.AlignerFactory;
+import biotec.bsi.ngs.vardetect.core.Aligner;
+import biotec.bsi.ngs.vardetect.core.AlignmentResultRead;
 import biotec.bsi.ngs.vardetect.core.ExonIntron;
 import biotec.bsi.ngs.vardetect.core.InputSequence;
 import biotec.bsi.ngs.vardetect.core.ReferenceExonIntron;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
+import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_WholeGene;
 import java.io.DataInputStream;
@@ -27,28 +31,30 @@ import java.util.Vector;
 public class NGSCMD2 {
     
     public static void main(String args[]) throws FileNotFoundException, IOException{
-//        ReferenceExonIntron output = new ReferenceExonIntron();
-//        ReferenceExonIntron ee = SequenceUtil.readExonIntron(args[3]);
-//        output = SequenceUtil.randomExonIntron(ee);
+        String refPath = args[0];
+        ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath); //runFile hg19.fa
         
-        //String test = "x";
+        InputSequence tempInSS = new InputSequence();
+        int numMer = 18;
+        String s = "TTCCATTTCGTTCCATTTCATTCTATTCCGTACATTTCCATTGAATTCATTTCCTTACCATTCAATACCATTCCAATCGGGTTGATTCAATTTCATTCCA";
         
-        //String[] aon = test.split("r");
-//        System.out.println(Long.valueOf(1233));
-//        Long[][] a = new Long[10][1];
-        //Object[][] aon new Object[1][2];
+        ShortgunSequence inSS = new ShortgunSequence(s);
+        inSS.addReadName("err01");
+        tempInSS.addRead(inSS);
+                    
+        Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
+
+        AlignmentResultRead align = aligner.alignV3(ref, tempInSS);  // function align is located in binary aligner
         
-        long test = 14726418;
-        DataOutputStream os = new DataOutputStream(new FileOutputStream("outx.txt"));
         
-         os.writeInt((int)test);
-         os.close();
-//        System.out.println(test);
-//        
-//        long newtest = test&255;
-//        System.out.println(newtest);
-//        
-//        long realtest = test>>8;
-//        System.out.println(realtest);
+        
+        for(int i=0;i<(s.length()-numMer)+1;i++){                                  // (Windowing with one stepping) for loop over String sequence which has limit round at (string length - mer length) + one [maximum possible mer sequence]
+                int index = i;
+                String sub = s.substring(i, i+numMer);                                 // cut String sequence into sub string sequence (mer length long) 
+                //System.out.println("check sub length"+sub.length());
+                long m = SequenceUtil.encodeMer(sub, numMer);
+                
+                System.out.println("index: "+i+" sequence: "+sub+" sequence code: "+m);
+        }
     }
 }
