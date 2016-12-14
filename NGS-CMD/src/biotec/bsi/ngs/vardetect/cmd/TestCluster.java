@@ -20,7 +20,7 @@ public class TestCluster {
        String FileName = "hg38_3661_mul_alignmentResult_th5_LinuxSortedV2.txt";
         String path = "/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/";
         System.out.println("start cluster");
-        ArrayList<ClusterGroup> cg = Clustering.clusterFromFileBinarySearch(path+FileName, 500, 3, 5);
+        ArrayList<ClusterGroup> cg = Clustering.clusterFromFileBinarySearch(path+FileName, 500, 3, 12);
         
         System.out.println("Done");
         
