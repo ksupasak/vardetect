@@ -635,7 +635,9 @@ public class Clustering {
     System.out.println("Done extract and save significant Group");
     System.out.println("Start extract common peak");
     Map<String,ArrayList<Integer>> readMap = clusterPhaseTwo_createReadMap(sigGroup);
-    ArrayList<ClusterGroup> lastListGroup = clusterPhaseTwo_extractCommon(sigGroup,readMap);
+    
+    
+    ArrayList<ClusterGroup> lastListGroup = clusterPhaseTwo_extractCommon2(sigGroup,readMap);
     System.out.println("Done extract common peak");
     System.out.println("Save extract common peak");
     writeClusterGroupToFile(filename.split("\\.")[0] + "_ClusterGroup_second_Phase_CommonPeaks.txt",lastListGroup);
@@ -783,29 +785,55 @@ public class Clustering {
                     strand = realData[7];
                     iniIdx = Byte.parseByte(realData[8]);
                     readName = realData[9];
-                    if(group.getListReadname().contains(readName)!=true){
-                        group.addReadName(readName);
-                        group.addChromosomeNumber(numChr);
-                        group.addIniPos(iniPos);
+                    
+                    int numMerMatch = numG+numY;
+                    if(numMerMatch>=threshold){
+                        if(group.getListReadname().contains(readName)!=true){
+                            group.addReadName(readName);
+                            group.addChromosomeNumber(numChr);
+                            group.addIniPos(iniPos);
 
-                        /* Additional information */
-                        group.addIniIndex(iniIdx);
-                        group.addLastPos(lastPos);
-                        group.addNumGreen(numG);
-                        group.addNumOrange(numO);
-                        group.addNumRed(numR);
-                        group.addNumYellow(numY);
-                        group.addStrand(strand);
-
-
-
-                        int numMerMatch = numG+numY;
-
-                        if(numMerMatch >= threshold){
+                            /* Additional information */
+                            group.addIniIndex(iniIdx);
+                            group.addLastPos(lastPos);
+                            group.addNumGreen(numG);
+                            group.addNumOrange(numO);
+                            group.addNumRed(numR);
+                            group.addNumYellow(numY);
+                            group.addStrand(strand);
                             group.significantSetTrue();
-                            group.addHighlightRead(readName);
-                        }
-                    } 
+//                            if(numMerMatch >= threshold){
+//                                group.significantSetTrue();
+//                                group.addHighlightRead(readName);                        
+//                            }
+                        } 
+                    }
+                    
+                    /*old code*/
+//                    if(group.getListReadname().contains(readName)!=true){
+//                        group.addReadName(readName);
+//                        group.addChromosomeNumber(numChr);
+//                        group.addIniPos(iniPos);
+//
+//                        /* Additional information */
+//                        group.addIniIndex(iniIdx);
+//                        group.addLastPos(lastPos);
+//                        group.addNumGreen(numG);
+//                        group.addNumOrange(numO);
+//                        group.addNumRed(numR);
+//                        group.addNumYellow(numY);
+//                        group.addStrand(strand);
+//
+//
+//
+//                        int numMerMatch = numG+numY;
+//
+//                        if(numMerMatch >= threshold){
+//                            group.significantSetTrue();
+//                            group.addHighlightRead(readName);
+//                        }
+//                    } 
+                      /**/
                 }
                 
                 /***********/
@@ -1189,6 +1217,241 @@ public class Clustering {
 
                 listCommonGroup.add(newGroup);
                 /**********************************/
+            }
+            
+        }
+        return listCommonGroup;
+        
+    }
+    
+     public static ArrayList<ClusterGroup> clusterPhaseTwo_extractCommon2(ArrayList<ClusterGroup> inListGroup, Map<String,ArrayList<Integer>> inReadNameMap){
+        ArrayList<ClusterGroup> listCommonGroup = new ArrayList();
+        ArrayList<Integer> checkList = new ArrayList();
+        for(int numG=0;numG<inListGroup.size();numG++){
+            
+            int singlePeakCount = 0;
+            
+            if(checkList.contains(numG)!=true){
+                ClusterGroup group = inListGroup.get(numG);
+                ArrayList<String> listRead = group.getListReadname();
+                Map<Integer,ArrayList<String>> temporaryGroupMap = new HashMap();
+                
+                /*** Additional information ***/
+                ArrayList<Byte> listNumChr = group.getListChromosome();
+                ArrayList<Long> listIniPos = group.getListIniPos();
+                ArrayList<Long> listLastPos = group.getListLastPos();
+                ArrayList<Byte> listNumGreen = group.getListNumGreen();
+                ArrayList<Byte> listNumY = group.getListNumYellow();
+                ArrayList<Byte> listNumO = group.getListNumOrange();
+                ArrayList<Byte> listNumR = group.getListNumRed();
+                ArrayList<String> listStrand = group.getListStrand();
+                ArrayList<Byte> listIniIdx = group.getListIniIndex();
+                
+                Map<Integer,ArrayList<Byte>> temporaryNumChrMap = new HashMap();
+                Map<Integer,ArrayList<Long>> temporaryIniPosMap = new HashMap();
+                Map<Integer,ArrayList<Long>> temporaryLastPosMap = new HashMap();
+                Map<Integer,ArrayList<Byte>> temporaryNumGreenMap = new HashMap();
+                Map<Integer,ArrayList<Byte>> temporaryNumYMap = new HashMap();
+                Map<Integer,ArrayList<Byte>> temporaryNumOMap = new HashMap();
+                Map<Integer,ArrayList<Byte>> temporaryNumRMap = new HashMap();
+                Map<Integer,ArrayList<String>> temporaryStrandMap = new HashMap();
+                Map<Integer,ArrayList<Byte>> temporaryIniIdxMap = new HashMap();
+                /**********************************************************************/
+                
+                for(int numR=0;numR<listRead.size();numR++){
+                    String dummyRead = listRead.get(numR);
+
+//                    /*** Additional information ***/
+//                    byte dummyNumChr = listNumChr.get(numR);
+//                    long dummyIniPos = listIniPos.get(numR);
+//                    long dummyLastPos = listLastPos.get(numR);
+//                    byte dummyNumGreen = listNumGreen.get(numR);
+//                    byte dummyNumY = listNumY.get(numR);
+//                    byte dummyNumO = listNumO.get(numR);        
+//                    byte dummyNumR = listNumR.get(numR);
+//                    String dummyStrand = listStrand.get(numR);
+//                    byte dummyIniIdx = listIniIdx.get(numR);                                
+//                    /**********************************************************************/
+                    
+                    /**
+                     * Start using read name as key to get number of group from inReadNameMap
+                     * and create temporary group map for each numG Group
+                     */
+
+                    ArrayList<Integer> listNumG = inReadNameMap.get(dummyRead);
+                    if(listNumG.size()>1){
+                        for(int idx=0;idx<listNumG.size();idx++){
+                            int dummyNumG = listNumG.get(idx);
+                            
+                            /**
+                             * extract peak data by using number of group (dummyNumG) 
+                             */
+                                
+                            ClusterGroup exGroup = inListGroup.get(dummyNumG);
+                            int exIndex = exGroup.getListReadname().indexOf(dummyRead);
+
+                            /*** Additional information ***/
+                            listNumChr = exGroup.getListChromosome();
+                            listIniPos = exGroup.getListIniPos();
+                            listLastPos = exGroup.getListLastPos();
+                            listNumGreen = exGroup.getListNumGreen();
+                            listNumY = exGroup.getListNumYellow();
+                            listNumO = exGroup.getListNumOrange();
+                            listNumR = exGroup.getListNumRed();
+                            listStrand = exGroup.getListStrand();
+                            listIniIdx = exGroup.getListIniIndex();
+
+                            byte dummyNumChr = listNumChr.get(exIndex);
+                            long dummyIniPos = listIniPos.get(exIndex);
+                            long dummyLastPos = listLastPos.get(exIndex);
+                            byte dummyNumGreen = listNumGreen.get(exIndex);
+                            byte dummyNumY = listNumY.get(exIndex);
+                            byte dummyNumO = listNumO.get(exIndex);        
+                            byte dummyNumR = listNumR.get(exIndex);
+                            String dummyStrand = listStrand.get(exIndex);
+                            byte dummyIniIdx = listIniIdx.get(exIndex);   
+                            /**********************************************************************/
+
+                            if(temporaryGroupMap.containsKey(dummyNumG)){
+                                ArrayList<String> dummyReadList = temporaryGroupMap.get(dummyNumG);
+                                dummyReadList.add(dummyRead);
+                                temporaryGroupMap.put(dummyNumG, dummyReadList);
+
+                                /*** Additional information ***/
+                                ArrayList<Byte> dummyNumChrList = temporaryNumChrMap.get(dummyNumG);
+                                ArrayList<Long> dummyIniPosList = temporaryIniPosMap.get(dummyNumG);
+                                ArrayList<Long> dummyLastPosList = temporaryLastPosMap.get(dummyNumG);
+                                ArrayList<Byte> dummyNumGreenList = temporaryNumGreenMap.get(dummyNumG);
+                                ArrayList<Byte> dummyNumYList = temporaryNumYMap.get(dummyNumG);
+                                ArrayList<Byte> dummyNumOList = temporaryNumOMap.get(dummyNumG);
+                                ArrayList<Byte> dummyNumRList = temporaryNumRMap.get(dummyNumG);
+                                ArrayList<String> dummyStrandList = temporaryStrandMap.get(dummyNumG);
+                                ArrayList<Byte> dummyIniIdxList = temporaryIniIdxMap.get(dummyNumG);
+
+                                dummyNumChrList.add(dummyNumChr);
+                                dummyIniPosList.add(dummyIniPos);
+                                dummyLastPosList.add(dummyLastPos);
+                                dummyNumGreenList.add(dummyNumGreen);
+                                dummyNumYList.add(dummyNumY);
+                                dummyNumOList.add(dummyNumO);
+                                dummyNumRList.add(dummyNumR);
+                                dummyStrandList.add(dummyStrand);
+                                dummyIniIdxList.add(dummyIniIdx);
+
+                                temporaryNumChrMap.put(dummyNumG, dummyNumChrList);
+                                temporaryIniPosMap.put(dummyNumG, dummyIniPosList);
+                                temporaryLastPosMap.put(dummyNumG, dummyLastPosList);
+                                temporaryNumGreenMap.put(dummyNumG, dummyNumGreenList);
+                                temporaryNumYMap.put(dummyNumG, dummyNumYList);
+                                temporaryNumOMap.put(dummyNumG, dummyNumOList);
+                                temporaryNumRMap.put(dummyNumG, dummyNumRList);
+                                temporaryStrandMap.put(dummyNumG, dummyStrandList);
+                                temporaryIniIdxMap.put(dummyNumG, dummyIniIdxList);
+                                /**********************************************************************/
+                            }else{
+                                ArrayList<String> dummyReadList = new ArrayList();
+                                dummyReadList.add(dummyRead);
+                                temporaryGroupMap.put(dummyNumG, dummyReadList);
+
+                                /*** Additional information ***/
+                                ArrayList<Byte> dummyNumChrList = new ArrayList();
+                                ArrayList<Long> dummyIniPosList = new ArrayList();
+                                ArrayList<Long> dummyLastPosList = new ArrayList();
+                                ArrayList<Byte> dummyNumGreenList = new ArrayList();
+                                ArrayList<Byte> dummyNumYList = new ArrayList();
+                                ArrayList<Byte> dummyNumOList = new ArrayList();
+                                ArrayList<Byte> dummyNumRList = new ArrayList();
+                                ArrayList<String> dummyStrandList = new ArrayList();
+                                ArrayList<Byte> dummyIniIdxList = new ArrayList();
+
+                                dummyNumChrList.add(dummyNumChr);
+                                dummyIniPosList.add(dummyIniPos);
+                                dummyLastPosList.add(dummyLastPos);
+                                dummyNumGreenList.add(dummyNumGreen);
+                                dummyNumYList.add(dummyNumY);
+                                dummyNumOList.add(dummyNumO);
+                                dummyNumRList.add(dummyNumR);
+                                dummyStrandList.add(dummyStrand);
+                                dummyIniIdxList.add(dummyIniIdx);
+
+                                temporaryNumChrMap.put(dummyNumG, dummyNumChrList);
+                                temporaryIniPosMap.put(dummyNumG, dummyIniPosList);
+                                temporaryLastPosMap.put(dummyNumG, dummyLastPosList);
+                                temporaryNumGreenMap.put(dummyNumG, dummyNumGreenList);
+                                temporaryNumYMap.put(dummyNumG, dummyNumYList);
+                                temporaryNumOMap.put(dummyNumG, dummyNumOList);
+                                temporaryNumRMap.put(dummyNumG, dummyNumRList);
+                                temporaryStrandMap.put(dummyNumG, dummyStrandList);
+                                temporaryIniIdxMap.put(dummyNumG, dummyIniIdxList);
+                                /**********************************************************************/
+                            }
+                        }
+                    }else{
+                        singlePeakCount++;
+                    }
+                }
+                
+                if(singlePeakCount<listRead.size()){
+                    /**
+                     * Find common peaks
+                     */
+                    int oldCountRead = 0;
+                    ArrayList<String> selectList = new ArrayList();
+                    int selectNumGroup = 0;
+                    for(Map.Entry<Integer,ArrayList<String>> subEntry : temporaryGroupMap.entrySet()){    // minor loop for check intersect
+                        Integer numGroup = subEntry.getKey();
+                        ArrayList<String> listOfRead = subEntry.getValue();
+                        int newCountRead = listOfRead.size();
+
+                        if(numGroup!=numG && newCountRead>oldCountRead){
+                            selectList = listOfRead;
+                            oldCountRead = newCountRead;
+
+                            selectNumGroup = numGroup;
+                        }
+                    }
+
+                    checkList.add(numG);
+                    checkList.add(selectNumGroup);
+
+                    if(selectList.isEmpty()!=true){
+                        ClusterGroup newGroup = new ClusterGroup();
+                        newGroup.addReadName(selectList);
+
+                        /*** Additional information ***/
+                        newGroup.addChromosomeNumber(temporaryNumChrMap.get(selectNumGroup));
+                        newGroup.addIniPos(temporaryIniPosMap.get(selectNumGroup));
+                        newGroup.addLastPos(temporaryLastPosMap.get(selectNumGroup));
+                        newGroup.addNumGreen(temporaryNumGreenMap.get(selectNumGroup));
+                        newGroup.addNumYellow(temporaryNumYMap.get(selectNumGroup));
+                        newGroup.addNumOrange(temporaryNumOMap.get(selectNumGroup));
+                        newGroup.addNumRed(temporaryNumRMap.get(selectNumGroup));
+                        newGroup.addStrand(temporaryStrandMap.get(selectNumGroup));
+                        newGroup.addIniIndex(temporaryIniIdxMap.get(selectNumGroup));
+                        /**********************************************************************/
+
+                        listCommonGroup.add(newGroup);
+                    }
+
+                    /**** Create new group for numG group (the numG group is always one of the common peak group ****/
+                    ClusterGroup newGroup = new ClusterGroup();
+                    newGroup.addReadName(temporaryGroupMap.get(numG));
+
+                    /*** Additional information ***/
+                    newGroup.addChromosomeNumber(temporaryNumChrMap.get(numG));
+                    newGroup.addIniPos(temporaryIniPosMap.get(numG));
+                    newGroup.addLastPos(temporaryLastPosMap.get(numG));
+                    newGroup.addNumGreen(temporaryNumGreenMap.get(numG));
+                    newGroup.addNumYellow(temporaryNumYMap.get(numG));
+                    newGroup.addNumOrange(temporaryNumOMap.get(numG));
+                    newGroup.addNumRed(temporaryNumRMap.get(numG));
+                    newGroup.addStrand(temporaryStrandMap.get(numG));
+                    newGroup.addIniIndex(temporaryIniIdxMap.get(numG));
+                    /**********************************************************************/
+
+                    listCommonGroup.add(newGroup);
+                    /**********************************/
+                }
             }
             
         }
