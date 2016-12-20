@@ -869,7 +869,7 @@ public class AlignmentResultRead {
         
         String filename = path+nameFile+"."+fileFormat;
         PrintStream ps;
-        FileWriter writer;
+        FileWriter writer;        
         /**
          * Check File existing
          */
@@ -887,6 +887,7 @@ public class AlignmentResultRead {
          * Begin extract data to write
          */
         for(int i=0;i<this.shrtRead.size();i++){
+            boolean ignoreFlag = false;
             ShortgunSequence dummySS = this.shrtRead.get(i);
             String readName = dummySS.getReadName();
             ArrayList<Integer> listChr = dummySS.getListChrMatch();
@@ -911,20 +912,38 @@ public class AlignmentResultRead {
                 
                 String strand = listStrand.get(numP);
                 int merMatch = green+yellow+orange+red;
-//                ps.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName);
-//                ps.format("\n");
-                if(merMatch<option2 && option1.equals("gy")){
-                    if(orange==0&&red==0){
-                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName));
-                        writer.write("\n");
-                    }
-                }else if(merMatch<option2 && option1.equals("g")){
-                    if(orange==0&&red==0&&yellow==0){
-                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName));
-                        writer.write("\n");
-                    }
+                if(merMatch == option2){
+                    ignoreFlag = true;
                 }
-                
+            }
+            if(ignoreFlag==false){
+                for(int numP=0;numP<listChr.size();numP++){
+                    int numChr = listChr.get(numP);
+                    long iniPos = listIniPos.get(numP);
+                    long lastPos = listLastPos.get(numP);
+                    int iniIndex = listIniIndex.get(numP);
+                    int green = listGreen.get(numP);
+                    int yellow = listYellow.get(numP);
+                    int orange = listOrange.get(numP);
+                    int red = listRed.get(numP);
+
+                    String strand = listStrand.get(numP);
+//                    int merMatch = green+yellow+orange+red;
+    //                ps.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName);
+    //                ps.format("\n");
+                    if(option1.equals("gy")){
+                        if(orange==0&&red==0){
+                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName));
+                            writer.write("\n");
+                        }
+                    }else if(option1.equals("g")){
+                        if(orange==0&&red==0&&yellow==0){
+                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName));
+                            writer.write("\n");
+                        }
+                    }
+
+                }
             }
         }
         writer.flush();

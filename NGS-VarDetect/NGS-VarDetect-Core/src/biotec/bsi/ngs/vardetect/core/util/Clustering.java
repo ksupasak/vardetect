@@ -335,15 +335,15 @@ public class Clustering {
                      */
                     Set<Integer> chrCheckSet = new HashSet<Integer>(chrCheckList);
                     if(chrCheckSet.size()<chrCheckList.size()){         // check case if this true that mean chrCheckList has duplicate element in it
-                        if(chrCheckSet.size() == 1){    // Has duplicate and size is 1, this mean it match only one chr but various position
+                        if(chrCheckSet.size() == 1){    // Has duplicate and size is 1, this mean it match only one chr but various position (Orange)
                             colorArray[index] = 3;
-                        }else{                          // Has duplicate and size is more than 1, this mean it match at same chr and other chr
+                        }else{                          // Has duplicate and size is more than 1, this mean it match at same chr and other chr (Red)
                             colorArray[index] = 4;
                         }
                     }else{
-                        if(chrCheckList.size()>1){      // Has no duplicate and size is more than 1, this mean it match at different chr
+                        if(chrCheckList.size()>1){      // Has no duplicate and size is more than 1, this mean it match at different chr (yellow)
                             colorArray[index] = 2;
-                        }else if(chrCheckList.size()==1){   // Has no duplicate and size is 1, this mean it unique
+                        }else if(chrCheckList.size()==1){   // Has no duplicate and size is 1, this mean it unique (Green)
                             colorArray[index] = 1;
                         }
                     }

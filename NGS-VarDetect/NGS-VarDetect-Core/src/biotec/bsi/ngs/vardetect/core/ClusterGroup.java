@@ -25,7 +25,8 @@ public class ClusterGroup {
     private ArrayList<String> listStrand;       
     private ArrayList<Byte> listIniIndex;
     private ArrayList<String> listHighlightRead;
-    private boolean significantFlag;
+    //private boolean significantFlag;
+    private ArrayList<Boolean> listSignificantFlag;
     private int numMember;
            
             
@@ -41,7 +42,8 @@ public class ClusterGroup {
         this.listNumO = new ArrayList();
         this.listNumR = new ArrayList();
         this.listStrand = new ArrayList();
-        this.significantFlag = false;
+        //this.significantFlag = false;
+        this.listSignificantFlag = new ArrayList();
         this.listHighlightRead = new ArrayList();
     }
     
@@ -137,12 +139,20 @@ public class ClusterGroup {
         this.listHighlightRead.add(input);
     }
     
+    public void addSignificantFlags(Boolean input){
+        this.listSignificantFlag.add(input);
+    }
+    
     public void significantSetTrue(){
-        this.significantFlag = true;
+        this.listSignificantFlag.add(true);
     }
     
     public boolean checkSignificantFlag(){
-        return this.significantFlag;
+        if(listSignificantFlag.size()>=this.readNameList.size()/2){
+            return true;
+        }else{
+            return false;
+        }
     }
     
     public int getNumMember(){
