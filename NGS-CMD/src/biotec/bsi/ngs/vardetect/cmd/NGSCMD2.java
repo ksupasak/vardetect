@@ -36,17 +36,7 @@ public class NGSCMD2 {
         
         InputSequence tempInSS = new InputSequence();
         int numMer = 18;
-        String s = "TTCCATTTCGTTCCATTTCATTCTATTCCGTACATTTCCATTGAATTCATTTCCTTACCATTCAATACCATTCCAATCGGGTTGATTCAATTTCATTCCA";
-        
-        ShortgunSequence inSS = new ShortgunSequence(s);
-        inSS.addReadName("err01");
-        tempInSS.addRead(inSS);
-                    
-        Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
-
-        AlignmentResultRead align = aligner.alignV3(ref, tempInSS);  // function align is located in binary aligner
-        
-        
+        String s = "AACCCCACCGTGACATACACGTACGCCTCTCGCCTTTCGAGGCCTCAAACACGTTAGGAATTATGCGTGATTTCTTTTTTTAACTTCATTTTATGTTATT";
         
         for(int i=0;i<(s.length()-numMer)+1;i++){                                  // (Windowing with one stepping) for loop over String sequence which has limit round at (string length - mer length) + one [maximum possible mer sequence]
                 int index = i;
@@ -56,5 +46,14 @@ public class NGSCMD2 {
                 
                 System.out.println("index: "+i+" sequence: "+sub+" sequence code: "+m);
         }
+        
+        ShortgunSequence inSS = new ShortgunSequence(s);
+        inSS.addReadName("err01");
+        tempInSS.addRead(inSS);
+                    
+        Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
+
+        AlignmentResultRead align = aligner.alignV3(ref, tempInSS);  // function align is located in binary aligner
+        
     }
 }

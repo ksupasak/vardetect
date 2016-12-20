@@ -26,8 +26,8 @@ public class TestPostProcess {
         String filename = "hg38_full_3661_mul_alignmentResult_th5_part";       
         String path = "/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/";
         String saveFileName = "hg38_3661_alignmentResult_forLinuxSort";
-        String filename3661 = "hg38_full_3661_mul_alignmentResult_th5_part";
-        String saveFileName3661 = "hg38_full_3661_mul_alignmentResult_th5_forLinuxSort";
+        String filename3661 = "hg38_3661_mul_alignmentResult_th5_part";
+        String saveFileName3661 = "hg38_3661_mul_alignmentResult_th5_forLinuxSortFull";
     
         for(int i=1;i<=26;i++){
             
@@ -35,7 +35,7 @@ public class TestPostProcess {
             System.out.println("Begin create color array");
             Clustering.createColorArray(readAlign, 100, 18);        
             System.out.println("Done create color array");
-            readAlign.writeSortedCutColorResultToPathInFormatForLinuxSort(path, saveFileName3661, "txt","gy",83);
+            readAlign.writeSortedCutColorResultToPathInFormatForLinuxSort(path, saveFileName3661, "txt");
             readAlign = null;
             System.gc();
        }
