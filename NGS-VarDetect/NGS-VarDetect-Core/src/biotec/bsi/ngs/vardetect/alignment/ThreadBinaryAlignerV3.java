@@ -80,7 +80,7 @@ public class ThreadBinaryAlignerV3 implements Runnable {
         while(seqs.hasNext()){                                              // Loop over ShortgunSequence contain in InputSequence 
                     
             ShortgunSequence seq = (ShortgunSequence)seqs.next();
-            this.alnMerMap = new HashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read
+            this.alnMerMap = new LinkedHashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read
 
 //                    System.out.println(""+chr.getName()+" "+encoded.getMers().length);
 
@@ -310,7 +310,7 @@ public class ThreadBinaryAlignerV3 implements Runnable {
         Iterator seqsComp = inputSequence.iterator();
         while(seqsComp.hasNext()){
             ShortgunSequence seq = (ShortgunSequence)seqsComp.next();                                  // get ShortgunSequence from InputSequence
-            this.alnMerMap = new HashMap();
+            this.alnMerMap = new LinkedHashMap();
 
 //                    System.out.println(""+chr.getName()+" "+encoded.getMers().length);
 

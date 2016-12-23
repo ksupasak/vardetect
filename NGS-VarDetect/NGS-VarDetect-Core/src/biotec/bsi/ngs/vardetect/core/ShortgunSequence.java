@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+
 /**
  *
  * @author soup
@@ -870,6 +871,101 @@ public class ShortgunSequence {
             this.listOrange.add(countOrange);
             this.listRed.add(countRed);
             
+            /**
+             *  call join peak to join possible peak that may be the same sequence 
+             */
+            joinPeak();
+            
         }
     }
+    
+    public void joinPeak(){
+        
+        /**
+         * Join the same sequence of peak that have been split for color detect purpose together
+         */
+        
+        Map<Long,ArrayList<Integer>> tempMap = new LinkedHashMap();
+        long chrNew =0;
+        long posNew =0;
+        for(int i=0;i<this.listChr.size();i++){
+            chrNew = this.listChr.get(i);
+            posNew = this.listPos.get(i);
+            long chrPos = (chrNew<<28)+posNew;
+            if(tempMap.containsKey(chrPos)){
+                ArrayList<Integer> listIdx = tempMap.get(chrPos);
+                listIdx.add(i);
+                tempMap.put(chrPos, listIdx);
+            }else{
+                ArrayList<Integer> listIdx = new ArrayList();
+                listIdx.add(i);
+                tempMap.put(chrPos,listIdx);
+            }
+        }
+        
+
+        Set keySet = tempMap.keySet();
+        Iterator keyIter = keySet.iterator();
+        while(keyIter.hasNext()){
+            
+            ArrayList<Integer> listIdx = tempMap.get(keyIter.next());
+            
+            if(listIdx.size()>1){
+                /**
+                 * Joining
+                 */
+                int chr = 0;
+                long iniPos = 0;      
+                long lastPos = 0;
+                int numG = 0;
+                int numY = 0;
+                int numO = 0;
+                int numR = 0;
+                int iniIdx = 0;
+                String strand = null;
+                
+                for(int i=0;i<listIdx.size();i++){
+                    
+                    int idx = listIdx.get(i);
+                    
+                    chr = this.listChr.get(idx);
+                    if(i==0){
+                        iniPos = this.listPos.get(idx);
+                        iniIdx = this.listIniIdx.get(idx);
+                    }else{
+                        lastPos = (this.listLastPos.get(idx)+this.listIniIdx.get(idx))-iniIdx;
+                    }                   
+                    numG = this.listGreen.get(idx)+numG;
+                    numY = this.listYellow.get(idx)+numY;
+                    numO = this.listOrange.get(idx)+numO;
+                    numR = this.listRed.get(idx)+numR;
+                    strand = this.listStrand.get(idx);
+                    
+                    this.listChr.remove(idx);
+                    this.listPos.remove(idx);
+                    this.listLastPos.remove(idx);
+                    this.listGreen.remove(idx);
+                    this.listYellow.remove(idx);
+                    this.listOrange.remove(idx);
+                    this.listRed.remove(idx);
+                    this.listStrand.remove(idx);
+                    this.listIniIdx.remove(idx);
+                }
+                /**
+                 * put joined peak back
+                 */
+                this.listChr.add(chr);
+                this.listPos.add(iniPos);
+                this.listLastPos.add(lastPos);
+                this.listGreen.add(numG);
+                this.listYellow.add(numY);
+                this.listOrange.add((numO));
+                this.listRed.add(numR);
+                this.listStrand.add(strand);
+                this.listIniIdx.add(iniIdx);  
+            }
+            
+        }   
+    }
+    
 }

@@ -1090,7 +1090,7 @@ public class BinaryAligner extends Thread implements Aligner {
                 EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr);            // encoded selected chromosome (just for sure it is encode)
                 while(seqs.hasMoreElements()){                                              // Loop over ShortgunSequence contain in InputSequence 
                     ShortgunSequence seq = seqs.nextElement();
-                    this.alnMerMap = new HashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read
+                    this.alnMerMap = new LinkedHashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read
                     
 //                    System.out.println(""+chr.getName()+" "+encoded.getMers().length);
                     
@@ -1343,7 +1343,7 @@ public class BinaryAligner extends Thread implements Aligner {
                 Enumeration<ShortgunSequence> seqsComp = input.getInputSequence().elements();
                 while(seqsComp.hasMoreElements()){
                     ShortgunSequence seq = seqsComp.nextElement();                                  // get ShortgunSequence from InputSequence
-                    this.alnMerMap = new HashMap();
+                    this.alnMerMap = new LinkedHashMap();
                     
 //                    System.out.println(""+chr.getName()+" "+encoded.getMers().length);
                     

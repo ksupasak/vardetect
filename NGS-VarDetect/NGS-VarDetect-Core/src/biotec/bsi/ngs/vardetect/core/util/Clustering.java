@@ -250,7 +250,7 @@ public class Clustering {
     public static void createColorArray(AlignmentResultRead inRes, int rLen, int merLen){
         /**
          *  Use for create colorArray 
-         *  please make sure that your inRes must implement iniIndex in its
+         *  please make sure that your inRes must implement iniIndex in its (because we use iniIndex to trace back to match mer index of each peak)
          *  
          *  Suitable for version 3 data structure (data structure that has iniIdx in its)
          */
