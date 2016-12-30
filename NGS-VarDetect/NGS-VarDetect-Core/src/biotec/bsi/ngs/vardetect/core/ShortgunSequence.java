@@ -11,6 +11,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 
 /**
@@ -870,13 +871,13 @@ public class ShortgunSequence {
             this.listYellow.add(countYellow);
             this.listOrange.add(countOrange);
             this.listRed.add(countRed);
-            
-            /**
-             *  call join peak to join possible peak that may be the same sequence 
-             */
-            joinPeak();
-            
+               
         }
+        
+        /**
+        *  call join peak to join possible peak that may be the same sequence 
+        */
+        joinPeak();
     }
     
     public void joinPeak(){
@@ -906,9 +907,11 @@ public class ShortgunSequence {
 
         Set keySet = tempMap.keySet();
         Iterator keyIter = keySet.iterator();
+        int adjustNum = 0; // this number has been use to adjust idx (it store a number of remove round)
         while(keyIter.hasNext()){
             
             ArrayList<Integer> listIdx = tempMap.get(keyIter.next());
+            Map<Integer,Integer> dummyIdxMap = new TreeMap(); 
             
             if(listIdx.size()>1){
                 /**
@@ -924,22 +927,65 @@ public class ShortgunSequence {
                 int iniIdx = 0;
                 String strand = null;
                 
+                /**
+                 * Find front part and back part
+                 */
                 for(int i=0;i<listIdx.size();i++){
-                    
-                    int idx = listIdx.get(i);
-                    
+                    int dummyIdx = listIdx.get(i);
+                    dummyIdx = dummyIdx - adjustNum;
+                    if(dummyIdx<0){
+                        dummyIdx = 0;
+                    }
+                    int dummyIniIdx = this.listIniIdx.get(dummyIdx);
+                    dummyIdxMap.put(dummyIniIdx, dummyIdx);
+                }
+                
+                Set set = dummyIdxMap.keySet();
+                Iterator iter = set.iterator();
+                boolean flagFirstTime = true;
+                while(iter.hasNext()){
+                    int key = (int)iter.next();
+                    int idx = dummyIdxMap.get(key);
+                                      
                     chr = this.listChr.get(idx);
-                    if(i==0){
+                    if(flagFirstTime==true){
                         iniPos = this.listPos.get(idx);
                         iniIdx = this.listIniIdx.get(idx);
                     }else{
                         lastPos = (this.listLastPos.get(idx)+this.listIniIdx.get(idx))-iniIdx;
-                    }                   
+                    }
+                    
                     numG = this.listGreen.get(idx)+numG;
                     numY = this.listYellow.get(idx)+numY;
                     numO = this.listOrange.get(idx)+numO;
                     numR = this.listRed.get(idx)+numR;
                     strand = this.listStrand.get(idx);
+                    
+                    flagFirstTime = false;  
+                }
+                
+                for(int i=0;i<listIdx.size();i++){ 
+                    /**
+                     * This Loop stand for remove element from list of result
+                    */
+                    int idx = listIdx.get(i);
+                    idx = idx - adjustNum;
+                    if(idx<0){
+                        idx = 0;
+                    }
+//                    
+//                    chr = this.listChr.get(idx);
+//                    if(i==0){
+//                        iniPos = this.listPos.get(idx);
+//                        iniIdx = this.listIniIdx.get(idx);
+//                    }else{
+//                        lastPos = (this.listLastPos.get(idx)+this.listIniIdx.get(idx))-iniIdx;
+//                    }                   
+//                    numG = this.listGreen.get(idx)+numG;
+//                    numY = this.listYellow.get(idx)+numY;
+//                    numO = this.listOrange.get(idx)+numO;
+//                    numR = this.listRed.get(idx)+numR;
+//                    strand = this.listStrand.get(idx);
                     
                     this.listChr.remove(idx);
                     this.listPos.remove(idx);
@@ -950,6 +996,8 @@ public class ShortgunSequence {
                     this.listRed.remove(idx);
                     this.listStrand.remove(idx);
                     this.listIniIdx.remove(idx);
+                    
+                    adjustNum++;
                 }
                 /**
                  * put joined peak back

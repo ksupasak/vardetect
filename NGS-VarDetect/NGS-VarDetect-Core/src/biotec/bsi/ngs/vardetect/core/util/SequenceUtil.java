@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.Reader;
+import static java.lang.Math.abs;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -1404,6 +1405,338 @@ public class SequenceUtil {
         
         
         return concatenateCut;
+    }
+    
+    public static CharSequence createComplexSNPSample(ChromosomeSequence chrA, int cutLengthA){
+                
+        int check,checkA = 1,checkB = 1;
+        CharSequence cutA,cutB;
+        StringBuilder dummyCut;
+        
+        CharSequence checkN = "N";
+        
+        int lengthA = chrA.getSequence().length();
+        
+        int rangeA = lengthA - 0 ;
+       
+        
+        Random r = new Random();
+        int iniA = r.nextInt(rangeA);
+        
+        cutA = chrA.getSequence().subSequence(iniA, iniA+cutLengthA); // suitble cut length should be 198 base if you want read 100 base
+
+        while(checkA == 1){
+            //System.out.println(rangeA);
+            //System.out.println(rangeB);
+            //System.out.println(lengthA);
+            //System.out.println(lengthB);
+
+            System.out.println(cutA.toString().contains("N"));
+                                
+            if(cutA.toString().contains("N") || cutA.toString().equals(cutA.toString().toLowerCase())){
+                iniA = r.nextInt(rangeA);
+                cutA = chrA.getSequence().subSequence(iniA, iniA+cutLengthA);                
+            }else checkA = 0;                        
+        }
+        
+        Random fusionType = new Random();
+        int type = fusionType.nextInt(2);
+        
+        if(type == 0){
+            /* strand ++ */
+            dummyCut = new StringBuilder(cutA.toString());
+            char base = dummyCut.charAt(cutLengthA/2);
+
+            if(base == 'a' || base == 'A'){
+                base = 'G';
+            }else if(base == 't'||base == 'T'){
+                base = 'C';
+            }else if(base == 'g'||base == 'G'){
+                base = 'A';
+            }else if(base == 'c'||base == 'C'){
+                base = 'T';
+            }
+            
+            dummyCut.setCharAt(cutLengthA/2, base);
+
+        }else{
+            /* strand -- */
+            String invCutA = SequenceUtil.inverseSequence(cutA.toString());
+            String compCutA = SequenceUtil.createComplimentV2(invCutA);
+            
+            dummyCut = new StringBuilder(compCutA);
+            char base = dummyCut.charAt(cutLengthA/2);
+
+            if(base == 'a' || base == 'A'){
+                base = 'G';
+            }else if(base == 't'||base == 'T'){
+                base = 'C';
+            }else if(base == 'g'||base == 'G'){
+                base = 'A';
+            }else if(base == 'c'||base == 'C'){
+                base = 'T';
+            }
+            
+            dummyCut.setCharAt(cutLengthA/2, base);
+  
+        }
+         
+        cutA = null;
+        cutB = null;
+        System.gc();
+
+        return dummyCut;
+    }
+    
+    public static ConcatenateCut createComplexLargeIndel(ChromosomeSequence chrA,ChromosomeSequence chrB, int cutLengthA, int cutLengthB, int posDiff){
+        //chrA.getsequence
+        int check,checkA = 1,checkB = 1;
+        CharSequence cutA,cutB,dummyConcatenateCut;
+        ConcatenateCut concatenateCut = new ConcatenateCut(); 
+        CharSequence checkN = "N";
+        
+        int lengthA = chrA.getSequence().length();
+        int lengthB = chrB.getSequence().length();
+        int rangeA = lengthA - 0 ;
+        int rangeB = lengthB - 0 ;
+        int dif = 0;
+        int iniA=0,iniB=0;
+        Random r = new Random();
+        while(dif < posDiff){
+            iniA = r.nextInt(rangeA);
+            iniB = r.nextInt(rangeB);
+            dif = iniA - iniB;                  // the value of dif has benn strict to positive by the case check of while loop
+        }
+        
+        cutA = chrA.getSequence().subSequence(iniA, iniA+cutLengthA);
+        cutB = chrB.getSequence().subSequence(iniB, iniB+cutLengthB);
+
+        while(checkA == 1 || checkB == 1){
+     
+            System.out.println(cutA.toString().contains("N"));
+            System.out.println(cutB.toString().contains("N"));
+                                
+            if(cutA.toString().contains("N") || cutA.toString().equals(cutA.toString().toLowerCase())){
+                while(dif < posDiff){
+                    iniA = r.nextInt(rangeA);                   
+                    dif = iniA - iniB;                  // the value of dif has benn strict to positive by the case check of while loop
+                }
+                cutA = chrA.getSequence().subSequence(iniA, iniA+cutLengthA);                
+            }else checkA = 0;                        
+        
+            if(cutB.toString().contains("N") || cutB.toString().equals(cutB.toString().toLowerCase())){
+                while(dif < posDiff){
+                    iniB = r.nextInt(rangeB);
+                    dif = iniA - iniB;                  // the value of dif has benn strict to positive by the case check of while loop
+                }
+                cutB = chrB.getSequence().subSequence(iniB, iniB+cutLengthB);
+            }else checkB = 0;
+        }
+       
+        Random indelType = new Random();
+        int type = indelType.nextInt(4);
+        
+        if(type == 0){
+            /* strand ++ */
+            dummyConcatenateCut = cutA.toString()+cutB.toString();
+            concatenateCut.addSequence(dummyConcatenateCut);
+            concatenateCut.addType(type);
+            concatenateCut.addCutInfo(cutA, cutB);
+            
+            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
+            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
+            System.out.println("Concatenate chromosome: " + concatenateCut);
+            
+        }else if(type == 1){
+            /* strand +- */
+            String invCutB = SequenceUtil.inverseSequence(cutB.toString());
+            String compCutB = SequenceUtil.createComplimentV2(invCutB);
+            
+            dummyConcatenateCut = cutA.toString()+compCutB;
+            concatenateCut.addSequence(dummyConcatenateCut);
+            concatenateCut.addType(type);
+            concatenateCut.addCutInfo(cutA, cutB);
+            
+            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
+            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
+            System.out.println("Concatenate chromosome: " + concatenateCut);
+            
+        }else if(type == 2){
+            /* strand -+ */
+            String invCutA = SequenceUtil.inverseSequence(cutA.toString());
+            String compCutA = SequenceUtil.createComplimentV2(invCutA);
+            
+            dummyConcatenateCut = compCutA + cutB.toString();
+            concatenateCut.addSequence(dummyConcatenateCut);
+            concatenateCut.addType(type);
+            concatenateCut.addCutInfo(cutA, cutB);
+            
+            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
+            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
+            System.out.println("Concatenate chromosome: " + concatenateCut);
+            
+        }else{
+            /* strand -- */
+            String invCutA = SequenceUtil.inverseSequence(cutA.toString());
+            String compCutA = SequenceUtil.createComplimentV2(invCutA);
+            String invCutB = SequenceUtil.inverseSequence(cutB.toString());
+            String compCutB = SequenceUtil.createComplimentV2(invCutB);
+        
+            dummyConcatenateCut = compCutA + compCutB;
+            concatenateCut.addSequence(dummyConcatenateCut);
+            concatenateCut.addType(type);
+            concatenateCut.addCutInfo(cutA, cutB);
+            
+            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
+            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
+            System.out.println("Concatenate chromosome: " + concatenateCut);
+            
+        }
+         
+        cutA = null;
+        cutB = null;
+        System.gc();
+            
+            // not finish
+        //}
+        
+        
+        return concatenateCut;
+    }
+    
+    public static CharSequence createComplexSmallIndel(ChromosomeSequence chrA,ChromosomeSequence chrB, int cutLengthA, int cutLengthB, int posDiff, char indelType, int indelSize){
+        //chrA.getsequence
+        int check,checkA = 1,checkB = 1;
+        CharSequence cutA=null,cutB=null,dummyCut=null;
+        ConcatenateCut concatenateCut = new ConcatenateCut(); 
+        CharSequence checkN = "N";
+        
+        int lengthA = chrA.getSequence().length();
+        int lengthB = chrB.getSequence().length();
+        int rangeA = lengthA - 0 ;
+        int rangeB = lengthB - 0 ;
+        int dif = 0;
+        int iniA=0,iniB=0;
+        Random r = new Random();
+        while(dif < posDiff){
+            iniA = r.nextInt(rangeA);
+            iniB = r.nextInt(rangeB);
+            dif = abs(iniA - iniB);                  
+        }
+        
+        if(indelType == 'D'){            // 'D' mean Deletion
+            cutA = chrA.getSequence().subSequence(iniA, (iniA+cutLengthA*2)+indelSize);
+        }else if (indelType == 'I'){    // 'I' mean Insertion
+            cutA = chrA.getSequence().subSequence(iniA, (iniA+cutLengthA*2)-indelSize);  
+        }
+        
+        cutB = chrB.getSequence().subSequence(iniB, iniB+indelSize);
+        
+        while(checkA == 1 || checkB == 1){
+     
+            System.out.println(cutA.toString().contains("N"));
+            System.out.println(cutB.toString().contains("N"));
+                                
+            if(cutA.toString().contains("N") || cutA.toString().equals(cutA.toString().toLowerCase())){
+                while(dif < posDiff){
+                    iniA = r.nextInt(rangeA);
+                    dif = abs(iniA - iniB);
+                }
+                
+                if(indelType == 'D'){            // 'D' mean Deletion
+                    cutA = chrA.getSequence().subSequence(iniA, (iniA+cutLengthA*2)+indelSize);
+                }else if (indelType == 'I'){    // 'I' mean Insertion
+                    cutA = chrA.getSequence().subSequence(iniA, (iniA+cutLengthA*2)-indelSize);  
+                }
+                
+            }else checkA = 0;                        
+        
+            if(cutB.toString().contains("N") || cutB.toString().equals(cutB.toString().toLowerCase())){
+                while(dif < posDiff){
+                    iniB = r.nextInt(rangeB);
+                    dif = abs(iniA - iniB);
+                }
+                
+                cutB = chrB.getSequence().subSequence(iniB, iniB+indelSize);
+            }else checkB = 0;
+        }
+       
+        Random indelStyle= new Random();
+        int type = indelStyle.nextInt(4);
+        
+        if(type == 0){
+            /* strand ++ */
+            
+            if(indelType == 'D'){            // 'D' mean Deletion
+                dummyCut = cutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + cutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
+            }else if (indelType == 'I'){    // 'I' mean Insertion
+                
+                dummyCut = cutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + cutB.toString() + cutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
+            }
+
+            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
+            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
+            System.out.println("Concatenate chromosome: " + concatenateCut);
+            
+        }else if(type == 1){
+            /* strand +- */
+            String invCutB = SequenceUtil.inverseSequence(cutB.toString());
+            String compCutB = SequenceUtil.createComplimentV2(invCutB);
+            
+            if(indelType == 'D'){            // 'D' mean Deletion
+                dummyCut = cutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + cutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
+            }else if (indelType == 'I'){    // 'I' mean Insertion
+                
+                dummyCut = cutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + compCutB.toString() + cutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
+            }
+
+            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
+            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
+            System.out.println("Concatenate chromosome: " + concatenateCut);
+            
+        }else if(type == 2){
+            /* strand -+ */
+            String invCutA = SequenceUtil.inverseSequence(cutA.toString());
+            String compCutA = SequenceUtil.createComplimentV2(invCutA);
+            
+            if(indelType == 'D'){            // 'D' mean Deletion
+
+                dummyCut = compCutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + compCutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
+            }else if (indelType == 'I'){    // 'I' mean Insertion
+                
+                dummyCut = compCutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + cutB.toString() + compCutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
+            }
+            
+            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
+            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
+            System.out.println("Concatenate chromosome: " + concatenateCut);
+            
+        }else{
+            /* strand -- */
+            String invCutA = SequenceUtil.inverseSequence(cutA.toString());
+            String compCutA = SequenceUtil.createComplimentV2(invCutA);
+            String invCutB = SequenceUtil.inverseSequence(cutB.toString());
+            String compCutB = SequenceUtil.createComplimentV2(invCutB);
+        
+            if(indelType == 'D'){            // 'D' mean Deletion
+
+                dummyCut = compCutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + compCutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
+            }else if (indelType == 'I'){    // 'I' mean Insertion
+                
+                dummyCut = compCutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + compCutB.toString() + compCutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
+            }
+            
+            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
+            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
+            System.out.println("Concatenate chromosome: " + concatenateCut);
+            
+        }
+         
+        cutA = null;
+        cutB = null;
+        System.gc();
+ 
+        return dummyCut;
     }
     
     public static Map mapGenomeShotgun(EncodedSequence refChr, InputSequence read){
