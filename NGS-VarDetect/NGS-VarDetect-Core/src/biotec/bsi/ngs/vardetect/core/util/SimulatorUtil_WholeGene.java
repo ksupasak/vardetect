@@ -9,7 +9,9 @@ import biotec.bsi.ngs.vardetect.core.ChromosomeSequence;
 import biotec.bsi.ngs.vardetect.core.ConcatenateCut;
 import biotec.bsi.ngs.vardetect.core.InputSequence;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
+import biotec.bsi.ngs.vardetect.core.SNPsample;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
+import biotec.bsi.ngs.vardetect.core.Smallindelsample;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -229,7 +231,7 @@ public class SimulatorUtil_WholeGene {
     }
     
     public static InputSequence simulateComplexWholeGeneRandom(ReferenceSequence ref, int num_read, int ln_read, int num_shortgun) throws FileNotFoundException{
-        PrintStream ps = new PrintStream(ref.getPath()+"_Simulatedata.txt");
+        PrintStream ps = new PrintStream(ref.getPath()+"_Simulatedata.txt");        
         ps.println("Simulated Data\n");
         
         /* num_read is number of read per random time */
@@ -336,6 +338,8 @@ public class SimulatorUtil_WholeGene {
                 ps.println(read);
                 ps.println();
                 
+                
+                
                 System.gc();
             }
            
@@ -363,7 +367,10 @@ public class SimulatorUtil_WholeGene {
     
     public static InputSequence simulateComplexWholeGeneRandomMixed(ReferenceSequence ref, int num_read, int ln_read, int num_shortgun , int posDiffL, int indelSizeS ) throws FileNotFoundException{
         PrintStream ps = new PrintStream(ref.getPath()+"_Simulatedata.txt");
+        PrintStream ps2 = new PrintStream(ref.getPath()+"_Simulatedata.fa");
         ps.println("Simulated Data\n");
+        
+        int numRead = 0;
         
         /* num_read is number of read per random time */
         InputSequence is = new InputSequence();
@@ -376,7 +383,7 @@ public class SimulatorUtil_WholeGene {
         /**
          * Generate fusion samples
          */
-        
+        ps.println("Simulated Fusion Reads");
         for(int i = 0;i<proportion;i++){
             String numberChrA = Integer.toString(rand1.nextInt(25-1)+1);
             String numberChrB = Integer.toString(rand1.nextInt(25-1)+1);
@@ -464,7 +471,7 @@ public class SimulatorUtil_WholeGene {
                 System.out.println(read);
 
                 ShortgunSequence ss = new ShortgunSequence(read);
-                readName = "Read"+i+"SS"+j;
+                readName = "Read"+numRead+"SS"+j;
                 ss.addReadName(readName);
                 is.addRead(ss);
                 ss = null;
@@ -478,10 +485,13 @@ public class SimulatorUtil_WholeGene {
                 ps.println("Number of base from " + namechrB + " : " + (iniread+1));
                 ps.println(read);
                 ps.println();
+                                
+                ps2.println(">"+readName);
+                ps2.println(read);
                 
                 System.gc();
             }
-           
+            numRead++;
         }
         
         /**********************************************************************/
@@ -489,6 +499,8 @@ public class SimulatorUtil_WholeGene {
         /**
          * Generate SNP contained samples
          */
+        
+        ps.println("Simulated SNP Reads");
         for(int i = 0;i<proportion;i++){
             String numberChrA = Integer.toString(rand1.nextInt(25-1)+1);
 
@@ -523,8 +535,17 @@ public class SimulatorUtil_WholeGene {
                 }
             }
             
-            CharSequence iniTemplate = SequenceUtil.createComplexSNPSample(chrA, (ln_read-1)*2); // SNP simulate sample
+            SNPsample snpSample = SequenceUtil.createComplexSNPSample(chrA, (ln_read-1)*2); // SNP simulate sample
 
+            CharSequence iniTemplate = snpSample.getSequence();
+            
+            ps.println("Random cut from " + snpSample.getchrA() + " at position " + String.valueOf(snpSample.getiniA()));
+            ps.println("Raw Read: " + snpSample.getcutA());
+            ps.println("Add SNP at : "+snpSample.getPosBaseChange() + " Base change is : " + snpSample.getBaseChange());
+            ps.println("SNP contained read: " + snpSample.getSequence());
+            ps.println("Type is " + snpSample.getType());
+            
+            
             chrA.lazyLoad();
             
             String read;
@@ -552,7 +573,7 @@ public class SimulatorUtil_WholeGene {
                 
 
                 ShortgunSequence ss = new ShortgunSequence(read);
-                readName = "Read"+i+"SS"+j;
+                readName = "Read"+numRead+"SS"+j;
                 ss.addReadName(readName);
                 is.addRead(ss);
                 ss = null;
@@ -566,8 +587,12 @@ public class SimulatorUtil_WholeGene {
                 ps.println(read);
                 ps.println();
                 
+                ps2.println(">"+readName);
+                ps2.println(read);
+                
                 System.gc();
-            }  
+            }
+            numRead++;
         }
 
         /**********************************************************************/
@@ -575,6 +600,7 @@ public class SimulatorUtil_WholeGene {
         /**
          * Generate large indel samples
          */
+        ps.println("Simulated large indel Reads");
         for(int i = 0;i<proportion;i++){
             
             String numberChrA = Integer.toString(rand1.nextInt(25-1)+1);
@@ -659,7 +685,7 @@ public class SimulatorUtil_WholeGene {
                 System.out.println("Complete large indel read: " + read);
 
                 ShortgunSequence ss = new ShortgunSequence(read);
-                readName = "Read"+i+"SS"+j;
+                readName = "Read"+numRead+"SS"+j;
                 ss.addReadName(readName);
                 is.addRead(ss);
                 ss = null;
@@ -671,12 +697,16 @@ public class SimulatorUtil_WholeGene {
                 ps.println("Initial position: " + iniread);
                 ps.println("Number of base from " + namechrA + " : " + ((ln_read-iniread)-1));
                 ps.println("Number of base from " + namechrB + " : " + (iniread+1));
-                ps.println(read);
+                ps.println("Raw read: " + iniTemplate);
+                ps.println("Complete large indel read: " + read);                
                 ps.println();
+                
+                ps2.println(">"+readName);
+                ps2.println(read);
                 
                 System.gc();
             }
-            
+            numRead++;
         }
         
         /**********************************************************************/
@@ -684,6 +714,7 @@ public class SimulatorUtil_WholeGene {
         /**
          * Generate small indel samples
          */
+        ps.println("Simulated small indel reads");
         int proportionDel = proportion/2;
         int proportionIns = proportion-proportionDel;
         
@@ -739,8 +770,13 @@ public class SimulatorUtil_WholeGene {
                 }
             }
             
-            CharSequence iniTemplate = SequenceUtil.createComplexSmallIndel(chrA, chrB, ln_read, ln_read, posDiffL, 'I', indelSizeS);
-
+            Smallindelsample smallIndelSample = SequenceUtil.createComplexSmallIndel(chrA, chrB, ln_read, ln_read, posDiffL, 'I', indelSizeS);
+            CharSequence iniTemplate = smallIndelSample.getSequence();
+            
+            ps.println("Random cut of " + smallIndelSample.getchrA() + " at position " + String.valueOf(smallIndelSample.getiniA()) + " : " + smallIndelSample.getcutA().toString());
+            ps.println("Random cut of " + smallIndelSample.getchrB() + " at position " + String.valueOf(smallIndelSample.getiniB()) + " : " + smallIndelSample.getIndelSequence().toString());
+            ps.println("Indel type is "+ smallIndelSample.getIndelType()+" and Type is " + smallIndelSample.getType()+" Indel size is "+smallIndelSample.getIndelSize());
+            
             chrA.lazyLoad();
             chrB.lazyLoad();
             
@@ -768,7 +804,7 @@ public class SimulatorUtil_WholeGene {
                 System.out.println("Complete Read: "+read);
 
                 ShortgunSequence ss = new ShortgunSequence(read);
-                readName = "Read"+i+"SS"+j;
+                readName = "Read"+numRead+"SS"+j;
                 ss.addReadName(readName);
                 is.addRead(ss);
                 ss = null;
@@ -778,13 +814,17 @@ public class SimulatorUtil_WholeGene {
                 ps.println("iniread : "+ iniread);
                 ps.println("ln_read : "+ ln_read);
                 ps.println("Initial position: " + iniread);
-                ps.println("Number of base from " + namechrA + " : " + ((ln_read-iniread)-1));
-                ps.println("Number of base from " + namechrB + " : " + (iniread+1));
+                ps.println("Number of base from front part : " + ((ln_read-iniread)-1));
+                ps.println("Number of base from back part : " + (iniread+1));
                 ps.println(read);
                 ps.println();
                 
+                ps2.println(">"+readName);
+                ps2.println(read);
+                
                 System.gc();
-            } 
+            }
+            numRead++;
         }
         
         /**
@@ -839,7 +879,12 @@ public class SimulatorUtil_WholeGene {
                 }
             }
             
-            CharSequence iniTemplate = SequenceUtil.createComplexSmallIndel(chrA, chrB, ln_read, ln_read, 10000, 'D', 9);
+            Smallindelsample smallIndelSample = SequenceUtil.createComplexSmallIndel(chrA, chrB, ln_read, ln_read, posDiffL, 'D', indelSizeS);
+            CharSequence iniTemplate = smallIndelSample.getSequence();
+            
+            ps.println("Random cut of " + smallIndelSample.getchrA() + " at position " + String.valueOf(smallIndelSample.getiniA()) + " : " + smallIndelSample.getcutA().toString());
+            ps.println("Random cut of " + smallIndelSample.getchrB() + " at position " + String.valueOf(smallIndelSample.getiniB()) + " : " + smallIndelSample.getIndelSequence().toString());
+            ps.println("Indel type is "+ smallIndelSample.getIndelType()+" and Type is " + smallIndelSample.getType()+" Indel size is "+smallIndelSample.getIndelSize());
 
             chrA.lazyLoad();
             chrB.lazyLoad();
@@ -868,7 +913,7 @@ public class SimulatorUtil_WholeGene {
                 System.out.println("Complete Read: "+read);
 
                 ShortgunSequence ss = new ShortgunSequence(read);
-                readName = "Read"+i+"SS"+j;
+                readName = "Read"+numRead+"SS"+j;
                 ss.addReadName(readName);
                 is.addRead(ss);
                 ss = null;
@@ -883,8 +928,12 @@ public class SimulatorUtil_WholeGene {
                 ps.println(read);
                 ps.println();
                 
+                ps2.println(">"+readName);
+                ps2.println(read);
+                
                 System.gc();
-            } 
+            }
+            numRead++;
         }
       
         return is;

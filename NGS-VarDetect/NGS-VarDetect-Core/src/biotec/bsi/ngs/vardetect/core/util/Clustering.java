@@ -839,7 +839,7 @@ public class Clustering {
                 /***********/
             }else{
                 // no coverage ignore create new group
-                lastIdx = dummyHighIdx;
+//                lastIdx = dummyHighIdx;
 //                group = new ClusterGroup();
 //                group.addReadName(readName);
 //                group.addChromosomeNumber(numChr);
