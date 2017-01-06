@@ -26,10 +26,10 @@ public class TestPostProcess {
         String filename = "hg38_full_3661_mul_alignmentResult_th5_part";       
         String path = "/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/";
         String saveFileName = "hg38_3661_alignmentResult_forLinuxSort";
-        String filename3661 = "hg38_3661_mul_alignmentResult_th5_Vpart";
-        String saveFileName3661 = "hg38_3661_mul_alignmentResult_th5_VVforLinuxSort";
+        String filename3661 = "hg38_simData_mul_alignmentResult_th5_part";
+        String saveFileName3661 = "hg38_simData_mul_alignmentResult_th5_VVforLinuxSort";
     
-        for(int i=1;i<=26;i++){
+        for(int i=1;i<=1;i++){
             
             AlignmentResultRead readAlign = SequenceUtil.readAlignmentReportV2(path+filename3661+i+".txt",100,18);
             System.out.println("Begin create color array");
