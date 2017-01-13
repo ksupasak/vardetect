@@ -714,7 +714,10 @@ public class Clustering {
     }
     
     public static ArrayList<ClusterGroup> clusterBinaryImplement(ArrayList<String> inData,int maxBaseDiff, int minCoverage, int threshold){     // thrshold use in criteria for extract significant read from bunct of read
-       
+        /**
+         * minCoverage 
+        */
+        
         ArrayList<String> listData = inData; 
         int dataIdx = 0;
         int lowIdx = 0;
@@ -897,18 +900,18 @@ public class Clustering {
                 if(diff>=(threshold*-1)&&diff<=threshold){
                     return middle;
                 }else if(diff > threshold){
-                    lowIdx = middle;
+                    lowIdx = middle+1;
                     middle = (lowIdx + highIdx)/2;
                 }else if(diff < (threshold*-1)){
-                    highIdx = middle;
+                    highIdx = middle-1;
                     middle = (lowIdx + highIdx)/2;
                 }
 
             }else if(numChr > inChr){
-                highIdx = middle;
+                highIdx = middle-1;
                 middle = (lowIdx + highIdx)/2;
             }else if(numChr < inChr){
-                lowIdx = middle;
+                lowIdx = middle+1;
                 middle = (lowIdx + highIdx)/2;            
             }
         }
@@ -1388,10 +1391,118 @@ public class Clustering {
                         }
                     }else{
                         singlePeakCount++;
+                        
+                        /* New additional (After notice that we can not ignore the single peak */
+                        
+                        int dummyNumG = listNumG.get(0);
+                            
+                        /**
+                         * extract peak data by using number of group (dummyNumG) 
+                         */
+
+                        ClusterGroup exGroup = inListGroup.get(dummyNumG);
+                        int exIndex = exGroup.getListReadname().indexOf(dummyRead);
+
+                        /*** Additional information ***/
+                        listNumChr = exGroup.getListChromosome();
+                        listIniPos = exGroup.getListIniPos();
+                        listLastPos = exGroup.getListLastPos();
+                        listNumGreen = exGroup.getListNumGreen();
+                        listNumY = exGroup.getListNumYellow();
+                        listNumO = exGroup.getListNumOrange();
+                        listNumR = exGroup.getListNumRed();
+                        listStrand = exGroup.getListStrand();
+                        listIniIdx = exGroup.getListIniIndex();
+
+                        byte dummyNumChr = listNumChr.get(exIndex);
+                        long dummyIniPos = listIniPos.get(exIndex);
+                        long dummyLastPos = listLastPos.get(exIndex);
+                        byte dummyNumGreen = listNumGreen.get(exIndex);
+                        byte dummyNumY = listNumY.get(exIndex);
+                        byte dummyNumO = listNumO.get(exIndex);        
+                        byte dummyNumR = listNumR.get(exIndex);
+                        String dummyStrand = listStrand.get(exIndex);
+                        byte dummyIniIdx = listIniIdx.get(exIndex);   
+                        /**********************************************************************/
+
+                        if(temporaryGroupMap.containsKey(dummyNumG)){
+                            ArrayList<String> dummyReadList = temporaryGroupMap.get(dummyNumG);
+                            dummyReadList.add(dummyRead);
+                            temporaryGroupMap.put(dummyNumG, dummyReadList);
+
+                            /*** Additional information ***/
+                            ArrayList<Byte> dummyNumChrList = temporaryNumChrMap.get(dummyNumG);
+                            ArrayList<Long> dummyIniPosList = temporaryIniPosMap.get(dummyNumG);
+                            ArrayList<Long> dummyLastPosList = temporaryLastPosMap.get(dummyNumG);
+                            ArrayList<Byte> dummyNumGreenList = temporaryNumGreenMap.get(dummyNumG);
+                            ArrayList<Byte> dummyNumYList = temporaryNumYMap.get(dummyNumG);
+                            ArrayList<Byte> dummyNumOList = temporaryNumOMap.get(dummyNumG);
+                            ArrayList<Byte> dummyNumRList = temporaryNumRMap.get(dummyNumG);
+                            ArrayList<String> dummyStrandList = temporaryStrandMap.get(dummyNumG);
+                            ArrayList<Byte> dummyIniIdxList = temporaryIniIdxMap.get(dummyNumG);
+
+                            dummyNumChrList.add(dummyNumChr);
+                            dummyIniPosList.add(dummyIniPos);
+                            dummyLastPosList.add(dummyLastPos);
+                            dummyNumGreenList.add(dummyNumGreen);
+                            dummyNumYList.add(dummyNumY);
+                            dummyNumOList.add(dummyNumO);
+                            dummyNumRList.add(dummyNumR);
+                            dummyStrandList.add(dummyStrand);
+                            dummyIniIdxList.add(dummyIniIdx);
+
+                            temporaryNumChrMap.put(dummyNumG, dummyNumChrList);
+                            temporaryIniPosMap.put(dummyNumG, dummyIniPosList);
+                            temporaryLastPosMap.put(dummyNumG, dummyLastPosList);
+                            temporaryNumGreenMap.put(dummyNumG, dummyNumGreenList);
+                            temporaryNumYMap.put(dummyNumG, dummyNumYList);
+                            temporaryNumOMap.put(dummyNumG, dummyNumOList);
+                            temporaryNumRMap.put(dummyNumG, dummyNumRList);
+                            temporaryStrandMap.put(dummyNumG, dummyStrandList);
+                            temporaryIniIdxMap.put(dummyNumG, dummyIniIdxList);
+                            /**********************************************************************/
+                        }else{
+                            ArrayList<String> dummyReadList = new ArrayList();
+                            dummyReadList.add(dummyRead);
+                            temporaryGroupMap.put(dummyNumG, dummyReadList);
+
+                            /*** Additional information ***/
+                            ArrayList<Byte> dummyNumChrList = new ArrayList();
+                            ArrayList<Long> dummyIniPosList = new ArrayList();
+                            ArrayList<Long> dummyLastPosList = new ArrayList();
+                            ArrayList<Byte> dummyNumGreenList = new ArrayList();
+                            ArrayList<Byte> dummyNumYList = new ArrayList();
+                            ArrayList<Byte> dummyNumOList = new ArrayList();
+                            ArrayList<Byte> dummyNumRList = new ArrayList();
+                            ArrayList<String> dummyStrandList = new ArrayList();
+                            ArrayList<Byte> dummyIniIdxList = new ArrayList();
+
+                            dummyNumChrList.add(dummyNumChr);
+                            dummyIniPosList.add(dummyIniPos);
+                            dummyLastPosList.add(dummyLastPos);
+                            dummyNumGreenList.add(dummyNumGreen);
+                            dummyNumYList.add(dummyNumY);
+                            dummyNumOList.add(dummyNumO);
+                            dummyNumRList.add(dummyNumR);
+                            dummyStrandList.add(dummyStrand);
+                            dummyIniIdxList.add(dummyIniIdx);
+
+                            temporaryNumChrMap.put(dummyNumG, dummyNumChrList);
+                            temporaryIniPosMap.put(dummyNumG, dummyIniPosList);
+                            temporaryLastPosMap.put(dummyNumG, dummyLastPosList);
+                            temporaryNumGreenMap.put(dummyNumG, dummyNumGreenList);
+                            temporaryNumYMap.put(dummyNumG, dummyNumYList);
+                            temporaryNumOMap.put(dummyNumG, dummyNumOList);
+                            temporaryNumRMap.put(dummyNumG, dummyNumRList);
+                            temporaryStrandMap.put(dummyNumG, dummyStrandList);
+                            temporaryIniIdxMap.put(dummyNumG, dummyIniIdxList);
+                            /**********************************************************************/
+                        }
+                        /****************/
                     }
                 }
                 
-                if(singlePeakCount<listRead.size()){
+                if(singlePeakCount<=listRead.size()){    // this is check case for get rid off the group that have only single peak
                     /**
                      * Find common peaks
                      */

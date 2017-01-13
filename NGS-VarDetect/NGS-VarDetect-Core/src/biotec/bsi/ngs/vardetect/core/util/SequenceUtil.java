@@ -19,6 +19,7 @@ import biotec.bsi.ngs.vardetect.core.ReferenceExonIntron;
 import biotec.bsi.ngs.vardetect.core.SNPsample;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import biotec.bsi.ngs.vardetect.core.Smallindelsample;
+import biotec.bsi.ngs.vardetect.core.VariationResult;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -47,6 +48,7 @@ import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.SortedSet;
@@ -3184,7 +3186,219 @@ public class SequenceUtil {
         return preGroupMap; 
     }
     
-  
-   
+    public static VariationResult analysisResultFromFile(String filename, int merLength, int readLength ) throws IOException{
+        /**
+        * Suitable with result format only (result format is a file that store peak result arrange by sample order (come first be the first). the peak result is in format data structure V3
+        * startIndex and stopIndex defined in this method is the index of base in Read Ex. read length 100 base will has index 0 to 99 and has index of mer 0 to 83 [83 is come from 100 - 18]
+        */
+        
+        VariationResult varResult = new VariationResult();
+        
+        Charset charset = Charset.forName("US-ASCII");
+        //String[] ddSS = filename.split(".");
+        String saveFileName = filename.split("\\.")[0] + "_ClusterGroup.txt";
+        Path path = Paths.get(filename);
+
+        StringBuffer seq = new StringBuffer();
+        ArrayList<String> inData = new ArrayList();    
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;    
+            int count = 0;
+
+            System.out.println("reading");
+            while ((line = reader.readLine()) != null) {
+
+                inData.add(line);
+                count++;
+                if(count%1000000==0){
+                    System.out.println(count + " line past");
+                    //System.out.println("Recent chromosome: " + numChr);
+                }       
+
+            }
+//            writeClusterGroupToFile(filename,listGroup);
+        }
+        
+        System.out.println(" Done read ");
+        
+        ArrayList<String> selectData = new ArrayList();
+        ArrayList<Byte> selectChr = new ArrayList();
+        Map<Integer,Integer> mapF = new LinkedHashMap();
+        Map<Integer,Integer> mapB = new LinkedHashMap();
+        int index = 0;
+        String oldReadName = null;
+        
+        for(int i=0;i<inData.size();i++){
+            String dataGet = inData.get(i);
+            
+            /***    Extract data    ****/
+            String[] data = dataGet.split(",");
+            byte numChr = Byte.parseByte(data[0]);
+            long iniPos = Long.parseLong(data[1]);
+            long lastPos = Long.parseLong(data[2]);
+            byte numG = Byte.parseByte(data[3]);
+            byte numY = Byte.parseByte(data[4]);
+            byte numO = Byte.parseByte(data[5]);
+            byte numR = Byte.parseByte(data[6]);
+            String strand = data[7];
+            byte iniIdx = Byte.parseByte(data[8]);
+            String readName = data[9];
+            byte snpFlag = Byte.parseByte(data[10]);
+            /******************************/
+            
+            int matchCount = numG+numY+numO+numR;
+            int startIndex = iniIdx;
+            int stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
+            
+            if(strand.equals("-")){
+                startIndex = readLength - (iniIdx+(merLength+matchCount-1));
+                stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
+            }
+            
+            if(readName.equals(oldReadName)){
+                /* Same set of read (continue add data) */
+                selectData.add(dataGet);
+                selectChr.add(numChr);
+
+                mapF.put(startIndex, index);
+                mapB.put(stopIndex, index);
+                index++;
+            }else{
+                /**
+                 * Found new set of Read 
+                 * 1. Do detect variation
+                 * 2. reset 
+                 * 3. Add new set of data       
+                 */
+                if(selectData.size()!=0){
+                    /* Case check for avoid first time */
+                     Map<Integer,String[]> variation = detectVariation(selectData,selectChr,mapF,mapB,merLength,readLength);
+                     varResult.addVariationMap(variation);
+                }
+
+                selectData = new ArrayList();
+                selectChr = new ArrayList();
+                
+                mapF = new LinkedHashMap();
+                mapB = new LinkedHashMap();
+                
+                index = 0;
+                selectData.add(dataGet);
+                selectChr.add(numChr);
+
+                mapF.put(startIndex, index);
+                mapB.put(stopIndex, index);    
+            }
+            
+            oldReadName = readName;
+            
+            
+            
+            
+            /* Detect SNP case and think about doing something with out of criteria peaks */
+          
+            
+            
+        } 
+        
+        return varResult;
+    }
     
+    public static Map<Integer,String[]> detectVariation(ArrayList<String> selectData , ArrayList<Byte> selectChr , Map<Integer,Integer> mapF , Map<Integer,Integer> mapB , int merLength , int readLength){
+        /**
+         * the variable in Map<Byte,String[]> 
+         * => Byte is represent type of variation
+         *      '0' = SNP contain and others
+         *      '1' = fusion
+         *      '2' = large or small indel               
+         * => String[] is represent the result of variation
+         */
+        
+        Map<Integer,String[]> variation = new LinkedHashMap();
+        ArrayList<Integer> indexCheckList = new ArrayList();
+        
+        /**
+         * Begin variable detection 
+         * Loop each String data
+         */
+        for(int i=0;i<selectData.size();i++){
+            String dataGet = selectData.get(i);
+            
+            /***    Extract data    ****/
+            String[] data = dataGet.split(",");
+            byte numChr = Byte.parseByte(data[0]);
+            long iniPos = Long.parseLong(data[1]);
+            long lastPos = Long.parseLong(data[2]);
+            byte numG = Byte.parseByte(data[3]);
+            byte numY = Byte.parseByte(data[4]);
+            byte numO = Byte.parseByte(data[5]);
+            byte numR = Byte.parseByte(data[6]);
+            String strand = data[7];
+            byte iniIdx = Byte.parseByte(data[8]);
+            String readName = data[9];
+            byte snpFlag = Byte.parseByte(data[10]);
+            /******************************/
+            
+            int matchCount = numG+numY+numO+numR;  
+  
+            int startIndex = iniIdx;
+            int stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
+            
+            if(strand.equals("-")){
+                startIndex = readLength - (iniIdx+(merLength+matchCount-1));
+                stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
+            }
+            
+            int expectNextIndex = stopIndex+1;
+            
+            /**
+             * Check junction
+             */
+            
+            if(mapF.containsKey(expectNextIndex)){
+                /**
+                 * Junction found
+                 */
+                int selectIndex = mapF.get(expectNextIndex);
+                String selectRead = selectData.get(selectIndex);
+                byte numChrB = selectChr.get(selectIndex);
+
+
+                /**
+                 * Check fusion of large indel
+                 */
+                if(numChr == numChrB){
+
+                    /**
+                     * large or small indel
+                     */
+                    String[] pairedPeak = new String[2];  
+                    pairedPeak[0]=dataGet;
+                    pairedPeak[1]=selectRead;
+
+                    variation.put(2, pairedPeak);
+
+                }else if(numChr != numChrB){
+                    /**
+                     * Fusion
+                     */
+
+                    String[] pairedPeak = new String[2];  
+                    pairedPeak[0]=dataGet;
+                    pairedPeak[1]=selectRead;
+
+                    variation.put(1, pairedPeak);
+                }
+            }else{
+                if(snpFlag == 1){
+                    String[] pairedPeak = new String[2];
+                    pairedPeak[0]=dataGet;
+                    variation.put(0, pairedPeak);
+                }
+            }
+            
+        }
+        
+        return variation;
+    }
 }

@@ -46,11 +46,13 @@ public class ShortgunSequence {
     ArrayList<Long> frontAlgnCode;
     ArrayList<Long> backAlgnCode;
     ArrayList<ReconstructSequence> listReconSeq;
+    ArrayList<Boolean> snpFlag;                     // This ArrayList contain number that indicate the SNP contained peak. False mean not contain SNP, True mean SNP contain.
     //ArrayList<AlignmentData> algns;
     Map<Long,long[]> countResult;
     Map<Long,long[]> countResultSorted;
     Map<Long,long[]> countResultSortedCut;
     Map<Long,int[]> algnCodeIndex;             // map store the align code as key and start index , last index as value
+    
     
     byte[] colorArray;
     
@@ -84,6 +86,8 @@ public class ShortgunSequence {
         this.listYellow = new ArrayList();
         this.listOrange = new ArrayList();
         this.listRed = new ArrayList();
+        
+        this.snpFlag = new ArrayList();
         
     }
     
@@ -241,19 +245,19 @@ public class ShortgunSequence {
         return this.colorArray;
     }
     
-    public ArrayList<Integer> gerListGreen(){
+    public ArrayList<Integer> getListGreen(){
         return this.listGreen;
     }
     
-    public ArrayList<Integer> gerListYellow(){
+    public ArrayList<Integer> getListYellow(){
         return this.listYellow;
     }
     
-    public ArrayList<Integer> gerListOrange(){
+    public ArrayList<Integer> getListOrange(){
         return this.listOrange;
     }
     
-    public ArrayList<Integer> gerListRed(){
+    public ArrayList<Integer> getListRed(){
         return this.listRed;
     }
     
@@ -287,6 +291,10 @@ public class ShortgunSequence {
     public ArrayList getOutGroup(){
         return this.outGroup; // ArrayList outGroup is already rearrange from low to high
     }
+    
+    public ArrayList<Boolean> getSNPFlag(){
+        return this.snpFlag;
+    } 
     
     public void createInGroupOutGroup(double th){
         /* Key for clustering */
@@ -885,7 +893,7 @@ public class ShortgunSequence {
         /**
          * Join the same sequence of peak that have been split for color detect purpose together
          */
-        
+        this.snpFlag = new ArrayList(); 
         Map<Long,ArrayList<Integer>> tempMap = new LinkedHashMap();
         long chrNew =0;
         long posNew =0;
@@ -902,6 +910,8 @@ public class ShortgunSequence {
                 listIdx.add(i);
                 tempMap.put(chrPos,listIdx);
             }
+            
+            this.snpFlag.add(false);
         }
         
 
@@ -911,7 +921,7 @@ public class ShortgunSequence {
         while(keyIter.hasNext()){
             
             ArrayList<Integer> listIdx = tempMap.get(keyIter.next());
-            Map<Integer,Integer> dummyIdxMap = new TreeMap(); 
+            Map<Integer,Integer> dummyIdxMap = new TreeMap();            
             
             if(listIdx.size()>1){
                 /**
@@ -997,6 +1007,8 @@ public class ShortgunSequence {
                     this.listStrand.remove(idx);
                     this.listIniIdx.remove(idx);
                     
+                    this.snpFlag.remove(idx);
+                    
                     adjustNum++;
                 }
                 /**
@@ -1010,8 +1022,11 @@ public class ShortgunSequence {
                 this.listOrange.add((numO));
                 this.listRed.add(numR);
                 this.listStrand.add(strand);
-                this.listIniIdx.add(iniIdx);  
+                this.listIniIdx.add(iniIdx); 
+                
+                this.snpFlag.add(true);
             }
+            
             
         }   
     }
