@@ -17,7 +17,8 @@ import java.util.ArrayList;
 public class TestCluster {
     public static void main(String[] args) throws IOException{
         //String FileName = "hg19_3661_mul_alignmentResult_th2_LinuxSortedV3.txt";
-       String FileName = "hg38_simData_mul_alignmentResult_th5_LinuxSorted.txt";
+       //String FileName = "hg38_simData_mul_alignmentResult_th5_LinuxSorted.txt";
+       String FileName = "hg38_3661_mul_alignmentResult_th5_VVLinuxSorted.txt";
         String path = "/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/";
         System.out.println("start cluster");
         ArrayList<ClusterGroup> cg = Clustering.clusterFromFileBinarySearch(path+FileName, 500, 3, 12);

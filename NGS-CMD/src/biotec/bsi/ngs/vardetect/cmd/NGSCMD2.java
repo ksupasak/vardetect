@@ -53,7 +53,7 @@ public class NGSCMD2 {
 //        inSS.addReadName("err01");
 //        tempInSS.addRead(inSS);
 
-        tempInSS = SimulatorUtil_WholeGene.simulateComplexWholeGeneRandomMixed(ref, 100, 100, 5, 10000, 9);
+        tempInSS = SimulatorUtil_WholeGene.simulateComplexWholeGeneRandomMixed(ref, 200, 100, 10, 10000, 9);
         System.out.println("done");
                     
         //Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
