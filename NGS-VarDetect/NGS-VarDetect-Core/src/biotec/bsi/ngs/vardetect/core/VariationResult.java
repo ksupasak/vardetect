@@ -296,10 +296,10 @@ public class VariationResult {
         for(int i =0;i<this.listFusion.size();i++){                         // loop over list of variation (Fusion type)
             Variation dummyVar = this.listFusion.get(i);
             long bpF = dummyVar.getBreakPointFront();
-            long bpB = dummyVar.getBreakPointFront();
+            long bpB = dummyVar.getBreakPointBack();
             
-            long bpFCode = (dummyVar.numChrF<<28)+bpF;
-            long bpBCode = (dummyVar.numChrB<<28)+bpB;
+            long bpFCode = ((long)dummyVar.numChrF<<28)+bpF;
+            long bpBCode = ((long)dummyVar.numChrB<<28)+bpB;
             
             if(this.coverageMapFusion.containsKey(bpFCode)){                      // check similarity of front breakpoint
                 Map<Long,ArrayList<Variation>> coverageMapFusionII = this.coverageMapFusion.get(bpFCode);
@@ -332,9 +332,9 @@ public class VariationResult {
         for(int i =0;i<this.listSNP.size();i++){                         // loop over list of variation (SNP type)
             Variation dummyVar = this.listSNP.get(i);
             long bpF = dummyVar.getBreakPointFront();
-            long bpB = dummyVar.getBreakPointFront();
+            long bpB = dummyVar.getBreakPointBack();
             
-            long bpFCode = (dummyVar.numChrF<<28)+bpF;
+            long bpFCode = ((long)dummyVar.numChrF<<28)+bpF;
 //            long bpBCode = (dummyVar.numChrB<<28)+bpB;
             
             if(this.coverageMapSNP.containsKey(bpFCode)){                      // check similarity of front breakpoint
@@ -363,10 +363,10 @@ public class VariationResult {
         for(int i =0;i<this.listIndel.size();i++){                         // loop over list of variation (Indel type)
             Variation dummyVar = this.listIndel.get(i);
             long bpF = dummyVar.getBreakPointFront();
-            long bpB = dummyVar.getBreakPointFront();
+            long bpB = dummyVar.getBreakPointBack();
             
-            long bpFCode = (dummyVar.numChrF<<28)+bpF;
-            long bpBCode = (dummyVar.numChrB<<28)+bpB;
+            long bpFCode = ((long)dummyVar.numChrF<<28)+bpF;
+            long bpBCode = ((long)dummyVar.numChrB<<28)+bpB;
             
             if(this.coverageMapIndel.containsKey(bpFCode)){                      // check similarity of front breakpoint
                 Map<Long,ArrayList<Variation>> coverageMapII = this.coverageMapIndel.get(bpFCode);
@@ -399,10 +399,10 @@ public class VariationResult {
         for(int i =0;i<this.listOthers.size();i++){                         // loop over list of variation (Others type)
             Variation dummyVar = this.listOthers.get(i);
             long bpF = dummyVar.getBreakPointFront();
-            long bpB = dummyVar.getBreakPointFront();
+            long bpB = dummyVar.getBreakPointBack();
             
-            long bpFCode = (dummyVar.numChrF<<28)+bpF;
-            long bpBCode = (dummyVar.numChrB<<28)+bpB;
+            long bpFCode = ((long)dummyVar.numChrF<<28)+bpF;
+            long bpBCode = ((long)dummyVar.numChrB<<28)+bpB;
             
             if(this.coverageMapOther.containsKey(bpFCode)){                      // check similarity of front breakpoint
                 Map<Long,ArrayList<Variation>> coverageMapII = this.coverageMapOther.get(bpFCode);
@@ -431,12 +431,12 @@ public class VariationResult {
     }
     
     public void writeVarianCoverageReportToFile(String path , String nameFile , char varType) throws IOException{
-         /**
-         * Suitable for version 3 data structure (data structure that has iniIdx in its)
-         * write result to file format for variant report
-         */
+        /**
+        * Suitable for version 3 data structure (data structure that has iniIdx in its)
+        * write result to file format for variant report
+        */
         
-        String filename = path+nameFile+".txt";
+        String filename = path+nameFile+varType+".txt";
         PrintStream ps;
         FileWriter writer;        
         /**
@@ -493,9 +493,79 @@ public class VariationResult {
             }
         }
         if(varType == 'I'){
+            writer.write("Variation type : Indel\n");
+            Set set = this.coverageMapIndel.keySet();
+            Iterator iterKey = set.iterator();
+            while(iterKey.hasNext()){
+                long bpFCode = (long)iterKey.next();
+                long bpF = bpFCode&this.mask28bit;
+                int chrF = (int)bpFCode>>28;
+                
+                Map<Long,ArrayList<Variation>> coverageMapII = this.coverageMapIndel.get(bpFCode);
+                Set setII = coverageMapII.keySet();
+                Iterator iterKeyII = setII.iterator();
+                while(iterKeyII.hasNext()){
+                    long bpBCode = (long)iterKeyII.next();
+                    long bpB = bpBCode&this.mask28bit;
+                    int chrB = (int)bpBCode>>28;
+                    
+                    /**
+                     * Write Report Part
+                     */
+                    writer.write("Group "+count);
+                    writer.write("\tFront Break point : " + chrF +","+bpF);
+                    writer.write("\tBack Break point : " + chrB +","+bpB);
+ 
+                    ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
+                    writer.write("\tCoverage : " + coverageList.size());
+                    writer.write("\n");
+                    for(int i=0;i<coverageList.size();i++){
+                        Variation var = coverageList.get(i);
+                        
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF));
+                        writer.write(" || ");
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB));
+                        writer.write("\n");
+                    }
+                }
+                count++;
+            }
             
         }
         if(varType == 'S'){
+            writer.write("Variation type : SNP and other miss match\n");
+            Set set = this.coverageMapSNP.keySet();
+            Iterator iterKey = set.iterator();
+            while(iterKey.hasNext()){
+//                long bpFCode = (long)iterKey.next();
+//                long bpF = bpFCode&this.mask28bit;
+//                int chrF = (int)bpFCode>>28;
+                long bpBCode = (long)iterKey.next();
+                long bpB = bpBCode&this.mask28bit;
+                int chrB = (int)bpBCode>>28;
+                
+                ArrayList<Variation> coverageList = this.coverageMapSNP.get(bpBCode);
+                /**
+                * Write Report Part
+                */
+                writer.write("Group "+count);
+                writer.write("\tBack Break point : " + chrB +","+bpB);  
+                writer.write("\tCoverage : " + coverageList.size());
+                writer.write("\n");
+                
+                for(int i=0;i<coverageList.size();i++){
+                    /**
+                     * Write Report Part
+                     */
+                    Variation var = coverageList.get(i);
+                        
+                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF));
+                    writer.write(" || ");
+                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB));
+                    writer.write("\n");
+                }
+                count++;
+            }
             
         }
         if(varType == 'O'){
