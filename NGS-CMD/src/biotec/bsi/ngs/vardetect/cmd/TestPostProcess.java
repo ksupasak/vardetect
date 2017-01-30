@@ -28,8 +28,10 @@ public class TestPostProcess {
         String path = "/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/test_sim_01/";
         String saveFileName = "hg38_3661_alignmentResult_forLinuxSort";
         String filename3661 = "hg38_simData_mul_alignmentResult_th5_part";
-        String saveFileName3661 = "hg38_simData_mul_alignmentResult_th5_VVforLinuxSort";
-        String saveFileNameForPostProcess = "hg38_simData_mul_alignmentResult_th5_PostLinuxSorted";
+        String filenameERR = "hg38_simData_mul_alignmentResult_th5_ERR_part";
+        String saveFileNameERR = "hg38_simData_mul_alignmentResult_th5_ERR_forLinuxSortV2";
+        String saveFileName3661 = "hg38_simData_mul_alignmentResult_th5_forLinuxSort";
+        String saveFileNameForPostProcess = "hg38_simData_mul_alignmentResult_th5_PostLinuxSortedV2";
         int numPart = 1;
         
         for(int i=1;i<=numPart;i++){
@@ -38,8 +40,8 @@ public class TestPostProcess {
             System.out.println("Begin create color array");
             Clustering.createColorArray(readAlign, 100, 18);        
             System.out.println("Done create color array");
-            readAlign.writeSortedCutColorResultToPathInFormatForLinuxSort(path, saveFileName3661, "txt","gy",83);
-            VariationResult varRes = SequenceUtil.analysisResultFromFile(path+saveFileNameForPostProcess+".txt",18,100);
+            readAlign.writeSortedCutColorResultToPathInFormatForLinuxSort(path, saveFileName3661, "txt");
+//            VariationResult varRes = SequenceUtil.analysisResultFromFile(path+saveFileNameForPostProcess+".txt",18,100);
             readAlign = null;
             System.gc();
        }
