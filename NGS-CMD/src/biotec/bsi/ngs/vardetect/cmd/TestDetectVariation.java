@@ -34,7 +34,11 @@ public class TestDetectVariation {
         varRes.createVariantReport();
         varRes.analyzeCoverageFusion();
         varRes.writeVarianCoverageReportToFile(path, saveFilenameCov, 'F');
-        varRes.writeVarianReportToFile(path, saveFilename);
+        varRes.analyzeCoverageIndel();
+        varRes.writeVarianCoverageReportToFile(path, saveFilenameCov, 'I');
+        varRes.analyzeCoverageSNP();
+        varRes.writeVarianCoverageReportToFile(path, saveFilenameCov, 'S');
+//        varRes.writeVarianReportToFile(path, saveFilename);
         System.gc();
       
     }
