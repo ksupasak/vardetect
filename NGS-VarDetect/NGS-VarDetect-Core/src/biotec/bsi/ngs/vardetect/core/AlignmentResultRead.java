@@ -757,7 +757,8 @@ public class AlignmentResultRead {
             ArrayList<Integer> listYellow = dummySS.getListYellow();
             ArrayList<Integer> listOrange = dummySS.getListOrange();
             ArrayList<Integer> listRed = dummySS.getListRed();
-            ArrayList<Boolean> listSNPFlag = dummySS.getSNPFlag();
+            ArrayList<Integer> listSNPFlag = dummySS.getSNPFlag();
+            ArrayList<Integer> listIniBackFlag = dummySS.getIniBackFlag();
             
             for(int numP=0;numP<listChr.size();numP++){
                 int numChr = listChr.get(numP);
@@ -768,18 +769,31 @@ public class AlignmentResultRead {
                 int yellow = listYellow.get(numP);
                 int orange = listOrange.get(numP);
                 int red = listRed.get(numP);
-                boolean snpFlag = listSNPFlag.get(numP);
-                int flag = 0;
-                
-                if(snpFlag == true){
-                    flag = 1;
-                }
+                int snpFlag = listSNPFlag.get(numP);
+                int iniBackFlag = listIniBackFlag.get(numP);
+//                int flag = 0;
+//                
+//                if(snpFlag == true){
+//                    flag = 1;
+//                }
                 
                 String strand = listStrand.get(numP);
+                int matchCount = green+yellow+orange+red;
+                int missingMer = 0;
                 
+                if(snpFlag!=0){
+                    missingMer = (snpFlag+dummySS.getMerLength())-1;
+                    matchCount = matchCount+missingMer;
+                }
+                
+                if(strand.equals("-")){
+                    iniIndex = dummySS.getReadLength() - (iniIndex+(dummySS.getMerLength()+matchCount-1));
+//                    stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
+                }
+               
 //                ps.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName);
 //                ps.format("\n");
-                writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,flag));
+                writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag));
                 writer.write("\n");
             }
         }
@@ -828,7 +842,8 @@ public class AlignmentResultRead {
             ArrayList<Integer> listYellow = dummySS.getListYellow();
             ArrayList<Integer> listOrange = dummySS.getListOrange();
             ArrayList<Integer> listRed = dummySS.getListRed();
-            ArrayList<Boolean> listSNPFlag = dummySS.getSNPFlag();
+            ArrayList<Integer> listSNPFlag = dummySS.getSNPFlag();
+            ArrayList<Integer> listIniBackFlag = dummySS.getIniBackFlag();
             
             for(int numP=0;numP<listChr.size();numP++){
                 int numChr = listChr.get(numP);
@@ -839,25 +854,37 @@ public class AlignmentResultRead {
                 int yellow = listYellow.get(numP);
                 int orange = listOrange.get(numP);
                 int red = listRed.get(numP);
-                boolean snpFlag = listSNPFlag.get(numP);
-                int flag = 0;
-                
-                if(snpFlag == true){
-                    flag = 1;
-                }
+                int snpFlag = listSNPFlag.get(numP);
+                int iniBlackFlag = listIniBackFlag.get(numP);
+//                int flag = 0;
+//                
+//                if(snpFlag == true){
+//                    flag = 1;
+//                }
                 
                 String strand = listStrand.get(numP);
+                int matchCount = green+yellow+orange+red;
+                int missingMer = 0;
                 
+                if(snpFlag!=0){
+                    missingMer = (snpFlag+dummySS.getMerLength())-1;
+                    matchCount = matchCount+missingMer;
+                }
+                
+                if(strand.equals("-")){
+                    iniIndex = dummySS.getReadLength() - (iniIndex+(dummySS.getMerLength()+matchCount-1));
+//                    stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
+                }
 //                ps.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName);
 //                ps.format("\n");
                 if(option1.equals("gy")){
                     if(orange==0&&red==0){
-                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,flag));
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBlackFlag));
                         writer.write("\n");
                     }
                 }else if(option1.equals("g")){
                     if(orange==0&&red==0&&yellow==0){
-                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,flag));
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBlackFlag));
                         writer.write("\n");
                     }
                 }
@@ -879,6 +906,7 @@ public class AlignmentResultRead {
          *
          * int option2 filter option threshold indicate the maximum mer count. If read match result have mer count equal or more than this threshold the result has been filter out. (prevent full match read)
          * 
+         * We adjust iniIndex into a view of strand + [the last index of strand - will be iniIndex of strand +]
          */
         
         String filename = path+nameFile+"."+fileFormat;
@@ -913,7 +941,8 @@ public class AlignmentResultRead {
             ArrayList<Integer> listYellow = dummySS.getListYellow();
             ArrayList<Integer> listOrange = dummySS.getListOrange();
             ArrayList<Integer> listRed = dummySS.getListRed();
-            ArrayList<Boolean> listSNPFlag = dummySS.getSNPFlag();
+            ArrayList<Integer> listSNPFlag = dummySS.getSNPFlag();
+            ArrayList<Integer> listIniBackFlag = dummySS.getIniBackFlag();
             
             for(int numP=0;numP<listChr.size();numP++){
                 int numChr = listChr.get(numP);
@@ -941,25 +970,38 @@ public class AlignmentResultRead {
                     int yellow = listYellow.get(numP);
                     int orange = listOrange.get(numP);
                     int red = listRed.get(numP);
-                    boolean snpFlag = listSNPFlag.get(numP);
-                    int flag = 0;
+                    int snpFlag = listSNPFlag.get(numP);
+                    int iniBackFlag = listIniBackFlag.get(numP);
+//                    int flag = 0;
 
-                    if(snpFlag == true){
-                        flag = 1;
-                    }
+//                    if(snpFlag == true){
+//                        flag = 1;
+//                    }
 
                     String strand = listStrand.get(numP);
+                    int matchCount = green+yellow+orange+red;
+                    int missingMer = 0;
+                    
+                    if(snpFlag!=0){         
+                        missingMer = (snpFlag+dummySS.getMerLength())-1;
+                        matchCount = matchCount+missingMer;
+                    }
+                    
+                    if(strand.equals("-")){
+                        iniIndex = dummySS.getReadLength() - (iniIndex+(dummySS.getMerLength()+matchCount-1));
+    //                    stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
+                    }
 //                    int merMatch = green+yellow+orange+red;
     //                ps.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName);
     //                ps.format("\n");
                     if(option1.equals("gy")){
                         if(orange==0&&red==0){
-                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,flag));
+                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag));
                             writer.write("\n");
                         }
                     }else if(option1.equals("g")){
                         if(orange==0&&red==0&&yellow==0){
-                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,flag));
+                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag));
                             writer.write("\n");
                         }
                     }

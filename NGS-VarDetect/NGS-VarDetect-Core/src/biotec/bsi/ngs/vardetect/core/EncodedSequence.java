@@ -104,30 +104,30 @@ public class EncodedSequence {
         int stop = -1;
         
         if(index>0){
-            for(int i=index;i>=0&&i>=index-200;i--){
+            for(int i=index;i>=0;i--){ 
                 long imer = mers[i]&mask;
                 
                 if(imer!=mer){
                     start = i+1;
                     break;
                 }else{
-                    
+                    start = i;
                 }
             }
             
-            for(int i=index;i<mers.length&&i<index+200;i++){
+            for(int i=index;i<mers.length;i++){
                 long imer = mers[i]&mask;
                 
                 if(imer!=mer){
                     stop = i;
                     break;
                 }else{
-                    
+                    stop = i;
                 }
             }
-            if(start<stop&&stop-start<500){
+            if(start<stop){
 //            System.out.println(" size "+(stop-start));
-            long j[] = new long[stop-start]; 
+                long j[] = new long[stop-start]; 
             
                 for(int i =start;i<stop;i++){
                     if(i-start>=0&&i>=0)

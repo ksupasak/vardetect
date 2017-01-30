@@ -471,7 +471,20 @@ public class SimulatorUtil_WholeGene {
                 System.out.println(read);
 
                 ShortgunSequence ss = new ShortgunSequence(read);
-                readName = "Read"+numRead+"SS"+j;
+                
+                
+                if(numRead<10){
+                    readName = "Read0"+numRead+"SS"+j;
+                    if(j<10){
+                        readName = "Read0"+numRead+"SS0"+j;
+                    } 
+                }else{
+                    readName = "Read"+numRead+"SS"+j;
+                    if(j<10){
+                        readName = "Read"+numRead+"SS0"+j;
+                    } 
+                }
+                
                 ss.addReadName(readName);
                 is.addRead(ss);
                 ss = null;
@@ -573,7 +586,19 @@ public class SimulatorUtil_WholeGene {
                 
 
                 ShortgunSequence ss = new ShortgunSequence(read);
-                readName = "Read"+numRead+"SS"+j;
+                
+                if(numRead<10){
+                    readName = "Read0"+numRead+"SS"+j;
+                    if(j<10){
+                        readName = "Read0"+numRead+"SS0"+j;
+                    } 
+                }else{
+                    readName = "Read"+numRead+"SS"+j;
+                    if(j<10){
+                        readName = "Read"+numRead+"SS0"+j;
+                    } 
+                }
+                
                 ss.addReadName(readName);
                 is.addRead(ss);
                 ss = null;
@@ -685,7 +710,19 @@ public class SimulatorUtil_WholeGene {
                 System.out.println("Complete large indel read: " + read);
 
                 ShortgunSequence ss = new ShortgunSequence(read);
-                readName = "Read"+numRead+"SS"+j;
+                
+                if(numRead<10){
+                    readName = "Read0"+numRead+"SS"+j;
+                    if(j<10){
+                        readName = "Read0"+numRead+"SS0"+j;
+                    } 
+                }else{
+                    readName = "Read"+numRead+"SS"+j;
+                    if(j<10){
+                        readName = "Read"+numRead+"SS0"+j;
+                    } 
+                }
+                
                 ss.addReadName(readName);
                 is.addRead(ss);
                 ss = null;
@@ -804,7 +841,19 @@ public class SimulatorUtil_WholeGene {
                 System.out.println("Complete Read: "+read);
 
                 ShortgunSequence ss = new ShortgunSequence(read);
-                readName = "Read"+numRead+"SS"+j;
+                
+                if(numRead<10){
+                    readName = "Read0"+numRead+"SS"+j;
+                    if(j<10){
+                        readName = "Read0"+numRead+"SS0"+j;
+                    } 
+                }else{
+                    readName = "Read"+numRead+"SS"+j;
+                    if(j<10){
+                        readName = "Read"+numRead+"SS0"+j;
+                    } 
+                }
+                
                 ss.addReadName(readName);
                 is.addRead(ss);
                 ss = null;
@@ -912,8 +961,20 @@ public class SimulatorUtil_WholeGene {
                 System.out.println("Raw read: "+iniTemplate);
                 System.out.println("Complete Read: "+read);
 
-                ShortgunSequence ss = new ShortgunSequence(read);
-                readName = "Read"+numRead+"SS"+j;
+                ShortgunSequence ss = new ShortgunSequence(read);               
+                
+                if(numRead<10){
+                    readName = "Read0"+numRead+"SS"+j;
+                    if(j<10){
+                        readName = "Read0"+numRead+"SS0"+j;
+                    } 
+                }else{
+                    readName = "Read"+numRead+"SS"+j;
+                    if(j<10){
+                        readName = "Read"+numRead+"SS0"+j;
+                    } 
+                }
+                
                 ss.addReadName(readName);
                 is.addRead(ss);
                 ss = null;

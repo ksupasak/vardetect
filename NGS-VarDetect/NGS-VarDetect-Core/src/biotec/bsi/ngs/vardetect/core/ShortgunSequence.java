@@ -7,6 +7,7 @@ package biotec.bsi.ngs.vardetect.core;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -46,7 +47,8 @@ public class ShortgunSequence {
     ArrayList<Long> frontAlgnCode;
     ArrayList<Long> backAlgnCode;
     ArrayList<ReconstructSequence> listReconSeq;
-    ArrayList<Boolean> snpFlag;                     // This ArrayList contain number that indicate the SNP contained peak. False mean not contain SNP, True mean SNP contain.
+    ArrayList<Integer> snpFlag;                     // This ArrayList contain number that indicate how many base is missing, 0 mean nothing missing between the peak match, Ex. if 1 mean it has 1 base missing between this peak match 
+    ArrayList<Integer> iniBackFlag;
     //ArrayList<AlignmentData> algns;
     Map<Long,long[]> countResult;
     Map<Long,long[]> countResultSorted;
@@ -292,9 +294,21 @@ public class ShortgunSequence {
         return this.outGroup; // ArrayList outGroup is already rearrange from low to high
     }
     
-    public ArrayList<Boolean> getSNPFlag(){
+    public ArrayList<Integer> getSNPFlag(){
         return this.snpFlag;
-    } 
+    }
+    
+    public ArrayList<Integer> getIniBackFlag(){
+        return this.iniBackFlag;
+    }
+    
+    public int getReadLength(){
+        return this.readLength;
+    }
+    
+    public int getMerLength(){
+        return this.merLength;
+    }
     
     public void createInGroupOutGroup(double th){
         /* Key for clustering */
@@ -894,9 +908,11 @@ public class ShortgunSequence {
          * Join the same sequence of peak that have been split for color detect purpose together
          */
         this.snpFlag = new ArrayList(); 
+        this.iniBackFlag = new ArrayList();
         Map<Long,ArrayList<Integer>> tempMap = new LinkedHashMap();
         long chrNew =0;
         long posNew =0;
+        
         for(int i=0;i<this.listChr.size();i++){
             chrNew = this.listChr.get(i);
             posNew = this.listPos.get(i);
@@ -911,19 +927,22 @@ public class ShortgunSequence {
                 tempMap.put(chrPos,listIdx);
             }
             
-            this.snpFlag.add(false);
+            this.snpFlag.add(0);
+            this.iniBackFlag.add(0);
         }
         
 
         Set keySet = tempMap.keySet();
         Iterator keyIter = keySet.iterator();
-        int adjustNum = 0; // this number has been use to adjust idx (it store a number of remove round)
+        
+        ArrayList<Integer> removeIdxList = new ArrayList();     // contain index that have to be delete at the end 
+        
         while(keyIter.hasNext()){
             
             ArrayList<Integer> listIdx = tempMap.get(keyIter.next());
-            Map<Integer,Integer> dummyIdxMap = new TreeMap();            
+            Map<Integer,Integer> dummyIdxMap = new TreeMap();  //   treemap is a map that rearrange key in numerical order          
             
-            if(listIdx.size()>1){
+            if(listIdx.size()>1){           // If size is more than one mean it has more than one peak with same chr and align position
                 /**
                  * Joining
                  */
@@ -934,25 +953,32 @@ public class ShortgunSequence {
                 int numY = 0;
                 int numO = 0;
                 int numR = 0;
+                int numMatch = 0;
                 int iniIdx = 0;
                 String strand = null;
+                
+                int missingBase = 0;
+                int iniBack = 0;
                 
                 /**
                  * Find front part and back part
                  */
                 for(int i=0;i<listIdx.size();i++){
                     int dummyIdx = listIdx.get(i);
-                    dummyIdx = dummyIdx - adjustNum;
+                    dummyIdx = dummyIdx;
                     if(dummyIdx<0){
                         dummyIdx = 0;
                     }
                     int dummyIniIdx = this.listIniIdx.get(dummyIdx);
                     dummyIdxMap.put(dummyIniIdx, dummyIdx);
+                    
+                    removeIdxList.add(dummyIdx);                    
                 }
                 
                 Set set = dummyIdxMap.keySet();
                 Iterator iter = set.iterator();
                 boolean flagFirstTime = true;
+                int lastIdxFront = 0;
                 while(iter.hasNext()){
                     int key = (int)iter.next();
                     int idx = dummyIdxMap.get(key);
@@ -961,56 +987,28 @@ public class ShortgunSequence {
                     if(flagFirstTime==true){
                         iniPos = this.listPos.get(idx);
                         iniIdx = this.listIniIdx.get(idx);
+                        numMatch = this.listNumMatch.get(idx);
+                        int numBase = (numMatch+this.merLength)-1;
+                        lastIdxFront = (iniIdx+numBase)-1;
                     }else{
                         lastPos = (this.listLastPos.get(idx)+this.listIniIdx.get(idx))-iniIdx;
+                        numMatch = this.listNumMatch.get(idx)+numMatch;
+                        
+                        int iniIdxBack = this.listIniIdx.get(idx);
+                        iniBack = iniIdxBack;
+                        missingBase = (iniIdxBack-lastIdxFront)-1;
                     }
                     
                     numG = this.listGreen.get(idx)+numG;
                     numY = this.listYellow.get(idx)+numY;
                     numO = this.listOrange.get(idx)+numO;
                     numR = this.listRed.get(idx)+numR;
+//                    numMatch = this.listNumMatch.get(idx)+numMatch;
                     strand = this.listStrand.get(idx);
                     
                     flagFirstTime = false;  
                 }
-                
-                for(int i=0;i<listIdx.size();i++){ 
-                    /**
-                     * This Loop stand for remove element from list of result
-                    */
-                    int idx = listIdx.get(i);
-                    idx = idx - adjustNum;
-                    if(idx<0){
-                        idx = 0;
-                    }
-//                    
-//                    chr = this.listChr.get(idx);
-//                    if(i==0){
-//                        iniPos = this.listPos.get(idx);
-//                        iniIdx = this.listIniIdx.get(idx);
-//                    }else{
-//                        lastPos = (this.listLastPos.get(idx)+this.listIniIdx.get(idx))-iniIdx;
-//                    }                   
-//                    numG = this.listGreen.get(idx)+numG;
-//                    numY = this.listYellow.get(idx)+numY;
-//                    numO = this.listOrange.get(idx)+numO;
-//                    numR = this.listRed.get(idx)+numR;
-//                    strand = this.listStrand.get(idx);
-                    
-                    this.listChr.remove(idx);
-                    this.listPos.remove(idx);
-                    this.listLastPos.remove(idx);
-                    this.listGreen.remove(idx);
-                    this.listYellow.remove(idx);
-                    this.listOrange.remove(idx);
-                    this.listRed.remove(idx);
-                    this.listStrand.remove(idx);
-                    this.listIniIdx.remove(idx);
-                    
-                    this.snpFlag.remove(idx);
-                    
-                    adjustNum++;
-                }
+
                 /**
                  * put joined peak back
                  */
@@ -1021,14 +1019,39 @@ public class ShortgunSequence {
                 this.listYellow.add(numY);
                 this.listOrange.add((numO));
                 this.listRed.add(numR);
+                this.listNumMatch.add(numMatch);
                 this.listStrand.add(strand);
                 this.listIniIdx.add(iniIdx); 
                 
-                this.snpFlag.add(true);
+                this.snpFlag.add(missingBase);
+                this.iniBackFlag.add(iniBack);
             }
             
             
-        }   
+        }
+        
+        /**
+         * Remove element part
+         */
+        Collections.sort(removeIdxList, Collections.reverseOrder());
+        for(int i = 0 ;i<removeIdxList.size();i++){
+            int idx = removeIdxList.get(i);
+            
+            this.listChr.remove(idx);
+            this.listPos.remove(idx);
+            this.listLastPos.remove(idx);
+            this.listGreen.remove(idx);
+            this.listYellow.remove(idx);
+            this.listOrange.remove(idx);
+            this.listRed.remove(idx);
+            this.listNumMatch.remove(idx);
+            this.listStrand.remove(idx);
+            this.listIniIdx.remove(idx);
+
+            this.snpFlag.remove(idx);
+            this.iniBackFlag.remove(idx);
+        }
+        
     }
     
 }
