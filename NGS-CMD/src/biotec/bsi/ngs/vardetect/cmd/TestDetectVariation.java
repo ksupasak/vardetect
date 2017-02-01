@@ -25,12 +25,12 @@ public class TestDetectVariation {
         // TODO code application logic here
         
         String filename = "hg38_simData_mul_alignmentResult_th5_PostLinuxSorted";       
-        String path = "/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/test_sim_01/";
+        String path = "/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/test_sim_02/";
         String saveFilename = "hg38_simData_mul_alignmentResult_th5_VariantReport";
         String saveFilenameCov = "hg38_simData_mul_alignmentResult_th5_VariantCoverageReport";
         
 
-        VariationResult varRes = SequenceUtil.analysisResultFromFile(path+filename+".txt",18,100,1);
+        VariationResult varRes = SequenceUtil.analysisResultFromFile(path+filename+".txt",18,100,4);
         varRes.createVariantReport();
         varRes.analyzeCoverageFusion();
         varRes.writeVarianCoverageReportToFile(path, saveFilenameCov, 'F');

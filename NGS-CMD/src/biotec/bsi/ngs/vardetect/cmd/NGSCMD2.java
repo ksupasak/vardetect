@@ -33,10 +33,10 @@ import java.util.Vector;
 public class NGSCMD2 {
     
     public static void main(String args[]) throws FileNotFoundException, IOException{
-        String refPath = args[0];
-        ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath); //runFile hg19.fa
-        
-        InputSequence tempInSS = new InputSequence();
+//        String refPath = args[0];
+//        ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath); //runFile hg19.fa
+//        
+//        InputSequence tempInSS = new InputSequence();
 //        int numMer = 18;
 //        String s = "CTCTATACTATATAGTATAGAGTATATTATTATATACTCTATATAATATAACATAGAGTATATAATAATATACTCTATATTATATTATATAGAATATATA";
 //        
@@ -53,12 +53,34 @@ public class NGSCMD2 {
 //        inSS.addReadName("err01");
 //        tempInSS.addRead(inSS);
 
-        tempInSS = SimulatorUtil_WholeGene.simulateComplexWholeGeneRandomMixed(ref, 200, 100, 10, 10000, 9);
-        System.out.println("done");
+//        tempInSS = SimulatorUtil_WholeGene.simulateComplexWholeGeneRandomMixed(ref, 200, 100, 10, 10000, 9);
+//        System.out.println("done");
                     
         //Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
 
         //AlignmentResultRead align = aligner.alignV3(ref, tempInSS);  // function align is located in binary aligner
+        
+        
+        
+        
+        /**
+         * Test Zone 2
+         */
+        
+        String filename = "cDNA_Sample";       
+        String path = "/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/";
+        
+        String seq = "GCACGAGGGCCCCGCGCCCGCGCCCGCGCCCGCACCCGCCGCCGCCGCCCGCAGCGATGATCTTCCCCAG" +
+"CAGCAGTGGCAACCCCGGGGGCAGCAGCAACTGCCGGACGCCCTATCGCAAGCAGCAGTCTCTGGTCCCA" +
+"GCCCACCCCATGGCCCCTCCCAGTCCCAGCACCACCAGCAGTAATAACAACAGTAGCAGCAGTAGCAACT" +
+"CAGGATGGGATCAGCTCAGCAAAACGAACCTCTATATCCGAGGACTGCCTCCCCACACCACCGACCAGGA" +
+"CCTGGTGAAGCTCTGTCAACCATATGGGAAAATAGTCTCCACAAAGGCAATTTTGGATAAGACAACGAAC" +
+"AAATGCAAAGGTTATGGTTTTGTCGACTTTGACAGCCCTGCAGCAGCTCAAAAAGCTGTGTCTGCCCTGA" +
+"AGGCCAGTGGGGTTCAAGCTCAAATGGCAAAGCAACAGGAACAAGATCCTACCAACCTCTACATTTCTAA" +
+"TTTGCCACTCTCCATGGATGAGCAAGAACTAGAAAATATGCTCAAACCATTTGGACAAGTTATTTCTACA" +
+"AGGATACTACGTGATTCCAGTGGTACAAGTC";
+        
+        SequenceUtil.createShortReadFromLongSequence(seq, 100, path+filename);
         
     }
 }
