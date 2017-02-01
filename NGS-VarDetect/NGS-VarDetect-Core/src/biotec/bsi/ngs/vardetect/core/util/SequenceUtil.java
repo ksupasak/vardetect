@@ -30,6 +30,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
@@ -3523,5 +3524,46 @@ public class SequenceUtil {
         }
         
         return variation;
+    }
+    
+    public static InputSequence createShortReadFromLongSequence(String seq,int readLength,String fileName) throws IOException{
+        /**
+         * 
+         */
+        String filename = fileName+".fa";
+        FileWriter writer;  
+        File f = new File(filename); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(filename,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(filename);
+        }
+        
+        InputSequence inputSeq = new InputSequence();
+        String readName = "Read";
+        int seqLen = seq.length();
+        for(int ini = 0;ini<=seqLen-readLength;ini++){
+            
+            if(ini<10){
+                readName = "Read0"+ini;
+            }else{
+                readName = "Read"+ini;
+            }
+            String cutSeq = (String)seq.subSequence(ini, ini+readLength);
+            ShortgunSequence newSeq = new ShortgunSequence(cutSeq);
+            newSeq.addReadName(readName);
+            newSeq.addReadLength(readLength);
+            inputSeq.addRead(newSeq);
+            
+            writer.write(">"+readName);
+            writer.write("\n");
+            writer.write(cutSeq);
+            writer.write("\n");
+        }
+        writer.flush();
+        writer.close();
+        return inputSeq;
     }
 }
