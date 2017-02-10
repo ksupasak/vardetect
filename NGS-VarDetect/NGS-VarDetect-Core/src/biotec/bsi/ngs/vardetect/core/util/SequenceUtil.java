@@ -12,10 +12,10 @@ import biotec.bsi.ngs.vardetect.core.ChromosomeSequence;
 import biotec.bsi.ngs.vardetect.core.ConcatenateCut;
 import biotec.bsi.ngs.vardetect.core.EncodedSequence;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
-import biotec.bsi.ngs.vardetect.core.ExonIntron;
+import biotec.bsi.ngs.vardetect.core.Annotation;
 import biotec.bsi.ngs.vardetect.core.InputSequence;
 import biotec.bsi.ngs.vardetect.core.MapResult;
-import biotec.bsi.ngs.vardetect.core.ReferenceExonIntron;
+import biotec.bsi.ngs.vardetect.core.ReferenceAnnotation;
 import biotec.bsi.ngs.vardetect.core.SNPsample;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import biotec.bsi.ngs.vardetect.core.Smallindelsample;
@@ -2148,175 +2148,194 @@ public class SequenceUtil {
     }
     
     
-    public static ReferenceExonIntron readExonIntron(String filename){
+//    public static ReferenceAnnotation readExonIntron(String filename){
+//        
+//        ReferenceAnnotation ref = new ReferenceAnnotation();
+//        Path path = Paths.get(filename);
+//        String chr = null;
+//        StringBuffer seq = new StringBuffer();
+//        
+//        try (BufferedReader reader = new BufferedReader(new FileReader(filename));) {
+//            String line = null;
+//            String setA[] = null;
+//            String setB[] = null;
+//            String chrName = null;
+//            String geneName = null;
+//            long startPos = 0;
+//            long stopPos = 0;
+//            int direction = 0;
+//        
+//            while ((line = reader.readLine()) != null) {
+//
+//                int count = 0;
+//                setA = line.split("\\s+");
+//                setB = line.split(";");             
+//
+//                for (String part : setA) {
+//                    count++;
+//                    if (count == 1){
+//                        chrName = part;
+//                    }
+//                    else if(count == 4){
+//                        startPos = Long.parseLong(part);
+//                        //System.out.println(startPos);
+//                    }
+//                    else if (count == 5){
+//                        stopPos = Long.parseLong(part);
+//                    }
+//                    else if (count ==6){
+//                        direction = Integer.parseInt(part);
+//                    }
+//
+//                }
+//
+//                count = 0;
+//                for (String part : setB) {
+//                    count++;
+//                    if (count ==3){
+//                        geneName = part;
+//                    }
+//                    //System.out.println(part);
+//                }
+//
+//                System.out.println("Get :" + chrName+ "  "  + geneName+ "  " + startPos+ "  " + stopPos+ "  " + direction);
+//
+//                Annotation data = new Annotation(chrName,geneName,startPos,stopPos,direction);
+//                ref.addData(data);
+//            }
+//        } catch (IOException x) {
+//            System.err.format("IOException: %s%n", x);
+//        }    
+//
+//        return ref;
+//    }
+    
+     public static ReferenceAnnotation readAnnotationFile(String filename, String specificSource){
+        /**
+         * This function will read .gff3 file
+         * Then store each Annotation that came from the specificSource in to Annotation object
+         * After that store Annotation object in ReferenceAnnotation
+         */
         
-        ReferenceExonIntron ref = new ReferenceExonIntron();
-        //ref.setFilename(filename);
-        //Charset charset = Charset.forName("US-ASCII");
+        Annotation anno;
+        ReferenceAnnotation refAnno = new ReferenceAnnotation();
         Path path = Paths.get(filename);
         String chr = null;
-    //    String seq = "";
         StringBuffer seq = new StringBuffer();
         
         try (BufferedReader reader = new BufferedReader(new FileReader(filename));) {
-        String line = null;
-        String setA[] = null;
-        String setB[] = null;
-        String chrName = null;
-        String geneName = null;
-        long startPos = 0;
-        long stopPos = 0;
-        int direction = 0;
+            String line = null;
+            String setA[] = null;
+            String setB[] = null;
+//            String chrName = null;
+            String geneName = null;
+            long startPos = 0;
+            long stopPos = 0;
+            int direction = 0;
         
-        while ((line = reader.readLine()) != null) {
-            
-            int count = 0;
-            setA = line.split("\\s+");
-            setB = line.split(";");
-            //System.out.println(line);
-            //System.out.println(setA.length);
-            
-            for (String part : setA) {
-                count++;
-                if (count == 1){
-                    chrName = part;
-                }
-                else if(count == 4){
-                    startPos = Long.parseLong(part);
-                    //System.out.println(startPos);
-                }
-                else if (count == 5){
-                    stopPos = Long.parseLong(part);
-                }
-                else if (count ==6){
-                    direction = Integer.parseInt(part);
-                }
+            while ((line = reader.readLine()) != null) {
                 
-                //System.out.println(part);
-            }
-            
-            count = 0;
-            for (String part : setB) {
-                count++;
-                if (count ==3){
-                    geneName = part;
+                if(line.charAt(0) == '#'){
+                    
+                    if(line.charAt(1) == '#'){
+                        
+                    }else{
+                        
+                        if(line.charAt(3) == '#'){
+                            
+                        }
+                    }
+                }else{
+                    setA = line.split("\\s+");
+                    
+                    long chrName = Long.parseLong(setA[0]);
+                    String source = setA[1];
+                    String feature = setA[2];
+                    long start = Long.parseLong(setA[3]);
+                    long stop = Long.parseLong(setA[4]);
+                    String score = setA[5];
+                    String strand = setA[6];
+                    int frame = Integer.parseInt(setA[7]);
+                    String attribute = setA[8];
+                    
+                    if(source.equals(specificSource)){
+                        anno = new Annotation(chrName,source,feature,start,stop,score,strand,frame,attribute);
+                        long startCode = (chrName<<28)+start;
+                        long stopCode = (chrName<<28)+stop;
+                        
+                        refAnno.putData(anno,startCode,stopCode);
+                    }    
                 }
-                //System.out.println(part);
             }
-            
-            System.out.println("Get :" + chrName+ "  "  + geneName+ "  " + startPos+ "  " + stopPos+ "  " + direction);
-            
-            ExonIntron data = new ExonIntron(chrName,geneName,startPos,stopPos,direction);
-            ref.addData(data);
-            
-//System.out.println(line.split(";"));
-            /*if(line.charAt(0)=='>'){
-
-                if(chr!=null){
-
-                    System.out.println("CHR : "+chr+" Size : "+seq.length());
-
-                    ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
-
-                    ref.addChromosomeSequence(c);
-
-                }
-                seq = new StringBuffer();
-                chr = line.substring(1,line.length());
-
-            }else{
-
-                seq.append(line.trim());
-
-
-            }*/
-
-        }
-
-        /*if(seq.length()>0){
-
-    //        System.out.println("CHR : "+chr+" Size : "+seq.length());
-
-            ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
-
-            ref.addChromosomeSequence(c);
-
-        }*/
-
-
-
-
         } catch (IOException x) {
             System.err.format("IOException: %s%n", x);
         }    
 
-
-        return ref;
+        return refAnno;
     }
     
-    
-    public static ReferenceExonIntron randomExonIntron(ReferenceExonIntron ref){
-        ReferenceExonIntron output = new ReferenceExonIntron();
-        Vector<ExonIntron> data = ref.getdata();
-        Random rand = new Random();
-        //Vector<ExonIntron> output;
-        int r = rand.nextInt(data.size());
-        System.out.println("Vector size" + data.size());
-        
-        //int r = 500;
-        System.out.print("Pick" + data.elementAt(r).getdirection());
-        int iniguess = Math.abs(data.elementAt(r).getdirection());
-        int iniguesscheck = Math.abs(data.elementAt(r).getdirection());
-        System.out.println("iniGuesscheck" + iniguess);
-        int mainPoint = 0;
-        int axonNum = 0;
-        int rguess = r;
-        
-        while(true){
-            rguess++;
-            System.out.println("num of r : "+rguess);
-            int newguess = Math.abs(data.elementAt(rguess).getdirection());
-            System.out.println("num of guess : "+newguess);
-            if(newguess<iniguess||newguess==iniguess){
-                mainPoint = rguess-1;
-                axonNum = iniguess;
-                break;
-            }
-            else{
-                iniguess = newguess;
-            }
-        }
-        System.out.println("mainPoint : "+ mainPoint);
-        System.out.println("axonNum : "+ axonNum);
-        
-        String name = data.elementAt(mainPoint).getGeneName();
-        //output = new Vector<ExonIntron>();
-        while(axonNum>0){
-            
-            
-            if (data.elementAt(mainPoint).getGeneName().equalsIgnoreCase(name)){
-                // check in case that direction of exon is more than 2 but have just one exon EX. around element 1000
-                System.out.println("At Point : " + mainPoint);
-                System.out.println("Final Pick " + data.elementAt(mainPoint).getGeneName()+" Direction" + data.elementAt(mainPoint).getdirection());
-                //output.add(data.elementAt(mainPoint));
-                output.addData(data.elementAt(mainPoint));
-                axonNum--;
-                mainPoint--;
-            }else break;
-            
-            //axonNum--;
-            //mainPoint--;
-            //r++;
-        }
-        
-        //System.out.println("New vector size : "+output.getdata().size());
-        output.reverseorder();
-        
-        //System.out.println("New vector size : "+output.getdata().elementAt(0).getdirection());
-        //System.out.println("New vector size : "+output.getdata().elementAt(1).getdirection());
-        
-        return output;
-    }
+//    public static ReferenceAnnotation randomExonIntron(ReferenceAnnotation ref){
+//        ReferenceAnnotation output = new ReferenceAnnotation();
+//        ArrayList<Annotation> data = ref.getdata();
+//        Random rand = new Random();
+//        //Vector<ExonIntron> output;
+//        int r = rand.nextInt(data.size());
+//        System.out.println("Vector size" + data.size());
+//        
+//        //int r = 500;
+//        System.out.print("Pick" + data.elementAt(r).getdirection());
+//        int iniguess = Math.abs(data.elementAt(r).getdirection());
+//        int iniguesscheck = Math.abs(data.elementAt(r).getdirection());
+//        System.out.println("iniGuesscheck" + iniguess);
+//        int mainPoint = 0;
+//        int axonNum = 0;
+//        int rguess = r;
+//        
+//        while(true){
+//            rguess++;
+//            System.out.println("num of r : "+rguess);
+//            int newguess = Math.abs(data.elementAt(rguess).getdirection());
+//            System.out.println("num of guess : "+newguess);
+//            if(newguess<iniguess||newguess==iniguess){
+//                mainPoint = rguess-1;
+//                axonNum = iniguess;
+//                break;
+//            }
+//            else{
+//                iniguess = newguess;
+//            }
+//        }
+//        System.out.println("mainPoint : "+ mainPoint);
+//        System.out.println("axonNum : "+ axonNum);
+//        
+//        String name = data.elementAt(mainPoint).getGeneName();
+//        //output = new Vector<ExonIntron>();
+//        while(axonNum>0){
+//            
+//            
+//            if (data.elementAt(mainPoint).getGeneName().equalsIgnoreCase(name)){
+//                // check in case that direction of exon is more than 2 but have just one exon EX. around element 1000
+//                System.out.println("At Point : " + mainPoint);
+//                System.out.println("Final Pick " + data.elementAt(mainPoint).getGeneName()+" Direction" + data.elementAt(mainPoint).getdirection());
+//                //output.add(data.elementAt(mainPoint));
+//                output.addData(data.elementAt(mainPoint));
+//                axonNum--;
+//                mainPoint--;
+//            }else break;
+//            
+//            //axonNum--;
+//            //mainPoint--;
+//            //r++;
+//        }
+//        
+//        //System.out.println("New vector size : "+output.getdata().size());
+//        output.reverseorder();
+//        
+//        //System.out.println("New vector size : "+output.getdata().elementAt(0).getdirection());
+//        //System.out.println("New vector size : "+output.getdata().elementAt(1).getdirection());
+//        
+//        return output;
+//    }
 
     public static void createHistrogram(MapResult inResult, String readName){
         ArrayList indexArray = new ArrayList();
@@ -3192,6 +3211,11 @@ public class SequenceUtil {
         * Suitable with result format only (result format is a file that store peak result arrange by sample order (come first be the first). the peak result is in format data structure V3
         * startIndex and stopIndex defined in this method is the index of DNA base in Read Ex. read length 100 base will has index 0 to 99 and has index of mer 0 to 83 [83 is come from 100 - 18]
         * allowOverLap is indicate the number of DNA base that allow to over lap at the junction
+        * 
+        * This function is stand for extract data and flag each peak that does not have green count with false and vise versa
+        * It also calculate start and stop index then create MapF and MapB which has been use for detect variation
+        * then passing the information to detect variation function and store result to VariationResult object
+        * The input data must be sorted by order of Read (same read will group together) and iniIndex (numeric order)
         */
         
         VariationResult varResult = new VariationResult();
@@ -3225,10 +3249,10 @@ public class SequenceUtil {
         
         System.out.println(" Done read ");
         
-        ArrayList<String> selectData = new ArrayList();
-        ArrayList<Byte> selectChr = new ArrayList();
+        ArrayList<String> selectData = new ArrayList();                     // Store list of long string that contain peak information (list of all peak in specific read)
+        ArrayList<Byte> selectChr = new ArrayList();                        // store list of chr number same oreder as selectData
         ArrayList<Boolean> selectGreenChar = new ArrayList();
-        Map<Integer,Integer> mapF = new LinkedHashMap();
+        Map<Integer,ArrayList<Integer>> mapF = new LinkedHashMap();
         Map<Integer,Integer> mapB = new LinkedHashMap();
         int index = 0;
         String oldReadName = null;
@@ -3273,8 +3297,16 @@ public class SequenceUtil {
                 selectData.add(dataGet);
                 selectChr.add(numChr);
                 selectGreenChar.add(greenChar);
-                mapF.put(startIndex, index);
                 mapB.put(stopIndex, index);
+                if(mapF.containsKey(startIndex)){
+                    ArrayList<Integer> val = mapF.get(startIndex);
+                    val.add(index);
+                    mapF.put(startIndex, val);
+                }else{
+                    ArrayList<Integer> val = new ArrayList();
+                    val.add(index);
+                    mapF.put(startIndex, val);
+                }
                 
             }else{
                 /**
@@ -3299,8 +3331,17 @@ public class SequenceUtil {
                 selectData.add(dataGet);
                 selectChr.add(numChr);
                 selectGreenChar.add(greenChar);
-                mapF.put(startIndex, index);
-                mapB.put(stopIndex, index);    
+                mapB.put(stopIndex, index);
+                if(mapF.containsKey(startIndex)){
+                    ArrayList<Integer> val = mapF.get(startIndex);
+                    val.add(index);
+                    mapF.put(startIndex, val);
+                }else{
+                    ArrayList<Integer> val = new ArrayList();
+                    val.add(index);
+                    mapF.put(startIndex, val);
+                }
+                
             }
             
             oldReadName = readName;
@@ -3317,14 +3358,15 @@ public class SequenceUtil {
         return varResult;
     }
     
-    public static Map<Integer,ArrayList<String[]>> detectVariation(ArrayList<String> selectData , ArrayList<Byte> selectChr , ArrayList<Boolean> selectGreenChar , Map<Integer,Integer> mapF , Map<Integer,Integer> mapB , int merLength , int readLength , int allowOverlapBase){
+    public static Map<Integer,ArrayList<String[]>> detectVariation(ArrayList<String> selectData , ArrayList<Byte> selectChr , ArrayList<Boolean> selectGreenChar , Map<Integer,ArrayList<Integer>> mapF , Map<Integer,Integer> mapB , int merLength , int readLength , int allowOverlapBase){
         /**
-         * the variable in Map<Byte,String[]> 
-         * => Byte is represent type of variation
+         * the variable in Map<Integer,ArrayList<String[]>> 
+         * => Integer is represent type of variation
          *      '0' = SNP contain and others
          *      '1' = fusion
-         *      '2' = large or small indel               
-         * => String[] is represent the result of variation
+         *      '2' = large or small indel
+         *      '3' = others (wasted)
+         * => ArrayList<String[]> is represent the result of variation
          */
         
         Map<Integer,ArrayList<String[]>> variation = new LinkedHashMap();
@@ -3332,7 +3374,7 @@ public class SequenceUtil {
         
         /**
          * Begin variable detection 
-         * Loop each String data
+         * Loop each String data (peak information)
          */
         for(int i=0;i<selectData.size();i++){
             String dataGet = selectData.get(i);
@@ -3380,105 +3422,108 @@ public class SequenceUtil {
                     /**
                      * Junction found
                      */
-                    int selectIndex = mapF.get(expectNextIndex);
-                    String selectRead = selectData.get(selectIndex);
-                    byte numChrB = selectChr.get(selectIndex);
-                    boolean greenCharB = selectGreenChar.get(selectIndex);
+                    ArrayList<Integer> listSelectIndex = mapF.get(expectNextIndex);
+                    for(int j=0;j<listSelectIndex.size();j++){
+                        int selectIndex = listSelectIndex.get(j);
+                        String selectRead = selectData.get(selectIndex);
+                        byte numChrB = selectChr.get(selectIndex);
+                        boolean greenCharB = selectGreenChar.get(selectIndex);
 
 
-                    /**
-                     * Check fusion of large indel
-                     */
-                    if(numChr == numChrB){
-
-                        if(greenCharB == true || greenChar == true){                // case check to ensure that at least one side is green characteristic 
-                            /**
-                            * large or small indel
-                            */
-                            String[] pairedPeak = new String[2];  
-                            pairedPeak[0]=dataGet;
-                            pairedPeak[1]=selectRead;
-
-                            if(variation.containsKey(2)){
-                                ArrayList<String[]> listPP = variation.get(2);
-                                listPP.add(pairedPeak);
-                                variation.put(2, listPP);
-                            }else{
-                                ArrayList<String[]> listPP = new ArrayList();
-                                listPP.add(pairedPeak);
-                                variation.put(2, listPP);
-                            } 
-                        }else{
-
-                            /**
-                             * Has no green at all (wasted) type 3
-                             */
-                            String[] pairedPeak = new String[2];
-                            String pairedCheck = dataGet+"|"+selectRead;
-                            pairedPeak[0]=dataGet;
-                            pairedPeak[1]=selectRead;
-
-                            if(variation.containsKey(3)){
-                                ArrayList<String[]> listPP = variation.get(3);
-                                if(wastedCheckList.contains(pairedCheck)!=true){
-                                    listPP.add(pairedPeak);
-                                    wastedCheckList.add(pairedCheck);
-                                }                                                            
-                                variation.put(3, listPP);
-                            }else{
-                                ArrayList<String[]> listPP = new ArrayList();
-                                if(wastedCheckList.contains(pairedCheck)!=true){
-                                    listPP.add(pairedPeak);
-                                    wastedCheckList.add(pairedCheck);
-                                }  
-                                variation.put(3, listPP);
-                            } 
-                        }
-
-                    }else if(numChr != numChrB){
                         /**
-                         * Fusion
+                         * Check fusion or large indel
                          */
-                        if(greenCharB == true || greenChar == true){
-                            String[] pairedPeak = new String[2];  
-                            pairedPeak[0]=dataGet;
-                            pairedPeak[1]=selectRead;
+                        if(numChr == numChrB){
 
-                            if(variation.containsKey(1)){
-                                ArrayList<String[]> listPP = variation.get(1);
-                                listPP.add(pairedPeak);
-                                variation.put(1, listPP);
+                            if(greenCharB == true || greenChar == true){                // case check to ensure that at least one side is green characteristic 
+                                /**
+                                * large or small indel
+                                */
+                                String[] pairedPeak = new String[2];  
+                                pairedPeak[0]=dataGet;
+                                pairedPeak[1]=selectRead;
+
+                                if(variation.containsKey(2)){
+                                    ArrayList<String[]> listPP = variation.get(2);
+                                    listPP.add(pairedPeak);
+                                    variation.put(2, listPP);
+                                }else{
+                                    ArrayList<String[]> listPP = new ArrayList();
+                                    listPP.add(pairedPeak);
+                                    variation.put(2, listPP);
+                                } 
                             }else{
-                                ArrayList<String[]> listPP = new ArrayList();
-                                listPP.add(pairedPeak);
-                                variation.put(1, listPP);
+
+                                /**
+                                 * Has no green at all (wasted) type 3
+                                 */
+                                String[] pairedPeak = new String[2];
+                                String pairedCheck = dataGet+"|"+selectRead;
+                                pairedPeak[0]=dataGet;
+                                pairedPeak[1]=selectRead;
+
+                                if(variation.containsKey(3)){
+                                    ArrayList<String[]> listPP = variation.get(3);
+                                    if(wastedCheckList.contains(pairedCheck)!=true){
+                                        listPP.add(pairedPeak);
+                                        wastedCheckList.add(pairedCheck);
+                                    }                                                            
+                                    variation.put(3, listPP);
+                                }else{
+                                    ArrayList<String[]> listPP = new ArrayList();
+                                    if(wastedCheckList.contains(pairedCheck)!=true){
+                                        listPP.add(pairedPeak);
+                                        wastedCheckList.add(pairedCheck);
+                                    }  
+                                    variation.put(3, listPP);
+                                } 
                             }
-                        }else{
+
+                        }else if(numChr != numChrB){
                             /**
-                             * Has no green at all (wasted) type 3
+                             * Fusion
                              */
-                            String[] pairedPeak = new String[2];
-                            String pairedCheck = dataGet+"|"+selectRead;
-                            pairedPeak[0]=dataGet;
-                            pairedPeak[1]=selectRead;
+                            if(greenCharB == true || greenChar == true){
+                                String[] pairedPeak = new String[2];  
+                                pairedPeak[0]=dataGet;
+                                pairedPeak[1]=selectRead;
 
-                            if(variation.containsKey(3)){
-                                ArrayList<String[]> listPP = variation.get(3);
-                                if(wastedCheckList.contains(pairedCheck)!=true){
+                                if(variation.containsKey(1)){
+                                    ArrayList<String[]> listPP = variation.get(1);
                                     listPP.add(pairedPeak);
-                                    wastedCheckList.add(pairedCheck);
-                                }                                 
-                                variation.put(3, listPP);
+                                    variation.put(1, listPP);
+                                }else{
+                                    ArrayList<String[]> listPP = new ArrayList();
+                                    listPP.add(pairedPeak);
+                                    variation.put(1, listPP);
+                                }
                             }else{
-                                ArrayList<String[]> listPP = new ArrayList();
-                                if(wastedCheckList.contains(pairedCheck)!=true){
-                                    listPP.add(pairedPeak);
-                                    wastedCheckList.add(pairedCheck);
-                                }                                 
-                                variation.put(3, listPP);
-                            } 
-                        }
+                                /**
+                                 * Has no green at all (wasted) type 3
+                                 */
+                                String[] pairedPeak = new String[2];
+                                String pairedCheck = dataGet+"|"+selectRead;
+                                pairedPeak[0]=dataGet;
+                                pairedPeak[1]=selectRead;
 
+                                if(variation.containsKey(3)){
+                                    ArrayList<String[]> listPP = variation.get(3);
+                                    if(wastedCheckList.contains(pairedCheck)!=true){
+                                        listPP.add(pairedPeak);
+                                        wastedCheckList.add(pairedCheck);
+                                    }                                 
+                                    variation.put(3, listPP);
+                                }else{
+                                    ArrayList<String[]> listPP = new ArrayList();
+                                    if(wastedCheckList.contains(pairedCheck)!=true){
+                                        listPP.add(pairedPeak);
+                                        wastedCheckList.add(pairedCheck);
+                                    }                                 
+                                    variation.put(3, listPP);
+                                } 
+                            }
+
+                        }
                     }
                 }
             }
@@ -3565,5 +3610,15 @@ public class SequenceUtil {
         writer.flush();
         writer.close();
         return inputSeq;
+    }
+    
+    public static void markAnnotation(ReferenceAnnotation inRef,VariationResult inVar){
+        /** 
+         * get arraylist of variation 
+         * get breakpoint and try to map from inRef
+         * by check contain of key (2 layer check)
+         */
+        
+        
     }
 }

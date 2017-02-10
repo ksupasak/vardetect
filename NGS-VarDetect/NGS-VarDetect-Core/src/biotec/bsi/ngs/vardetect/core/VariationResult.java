@@ -430,7 +430,7 @@ public class VariationResult {
         }
     }
     
-    public void writeVarianCoverageReportToFile(String path , String nameFile , char varType) throws IOException{
+    public void writeVariantCoverageReportToFile(String path , String nameFile , char varType) throws IOException{
         /**
         * Suitable for version 3 data structure (data structure that has iniIdx in its)
         * write result to file format for variant report
