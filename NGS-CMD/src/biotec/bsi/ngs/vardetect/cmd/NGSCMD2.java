@@ -8,9 +8,9 @@ package biotec.bsi.ngs.vardetect.cmd;
 import biotec.bsi.ngs.vardetect.alignment.AlignerFactory;
 import biotec.bsi.ngs.vardetect.core.Aligner;
 import biotec.bsi.ngs.vardetect.core.AlignmentResultRead;
-import biotec.bsi.ngs.vardetect.core.ExonIntron;
+import biotec.bsi.ngs.vardetect.core.Annotation;
 import biotec.bsi.ngs.vardetect.core.InputSequence;
-import biotec.bsi.ngs.vardetect.core.ReferenceExonIntron;
+import biotec.bsi.ngs.vardetect.core.ReferenceAnnotation;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
@@ -66,19 +66,16 @@ public class NGSCMD2 {
         /**
          * Test Zone 2
          */
+        String refPath = "/Volumes/PromisePegasus/worawich/VMdev/dataScieneToolBox/projects/NGS/hg19test/hg19.fa";
+        ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath);
+        String filename = "EH613353.1";       
+        String path = "/Volumes/PromisePegasus/worawich/VMdev/dataScieneToolBox/projects/NGS/";
         
-        String filename = "cDNA_Sample";       
-        String path = "/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/";
-        
-        String seq = "GCACGAGGGCCCCGCGCCCGCGCCCGCGCCCGCACCCGCCGCCGCCGCCCGCAGCGATGATCTTCCCCAG" +
-"CAGCAGTGGCAACCCCGGGGGCAGCAGCAACTGCCGGACGCCCTATCGCAAGCAGCAGTCTCTGGTCCCA" +
-"GCCCACCCCATGGCCCCTCCCAGTCCCAGCACCACCAGCAGTAATAACAACAGTAGCAGCAGTAGCAACT" +
-"CAGGATGGGATCAGCTCAGCAAAACGAACCTCTATATCCGAGGACTGCCTCCCCACACCACCGACCAGGA" +
-"CCTGGTGAAGCTCTGTCAACCATATGGGAAAATAGTCTCCACAAAGGCAATTTTGGATAAGACAACGAAC" +
-"AAATGCAAAGGTTATGGTTTTGTCGACTTTGACAGCCCTGCAGCAGCTCAAAAAGCTGTGTCTGCCCTGA" +
-"AGGCCAGTGGGGTTCAAGCTCAAATGGCAAAGCAACAGGAACAAGATCCTACCAACCTCTACATTTCTAA" +
-"TTTGCCACTCTCCATGGATGAGCAAGAACTAGAAAATATGCTCAAACCATTTGGACAAGTTATTTCTACA" +
-"AGGATACTACGTGATTCCAGTGGTACAAGTC";
+        String seq = "CTACCTTCTACAGAAGGTGTTTTTCAGCAGGCTCTGCTGATTTTAACTGCCTCTCCTTGCTCTATGTTTT" +
+"CTCAGGGCTAACTCTTTTAATCTCGCTACTTCTACCAGCATTTGATATAAATACCCCAAATTTATATGTC" +
+"TGGCCCTGGTACCACTCTTAAGTTCTTGGCATGAATCCCCAATACTTGCTTGGGAAGAAACACCTCAAAC" +
+"CCACCATTTTCCAAAGTCATACCTGCGCTTTCAGTGCTTTTACCCTCATTAGTGACATCACCACCTGTGT" +
+"TACTAGAAACACTGGAGTCATCTTCAAGTCCTTTCTCCCTCGTTTCCCATTTCAACCTGGTAA";
         
         SequenceUtil.createShortReadFromLongSequence(seq, 100, path+filename);
         
