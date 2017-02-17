@@ -25,14 +25,16 @@ public class TestPostProcess {
         // TODO code application logic here
         
         String filename = "hg38_full_3661_mul_alignmentResult_th5_part";       
-        String path = "/Volumes/PromisePegasus/worawich/VMdev/dataScieneToolBox/projects/NGS/test_sim_03/";
+        String path = "/Volumes/PromisePegasus/worawich/VMdev/dataScieneToolBox/projects/NGS/Thalassemia/";
         String saveFileName = "hg38_3661_alignmentResult_forLinuxSort";
-        String filename3661 = "hg38_simData_mul_alignmentResult_th5_part";
+       
         String filenameERR = "hg38_simData_mul_alignmentResult_th5_ERR_part";
         String saveFileNameERR = "hg38_simData_mul_alignmentResult_th5_ERR_forLinuxSortV2";
         String saveFileName3661 = "hg38_simData_mul_alignmentResult_th5_forLinuxSort";
         String saveFileNameForPostProcess = "hg38_simData_mul_alignmentResult_th5_PostLinuxSortedV2";
-        String filenameRNA = "hg38_alignmentResult_part";
+        String filenameRNA = "hg38_Tha5.2_alignmentResult_part";
+        String filename3661 = "hg38_Tha5.2_mul_alignmentResult_th5_part";
+        
         
         int numPart = 1;
         
