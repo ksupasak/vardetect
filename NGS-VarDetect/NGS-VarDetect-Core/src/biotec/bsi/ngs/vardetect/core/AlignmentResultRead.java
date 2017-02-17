@@ -669,8 +669,16 @@ public class AlignmentResultRead {
          * Suitable for version 3 data structure (data structure that has iniIdx in its)
          */
         
-        PrintStream ps = new PrintStream(path+nameFile+"."+ fa);            // Create file object
+//        PrintStream ps = new PrintStream(path+nameFile+"."+ fa);            // Create file object
+        FileWriter writer;        
+        /**
+         * Check File existing
+         */
         
+        File f = new File(path+nameFile+"."+ fa); //File object        
+        
+        writer = new FileWriter(path+nameFile+"."+ fa);
+     
         
         Set set = this.alignmentSortedCutResultMap.keySet();
         Iterator readNameIter = set.iterator();
@@ -680,7 +688,9 @@ public class AlignmentResultRead {
             ArrayList dummyResList = this.alignmentSortedCutResultMap.get(readName);
             
             if(dummyResList.isEmpty() == false){
-                ps.println(">"+ readName);               
+                writer.write(">" + readName);
+                writer.write("\n");
+//                ps.println(">"+ readName);               
             }
             
             Iterator codeIter = dummyResList.iterator();
@@ -699,17 +709,22 @@ public class AlignmentResultRead {
                     strandNot = "-";
                 }
                 
-                ps.format("%d,%d,%s,%d,%d", chrNumber,alignPos,strandNot,numCount,iniIdx);
+//                ps.format("%d,%d,%s,%d,%d", chrNumber,alignPos,strandNot,numCount,iniIdx);
+                writer.write(String.format("%d,%d,%s,%d,%d", chrNumber,alignPos,strandNot,numCount,iniIdx));
                 if (codeIter.hasNext()){
-                    ps.format(";");
+//                    ps.format(";");
+                    writer.write(";");
                 }
             }
             
             if(dummyResList.isEmpty() == false){
-                ps.format("\n");
+//                ps.format("\n");
+                writer.write("\n");
             }
             
         }
+        writer.flush();
+        writer.close();
     }
     
     public void writeSortedCutColorResultToPathInFormat(String path, String nameFile, String fileFormat) throws FileNotFoundException{
