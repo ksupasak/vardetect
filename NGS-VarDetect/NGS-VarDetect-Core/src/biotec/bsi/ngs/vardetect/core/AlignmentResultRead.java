@@ -1019,6 +1019,14 @@ public class AlignmentResultRead {
                             writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag));
                             writer.write("\n");
                         }
+                    }else if(option1.equals("gyo")){
+                        if(red==0){
+                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag));
+                            writer.write("\n");
+                        }
+                    }else if(option1.equals("all")){
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag));
+                        writer.write("\n");
                     }
 
                 }

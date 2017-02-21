@@ -3250,7 +3250,7 @@ public class SequenceUtil {
         System.out.println(" Done read ");
         
         ArrayList<String> selectData = new ArrayList();                     // Store list of long string that contain peak information (list of all peak in specific read)
-        ArrayList<Byte> selectChr = new ArrayList();                        // store list of chr number same oreder as selectData
+        ArrayList<Byte> selectChr = new ArrayList();                        // store list of chr number same order as selectData
         ArrayList<Boolean> selectGreenChar = new ArrayList();
         Map<Integer,ArrayList<Integer>> mapF = new LinkedHashMap();
         Map<Integer,Integer> mapB = new LinkedHashMap();

@@ -452,15 +452,16 @@ public class VariationResult {
             writer = new FileWriter(filename);
         }
         
-        int count = 1;
+        
         if(varType == 'F'){
+            int count = 1;
             writer.write("Variation type : Fusion\n");
             Set set = this.coverageMapFusion.keySet();
             Iterator iterKey = set.iterator();
             while(iterKey.hasNext()){
                 long bpFCode = (long)iterKey.next();
                 long bpF = bpFCode&this.mask28bit;
-                int chrF = (int)bpFCode>>28;
+                int chrF = (int)(bpFCode>>28);
                 
                 Map<Long,ArrayList<Variation>> coverageMapII = this.coverageMapFusion.get(bpFCode);
                 Set setII = coverageMapII.keySet();
@@ -468,7 +469,7 @@ public class VariationResult {
                 while(iterKeyII.hasNext()){
                     long bpBCode = (long)iterKeyII.next();
                     long bpB = bpBCode&this.mask28bit;
-                    int chrB = (int)bpBCode>>28;
+                    int chrB = (int)(bpBCode>>28);
                     
                     /**
                      * Write Report Part
@@ -493,13 +494,14 @@ public class VariationResult {
             }
         }
         if(varType == 'I'){
+            int count = 1;
             writer.write("Variation type : Indel\n");
             Set set = this.coverageMapIndel.keySet();
             Iterator iterKey = set.iterator();
             while(iterKey.hasNext()){
                 long bpFCode = (long)iterKey.next();
                 long bpF = bpFCode&this.mask28bit;
-                int chrF = (int)bpFCode>>28;
+                int chrF = (int)(bpFCode>>28);
                 
                 Map<Long,ArrayList<Variation>> coverageMapII = this.coverageMapIndel.get(bpFCode);
                 Set setII = coverageMapII.keySet();
@@ -507,7 +509,7 @@ public class VariationResult {
                 while(iterKeyII.hasNext()){
                     long bpBCode = (long)iterKeyII.next();
                     long bpB = bpBCode&this.mask28bit;
-                    int chrB = (int)bpBCode>>28;
+                    int chrB = (int)(bpBCode>>28);
                     
                     /**
                      * Write Report Part
@@ -527,12 +529,14 @@ public class VariationResult {
                         writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB));
                         writer.write("\n");
                     }
+                    count++;
                 }
-                count++;
+                
             }
             
         }
         if(varType == 'S'){
+            int count = 1;
             writer.write("Variation type : SNP and other miss match\n");
             Set set = this.coverageMapSNP.keySet();
             Iterator iterKey = set.iterator();
@@ -542,7 +546,7 @@ public class VariationResult {
 //                int chrF = (int)bpFCode>>28;
                 long bpBCode = (long)iterKey.next();
                 long bpB = bpBCode&this.mask28bit;
-                int chrB = (int)bpBCode>>28;
+                int chrB = (int)(bpBCode>>28);
                 
                 ArrayList<Variation> coverageList = this.coverageMapSNP.get(bpBCode);
                 /**
