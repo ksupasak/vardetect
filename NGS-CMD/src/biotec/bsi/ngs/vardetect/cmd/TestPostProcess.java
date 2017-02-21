@@ -32,8 +32,8 @@ public class TestPostProcess {
         String saveFileNameERR = "hg38_simData_mul_alignmentResult_th5_ERR_forLinuxSortV2";
         String saveFileName3661 = "hg38_simData_mul_alignmentResult_th5_forLinuxSort";
         String saveFileNameForPostProcess = "hg38_simData_mul_alignmentResult_th5_PostLinuxSortedV2";
-        String filenameRNA = "hg38_Tha5.2_alignmentResult_part";
-        String saveFilenameRNA = "hg38_Tha5.2_alignmentResult_forLinuxSort";
+        String filenameRNA = "hg38_Tha3.7_alignmentResult_part";
+        String saveFilenameRNA = "hg38_Tha3.7_alignmentResult_forLinuxSort";
         
         
         int numPart = 1;
@@ -44,7 +44,7 @@ public class TestPostProcess {
             System.out.println("Begin create color array");
             Clustering.createColorArray(readAlign, 100, 18);        
             System.out.println("Done create color array");
-            readAlign.writeSortedCutColorResultToPathInFormatForLinuxSort(path, saveFilenameRNA, "txt","gyo",83);
+            readAlign.writeSortedCutColorResultToPathInFormatForLinuxSort(path, saveFilenameRNA, "txt");
 //            VariationResult varRes = SequenceUtil.analysisResultFromFile(path+saveFileNameForPostProcess+".txt",18,100);
             readAlign = null;
             System.gc();
