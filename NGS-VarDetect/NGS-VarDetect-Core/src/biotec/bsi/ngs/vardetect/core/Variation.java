@@ -107,12 +107,13 @@ public class Variation {
         this.iniBackFlagB=iniBackFlag;
         this.numMatchB = numG+numY+numO+numR;
         
-       
-        if(this.strandB.equals("-")){
-            int reverseIniIdx = this.readLength-(this.iniIndexB+(this.merLength+this.numMatchB-1));
-            this.breakPointB = this.lastPosB+reverseIniIdx;   
-        }else if(this.strandB.equals("+")){
-            this.breakPointB = this.iniPosB+this.iniIndexB;
+        if(this.strandB != null){
+            if(this.strandB.equals("-")){
+                int reverseIniIdx = this.readLength-(this.iniIndexB+(this.merLength+this.numMatchB-1));
+                this.breakPointB = this.lastPosB+reverseIniIdx;   
+            }else if(this.strandB.equals("+")){
+                this.breakPointB = this.iniPosB+this.iniIndexB;
+            }
         }
         
     }
