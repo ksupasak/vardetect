@@ -42,8 +42,9 @@ public class RunAlignmentMultiThreadV3 {
         String inputPath = args[1];                                     // Second argument; indicate input file (include it path if it not in the current directory)
         String filename = args[2];                                      // Third argument; indicate save file name
         int propotion = Integer.valueOf(args[3]);                       // Forth argument; indicate the number of read per time
-        int threshold = Integer.valueOf(args[4]);                       // Fifth argument; indicate count number threshold
-        int numThread = Integer.valueOf(args[5]);                       // Sixth argument; indicate number of thread
+        int numMer = Integer.valueOf(args[4]);
+        int threshold = Integer.valueOf(args[5]);                       // Fifth argument; indicate count number threshold
+        int numThread = Integer.valueOf(args[6]);                       // Sixth argument; indicate number of thread
         
 //       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
 
@@ -74,12 +75,12 @@ public class RunAlignmentMultiThreadV3 {
 
             Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
 
-            AlignmentResultRead align = aligner.alignMultithreadV3(ref, input, numThread);  // function align is located in binary aligner
+            AlignmentResultRead align = aligner.alignMultithreadV3(ref, input, numThread, numMer, threshold);  // function align is located in binary aligner
 
 
     
-            System.out.println("Do sortCountCutResult");
-            align.sortCountCutResultForMapV3(threshold);
+//            System.out.println("Do sortCountCutResult");
+//            align.sortCountCutResultForMapV3(threshold);
             System.out.println("Do write Report");
             align.writeSortedCutResultMapToPathInFormatV3(ref.getPath(),savefilename, "txt");
             System.out.println("Done part " + count);

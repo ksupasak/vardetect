@@ -58,7 +58,7 @@ public class NGSCMDforERRCheck {
                     
         Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
 
-        AlignmentResultRead align = aligner.alignV4(ref, tempInSS);  // function align is located in binary aligner
+        AlignmentResultRead align = aligner.alignV4(ref, tempInSS,18,5);  // function align is located in binary aligner
         
     }
 }

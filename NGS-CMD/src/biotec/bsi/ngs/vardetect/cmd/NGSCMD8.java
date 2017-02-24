@@ -53,7 +53,7 @@ public class NGSCMD8 {
         
         Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
           
-        AlignmentResultRead align = aligner.alignV2(ref, input);  // function align is located in binary aligner
+        AlignmentResultRead align = aligner.alignV2(ref, input,18,5);  // function align is located in binary aligner
         
         
 //        Map<String,ArrayList<Map>> result = new HashMap();

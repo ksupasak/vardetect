@@ -51,7 +51,7 @@ public class TestBedCMD {
         
         Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
           
-        AlignmentResultRead align = aligner.alignV3(ref, input);  // function align is located in binary aligner
+        AlignmentResultRead align = aligner.alignV3(ref, input,18,5);  // function align is located in binary aligner
                 
         System.out.println("Do sortCountCutResult");
         align.sortCountCutResultForMapV3(5);

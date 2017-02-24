@@ -70,7 +70,7 @@ public class NGSCMD13 {
 
         Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
 
-        AlignmentResultRead align = aligner.align(ref, input);  // function align is located in binary aligner
+        AlignmentResultRead align = aligner.align(ref, input,18,5);  // function align is located in binary aligner
           
 
 

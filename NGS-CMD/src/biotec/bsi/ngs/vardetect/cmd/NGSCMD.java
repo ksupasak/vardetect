@@ -54,7 +54,7 @@ public class NGSCMD {
                     
         Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
 
-        AlignmentResultRead align = aligner.alignV3(ref, tempInSS);  // function align is located in binary aligner
+        AlignmentResultRead align = aligner.alignV3(ref, tempInSS,numMer,5);  // function align is located in binary aligner
         
         
     }

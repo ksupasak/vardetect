@@ -70,7 +70,7 @@ public class RunMultiThreadV3 {
 
 //        AlignmentResultRead align = aligner.alignV2(ref, input);  // function align is located in binary aligner
         
-        AlignmentResultRead align = aligner.alignMultithreadV3(ref, input,4);  // function align is located in binary aligner
+        AlignmentResultRead align = aligner.alignMultithreadV3(ref, input,4,18,5);  // function align is located in binary aligner
 
 //        Map<String,ArrayList<Map>> result = new HashMap();
 //        result = align.getAlignmentResultV2();
