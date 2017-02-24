@@ -46,19 +46,21 @@ public class ThreadBinaryAlignerV3 implements Runnable {
     private EncodedSequence encodedRef;
     private long chrNum;
     private int numMer;
+    private int threshold;                          // It is a minimum number of count that we accept
     private Map<Long,Long> alignMap;
     private Map<Long,ArrayList<Long>> alnMerMap;     // Key is align code [strand|alignposition] and value is mer code
     private Map<String,ArrayList<Long>> alnRes;      // Key is ReadName and value is array of long [count|chr|strand|Pos]
     String flag;
             
     
-    public ThreadBinaryAlignerV3(String name,List inSeq, EncodedSequence inEncodeRef,long inchr, int inMer){
+    public ThreadBinaryAlignerV3(String name,List inSeq, EncodedSequence inEncodeRef,long inchr, int inMer , int inThreshold){
         threadName = name;
         inputSequence = inSeq;
         encodedRef = inEncodeRef;
         chrNum = inchr;
         numMer = inMer;
         alnRes = new LinkedHashMap();
+        threshold = inThreshold;
         
         System.out.println("Creating " + threadName);
     }
@@ -275,7 +277,10 @@ public class ThreadBinaryAlignerV3 implements Runnable {
                     long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
                     long chrIdxStrandAln = (chrNum<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add count number on the front of strandAln which has 37 bit
                     long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
-                    countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                    
+                    if(count>threshold){                                            // case check to filter small count peak out (use user specify threshold)
+                        countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                    }
                 }
                 this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
             }else{
@@ -287,7 +292,10 @@ public class ThreadBinaryAlignerV3 implements Runnable {
                     long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
                     long chrIdxStrandAln = (chrNum<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add count number on the front of strandAln which has 37 bit
                     long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
-                    countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                    
+                    if(count>threshold){                                              // case check to filter small count peak out (use user specify threshold)
+                        countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                    }
                 }
                 this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
             }
@@ -505,7 +513,9 @@ public class ThreadBinaryAlignerV3 implements Runnable {
                     long chrIdxStrandAln = (chrNum<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add chr number on the front of strandAln which has 37 bit
                     long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit
 
-                    countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                    if(count>threshold){                                            // case check to filter small count peak out (use user specify threshold)
+                        countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                    }
                 }
                 this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
             }else{
@@ -514,10 +524,13 @@ public class ThreadBinaryAlignerV3 implements Runnable {
                 Iterator keyIter =keySet.iterator();
                 while(keyIter.hasNext()){
                     long idxStrandAln = (long)keyIter.next();                      // strandAln has 37 bit compose of [iniIndex|strand|alignPosition]
-                   long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
+                    long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
                     long chrIdxStrandAln = (chrNum)+idxStrandAln;     // shift left 37 bit beacause we want to add chr number on the front of strandAln which has 37 bit
                     long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
-                    countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                    
+                    if(count>threshold){                                                // case check to filter small count peak out (use user specify threshold)
+                        countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                    }
                 }
                 this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
             }

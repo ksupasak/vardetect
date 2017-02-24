@@ -50,20 +50,20 @@ public class BinaryAligner extends Thread implements Aligner {
         
     }
        
-    public AlignmentResultRead align(ReferenceSequence ref, InputSequence input) {
+    public AlignmentResultRead align(ReferenceSequence ref, InputSequence input, int numMer, int threshold) {
         
         this.setReferenceSequence(ref);
-        return align(input);
+        return align(input,numMer,threshold);
         
     }
     
-    public AlignmentResultRead align(InputSequence input){
+    public AlignmentResultRead align(InputSequence input, int numMer, int threshold){
         
         
         //AlignmentResult res = new AlignmentResult(input);
         AlignmentResultRead alinResult = new AlignmentResultRead();
         
-        this.mer = 18;
+        this.mer = numMer;
         
         
         Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
@@ -283,15 +283,14 @@ public class BinaryAligner extends Thread implements Aligner {
         return alinResult;
     }
     
-    
-    public AlignmentResultRead alignMultithread(ReferenceSequence ref, InputSequence input, int numThread) throws InterruptedException {
+    public AlignmentResultRead alignMultithread(ReferenceSequence ref, InputSequence input, int numThread, int numMer, int threshold) throws InterruptedException {
         
         this.setReferenceSequence(ref);
-        return alignMultithread(input,numThread);
+        return alignMultithread(input,numThread,numMer,threshold);
         
     }
     
-    public AlignmentResultRead alignMultithread(InputSequence input, int numThread) throws InterruptedException{
+    public AlignmentResultRead alignMultithread(InputSequence input, int numThread, int numMer, int threshold) throws InterruptedException{
         
         /**
         * This method will create object that implement multi-thread capability in it
@@ -307,7 +306,7 @@ public class BinaryAligner extends Thread implements Aligner {
         //AlignmentResult res = new AlignmentResult(input);
         AlignmentResultRead alinResult = new AlignmentResultRead();
         
-        this.mer = 18;
+        this.mer = numMer;
 
         Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
 
@@ -396,16 +395,16 @@ public class BinaryAligner extends Thread implements Aligner {
         return alinResult;
     }
     
-    public AlignmentResultRead alignMultithreadV3(ReferenceSequence ref, InputSequence input, int numThread) throws InterruptedException {
+    public AlignmentResultRead alignMultithreadV3(ReferenceSequence ref, InputSequence input, int numThread, int numMer, int threshold) throws InterruptedException {
         /**
          * This version 3 function give the v3 data structure of result
          */
         this.setReferenceSequence(ref);
-        return alignMultithreadV3(input,numThread);
+        return alignMultithreadV3(input,numThread,numMer,threshold);
         
     }
     
-    public AlignmentResultRead alignMultithreadV3(InputSequence input, int numThread) throws InterruptedException{
+    public AlignmentResultRead alignMultithreadV3(InputSequence input, int numThread, int numMer, int threshold) throws InterruptedException{
         
         /**
         * This method will create object that implement multi-thread capability in it
@@ -422,7 +421,7 @@ public class BinaryAligner extends Thread implements Aligner {
         //AlignmentResult res = new AlignmentResult(input);
         AlignmentResultRead alinResult = new AlignmentResultRead();
         
-        this.mer = 18;
+        this.mer = numMer;
 
         Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
 
@@ -449,7 +448,7 @@ public class BinaryAligner extends Thread implements Aligner {
                     for(int i = 0 ; i < inputSize ; i+= numPerPartition){                        
                         List splitInputSequence = input.getInputSequence().subList(i, Math.min(inputSize, i+numPerPartition));
                         String threadName = "Thread_"+count; 
-                        ThreadBinaryAlignerV3 newThread = new ThreadBinaryAlignerV3(threadName,splitInputSequence,encoded,chr.getChrNumber(),mer);
+                        ThreadBinaryAlignerV3 newThread = new ThreadBinaryAlignerV3(threadName,splitInputSequence,encoded,chr.getChrNumber(),mer,threshold);
                         newThread.start();                        
                         threadListV3.add(newThread);
                         count++;
@@ -511,20 +510,20 @@ public class BinaryAligner extends Thread implements Aligner {
         return alinResult;
     }
     
-    public AlignmentResultRead alignV2(ReferenceSequence ref, InputSequence input) {
+    public AlignmentResultRead alignV2(ReferenceSequence ref, InputSequence input, int numMer, int threshold) {
         
         this.setReferenceSequence(ref);
-        return alignV2(input);
+        return alignV2(input,numMer,threshold);
         
     }
     
-    public AlignmentResultRead alignV2(InputSequence input){
+    public AlignmentResultRead alignV2(InputSequence input, int numMer, int threshold){
         
         alnRes = new LinkedHashMap();                                     // initialize this hashmap one time per alinment job
         //AlignmentResult res = new AlignmentResult(input);
         AlignmentResultRead alinResult = new AlignmentResultRead();
         
-        this.mer = 18;
+        this.mer = numMer;
         
         
         Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
@@ -1059,14 +1058,14 @@ public class BinaryAligner extends Thread implements Aligner {
         return alinResult;
     }
 
-    public AlignmentResultRead alignV3(ReferenceSequence ref, InputSequence input) {
+    public AlignmentResultRead alignV3(ReferenceSequence ref, InputSequence input, int numMer, int threshold) {
         
         this.setReferenceSequence(ref);
-        return alignV3(input);
+        return alignV3(input,numMer,threshold);
         
     }
     
-    public AlignmentResultRead alignV3(InputSequence input){
+    public AlignmentResultRead alignV3(InputSequence input, int numMer, int threshold){
         /**
          * The different between alignV2 and V3 is we add initial match of read index (iniIdx) 
          * So all sorting or other old version function may not suitable for this new data structure
@@ -1076,7 +1075,7 @@ public class BinaryAligner extends Thread implements Aligner {
         //AlignmentResult res = new AlignmentResult(input);
         AlignmentResultRead alinResult = new AlignmentResultRead();
         
-        this.mer = 18;
+        this.mer = numMer;
         
         
         Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
@@ -1317,7 +1316,10 @@ public class BinaryAligner extends Thread implements Aligner {
                             long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
                             long chrIdxStrandAln = (chr.getChrNumber()<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add count number on the front of strandAln which has 37 bit
                             long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
-                            countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            
+                            if(count>threshold){                                                // case check to filter small count peak out (use user specify threshold)
+                                countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            }
                         }
                         this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
                     }else{
@@ -1329,7 +1331,10 @@ public class BinaryAligner extends Thread implements Aligner {
                             long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
                             long chrIdxStrandAln = (chr.getChrNumber()<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add count number on the front of strandAln which has 37 bit
                             long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
-                            countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            
+                            if(count>threshold){                                                // case check to filter small count peak out (use user specify threshold)
+                                countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            }
                         }
                         this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
                     }
@@ -1562,7 +1567,9 @@ public class BinaryAligner extends Thread implements Aligner {
                             long chrIdxStrandAln = (chr.getChrNumber()<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add chr number on the front of strandAln which has 37 bit
                             long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit
                             
-                            countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            if(count>threshold){                                                // case check to filter small count peak out (use user specify threshold)
+                                countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            }
                         }
                         this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
                     }else{
@@ -1574,7 +1581,10 @@ public class BinaryAligner extends Thread implements Aligner {
                             long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
                             long chrIdxStrandAln = (chr.getChrNumber()<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add chr number on the front of strandAln which has 37 bit
                             long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
-                            countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            
+                            if(count>threshold){                                                // case check to filter small count peak out (use user specify threshold)
+                                countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            }
                         }
                         this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
                     }
@@ -1620,14 +1630,14 @@ public class BinaryAligner extends Thread implements Aligner {
         return alinResult;
     }
 
-    public AlignmentResultRead alignV4(ReferenceSequence ref, InputSequence input) {
+    public AlignmentResultRead alignV4(ReferenceSequence ref, InputSequence input, int numMer, int threshold) {
         
         this.setReferenceSequence(ref);
-        return alignV4(input);
+        return alignV4(input,numMer,threshold);
         
     }
     
-    public AlignmentResultRead alignV4(InputSequence input){
+    public AlignmentResultRead alignV4(InputSequence input, int numMer, int threshold){
         /**
          * The different between alignV3 and V4 is we add another map that contain variant information (SNP,Indel)
          * Suitable data structure V3. 
@@ -1640,7 +1650,7 @@ public class BinaryAligner extends Thread implements Aligner {
         //AlignmentResult res = new AlignmentResult(input);
         AlignmentResultRead alinResult = new AlignmentResultRead();
         
-        this.mer = 18;
+        this.mer = numMer;
         
         
         Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
@@ -1904,7 +1914,10 @@ public class BinaryAligner extends Thread implements Aligner {
                             long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
                             long chrIdxStrandAln = (chr.getChrNumber()<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add count number on the front of strandAln which has 37 bit
                             long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
-                            countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            
+                            if(count>threshold){                                                // case check to filter small count peak out (use user specify threshold)
+                                countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            }
                         }
                         this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
                     }else{
@@ -1916,7 +1929,10 @@ public class BinaryAligner extends Thread implements Aligner {
                             long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
                             long chrIdxStrandAln = (chr.getChrNumber()<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add count number on the front of strandAln which has 37 bit
                             long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
-                            countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            
+                            if(count>threshold){                                                // case check to filter small count peak out (use user specify threshold)
+                                countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            }
                         }
                         this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
                     }
@@ -2149,7 +2165,9 @@ public class BinaryAligner extends Thread implements Aligner {
                             long chrIdxStrandAln = (chr.getChrNumber()<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add chr number on the front of strandAln which has 37 bit
                             long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit
                             
-                            countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            if(count>threshold){                                                // case check to filter small count peak out (use user specify threshold)
+                                countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            }
                         }
                         this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
                     }else{
@@ -2161,7 +2179,10 @@ public class BinaryAligner extends Thread implements Aligner {
                             long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
                             long chrIdxStrandAln = (chr.getChrNumber()<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add chr number on the front of strandAln which has 37 bit
                             long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
-                            countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            
+                            if(count>threshold){                                                // case check to filter small count peak out (use user specify threshold)
+                                countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            }
                         }
                         this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
                     }

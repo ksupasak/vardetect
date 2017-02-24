@@ -25,6 +25,7 @@ import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -3017,6 +3018,112 @@ public class SequenceUtil {
             
             return alnResult;
         }
+    }
+    
+    public static AlignmentResultRead readBinaryAlignmentReportV2(String filename, int readLength, int mer){
+        /**
+         *  Suitable for version 3 data structure (data structure that has iniIdx in its)
+         * we have specify marker which will be use for decode the alignment result code (it specific for v3 data structure only)
+         */
+        
+        
+        long mask_chrIdxStrandAln = 4398046511103L;      //  Do & operation to get aligncode compose of chr|Idx|strand|alignposition from value contain in alignmentResultMap
+        long mask = 268435455;
+        
+        
+        ArrayList<Integer> listChr = new ArrayList();
+        ArrayList<Long> listPos = new ArrayList();
+        ArrayList<Long> listLastPos = new ArrayList();
+        ArrayList<String> listStrand = new ArrayList();
+        ArrayList<Integer> listNumCount = new ArrayList();
+        ArrayList<Integer> listIniIdx = new ArrayList();
+        ArrayList listResultCode = new ArrayList();
+        ShortgunSequence inSS = new ShortgunSequence(null);
+        AlignmentResultRead alnResult = new AlignmentResultRead();
+        int count = 0;
+        int count2 = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(filename);
+        String name = null;
+//        int actStart = readStart*2;     //this is actual start of line in file (compatible only specific file 3661 and 3662 .fasta file)
+//        int actStop = readLimit*2;
+    //    String seq = "";
+        
+        StringBuffer seq = new StringBuffer();
+        
+        File inputFile = new File(filename);
+        boolean eof = false;
+        
+        try{
+            
+            DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(inputFile)));
+            
+            while(!eof){
+                String readName = is.readUTF();
+                int resultSize = is.readInt();
+                
+                inSS = new ShortgunSequence(null);               
+                listChr = new ArrayList();
+                listPos = new ArrayList();
+                listLastPos = new ArrayList();
+                listStrand = new ArrayList();
+                listNumCount = new ArrayList();
+                listIniIdx = new ArrayList();
+                
+                for(int i=0;i<resultSize;i++){
+                    long code = is.readLong();  // code has structure like this [count|Chr|strand|alignPosition]                         
+                    long numCount = code>>42;                                               //Shift 34 bit to get count number
+                    long chrIdxStrandAln = code&mask_chrIdxStrandAln;
+                    long alignPos = chrIdxStrandAln&mask;                                      // And with 28bit binary to get position
+                    long chrNumber = chrIdxStrandAln>>37;
+                    long iniIdx = (chrIdxStrandAln>>29)&255;
+
+                    String strandNot = "no";                                                // Identify the strand type of this align Position
+                    if(((chrIdxStrandAln>>28)&1) == 1){
+                        strandNot = "+";
+                    }else if(((chrIdxStrandAln>>28)&1) == 0){
+                        strandNot = "-";
+                    }
+                    
+                    listChr.add((int)chrNumber);
+                    listPos.add(alignPos);
+                    listStrand.add(strandNot);
+                    listNumCount.add((int)numCount);
+                    listIniIdx.add((int)iniIdx);
+
+                    int numBase = (mer+(int)numCount)-1;
+                    long lastPos = (alignPos + numBase)-1;
+
+                    listLastPos.add(lastPos);
+                }
+                
+                inSS.addReadName(readName);
+                inSS.addListChr(listChr);
+                inSS.addListPos(listPos);
+                inSS.addListLastPos(listLastPos);
+                inSS.addListStrand(listStrand);
+                inSS.addListNumMatch(listNumCount);
+                inSS.addListIniIdx(listIniIdx);
+                alnResult.addResult(inSS);
+            }
+        }catch(EOFException e){
+            eof = true;
+        }
+        
+        catch (FileNotFoundException e) {
+            System.out.println("Couldn't Find the File");
+
+            System.exit(0);}
+        
+
+        catch(IOException e){
+           System.out.println("An I/O Error Occurred");
+             System.exit(0);
+
+        }
+            
+            return alnResult;
+        
     }
     
     public static InputSequence readSamFile(String filename) throws IOException {

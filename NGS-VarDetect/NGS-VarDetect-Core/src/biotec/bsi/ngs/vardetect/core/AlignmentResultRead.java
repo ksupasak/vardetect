@@ -5,6 +5,8 @@
  */
 package biotec.bsi.ngs.vardetect.core;
 
+import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -664,67 +666,87 @@ public class AlignmentResultRead {
         }
     }
     
-    public void writeSortedCutResultMapToPathInFormatV3(String path,String nameFile, String fa) throws FileNotFoundException, IOException {
+    public void writeSortedCutResultMapToPathInFormatV3(String path,String nameFile, String fileType) throws FileNotFoundException, IOException {
         /**
          * Suitable for version 3 data structure (data structure that has iniIdx in its)
          */
         
 //        PrintStream ps = new PrintStream(path+nameFile+"."+ fa);            // Create file object
-        FileWriter writer;        
-        /**
-         * Check File existing
-         */
-        
-        File f = new File(path+nameFile+"."+ fa); //File object        
-        
-        writer = new FileWriter(path+nameFile+"."+ fa);
-     
-        
-        Set set = this.alignmentSortedCutResultMap.keySet();
-        Iterator readNameIter = set.iterator();
-       
-        while(readNameIter.hasNext()){ 
-            String readName = (String) readNameIter.next();
-            ArrayList dummyResList = this.alignmentSortedCutResultMap.get(readName);
-            
-            if(dummyResList.isEmpty() == false){
-                writer.write(">" + readName);
-                writer.write("\n");
-//                ps.println(">"+ readName);               
-            }
-            
-            Iterator codeIter = dummyResList.iterator();
-            while(codeIter.hasNext()){
-                long code = (long) codeIter.next();                                     // code has structure like this [count|Chr|strand|alignPosition]
-                long numCount = code>>42;                                               //Shift 34 bit to get count number
-                long chrIdxStrandAln = code&this.mask_chrIdxStrandAln;
-                long alignPos = chrIdxStrandAln&mask;                                      // And with 28bit binary to get position
-                long chrNumber = chrIdxStrandAln>>37;
-                long iniIdx = (chrIdxStrandAln>>29)&255;
-                
-                String strandNot = "no";                                                // Identify the strand type of this align Position
-                if(((chrIdxStrandAln>>28)&1) == 1){
-                    strandNot = "+";
-                }else if(((chrIdxStrandAln>>28)&1) == 0){
-                    strandNot = "-";
+        if(fileType.equals("txt")){
+            FileWriter writer;        
+            /**
+             * Check File existing
+             */
+
+            File f = new File(path+nameFile+"."+ fileType); //File object        
+
+            writer = new FileWriter(path+nameFile+"."+ fileType);
+
+
+            Set set = this.alignmentResultMap.keySet();
+            Iterator readNameIter = set.iterator();
+
+            while(readNameIter.hasNext()){ 
+                String readName = (String) readNameIter.next();
+                ArrayList dummyResList = this.alignmentResultMap.get(readName);
+
+                if(dummyResList.isEmpty() == false){
+                    writer.write(">" + readName);
+                    writer.write("\n");
+    //                ps.println(">"+ readName);               
                 }
+
+                Iterator codeIter = dummyResList.iterator();
+                while(codeIter.hasNext()){
+                    long code = (long) codeIter.next();                                     // code has structure like this [count|Chr|strand|alignPosition]
+                    long numCount = code>>42;                                               //Shift 34 bit to get count number
+                    long chrIdxStrandAln = code&this.mask_chrIdxStrandAln;
+                    long alignPos = chrIdxStrandAln&mask;                                      // And with 28bit binary to get position
+                    long chrNumber = chrIdxStrandAln>>37;
+                    long iniIdx = (chrIdxStrandAln>>29)&255;
+
+                    String strandNot = "no";                                                // Identify the strand type of this align Position
+                    if(((chrIdxStrandAln>>28)&1) == 1){
+                        strandNot = "+";
+                    }else if(((chrIdxStrandAln>>28)&1) == 0){
+                        strandNot = "-";
+                    }
+
+    //                ps.format("%d,%d,%s,%d,%d", chrNumber,alignPos,strandNot,numCount,iniIdx);
+                    writer.write(String.format("%d,%d,%s,%d,%d", chrNumber,alignPos,strandNot,numCount,iniIdx));
+                    if (codeIter.hasNext()){
+    //                    ps.format(";");
+                        writer.write(";");
+                    }
+                }
+
+                if(dummyResList.isEmpty() == false){
+    //                ps.format("\n");
+                    writer.write("\n");
+                }
+
+            }
+            writer.flush();
+            writer.close();
+        }else if(fileType.equals("bin")){
+            File outputFile = new File(path+nameFile+"."+fileType);
+            DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)));
+            
+            
+            for(Map.Entry<String,ArrayList<Long>> entry : this.alignmentResultMap.entrySet()){
+                String readName = entry.getKey();
+                ArrayList<Long> resultList = entry.getValue();
+                int resultSize = resultList.size();
                 
-//                ps.format("%d,%d,%s,%d,%d", chrNumber,alignPos,strandNot,numCount,iniIdx);
-                writer.write(String.format("%d,%d,%s,%d,%d", chrNumber,alignPos,strandNot,numCount,iniIdx));
-                if (codeIter.hasNext()){
-//                    ps.format(";");
-                    writer.write(";");
+                os.writeUTF(readName);
+                os.writeInt(resultSize);
+                
+                for(int i =0;i<resultSize;i++){
+                    os.writeLong(resultList.get(i));
                 }
             }
-            
-            if(dummyResList.isEmpty() == false){
-//                ps.format("\n");
-                writer.write("\n");
-            }
-            
+            os.close();   
         }
-        writer.flush();
-        writer.close();
     }
     
     public void writeSortedCutColorResultToPathInFormat(String path, String nameFile, String fileFormat) throws FileNotFoundException{
