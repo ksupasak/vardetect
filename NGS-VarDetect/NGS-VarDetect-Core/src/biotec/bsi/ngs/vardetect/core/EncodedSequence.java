@@ -19,10 +19,12 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -36,8 +38,11 @@ public class EncodedSequence {
     //TreeMap<Long,Long> map;
     long[] mers;            // Store reference sequence of specific chr for mapping propose
     long[] mersComp;
+    long[] repeatMarker;
     
     Map<Long,Long> map;
+    Map<Long,Long> repeatMarkerFront;
+    Map<Long,Long> repeatMarkerBack;
     String name;
     
     public long mask = -268435456; // Do & operation to get mer  
@@ -48,6 +53,8 @@ public class EncodedSequence {
     public EncodedSequence(){
         this.mers = null;            // Store reference sequence of specific chr for mapping propose
         this.mersComp = null;
+        this.repeatMarkerFront = new LinkedHashMap();
+        this.repeatMarkerBack = new LinkedHashMap();
     }
     
     public long addStrandNotation(long in, int strand){
@@ -55,6 +62,17 @@ public class EncodedSequence {
         long pos_strand = (strand<<28)+in;      // add 1 bit to indicate strand notation 0(-) or 1(+) infront of the 28 position bit
         
         return pos_strand;
+    }
+    
+    public void addRepeatMarker(ArrayList<Map<Long,Long>> in){
+        
+        this.repeatMarkerFront = in.get(0);
+        this.repeatMarkerBack = in.get(1);
+    }
+    
+    public void addRepeatMarker(long[] in){
+        
+        this.repeatMarker = in;
     }
     
     public long[] fullAlign(long mer){  // now this function is unuse

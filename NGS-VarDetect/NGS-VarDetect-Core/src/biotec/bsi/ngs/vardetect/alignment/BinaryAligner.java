@@ -76,7 +76,9 @@ public class BinaryAligner extends Thread implements Aligner {
                 Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
                 System.out.println("reading .. "+chr.getName()+"");
 
-                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr);            // encoded selected chromosome (just for sure it is encode)
+                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,this.mer);            // encoded selected chromosome (just for sure it is encode)
+                ArrayList<Map<Long,Long>> repeatMarker = SequenceUtil.createRepeatMarkerReference(chr, this.mer);
+                encoded.addRepeatMarker(repeatMarker);
                 while(seqs.hasMoreElements()){                                              // Loop over ShortgunSequence contain in InputSequence 
                     ShortgunSequence seq = seqs.nextElement();
                     Map<Long,long[]> merMap = new HashMap();
@@ -318,7 +320,9 @@ public class BinaryAligner extends Thread implements Aligner {
                 Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
                 System.out.println("reading .. "+chr.getName()+"");
 
-                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr);            // encoded selected chromosome (just for sure it is encode)
+                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,this.mer);            // encoded selected chromosome (just for sure it is encode)
+                ArrayList<Map<Long,Long>> repeatMarker = SequenceUtil.createRepeatMarkerReference(chr, this.mer);  // create or import repeat marker
+                encoded.addRepeatMarker(repeatMarker);
                 long chrnumber = chr.getChrNumber();
                 /*********/
                 int inputSize = input.getInputSequence().size();
@@ -426,6 +430,7 @@ public class BinaryAligner extends Thread implements Aligner {
         Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
 
         while(chrs.hasMoreElements()){                                                      // Loop chromosome contain in ReferenceSequence
+            long startTime = System.currentTimeMillis();
             try {
                 
                 int count = 0;
@@ -433,7 +438,9 @@ public class BinaryAligner extends Thread implements Aligner {
                 Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
                 System.out.println("reading .. "+chr.getName()+"");
 
-                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr);            // encoded selected chromosome (just for sure it is encode)
+                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,this.mer);            // encoded selected chromosome (just for sure it is encode)
+                ArrayList<Map<Long,Long>> repeatMarker = SequenceUtil.createRepeatMarkerReference(chr, this.mer);  // create or import repeat marker
+                encoded.addRepeatMarker(repeatMarker);
                 long chrnumber = chr.getChrNumber();
                 /*********/
                 int inputSize = input.getInputSequence().size();
@@ -491,7 +498,10 @@ public class BinaryAligner extends Thread implements Aligner {
             } catch (IOException ex) {
                 Logger.getLogger(BinaryAligner.class.getName()).log(Level.SEVERE, null, ex);
             }
-            
+            long endTime = System.currentTimeMillis();
+            double totalTime = (endTime - startTime)/1000;
+            System.out.println("Done time use: "+ totalTime +" second");
+            System.out.println();
         }
         
         for(int i=0;i<threadListV3.size();i++){
@@ -536,7 +546,9 @@ public class BinaryAligner extends Thread implements Aligner {
                 Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
                 System.out.println("reading .. "+chr.getName()+"");
 
-                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr);            // encoded selected chromosome (just for sure it is encode)
+                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,this.mer);            // encoded selected chromosome (just for sure it is encode)
+                ArrayList<Map<Long,Long>> repeatMarker = SequenceUtil.createRepeatMarkerReference(chr, this.mer);  // create or import repeat marker
+                encoded.addRepeatMarker(repeatMarker);
                 while(seqs.hasMoreElements()){                                              // Loop over ShortgunSequence contain in InputSequence 
                     ShortgunSequence seq = seqs.nextElement();
                     this.alnMerMap = new HashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read
@@ -1088,7 +1100,9 @@ public class BinaryAligner extends Thread implements Aligner {
                 Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
                 System.out.println("reading .. "+chr.getName()+"");
 
-                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr);            // encoded selected chromosome (just for sure it is encode)
+                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,this.mer);            // encoded selected chromosome (just for sure it is encode)                
+                ArrayList<Map<Long,Long>> repeatMarker = SequenceUtil.createRepeatMarkerReference(chr, this.mer);  // create or import repeat marker
+                encoded.addRepeatMarker(repeatMarker);                
                 while(seqs.hasMoreElements()){                                              // Loop over ShortgunSequence contain in InputSequence 
                     ShortgunSequence seq = seqs.nextElement();
                     this.alnMerMap = new LinkedHashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read
@@ -1663,7 +1677,9 @@ public class BinaryAligner extends Thread implements Aligner {
                 Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
                 System.out.println("reading .. "+chr.getName()+"");
 
-                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr);            // encoded selected chromosome (just for sure it is encode)
+                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,this.mer);            // encoded selected chromosome (just for sure it is encode)
+                ArrayList<Map<Long,Long>> repeatMarker = SequenceUtil.createRepeatMarkerReference(chr, this.mer);  // create or import repeat marker
+                encoded.addRepeatMarker(repeatMarker);
                 while(seqs.hasMoreElements()){                                              // Loop over ShortgunSequence contain in InputSequence 
                     ShortgunSequence seq = seqs.nextElement();
                     this.alnMerMap = new LinkedHashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read

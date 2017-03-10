@@ -80,7 +80,7 @@ public class ThreadBinaryAlignerV3 implements Runnable {
         /* Alignment algorithm */
         Iterator seqs = inputSequence.iterator();
         while(seqs.hasNext()){                                              // Loop over ShortgunSequence contain in InputSequence 
-                    
+            boolean skipRead = false;        
             ShortgunSequence seq = (ShortgunSequence)seqs.next();
             this.alnMerMap = new LinkedHashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read
 
@@ -101,9 +101,19 @@ public class ThreadBinaryAlignerV3 implements Runnable {
             for(int i=0;i<(s.length()-numMer)+1;i++){                                  // (Windowing with one stepping) for loop over String sequence which has limit round at (string length - mer length) + one [maximum possible mer sequence]
                 int index = i;
                 String sub = s.substring(i, i+numMer);                                 // cut String sequence into sub string sequence (mer length long) 
-                //System.out.println("check sub length"+sub.length());
+                
+                if(sub.toUpperCase().equals("AAAAAAAAAAAAAAAAAA")||sub.toUpperCase().equals("TTTTTTTTTTTTTTTTTT")||sub.toUpperCase().equals("GGGGGGGGGGGGGGGGGG")||sub.toUpperCase().equals("CCCCCCCCCCCCCCCCCC")){
+                    skipRead = true;
+                    break;
+                }
+
+//System.out.println("check sub length"+sub.length());
                 long m = SequenceUtil.encodeMer(sub, numMer);                          // encode sub string sequence (code is 36 bit max preserve the rest 28 bit for position)
 //                        System.out.println(""+sub+" "+sub.length()+": "+m);
+                
+                if(m == 51904601109L){
+                    System.out.println("");
+                }
                 if(m!=-1){                                                          
                     m = m<<28;                                                      // shift left 28 bit for optimization binary search purpose 
 //                            long pos = encoded.align(m);
@@ -161,7 +171,7 @@ public class ThreadBinaryAlignerV3 implements Runnable {
                         
                         /******** New Part (fixed wrong mer count) Version 3 **********/
                         for(int j=0;j<pos2.length;j++){
-                            long alnCode = pos2[j] - index;     // pos is 29 bit [strand|position] ; algncode is 29 bit [strand|alignPosition]
+                            long alnCode = pos2[j] - index;     // pos is 29 bit [strand|position] ; algncode is 29 bit [strand|alignPosition] but already subtract index (offset)
 
 
                             if(alnCodeCheckList.containsKey(alnCode)){
@@ -268,7 +278,7 @@ public class ThreadBinaryAlignerV3 implements Runnable {
             /*************************************************************************************************************/
             /* -------------------------New Implement Part Cons. (Not Stroe in object)---------------------------------------------*/
             
-            if(this.alnRes.containsKey(seq.getReadName())){                     // Check for existing of ReadName (if exist put result code on existing ArrayList<Long>
+            if(this.alnRes.containsKey(seq.getReadName())&&skipRead==false){                     // Check for existing of ReadName (if exist put result code on existing ArrayList<Long>
                 ArrayList<Long> countChrIdxStrandAlnList = this.alnRes.get(seq.getReadName()); //get existing Arraylist
                 Set keySet = this.alnMerMap.keySet();
                 Iterator keyIter =keySet.iterator();
@@ -283,7 +293,7 @@ public class ThreadBinaryAlignerV3 implements Runnable {
                     }
                 }
                 this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
-            }else{
+            }else if(this.alnRes.containsKey(seq.getReadName())==false&&skipRead==false){
                 ArrayList<Long> countChrIdxStrandAlnList = new ArrayList();
                 Set keySet = this.alnMerMap.keySet();
                 Iterator keyIter =keySet.iterator();
@@ -317,6 +327,7 @@ public class ThreadBinaryAlignerV3 implements Runnable {
         /* Do the same algorithm but use function for compliment */
         Iterator seqsComp = inputSequence.iterator();
         while(seqsComp.hasNext()){
+            boolean skipRead = false;
             ShortgunSequence seq = (ShortgunSequence)seqsComp.next();                                  // get ShortgunSequence from InputSequence
             this.alnMerMap = new LinkedHashMap();
 
@@ -339,6 +350,12 @@ public class ThreadBinaryAlignerV3 implements Runnable {
             for(int i=0;i<(compSeq.length()-numMer)+1;i++){                                    // Windowing
                 int index = i;                                                              // index at aligncompliment and non compliment is not different. It not effect any thing. we just know strand notation is enough
                 String sub = compSeq.substring(i, i+numMer);
+                
+                if(sub.toUpperCase().equals("AAAAAAAAAAAAAAAAAA")||sub.toUpperCase().equals("TTTTTTTTTTTTTTTTTT")||sub.toUpperCase().equals("GGGGGGGGGGGGGGGGGG")||sub.toUpperCase().equals("CCCCCCCCCCCCCCCCCC")){
+                    skipRead = true;
+                    break;
+                }
+                
                 //System.out.println("check sub length"+sub.length());
                 long m = SequenceUtil.encodeMer(sub, numMer);
 //                        System.out.println(""+sub+" "+sub.length()+": "+m);
@@ -502,7 +519,7 @@ public class ThreadBinaryAlignerV3 implements Runnable {
             /*************************************************************************************************************/
             /* -------------------------New Implement Part Cons. (Not Stroe in object)---------------------------------------------*/
             
-            if(this.alnRes.containsKey(seq.getReadName())){                     // Check for existing of ReadName (if exist put result code on existing ArrayList<Long>
+            if(this.alnRes.containsKey(seq.getReadName())&&skipRead==false){                     // Check for existing of ReadName (if exist put result code on existing ArrayList<Long>
 
                 ArrayList<Long> countChrIdxStrandAlnList = this.alnRes.get(seq.getReadName()); //get existing Arraylist
                 Set keySet = this.alnMerMap.keySet();
@@ -518,7 +535,7 @@ public class ThreadBinaryAlignerV3 implements Runnable {
                     }
                 }
                 this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
-            }else{
+            }else if(this.alnRes.containsKey(seq.getReadName())==false && skipRead==false){
                 ArrayList<Long> countChrIdxStrandAlnList = new ArrayList();
                 Set keySet = this.alnMerMap.keySet();
                 Iterator keyIter =keySet.iterator();
