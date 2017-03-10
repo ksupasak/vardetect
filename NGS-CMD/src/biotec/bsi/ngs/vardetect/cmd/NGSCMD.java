@@ -30,7 +30,7 @@ public class NGSCMD {
     public static void main(String[] args) throws IOException {
     
         String refPath = args[0];
-        ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath); //runFile hg19.fa
+        ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath,18); //runFile hg19.fa
        
         InputSequence tempInSS = new InputSequence();
         int numMer = 18;

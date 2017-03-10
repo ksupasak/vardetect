@@ -41,7 +41,7 @@ public class TestBedCMD {
         
         String savefilename = "_test_New_structure_with_iniIndex";
         System.out.println("Get reference sequence");
-        ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0]); //runFile hg19.fa
+        ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0],18); //runFile hg19.fa
         //^^^^
         //ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
         System.out.println("Simulate Data");

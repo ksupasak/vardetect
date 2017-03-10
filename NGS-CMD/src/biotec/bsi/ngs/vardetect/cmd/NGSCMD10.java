@@ -28,7 +28,7 @@ public class NGSCMD10 {
     public static void main(String[] args) throws IOException {
         
         System.out.println("Get reference sequence");
-        ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0]); //runFile hg19.fa
+        ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0],18); //runFile hg19.fa
         
         //ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
         System.out.println("Read Data");

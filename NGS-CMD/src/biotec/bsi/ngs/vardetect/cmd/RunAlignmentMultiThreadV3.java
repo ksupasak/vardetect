@@ -49,7 +49,7 @@ public class RunAlignmentMultiThreadV3 {
 //       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
 
         System.out.println("Get reference sequence");
-        ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath); //runFile hg19.fa
+        ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath,numMer); //runFile hg19.fa
         
         //ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
         //System.out.println("Simulate Data");
@@ -67,6 +67,7 @@ public class RunAlignmentMultiThreadV3 {
         System.out.println("Total Sample: " + numSample);
         System.out.println("Propotion " + propotion + " read per part");
         for (int i = 0 ; i < numSample ; i += propotion){                       // loop over the input sample ( number of loop is up to the number of read per time )
+            long startTime = System.currentTimeMillis();
             count++;
             String savefilename = filename+count;
             InputSequence input = SequenceUtil.readSampleFileV2(inputPath,i,Math.min(numSample, i+propotion));
@@ -84,6 +85,11 @@ public class RunAlignmentMultiThreadV3 {
             System.out.println("Do write Report");
             align.writeSortedCutResultMapToPathInFormatV3(ref.getPath(),savefilename, "txt");
             System.out.println("Done part " + count);
+            
+            long endTime = System.currentTimeMillis();
+            double totalTime = ((endTime - startTime)/1000)/60;
+            System.out.println(String.format("Time use : %.4f min",totalTime));
+            System.out.println();
         }
     
     }

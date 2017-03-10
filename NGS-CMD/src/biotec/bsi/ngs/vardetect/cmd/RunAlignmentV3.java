@@ -50,7 +50,7 @@ public class RunAlignmentV3 {
         System.out.println(aon!=null);
         
         System.out.println("Get reference sequence");
-        ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath); //runFile hg19.fa
+        ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath,18); //runFile hg19.fa
         
         //ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
         System.out.println("Simulate Data");
