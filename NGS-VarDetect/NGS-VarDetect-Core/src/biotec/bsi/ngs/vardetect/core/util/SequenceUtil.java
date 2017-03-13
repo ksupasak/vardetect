@@ -100,27 +100,26 @@ public class SequenceUtil {
                  
                  
                  
-                File bin_file = new File(c.getFilePath()+".bin");
-                File comp_bin_file = new File(c.getFilePath()+"_comp.bin");
-                File chr_repeatfile = new File(c.getFilePath()+"_repeatMarker.bin");
-                if(bin_file.exists()==false){
-                    if(c.getSequence()==null){
-                   
-                    }
+//                File bin_file = new File(c.getFilePath()+".bin");
+//                File comp_bin_file = new File(c.getFilePath()+"_comp.bin");
+//                File chr_repeatfile = new File(c.getFilePath()+"_repeatMarker.bin");
+//                if(bin_file.exists()==false){
+//                    if(c.getSequence()==null){
+//                   
+//                    }
                      
                     EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c,mer);
-                    long[] repeatMarker = SequenceUtil.createRepeatMarkerReferenceV2(c, mer);
-                    encoded.addRepeatMarker(repeatMarker);
+                    ArrayList<Long> repeatMarker = SequenceUtil.createRepeatMarkerReferenceV2(c, mer);                  
                      
                      
-                }
+//                }
 //                if(comp_bin_file.exists()==false){
 //                    EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c,mer);
 //                }
 
-                if(chr_repeatfile.exists()==false){
-                    long[] repeatMarker = SequenceUtil.createRepeatMarkerReferenceV2(c, mer);
-                }
+//                if(chr_repeatfile.exists()==false){
+//                    long[] repeatMarker = SequenceUtil.createRepeatMarkerReferenceV2(c, mer);
+//                }
                  
             }else{
                 extract_chr=true;
@@ -168,8 +167,7 @@ public class SequenceUtil {
                         c.lazyLoad();
 
                         EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c,mer);
-                        long[] repeatMarker = SequenceUtil.createRepeatMarkerReferenceV2(c, mer);
-                        encoded.addRepeatMarker(repeatMarker);
+                        ArrayList<Long> repeatMarker = SequenceUtil.createRepeatMarkerReferenceV2(c, mer);
 
                         c.lazyLoad();
 
@@ -206,8 +204,7 @@ public class SequenceUtil {
             c.lazyLoad();
 
             EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c,mer);
-            long[] repeatMarker = SequenceUtil.createRepeatMarkerReferenceV2(c, mer);
-            encoded.addRepeatMarker(repeatMarker);
+            ArrayList<Long> repeatMarker = SequenceUtil.createRepeatMarkerReferenceV2(c, mer);           
 
             c.lazyLoad();
 
@@ -4008,7 +4005,7 @@ public class SequenceUtil {
 
     }
 
-     public static long[] createRepeatMarkerReferenceV2(ChromosomeSequence chr, int mer) throws IOException{
+     public static ArrayList<Long> createRepeatMarkerReferenceV2(ChromosomeSequence chr, int mer) throws IOException{
         /**
          * Create repeat Index and repeat Marker
          * Or read from file if file exist
@@ -4032,6 +4029,7 @@ public class SequenceUtil {
         ArrayList<Long> listRepeatMer = new ArrayList();                        // use for back unique part
         ArrayList<Map<Long,Long>> listRepeatMarker = new ArrayList();           // list of repeat marker first element is repeatMarker front unique and second is repeatMarker back unique 
         
+        EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,mer);            // encoded selected chromosome (to import all information of this chr. If it already encode it load a file, if not it do the encode)
         /**
          * Create Repeat Index by Chromosome and Map<Long,Long> of key=merPos and value=index of long[] merPos 
          */
@@ -4047,7 +4045,7 @@ public class SequenceUtil {
 
             int count = 0;
 
-            EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,mer);            // encoded selected chromosome (just for sure it is encode)
+            
             long chrnumber = chr.getChrNumber();
             merPos = encoded.getMers();
 
@@ -4055,8 +4053,6 @@ public class SequenceUtil {
 
                 long codeMerPos = merPos[i];
                 long codeMer = (codeMerPos>>28)&mask36bit;
-                merPosIndex.put(codeMerPos, i);
-
                 if(oldCodeMer == codeMer && repeatCodeMer != codeMer){      // check for repeat codeMer. if it repeat oldCodeMer and codeMer must equal more than one time. So, we can pick it from second time eaual and add to index file
                     repeatCodeMer = codeMer;
                     os.writeLong(codeMer);
@@ -4104,8 +4100,8 @@ public class SequenceUtil {
             long recentUnique = 0;
 
             long list[] = new long[n]; // Pre - allocate Array by n
-            long repeatMarker[] = new long[n];
-
+//            long repeatMarker[] = new long[n];                                  // this repeat Marker contain mer|index => mer[36bit] and index is indicate the index on reference array [long[]] has 28 bit 
+            ArrayList<Long> repeatMarker = new ArrayList();
 
             for(int i =0;i<mer;i++)mask=mask*4+3;
 
@@ -4163,17 +4159,31 @@ public class SequenceUtil {
                         list[count++] = x;
                         
                         if(repeatIndex.containsKey(cmer)){
+                                                                                                         
+                            long pos2[] = encoded.alignFullMerPos(x);       // align full mer|Pos with reference [expect only one position]. It will return index of this mer|Pos on reference array (long[]) expect only one index.             
+                            
+                            
+                            
+                            if(pos2.length>1){
+                                System.out.println("pos2 contain more than one index");
+                            }
+                            
+                            
                             if(firstFlag == true){
                                 oldMer = cmer;
                                 firstFlag = false;
                             }else if(firstFlag == false){
-                                long merIdx = (oldMer<<28)|i;
-                                repeatMarker[countMarker++] = merIdx;
+                                long merIdx = (oldMer<<28)+pos2[0];
+//                                repeatMarker[countMarker] = merIdx;
+                                repeatMarker.add(merIdx);
+//                                countMarker++;
                             }
                         }else{
                             if(firstFlag == false){
                                 long merIdx = (oldMer<<28)|mask28bit;
-                                repeatMarker[countMarker++] = merIdx;
+//                                repeatMarker[countMarker++] = merIdx;
+                                repeatMarker.add(merIdx);
+//                                countMarker++;
                                 firstFlag = true;
                             }else{
                                 firstFlag = true;
@@ -4183,12 +4193,12 @@ public class SequenceUtil {
                 }
             }
             
-            Arrays.sort(repeatMarker);
-
+            Collections.sort(repeatMarker);
+                
             System.out.println("write .bin file : repeatMarker");
-            os.writeInt(repeatMarker.length);
-            for(int i =0;i<repeatMarker.length;i++){
-                os.writeLong(repeatMarker[i]);
+            os.writeInt(repeatMarker.size());
+            for(int i=0;i<repeatMarker.size();i++){
+                os.writeLong(repeatMarker.get(i));
             }           
             os.close();
 
@@ -4198,11 +4208,11 @@ public class SequenceUtil {
             System.out.println("Begin read repeat marker");
             DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(repeatMarkerFile)));
             int size = is.readInt();
-            long repeatMarker[] = new long[size];
+            ArrayList<Long> repeatMarker = new ArrayList();
             
             for(int i=0;i<size;i++){
                 long merIdx = is.readLong();
-                repeatMarker[i] = merIdx;
+                repeatMarker.add(merIdx);
             }
 
             return repeatMarker;

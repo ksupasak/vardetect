@@ -38,7 +38,7 @@ public class EncodedSequence {
     //TreeMap<Long,Long> map;
     long[] mers;            // Store reference sequence of specific chr for mapping propose
     long[] mersComp;
-    long[] repeatMarker;
+    ArrayList<Long> repeatMarker;
     
     Map<Long,Long> map;
     Map<Long,Long> repeatMarkerFront;
@@ -64,13 +64,13 @@ public class EncodedSequence {
         return pos_strand;
     }
     
-    public void addRepeatMarker(ArrayList<Map<Long,Long>> in){
+    public void addRepeatMarkerFB(ArrayList<Map<Long,Long>> in){
         
         this.repeatMarkerFront = in.get(0);
         this.repeatMarkerBack = in.get(1);
     }
     
-    public void addRepeatMarker(long[] in){
+    public void addRepeatMarker(ArrayList<Long> in){
         
         this.repeatMarker = in;
     }
@@ -296,55 +296,186 @@ public class EncodedSequence {
         int start = -1;
         int stop = -1;
         
-        if(index>0){
-            for(int i=index;i>=0;i--){ 
-                long imer = mers[i]&mask;
-                
-                if(imer!=mer){
-                    start = i+1;
-                    break;
-                }else{
-                    start = i;
-                }
+        for(int i=index;i>=0;i--){ 
+            long imer = mers[i]&mask;
+
+            if(imer!=mer){
+                start = i+1;
+                break;
+            }else{
+                start = i;
             }
-            
-            for(int i=index;i<mers.length;i++){
-                long imer = mers[i]&mask;
-                
-                if(imer!=mer){
-                    stop = i;
-                    break;
-                }else{
-                    stop = i;
-                }
+        }
+
+        for(int i=index;i<mers.length;i++){
+            long imer = mers[i]&mask;
+
+            if(imer!=mer){
+                stop = i;
+                break;
+            }else{
+                stop = i;
             }
-            if(start<stop){
+        }
+
+        if(start<stop){
 //            System.out.println(" size "+(stop-start));
-                long j[] = new long[stop-start]; 
-            
-                for(int i =start;i<stop;i++){
-                    if(i-start>=0&&i>=0)
-                    j[i-start] = addStrandNotation(mers[i]&mask2,strand);
+            long j[] = new long[stop-start]; 
+
+            for(int i =start;i<stop;i++){                                       // This loop make program slow (In process to find the way to fix this)
+                if(i-start>=0&&i>=0)
+                j[i-start] = addStrandNotation(mers[i]&mask2,strand);
 //                    System.out.println();
 //                    System.out.println("Check mers the value should be 64 bit : " + mersComp[i] );
 //                    System.out.println("Check j the value should be 28 bit : " + j[i-start]);
 //                    System.out.println();
-                }
-
-
-                return j;
             }
-            else
-                return null;
-//            System.out.println("start : "+start+" stop : "+stop+" length :"+(stop-start));
-            
-            
-            
-        }
-        return null;
+
+
+            return j;
+        }else if(start == stop){
+            /**
+             * In case of index has value equal to 0 and 28bit value. We cannot scan up for the case that index is 0 and we cannot scan down for the case that index is 28bit(maximum index)
+             * With this two case the scan protocol above will return the same value of start and stop index If it not repeat. So, we can check booth value to determine this two special case.
+             * If it repeat it will fall into above check case (Because, with the repeat we can possibly scan down or scan up).
+             */
+            long j[] = new long[1];
+            j[0] = addStrandNotation(mers[start]&mask2,strand);
+            return j;
+
+        }else{
+            return null;
+        } 
+                
+//            System.out.println("start : "+start+" stop : "+stop+" length :"+(stop-start)); 
     }
     
-        public long[] alignLocal(long mer){
+    public long[] alignFullMerPos(long mer){
+        /**
+         * this function will return index on mers array (Reference chr.bin)
+         * Has been use for create repeat marker
+         */
+         
+        
+           
+        
+//        System.out.println("\n Do Strand + Alignment");
+        int strand = 1; // Notation for strand +
+        int index = alignMerPos(mer, 0, mers.length-1); // call binary search function with initial left and right with 0 and maximum index point
+        
+//        Old version its fix at 200 position scan up and down from middle(index)
+//        int start = -1;
+//        int stop = -1;
+//        
+//        if(index>0){
+//            for(int i=index;i>=0&&i>=index-200;i--){
+//                long imer = mers[i]&mask;
+//                
+//                if(imer!=mer){
+//                    start = i+1;
+//                    break;
+//                }else{
+//                    
+//                }
+//            }
+//            
+//            for(int i=index;i<mers.length&&i<index+200;i++){
+//                long imer = mers[i]&mask;
+//                
+//                if(imer!=mer){
+//                    stop = i;
+//                    break;
+//                }else{
+//                    
+//                }
+//            }
+//            if(start<stop&&stop-start<500){
+////            System.out.println(" size "+(stop-start));
+//            long j[] = new long[stop-start]; 
+//            
+//                for(int i =start;i<stop;i++){
+//                    if(i-start>=0&&i>=0)
+////                    j[i-start] = mers[i]&mask2;
+//                    j[i-start] = addStrandNotation(mers[i]&mask2,strand);
+////                    System.out.println();
+////                    System.out.println("Check mers the value should be 64 bit : " + mers[i] );
+////                    System.out.println("Check j the value should be 28 bit : " + j[i-start]);
+////                    System.out.println();
+//                }
+//
+//
+//                return j;
+//            }
+//            else
+//                return null;
+////            System.out.println("start : "+start+" stop : "+stop+" length :"+(stop-start));
+//            
+//            
+//            
+////        }
+//        
+        //createComplimentStrand();
+        
+
+/**
+ * New version
+ */
+        int start = -1;
+        int stop = -1;
+        
+                               
+        for(int i=index;i>=0;i--){                   // Scan up
+            long imer = mers[i];
+
+            if(imer!=mer){
+                start = i+1;
+                break;
+            }else{
+                start = i;
+            }
+        }
+
+        for(int i=index;i<mers.length;i++){     // Scan down
+            long imer = mers[i];
+
+            if(imer!=mer){
+                stop = i;
+                break;
+            }else{
+                stop = i;
+            }
+        }
+        
+        if(start<stop){
+//            System.out.println(" size "+(stop-start));
+            long j[] = new long[stop-start]; 
+
+            for(int i =start;i<stop;i++){
+                if(i-start>=0&&i>=0)
+                j[i-start] = i;
+
+            }
+
+
+            return j;
+        }else if(start == stop){
+            /**
+             * In case of index has value equal to 0 and 28bit value. We cannot scan up for the case that index is 0 and we cannot scan down for the case that index is 28bit(maximum index)
+             * With this two case the scan protocol above will return the same value of start and stop index If it not repeat. So, we can check booth value to determine this two special case.
+             * If it repeat it will fall into above check case (Because, with the repeat we can possibly scan down or scan up).
+             */
+            long j[] = new long[1];
+            j[0] = addStrandNotation(mers[start]&mask2,strand);
+            return j;
+        }else{
+            return null; 
+        }
+               
+//            System.out.println("start : "+start+" stop : "+stop+" length :"+(stop-start));
+
+    }
+ 
+    public long[] alignLocal(long mer){
 //        System.out.println("\n Do Strand + Alignment");
         int strand = 1; // Notation for strand +
         int index = align(mer, 0, mers.length-1); // call binary search function with initial left and right with 0 and maximum index point
@@ -422,6 +553,27 @@ public class EncodedSequence {
             }else
                 if(i>mer){              // if selected reference mers code higher than input mer
                     return align(mer, left,mid-1);  // adjust to new index by subtitude right position to mid-1
+                }else
+                    if(i==mer){         // if equal mean this position is match
+//                        long j = mers[mid];
+                        return mid;     // return match position
+                    }
+        
+        return -1;
+    }
+    
+    public int alignMerPos(long mer, int left, int right){
+        // Core of Binary Search Function (normal strand(+))
+        int mid = (left+right)/2;       // Find middle point between left and right
+        long i = mers[mid];        // get reference mers code at that middle point for matching purpose (long i = mer|Pos)  !! Important reference mer must be sorted 
+        
+        if(left>right)return -1;        // in case that left value higher than right that mean this mer not match
+        else
+            if(i<mer){                  // if selected reference mers code less than input mer
+                return alignMerPos(mer, mid+1,right);     // adjust to new index by subtitude left position to mid+1 
+            }else
+                if(i>mer){              // if selected reference mers code higher than input mer
+                    return alignMerPos(mer, left,mid-1);  // adjust to new index by subtitude right position to mid-1
                 }else
                     if(i==mer){         // if equal mean this position is match
 //                        long j = mers[mid];
