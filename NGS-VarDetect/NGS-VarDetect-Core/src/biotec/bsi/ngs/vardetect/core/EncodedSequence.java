@@ -41,9 +41,16 @@ public class EncodedSequence {
     ArrayList<Long> repeatMarker;
     
     Map<Long,Long> map;
-    Map<Long,Long> repeatMarkerFront;
-    Map<Long,Long> repeatMarkerBack;
+//    Map<Long,Long> repeatMarkerFront;
+//    Map<Long,Long> repeatMarkerBack;
+    Map<Long,Boolean> repeatIndex;
+    Map<Integer,ArrayList<Integer>> linkIndexCheck;
+    long[] repeatMarkerIndex;
+    int[] linkIndex;
+    int mainIndex;
+    int numMer;
     String name;
+    String subSequence;
     
     public long mask = -268435456; // Do & operation to get mer  
     public long mask2 = 268435455; // Do & operation to get position
@@ -53,8 +60,10 @@ public class EncodedSequence {
     public EncodedSequence(){
         this.mers = null;            // Store reference sequence of specific chr for mapping propose
         this.mersComp = null;
-        this.repeatMarkerFront = new LinkedHashMap();
-        this.repeatMarkerBack = new LinkedHashMap();
+//        this.repeatMarkerFront = new LinkedHashMap();
+//        this.repeatMarkerBack = new LinkedHashMap();
+        this.repeatIndex = new LinkedHashMap();
+        this.linkIndexCheck = new LinkedHashMap();
     }
     
     public long addStrandNotation(long in, int strand){
@@ -64,15 +73,27 @@ public class EncodedSequence {
         return pos_strand;
     }
     
-    public void addRepeatMarkerFB(ArrayList<Map<Long,Long>> in){
-        
-        this.repeatMarkerFront = in.get(0);
-        this.repeatMarkerBack = in.get(1);
-    }
+//    public void addRepeatMarkerFB(ArrayList<Map<Long,Long>> in){
+//        
+//        this.repeatMarkerFront = in.get(0);
+//        this.repeatMarkerBack = in.get(1);
+//    }
     
     public void addRepeatMarker(ArrayList<Long> in){
         
         this.repeatMarker = in;
+    }
+    
+    public void addRepeatIndex(Map<Long,Boolean> in){
+        this.repeatIndex = in;
+    }
+    
+    public void addRepeatMarkerIndex(long[] in){
+        this.repeatMarkerIndex = in;
+    }
+    
+    public void addLinkIndex(int[] in){
+        this.linkIndex = in;
     }
     
     public long[] fullAlign(long mer){  // now this function is unuse
@@ -350,6 +371,170 @@ public class EncodedSequence {
 //            System.out.println("start : "+start+" stop : "+stop+" length :"+(stop-start)); 
     }
     
+    public long[] align3(long mer, String inSeq, int mainIdx, int numMer){
+        
+        /**
+         * Core function for alignment with RepeatMarker
+         * Should return all information of peak
+         */
+        this.subSequence = inSeq;
+        this.mainIndex = mainIdx;
+        this.numMer = numMer;
+        this.linkIndexCheck.remove(mainIdx-1);            // remove all linked index that coresponse to old main index
+        
+        int strand = 1; // Notation for strand +
+        int index = alignWithRepeatMarker(mer, 0, this.repeatMarkerIndex.length-1); // call binary search function with initial left and right with 0 and maximum index point
+        
+        if(index == -1){
+            return null;
+        }else{
+            /**
+             * index scanning [ Scan up and down ] 
+             */
+            
+            int start = -1;
+            int stop = -1;
+
+            for(int i=index;i>=0;i--){ 
+                long imer = mers[i]&mask;
+
+                if(imer!=mer){
+                    start = i+1;
+                    break;
+                }else{
+                    start = i;
+                }
+            }
+
+            for(int i=index;i<mers.length;i++){
+                long imer = mers[i]&mask;
+
+                if(imer!=mer){
+                    stop = i;
+                    break;
+                }else{
+                    stop = i;
+                }
+            }
+            
+            /**
+             * Small window scan
+             */
+            
+            if(start<stop){
+    //            System.out.println(" size "+(stop-start));
+                long j[] = new long[stop-start]; 
+                
+                int merCount = 0;
+                for(int i =start;i<stop;i++){                                       // This loop make program slow (In process to find the way to fix this)
+                    /**
+                     * Do small window scan for each index
+                     */
+                    
+                    
+                    if(i-start>=0&&i>=0){
+                       
+                        /// Start here => repeatScan();
+                        
+                        int nextIndex = this.linkIndex[i];
+                        long nextMerPos = this.repeatMarkerIndex[nextIndex];
+                        long nextMer = nextMerPos&this.mask;
+                        
+                        for(int n=mainIdx;n<(inSeq.length()-numMer)+1;i++){ 
+                            String sub = inSeq.substring(i, i+numMer);                                 // cut String sequence into sub string sequence (mer length long) 
+                            long compareMer = SequenceUtil.encodeMer(sub, numMer);
+                            compareMer = compareMer<<28;
+                            
+                            if(nextMer != compareMer){
+                                break;
+                            }
+                        }        
+                                
+                        j[i-start] = addStrandNotation(mers[i]&mask2,strand);
+                        
+                    }
+
+                }
+
+
+                return j;
+            }else if(start == stop){
+                /**
+                 * In case of index has value equal to 0 and 28bit value. We cannot scan up for the case that index is 0 and we cannot scan down for the case that index is 28bit(maximum index)
+                 * With this two case the scan protocol above will return the same value of start and stop index If it not repeat. So, we can check both value to determine this two special case.
+                 * If it repeat it will fall into above check case (Because, with the repeat we can possibly scan down or scan up).
+                 */
+                long j[] = new long[1];
+                j[0] = addStrandNotation(mers[start]&mask2,strand);
+                return j;
+
+            }else{
+                return null;
+            } 
+            
+            
+        }
+ 
+/**
+ * New version
+ */
+        int start = -1;
+        int stop = -1;
+        
+        for(int i=index;i>=0;i--){ 
+            long imer = mers[i]&mask;
+
+            if(imer!=mer){
+                start = i+1;
+                break;
+            }else{
+                start = i;
+            }
+        }
+
+        for(int i=index;i<mers.length;i++){
+            long imer = mers[i]&mask;
+
+            if(imer!=mer){
+                stop = i;
+                break;
+            }else{
+                stop = i;
+            }
+        }
+
+        if(start<stop){
+//            System.out.println(" size "+(stop-start));
+            long j[] = new long[stop-start]; 
+
+            for(int i =start;i<stop;i++){                                       // This loop make program slow (In process to find the way to fix this)
+                if(i-start>=0&&i>=0)
+                j[i-start] = addStrandNotation(mers[i]&mask2,strand);
+//                    System.out.println();
+//                    System.out.println("Check mers the value should be 64 bit : " + mersComp[i] );
+//                    System.out.println("Check j the value should be 28 bit : " + j[i-start]);
+//                    System.out.println();
+            }
+
+
+            return j;
+        }else if(start == stop){
+            /**
+             * In case of index has value equal to 0 and 28bit value. We cannot scan up for the case that index is 0 and we cannot scan down for the case that index is 28bit(maximum index)
+             * With this two case the scan protocol above will return the same value of start and stop index If it not repeat. So, we can check both value to determine this two special case.
+             * If it repeat it will fall into above check case (Because, with the repeat we can possibly scan down or scan up).
+             */
+            long j[] = new long[1];
+            j[0] = addStrandNotation(mers[start]&mask2,strand);
+            return j;
+
+        }else{
+            return null;
+        } 
+                
+//            System.out.println("start : "+start+" stop : "+stop+" length :"+(stop-start)); 
+    }
+    
     public long[] alignFullMerPos(long mer){
         /**
          * this function will return index on mers array (Reference chr.bin)
@@ -559,6 +744,27 @@ public class EncodedSequence {
                         return mid;     // return match position
                     }
         
+        return -1;
+    }
+    
+    public int alignWithRepeatMarker(long mer, int left, int right){
+        // Core of Binary Search Function (normal strand(+))
+        long dummyMer = mer&mask;
+        int mid = (left+right)/2;       // Find middle point between left and right
+        long i = this.repeatMarkerIndex[mid]&mask;        // get reference mers code at that middle point for matching purpose  !! Important reference mer must be sorted 
+
+        if(left>right)return -1;        // in case that left value higher than right that mean this mer not match
+        else
+            if(i<mer){                  // if selected reference mers code less than input mer
+                return align(mer, mid+1,right);     // adjust to new index by subtitude left position to mid+1 
+            }else
+                if(i>mer){              // if selected reference mers code higher than input mer
+                    return align(mer, left,mid-1);  // adjust to new index by subtitude right position to mid-1
+                }else
+                    if(i==mer){         // if equal mean this position is match
+    //                        long j = mers[mid];
+                        return mid;     // return match position
+                    }       
         return -1;
     }
     
@@ -828,6 +1034,24 @@ public class EncodedSequence {
         Arrays.sort(this.mersComp);
         //return mersComp;
         
+    }
+    
+    public void repeatScan(int iniIdx){
+        ArrayList<Integer> listJumpIdx = new ArrayList();
+        
+        int nextIndex = this.linkIndex[iniIdx];
+        long nextMerPos = this.repeatMarkerIndex[nextIndex];
+        long nextMer = nextMerPos&this.mask;
+
+        for(int n=this.mainIndex;n<(this.subSequence.length()-numMer)+1;n++){ 
+            String sub = this.subSequence.substring(n, n+numMer);                                 // cut String sequence into sub string sequence (mer length long) 
+            long compareMer = SequenceUtil.encodeMer(sub, numMer);
+            compareMer = compareMer<<28;
+
+            if(nextMer != compareMer){
+                break;
+            }
+        } 
     }
                
                

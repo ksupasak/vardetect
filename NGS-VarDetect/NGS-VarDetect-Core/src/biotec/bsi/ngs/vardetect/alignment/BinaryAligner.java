@@ -76,9 +76,8 @@ public class BinaryAligner extends Thread implements Aligner {
                 Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
                 System.out.println("reading .. "+chr.getName()+"");
 
-                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,this.mer);            // encoded selected chromosome (just for sure it is encode)
-                ArrayList<Map<Long,Long>> repeatMarker = SequenceUtil.createRepeatMarkerReference(chr, this.mer);
-                encoded.addRepeatMarkerFB(repeatMarker);
+                EncodedSequence encoded = SequenceUtil.createAllReference(chr, this.mer);   // Create or import all reference [chromosome reference, repeat index, repeat Marker]
+                
                 while(seqs.hasMoreElements()){                                              // Loop over ShortgunSequence contain in InputSequence 
                     ShortgunSequence seq = seqs.nextElement();
                     Map<Long,long[]> merMap = new HashMap();
@@ -320,9 +319,7 @@ public class BinaryAligner extends Thread implements Aligner {
                 Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
                 System.out.println("reading .. "+chr.getName()+"");
 
-                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,this.mer);            // encoded selected chromosome (just for sure it is encode)
-                ArrayList<Map<Long,Long>> repeatMarker = SequenceUtil.createRepeatMarkerReference(chr, this.mer);  // create or import repeat marker
-                encoded.addRepeatMarkerFB(repeatMarker);
+                EncodedSequence encoded = SequenceUtil.createAllReference(chr, this.mer);   // Create or import all reference [chromosome reference, repeat index, repeat Marker]
                 long chrnumber = chr.getChrNumber();
                 /*********/
                 int inputSize = input.getInputSequence().size();
@@ -438,9 +435,7 @@ public class BinaryAligner extends Thread implements Aligner {
                 Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
                 System.out.println("reading .. "+chr.getName()+"");
 
-                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,this.mer);            // encoded selected chromosome (just for sure it is encode)
-                ArrayList<Map<Long,Long>> repeatMarker = SequenceUtil.createRepeatMarkerReference(chr, this.mer);  // create or import repeat marker
-                encoded.addRepeatMarkerFB(repeatMarker);
+                EncodedSequence encoded = SequenceUtil.createAllReference(chr, this.mer);   // Create or import all reference [chromosome reference, repeat index, repeat Marker]
                 long chrnumber = chr.getChrNumber();
                 /*********/
                 int inputSize = input.getInputSequence().size();
@@ -546,9 +541,7 @@ public class BinaryAligner extends Thread implements Aligner {
                 Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
                 System.out.println("reading .. "+chr.getName()+"");
 
-                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,this.mer);            // encoded selected chromosome (just for sure it is encode)
-                ArrayList<Map<Long,Long>> repeatMarker = SequenceUtil.createRepeatMarkerReference(chr, this.mer);  // create or import repeat marker
-                encoded.addRepeatMarkerFB(repeatMarker);
+                EncodedSequence encoded = SequenceUtil.createAllReference(chr, this.mer);   // Create or import all reference [chromosome reference, repeat index, repeat Marker]
                 while(seqs.hasMoreElements()){                                              // Loop over ShortgunSequence contain in InputSequence 
                     ShortgunSequence seq = seqs.nextElement();
                     this.alnMerMap = new HashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read
@@ -1100,9 +1093,7 @@ public class BinaryAligner extends Thread implements Aligner {
                 Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
                 System.out.println("reading .. "+chr.getName()+"");
 
-                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,this.mer);            // encoded selected chromosome (just for sure it is encode)                
-                ArrayList<Map<Long,Long>> repeatMarker = SequenceUtil.createRepeatMarkerReference(chr, this.mer);  // create or import repeat marker
-                encoded.addRepeatMarkerFB(repeatMarker);                
+                EncodedSequence encoded = SequenceUtil.createAllReference(chr, this.mer);   // Create or import all reference [chromosome reference, repeat index, repeat Marker]               
                 while(seqs.hasMoreElements()){                                              // Loop over ShortgunSequence contain in InputSequence 
                     ShortgunSequence seq = seqs.nextElement();
                     this.alnMerMap = new LinkedHashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read
@@ -1677,9 +1668,7 @@ public class BinaryAligner extends Thread implements Aligner {
                 Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
                 System.out.println("reading .. "+chr.getName()+"");
 
-                EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,this.mer);            // encoded selected chromosome (just for sure it is encode)
-                ArrayList<Map<Long,Long>> repeatMarker = SequenceUtil.createRepeatMarkerReference(chr, this.mer);  // create or import repeat marker
-                encoded.addRepeatMarkerFB(repeatMarker);
+                EncodedSequence encoded = SequenceUtil.createAllReference(chr, this.mer);   // Create or import all reference [chromosome reference, repeat index, repeat Marker]
                 while(seqs.hasMoreElements()){                                              // Loop over ShortgunSequence contain in InputSequence 
                     ShortgunSequence seq = seqs.nextElement();
                     this.alnMerMap = new LinkedHashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read
@@ -2241,6 +2230,364 @@ public class BinaryAligner extends Thread implements Aligner {
 //        }
         
         //return res;
+        return alinResult;
+    }
+    
+    public AlignmentResultRead alignV5(ReferenceSequence ref, InputSequence input, int numMer, int threshold) {
+        
+        this.setReferenceSequence(ref);
+        return alignV3(input,numMer,threshold);
+        
+    }
+    
+    public AlignmentResultRead alignV5(InputSequence input, int numMer, int threshold){
+        /**
+         * The different between alignV5 and V3 is we use repeat marker to align repeat
+         */
+        alnRes = new LinkedHashMap();                                     // initialize this hashmap one time per alinment job
+       
+        AlignmentResultRead alinResult = new AlignmentResultRead();
+        
+        this.mer = numMer;
+        
+        
+        Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
+
+        while(chrs.hasMoreElements()){                                                      // Loop chromosome contain in ReferenceSequence
+            try {
+                
+                
+                ChromosomeSequence chr = chrs.nextElement();
+                Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
+                System.out.println("reading .. "+chr.getName()+"");
+
+                EncodedSequence encoded = SequenceUtil.createAllReferenceV2(chr, this.mer);   // Create or import all reference [chromosome reference, repeat index, repeat Marker]               
+                while(seqs.hasMoreElements()){                                              // Loop over ShortgunSequence contain in InputSequence 
+                    ShortgunSequence seq = seqs.nextElement();
+                    this.alnMerMap = new LinkedHashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read
+
+                    String s = seq.getSequence();                                           // get String sequence of selected ShortgunSequence
+
+                    Map<Long,Long> alnCodeCheckList = new HashMap();                    // This map is a checklist for alncode to indicate the iniIndex Map<Long,Long> => Map<alnCode,iniIndex>
+                    /******** New Part (fixed wrong mer count) **********/
+                    long oldIniIdx = 0;
+                    long newIniIdx = 0;
+                    long iniIndex = 0;
+                    long recentIdx = 0;
+                    boolean firstMatchCheck = false;
+                    /****************/
+                    for(int i=0;i<(s.length()-mer)+1;i++){                                  // (Windowing with one stepping) for loop over String sequence which has limit round at (string length - mer length) + one [maximum possible mer sequence]    
+                        int index = i;
+                        String sub = s.substring(i, i+mer);                                 // cut String sequence into sub string sequence (mer length long) 
+                        long m = SequenceUtil.encodeMer(sub, mer);                          // encode sub string sequence (code is 36 bit max preserve the rest 28 bit for position)
+                        if(m!=-1){                                                          
+                            m = m<<28;                                                      // shift left 28 bit for optimization binary search purpose
+                            
+                            /**
+                             * write new implement code here
+                             * align repeat first
+                             * if output is nothing goes to normal align
+                             * align repeat should pass s (a sequence string) and all currently move information because we have to move small window inside it
+                             */
+                            
+                            long posR[] = encoded.
+                            
+                            long pos2[] = encoded.align2(m);                                // Do alignment with binary search (pos2[] cantain 64 bit long [mer code | position])
+                            long pos = -1;
+                            if(pos2!=null&&pos2.length>0){
+                                pos = pos2[0];
+                                pos = pos2.length;
+                            }
+                            
+                            int idx = (int) (pos-i);
+                            if(pos<0){
+                              idx = 0;
+                            }
+                            
+                            int totalMer = (seq.getShortgunLength()-mer)+1;
+                            
+                            /*************************************************************************************************************/
+                            /* -------------------------New Implement Part (Not Stroe in object)---------------------------------------------*/
+                            /*------------------------------- add iniIndex in front of 29 bit [strand|position] -----------------------------*/ 
+                            if(pos2 != null){
+
+                                /******** New Part (fixed wrong mer count) Version 3 **********/
+                                for(int j=0;j<pos2.length;j++){
+                                    long alnCode = pos2[j] - index;     // pos is 29 bit [strand|position] ; algncode is 29 bit [strand|alignPosition]
+                                    
+                                    
+                                    if(alnCodeCheckList.containsKey(alnCode)){
+ 
+                                        iniIndex = alnCodeCheckList.get(alnCode);
+                                        
+                                        long indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                        
+                                        ArrayList<Long> merList = this.alnMerMap.get(indexAlnCode);
+                                        
+                                        /**
+                                         * Case check to solve the problem. In case, when position-index is the same value but actually it different peak.
+                                         * To check continuity of this alnCode. We reserve index 0 of merList to store the recent index.
+                                         * Check continuity of index from different between recent index and current index.
+                                         */
+                                        
+                                        if(index-merList.get(0)==1){                                // Case check to solve the problem. In case, when position-index is the same value but actually it different peak
+                                            /**
+                                             * it's continue. So, iniIndex not change 
+                                             */
+                                            
+                                            iniIndex = alnCodeCheckList.get(alnCode);
+                                        
+                                            indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                            merList.remove(0);
+                                            merList.add(0,(long)index);
+                                            merList.add(m);
+                                            this.alnMerMap.put(indexAlnCode, merList);
+                                        }else{
+                                            /**
+                                             * it's not continue. So, iniIndex has change to present index                                                                                  
+                                             */
+                                            
+                                            iniIndex = index;
+                                            alnCodeCheckList.put(alnCode, iniIndex);
+
+                                            indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+
+                                            merList = new ArrayList();
+                                            merList.add(0,(long)index);
+                                            merList.add(m);
+                                            this.alnMerMap.put(indexAlnCode,merList);
+                                        }
+                                        /*******************/
+                                        
+                                    }else{
+                                        iniIndex = index;
+                                        alnCodeCheckList.put(alnCode, iniIndex);
+                                        
+                                        long indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                        
+                                        ArrayList<Long> merList = new ArrayList();
+                                        merList.add(0,(long)index);
+                                        merList.add(m);
+                                        this.alnMerMap.put(indexAlnCode,merList);
+                                        
+                                    }
+                                      
+                                }
+                                
+                                /***************************************************************/
+ 
+                            }
+                                                      
+                            /*-----------------------------------------------------------------------------------------------------------*/
+                            /*************************************************************************************************************/
+                            
+                        } 
+                                            
+                    }
+                    
+                    /*************************************************************************************************************/
+                    /* -------------------------New Implement Part Cons. (Not Stroe in object)---------------------------------------------*/
+                   
+                    if(this.alnRes.containsKey(seq.getReadName())){                     // Check for existing of ReadName (if exist put result code on existing ArrayList<Long>
+                        ArrayList<Long> countChrIdxStrandAlnList = this.alnRes.get(seq.getReadName()); //get existing Arraylist
+                        Set keySet = this.alnMerMap.keySet();
+                        Iterator keyIter =keySet.iterator();
+                        while(keyIter.hasNext()){
+                            long idxStrandAln = (long)keyIter.next();                      // strandAln has 29 bit compose of [strand|alignPosition]
+                            long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
+                            long chrIdxStrandAln = (chr.getChrNumber()<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add count number on the front of strandAln which has 37 bit
+                            long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
+                            
+                            if(count>threshold){                                                // case check to filter small count peak out (use user specify threshold)
+                                countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            }
+                        }
+                        this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
+                    }else{
+                        ArrayList<Long> countChrIdxStrandAlnList = new ArrayList();
+                        Set keySet = this.alnMerMap.keySet();
+                        Iterator keyIter =keySet.iterator();
+                        while(keyIter.hasNext()){
+                            long idxStrandAln = (long)keyIter.next();                      // strandAln has 29 bit compose of [strand|alignPosition]
+                            long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
+                            long chrIdxStrandAln = (chr.getChrNumber()<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add count number on the front of strandAln which has 37 bit
+                            long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
+                            
+                            if(count>threshold){                                                // case check to filter small count peak out (use user specify threshold)
+                                countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            }
+                        }
+                        this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
+                    }
+                    /*-----------------------------------------------------------------------------------------------------------*/
+                    /*************************************************************************************************************/
+                    
+
+                }
+                
+                /*-------------------- Do compliment alignment -------------------------------*/
+                /* Do the same algorithm but use function for compliment */
+                Enumeration<ShortgunSequence> seqsComp = input.getInputSequence().elements();
+                while(seqsComp.hasMoreElements()){
+                    ShortgunSequence seq = seqsComp.nextElement();                                  // get ShortgunSequence from InputSequence
+                    this.alnMerMap = new LinkedHashMap();
+
+                    String s = seq.getSequence();                                                   // get sequence form ShortgunSequence
+                    String invSeq = SequenceUtil.inverseSequence(s);                                // Do invert sequence (ATCG => GCTA)
+                    String compSeq = SequenceUtil.createComplimentV2(invSeq);                       // Do compliment on invert sequence (GCTA => CGAT)  
+
+                    Map<Long,Long> alnCodeCheckList = new HashMap();                    // This map is a checklist for alncode to indicate the iniIndex Map<Long,Long> => Map<alnCode,iniIndex> 
+                    /******** New Part (fixed wrong mer count) **********/
+                    long oldIniIdx = 0;
+                    long newIniIdx = 0;
+                    long iniIndex = 0;
+                    long recentIdx = 0;
+                    boolean firstMatchCheck = false;
+                    /****************/
+                    for(int i=0;i<(compSeq.length()-mer)+1;i++){                                    // Windowing   
+                        int index = i;                                                              // index at aligncompliment and non compliment is not different. It not effect any thing. we just know strand notation is enough
+                        String sub = compSeq.substring(i, i+mer);
+                        long m = SequenceUtil.encodeMer(sub, mer);
+                        if(m!=-1){
+                            m = m<<28;
+                            long pos2[] = encoded.align2ComplimentV2(m);                            // Do alignment by alignment function specific for compliment sequence
+                            long pos = -1;
+                            if(pos2!=null&&pos2.length>0){
+                                pos = pos2[0];
+                                pos = pos2.length;
+                            }
+                            
+                            int idx = (int) (pos-i);
+                            if(pos<0){
+                              idx = 0;
+                            }
+                            int totalMer = (seq.getShortgunLength()-mer)+1;
+                            
+                            /*************************************************************************************************************/
+                            /* -------------------------New Implement Part (Not Stroe in object)---------------------------------------------*/
+                            /*------------------------------- add iniIndex in front of 29 bit [strand|position] -----------------------------*/
+                            if(pos2 != null){
+                                /******** New Part (fixed wrong mer count) Version 3 **********/
+                                for(int j=0;j<pos2.length;j++){
+                                    long alnCode = pos2[j] - index;     // pos is 29 bit [strand|position] ; algncode is 29 bit [strand|alignPosition]
+                                    
+                                    
+                                    if(alnCodeCheckList.containsKey(alnCode)){
+ 
+                                        iniIndex = alnCodeCheckList.get(alnCode);
+                                        
+                                        long indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                        
+                                        ArrayList<Long> merList = this.alnMerMap.get(indexAlnCode);
+                                        
+                                        /**
+                                         * Case check to solve the problem. In case, when position-index is the same value but actually it different peak.
+                                         * To check continuity of this alnCode. We reserve index 0 of merList to store the recent index.
+                                         * Check continuity of index from different between recent index and current index.
+                                         */
+                                        
+                                        if(index-merList.get(0)==1){                                // Case check to solve the problem. In case, when position-index is the same value but actually it different peak
+                                            iniIndex = alnCodeCheckList.get(alnCode);
+                                        
+                                            indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                            merList.remove(0);
+                                            merList.add(0,(long)index);
+                                            merList.add(m);
+                                            this.alnMerMap.put(indexAlnCode, merList);
+                                        }else{
+                                            iniIndex = index;
+                                            alnCodeCheckList.put(alnCode, iniIndex);
+
+                                            indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+
+                                            merList = new ArrayList();
+                                            merList.add(0,(long)index);
+                                            merList.add(m);
+                                            this.alnMerMap.put(indexAlnCode,merList);
+                                        }
+                                        /*******************/
+                                        
+                                    }else{
+                                        iniIndex = index;
+                                        alnCodeCheckList.put(alnCode, iniIndex);
+                                        
+                                        long indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                        
+                                        ArrayList<Long> merList = new ArrayList();
+                                        merList.add(0,(long)index);
+                                        merList.add(m);
+                                        this.alnMerMap.put(indexAlnCode,merList);
+                                        
+                                    }
+                                     
+                                }
+                                
+                                /***************************************************************/
+
+                            }
+                                                   
+                            /*-----------------------------------------------------------------------------------------------------------*/
+                            /*************************************************************************************************************/
+                        }
+                                           
+                    }
+                    
+                    /*************************************************************************************************************/
+                    /* -------------------------New Implement Part Cons. (Not Stroe in object)---------------------------------------------*/
+                   
+                    if(this.alnRes.containsKey(seq.getReadName())){                     // Check for existing of ReadName (if exist put result code on existing ArrayList<Long>
+                        
+                        ArrayList<Long> countChrIdxStrandAlnList = this.alnRes.get(seq.getReadName()); //get existing Arraylist
+                        Set keySet = this.alnMerMap.keySet();
+                        Iterator keyIter =keySet.iterator();
+                        while(keyIter.hasNext()){
+                            long idxStrandAln = (long)keyIter.next();                      // strandAln has 37 bit compose of [iniIndex|strand|alignPosition]
+                            long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
+                            long chrIdxStrandAln = (chr.getChrNumber()<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add chr number on the front of strandAln which has 37 bit
+                            long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit
+                            
+                            if(count>threshold){                                                // case check to filter small count peak out (use user specify threshold)
+                                countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            }
+                        }
+                        this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
+                    }else{
+                        ArrayList<Long> countChrIdxStrandAlnList = new ArrayList();
+                        Set keySet = this.alnMerMap.keySet();
+                        Iterator keyIter =keySet.iterator();
+                        while(keyIter.hasNext()){
+                            long idxStrandAln = (long)keyIter.next();                      // strandAln has 37 bit compose of [iniIndex|strand|alignPosition]
+                            long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
+                            long chrIdxStrandAln = (chr.getChrNumber()<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add chr number on the front of strandAln which has 37 bit
+                            long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
+                            
+                            if(count>threshold){                                                // case check to filter small count peak out (use user specify threshold)
+                                countChrIdxStrandAlnList.add(countChrIdxStrandAln);
+                            }
+                        }
+                        this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
+                    }
+
+                    /*-----------------------------------------------------------------------------------------------------------*/
+                    /*************************************************************************************************************/
+
+                }
+                /* End */
+                
+                encoded.lazyLoad();         // clear memmory
+                encoded = null;
+                
+                System.gc();
+                
+                
+                
+            } catch (IOException ex) {
+                Logger.getLogger(BinaryAligner.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        }
+        alinResult.addMapResult(this.alnRes);
+        
         return alinResult;
     }
 }

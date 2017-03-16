@@ -107,9 +107,10 @@ public class SequenceUtil {
 //                    if(c.getSequence()==null){
 //                   
 //                    }
-                     
-                    EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c,mer);
-                    ArrayList<Long> repeatMarker = SequenceUtil.createRepeatMarkerReferenceV2(c, mer);                  
+                    
+                    EncodedSequence encoded = SequenceUtil.createAllReferenceV2(c, mer);
+//                    EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c,mer);
+//                    ArrayList<Long> repeatMarker = SequenceUtil.createRepeatMarkerReferenceV2(c, mer);                  
                      
                      
 //                }
@@ -166,8 +167,7 @@ public class SequenceUtil {
                         seq=null;
                         c.lazyLoad();
 
-                        EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c,mer);
-                        ArrayList<Long> repeatMarker = SequenceUtil.createRepeatMarkerReferenceV2(c, mer);
+                        EncodedSequence encoded = SequenceUtil.createAllReferenceV2(c, mer);
 
                         c.lazyLoad();
 
@@ -203,8 +203,7 @@ public class SequenceUtil {
 
             c.lazyLoad();
 
-            EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c,mer);
-            ArrayList<Long> repeatMarker = SequenceUtil.createRepeatMarkerReferenceV2(c, mer);           
+            EncodedSequence encoded = SequenceUtil.createAllReferenceV2(c, mer);           
 
             c.lazyLoad();
 
@@ -4029,7 +4028,7 @@ public class SequenceUtil {
         ArrayList<Long> listRepeatMer = new ArrayList();                        // use for back unique part
         ArrayList<Map<Long,Long>> listRepeatMarker = new ArrayList();           // list of repeat marker first element is repeatMarker front unique and second is repeatMarker back unique 
         
-        EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,mer);            // encoded selected chromosome (to import all information of this chr. If it already encode it load a file, if not it do the encode)
+        EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,mer);            // encoded selected chromosome (to import all information of this chr. If it already encode it load a file, if not it do the encode)        
         /**
          * Create Repeat Index by Chromosome and Map<Long,Long> of key=merPos and value=index of long[] merPos 
          */
@@ -4219,5 +4218,456 @@ public class SequenceUtil {
         }
 
         return null;
+    }
+     
+     public static EncodedSequence createAllReferenceV2(ChromosomeSequence chr, int mer) throws IOException{
+        /**
+         * This function will create or import all reference for alignment.
+         * 1. Create or import chromosome reference [create from function encodedSerialChromosomeSequence]
+         * 2. Create or import repeatMarkerIndex and linkIndex
+         *          repeatMarkerIndex is long[] : contain all repeat mer|pos (sorted)
+         *          linkIndex is int[] : contain index on repeatMarkerIndex has same order as repeatMakerIndex. 
+         *          This mean the information at index 100 of repeatMarkerIndex have relationship with information on the same index (index 100) on linkIndex
+         */
+        
+        long maskMinus28bit = -268435456; // Do & operation to get mer  (it is minus 28 bit plus 1 bit)
+        long mask28bit = 268435455; // Do & operation to get position (28 bit value)
+        long mask36bit = 68719476735L;
+        int sliding = 1;
+        long oldCodeMer = 0;
+        long oldCodeMerPos = 0;
+        long newCodeMer = 0;
+        long repeatCodeMer = 0;
+        long uniqueMer = 0;
+        long distant = 0;
+        long distantB = 0;
+        long[] merPos;
+        long[] repeatMI = new long[0];                                                        // long[] contain repeat mer|pos         
+        Map<Long,Boolean> repeatIndex = new LinkedHashMap();
+        Map<Long,Integer> merPosIndex = new LinkedHashMap();                    // Store merPos as key and index as Value. "index" is number that indicate the index of merPos on long[] merPos
+        Map<Long,Long> repeatMarkerFront = new LinkedHashMap();
+        Map<Long,Long> repeatMarkerBack = new LinkedHashMap();
+        ArrayList<Long> listRepeatMer = new ArrayList();                        // use for back unique part
+        ArrayList<Map<Long,Long>> listRepeatMarker = new ArrayList();           // list of repeat marker first element is repeatMarker front unique and second is repeatMarker back unique 
+        ArrayList<Long> repeatMarkerIndex = new ArrayList();
+        EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,mer);            // encoded selected chromosome (to import all information of this chr. If it already encode it load a file, if not it do the encode)        
+        
+        /**
+         * Create Repeat Index by Chromosome and Map<Long,Long> of key=merPos and value=index of long[] merPos 
+         */
+           
+        File indexFile = new File(chr.getFilePath() + "_repeatMarkerIdx.bin");
+        System.out.println("Chromosome: "+chr.getName());
+
+        if(indexFile.exists()!=true){
+            System.out.println("Begin create Repeat Marker Index");
+            DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(indexFile)));
+                                                      
+            long startTime = System.currentTimeMillis();
+
+            int count = 0;
+
+            
+            long chrnumber = chr.getChrNumber();
+            merPos = encoded.getMers();
+            boolean firstFlag = true;
+            for(int i=0;i<merPos.length;i++){
+
+                long codeMerPos = merPos[i];
+                long codeMer = (codeMerPos>>28)&mask36bit;
+                
+                if(firstFlag == true && oldCodeMer == codeMer){
+                    repeatMarkerIndex.add(oldCodeMerPos);
+                    repeatMarkerIndex.add(codeMerPos);
+                    firstFlag = false;
+                }else if(firstFlag == false && oldCodeMer == codeMer){
+                    repeatMarkerIndex.add(codeMerPos);
+                }else{
+                    firstFlag = true;
+                }
+                
+                oldCodeMer = codeMer;
+                oldCodeMerPos = codeMerPos;
+            }
+            
+            Collections.sort(repeatMarkerIndex);                            // Sort Arraylist<Long>
+            os.writeInt(repeatMarkerIndex.size());
+            repeatMI = new long[repeatMarkerIndex.size()];
+            for(int i = 0;i<repeatMarkerIndex.size();i++){
+                os.writeLong(repeatMarkerIndex.get(i));
+                repeatMI[i] = repeatMarkerIndex.get(i);
+            }
+            os.close();
+            repeatMarkerIndex = null;
+            System.gc();
+            
+        }else if(indexFile.exists()==true){
+            System.out.println("Begin read Repeat Marker Index");
+            boolean eof = false;
+
+            try{
+                DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(indexFile)));
+                int size = is.readInt();
+                repeatMI = new long[size];
+                int count = 0;
+                while(!eof){
+                    long repeatMerPos = is.readLong();
+                    repeatMI[count] = repeatMerPos;
+                    count++;
+                }   
+            }
+            catch(EOFException e){
+                eof = true;
+            }
+
+        }
+        encoded.addRepeatMarkerIndex(repeatMI);
+        
+        /**
+         * Create repeat marker (concatenate marker)
+         */
+
+        File repeatMarkerFile = new File(chr.getFilePath() + "_linkIndex.bin");
+        int[] linkIndex = new int[repeatMI.length];
+        
+        if(!repeatMarkerFile.exists()){
+            System.out.println("Begin create Link Index");
+            DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(repeatMarkerFile))); // create object for output data stream
+            StringBuffer sb = chr.getSequence();
+
+            int n = (sb.length()-mer)/sliding;       
+            long cmer = -1;
+            long mask = 0; 
+            int count = 0;
+            int countMarker = 0;
+
+            long recentUnique = 0;
+
+//            long repeatMarker[] = new long[n];                                  // this repeat Marker contain mer|index => mer[36bit] and index is indicate the index on reference array [long[]] has 28 bit 
+          
+            for(int i =0;i<mer;i++)mask=mask*4+3;
+
+            System.out.println(mask);
+
+            boolean firstFlag = true;
+            int oldIndex = 0;
+            
+            for(int i =0;i<n;i++){
+
+                long pos = i*sliding;
+                char chx = sb.charAt(i*sliding+mer-1);
+                if(chx!='N'){
+                    if(cmer==-1){
+                        String s = sb.substring(i*sliding,i*sliding+mer);
+                        cmer = encodeMer(s,mer);
+                    }else{
+                        int t =-1;
+                        switch(chx){
+                            case 'A':
+                            case 'a':
+                                t=0; // 00
+                                break;
+                            case 'T':
+                            case 't': 
+                                t=3; // 11
+                                break;
+                            case 'C':
+                            case 'c':
+                                t=1; // 01 
+                                break;
+                            case 'G':
+                            case 'g':
+                                t=2; // 10 
+                                break;
+                            default : 
+                                t=-1;
+                            break;
+
+                        }
+                        if(t>=0){
+
+                            cmer *= 4;
+                            cmer &= mask;
+                            cmer += t;
+
+                        }else{
+                            cmer = -1;
+                            i+=mer;
+                        }  
+                    }  
+                    if(i%1000000==0)System.out.println("Encode "+chr.getName()+" "+i*sliding);
+
+                    if(cmer>=0){
+                        long x = (cmer<<(64- mer*2))|pos;
+
+                        int index = Arrays.binarySearch(repeatMI, x);           // search x through repeatMarkerIndex (repeatMI). If it repeat index must be some single number that 0<= x <= repeatMI.length
+                        if(oldIndex == index){
+                            System.out.println("NOOOOO");
+                        }
+                        if(index >= 1){                                                      
+                            if(firstFlag == true){
+                                oldIndex = index;
+                                firstFlag = false;
+                            }else if(firstFlag == false){
+                                linkIndex[oldIndex] = index;
+                                oldIndex = index;
+                            }
+                        }else{
+                            if(firstFlag == false){
+                                linkIndex[oldIndex] = (int)mask28bit;
+                                firstFlag = true;
+                            }else{
+                                firstFlag = true;
+                            }  
+                        }           
+                    }
+                }
+            }
+                  
+            System.out.println("write .bin file : linkIndex");
+            os.writeInt(linkIndex.length);
+            for(int i=0;i<linkIndex.length;i++){
+                os.writeInt(linkIndex[i]);
+            }           
+            os.close();
+      
+        }else if(repeatMarkerFile.exists()){
+            System.out.println("Begin read repeat marker");
+            DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(repeatMarkerFile)));
+            int size = is.readInt();
+            linkIndex = new int[size];
+            
+            for(int i=0;i<size;i++){
+                int index = is.readInt();
+                linkIndex[i]=index;
+            }
+  
+        }
+        
+        encoded.addLinkIndex(linkIndex);
+
+        return encoded;
+    }
+     
+     public static EncodedSequence createAllReference(ChromosomeSequence chr, int mer) throws IOException{
+        /**
+         * This function will create or import all reference for alignment.
+         * 1. Create or import chromosome reference [create from function encodedSerialChromosomeSequence]
+         * 2. Create or import repeat Index and repeat Marker         * 
+         */
+        
+        long maskMinus28bit = -268435456; // Do & operation to get mer  (it is minus 28 bit plus 1 bit)
+        long mask28bit = 268435455; // Do & operation to get position (28 bit value)
+        long mask36bit = 68719476735L;
+        int sliding = 1;
+        long oldCodeMer = 0;
+        long newCodeMer = 0;
+        long repeatCodeMer = 0;
+        long uniqueMer = 0;
+        long distant = 0;
+        long distantB = 0;
+        long[] merPos;
+        Map<Long,Boolean> repeatIndex = new LinkedHashMap();
+        Map<Long,Integer> merPosIndex = new LinkedHashMap();                    // Store merPos as key and index as Value. "index" is number that indicate the index of merPos on long[] merPos
+        Map<Long,Long> repeatMarkerFront = new LinkedHashMap();
+        Map<Long,Long> repeatMarkerBack = new LinkedHashMap();
+        ArrayList<Long> listRepeatMer = new ArrayList();                        // use for back unique part
+        ArrayList<Map<Long,Long>> listRepeatMarker = new ArrayList();           // list of repeat marker first element is repeatMarker front unique and second is repeatMarker back unique 
+        ArrayList<Long> repeatMarker = new ArrayList();
+        
+        
+        EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,mer);            // encoded selected chromosome (to import all information of this chr. If it already encode it load a file, if not it do the encode)        
+        /**
+         * Create Repeat Index by Chromosome and Map<Long,Long> of key=merPos and value=index of long[] merPos 
+         */
+           
+        File indexFile = new File(chr.getFilePath() + "_repeatIdx.bin");
+        System.out.println("Chromosome: "+chr.getName());
+
+        if(indexFile.exists()!=true){
+            System.out.println("Begin create repeat index");
+            DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(indexFile)));
+                                                      
+            long startTime = System.currentTimeMillis();
+
+            int count = 0;
+
+            
+            long chrnumber = chr.getChrNumber();
+            merPos = encoded.getMers();
+
+            for(int i=0;i<merPos.length;i++){
+
+                long codeMerPos = merPos[i];
+                long codeMer = (codeMerPos>>28)&mask36bit;
+                if(oldCodeMer == codeMer && repeatCodeMer != codeMer){      // check for repeat codeMer. if it repeat oldCodeMer and codeMer must equal more than one time. So, we can pick it from second time eaual and add to index file
+                    repeatCodeMer = codeMer;
+                    os.writeLong(codeMer);
+                    repeatIndex.put(codeMer, true);
+                }
+                oldCodeMer = codeMer;
+            }
+            os.close();
+        }else if(indexFile.exists()==true){
+            System.out.println("Begin read repeat index");
+            boolean eof = false;
+
+            try{
+                DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(indexFile)));
+
+                while(!eof){
+                    long repeatMer = is.readLong();
+                    repeatIndex.put(repeatMer, true);
+                }   
+            }
+            catch(EOFException e){
+                eof = true;
+            }
+
+        }
+        
+        encoded.addRepeatIndex(repeatIndex);
+        
+        /**
+         * Create repeat marker (concatenate marker)
+         */
+
+        File repeatMarkerFile = new File(chr.getFilePath() + "_repeatMarker.bin");
+       
+
+        if(!repeatMarkerFile.exists()){
+            System.out.println("Begin create repeat marker");
+            DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(repeatMarkerFile))); // create object for output data stream
+            StringBuffer sb = chr.getSequence();
+
+            int n = (sb.length()-mer)/sliding;       
+            long cmer = -1;
+            long mask = 0; 
+            int count = 0;
+            int countMarker = 0;
+
+            long recentUnique = 0;
+
+            long list[] = new long[n]; // Pre - allocate Array by n
+//            long repeatMarker[] = new long[n];                                  // this repeat Marker contain mer|index => mer[36bit] and index is indicate the index on reference array [long[]] has 28 bit 
+            
+
+            for(int i =0;i<mer;i++)mask=mask*4+3;
+
+            System.out.println(mask);
+
+            boolean firstFlag = true;
+            long oldMer = 0;
+            for(int i =0;i<n;i++){
+
+                long pos = i*sliding;
+                char chx = sb.charAt(i*sliding+mer-1);
+                if(chx!='N'){
+                    if(cmer==-1){
+                        String s = sb.substring(i*sliding,i*sliding+mer);
+                        cmer = encodeMer(s,mer);
+                    }else{
+                        int t =-1;
+                        switch(chx){
+                            case 'A':
+                            case 'a':
+                                t=0; // 00
+                                break;
+                            case 'T':
+                            case 't': 
+                                t=3; // 11
+                                break;
+                            case 'C':
+                            case 'c':
+                                t=1; // 01 
+                                break;
+                            case 'G':
+                            case 'g':
+                                t=2; // 10 
+                                break;
+                            default : 
+                                t=-1;
+                            break;
+
+                        }
+                        if(t>=0){
+
+                            cmer *= 4;
+                            cmer &= mask;
+                            cmer += t;
+
+                        }else{
+                            cmer = -1;
+                            i+=mer;
+                        }  
+                    }  
+                    if(i%1000000==0)System.out.println("Encode "+chr.getName()+" "+i*sliding);
+
+                    if(cmer>=0){
+                        long x = (cmer<<(64- mer*2))|pos;
+                        list[count++] = x;
+                        
+                        if(repeatIndex.containsKey(cmer)){
+                                                                                                         
+                            long pos2[] = encoded.alignFullMerPos(x);       // align full mer|Pos with reference [expect only one position]. It will return index of this mer|Pos on reference array (long[]) expect only one index.             
+                            
+                            
+                            
+                            if(pos2.length>1){
+                                System.out.println("pos2 contain more than one index");
+                            }
+                            
+                            
+                            if(firstFlag == true){
+                                oldMer = cmer;
+                                firstFlag = false;
+                            }else if(firstFlag == false){
+                                long merIdx = (oldMer<<28)+pos2[0];
+//                                repeatMarker[countMarker] = merIdx;
+                                repeatMarker.add(merIdx);
+//                                countMarker++;
+                            }
+                        }else{
+                            if(firstFlag == false){
+                                long merIdx = (oldMer<<28)|mask28bit;
+//                                repeatMarker[countMarker++] = merIdx;
+                                repeatMarker.add(merIdx);
+//                                countMarker++;
+                                firstFlag = true;
+                            }else{
+                                firstFlag = true;
+                            }  
+                        }           
+                    }
+                }
+            }
+            
+            Collections.sort(repeatMarker);
+                
+            System.out.println("write .bin file : repeatMarker");
+            os.writeInt(repeatMarker.size());
+            for(int i=0;i<repeatMarker.size();i++){
+                os.writeLong(repeatMarker.get(i));
+            }           
+            os.close();
+
+//            return repeatMarker;
+            
+        }else if(repeatMarkerFile.exists()){
+            System.out.println("Begin read repeat marker");
+            DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(repeatMarkerFile)));
+            int size = is.readInt();
+     
+            for(int i=0;i<size;i++){
+                long merIdx = is.readLong();
+                repeatMarker.add(merIdx);
+            }
+
+//            return repeatMarker;
+        }
+        
+        encoded.addRepeatMarker(repeatMarker);
+        
+        return encoded;
     }
 }
