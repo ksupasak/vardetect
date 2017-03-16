@@ -20,6 +20,6 @@ public class TestCreateRepeatMarker {
         
         ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath,numMer);   
         
-    }
+    }    
     
 }
