@@ -292,7 +292,7 @@ public class ThreadBinaryAlignerV4 implements Runnable {
                     long chrIdxStrandAln = (chrNum<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add count number on the front of strandAln which has 37 bit
                     long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
                     
-                    if(count>threshold){                                            // case check to filter small count peak out (use user specify threshold)
+                    if(count>=threshold){                                            // case check to filter small count peak out (use user specify threshold)
                         countChrIdxStrandAlnList.add(countChrIdxStrandAln);
                     }
                 }
@@ -307,7 +307,7 @@ public class ThreadBinaryAlignerV4 implements Runnable {
                     long chrIdxStrandAln = (chrNum<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add count number on the front of strandAln which has 37 bit
                     long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
                     
-                    if(count>threshold){                                              // case check to filter small count peak out (use user specify threshold)
+                    if(count>=threshold){                                              // case check to filter small count peak out (use user specify threshold)
                         countChrIdxStrandAlnList.add(countChrIdxStrandAln);
                     }
                 }
@@ -539,7 +539,7 @@ public class ThreadBinaryAlignerV4 implements Runnable {
                     long chrIdxStrandAln = (chrNum<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add chr number on the front of strandAln which has 37 bit
                     long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit
 
-                    if(count>threshold){                                            // case check to filter small count peak out (use user specify threshold)
+                    if(count>=threshold){                                            // case check to filter small count peak out (use user specify threshold)
                         countChrIdxStrandAlnList.add(countChrIdxStrandAln);
                     }
                 }
@@ -554,7 +554,7 @@ public class ThreadBinaryAlignerV4 implements Runnable {
                     long chrIdxStrandAln = (chrNum)+idxStrandAln;     // shift left 37 bit beacause we want to add chr number on the front of strandAln which has 37 bit
                     long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
                     
-                    if(count>threshold){                                                // case check to filter small count peak out (use user specify threshold)
+                    if(count>=threshold){                                                // case check to filter small count peak out (use user specify threshold)
                         countChrIdxStrandAlnList.add(countChrIdxStrandAln);
                     }
                 }

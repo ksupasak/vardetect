@@ -555,7 +555,7 @@ public class BinaryAligner extends Thread implements Aligner {
                 Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
                 System.out.println("reading .. "+chr.getName()+"");
 
-                EncodedSequence encoded = SequenceUtil.createAllReferenceV2(chr, this.mer);   // Create or import all reference [chromosome reference, repeat index, repeat Marker]
+                EncodedSequence encoded = SequenceUtil.createAllReferenceV2(chr, this.mer, 'a');   // Create or import all reference [chromosome reference, repeat index, repeat Marker]
                 long chrnumber = chr.getChrNumber();
                 /*********/
                 int inputSize = input.getInputSequence().size();
@@ -2381,7 +2381,7 @@ public class BinaryAligner extends Thread implements Aligner {
                 Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
                 System.out.println("reading .. "+chr.getName()+"");
 
-                EncodedSequence encoded = SequenceUtil.createAllReferenceV2(chr, this.mer);   // Create or import all reference [chromosome reference, repeat index, repeat Marker]               
+                EncodedSequence encoded = SequenceUtil.createAllReferenceV2(chr, this.mer, 'a');   // Create or import all reference [chromosome reference, repeat index, repeat Marker]               
                 while(seqs.hasMoreElements()){                                              // Loop over ShortgunSequence contain in InputSequence 
                     ShortgunSequence seq = seqs.nextElement();
                     this.alnMerMap = new LinkedHashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read

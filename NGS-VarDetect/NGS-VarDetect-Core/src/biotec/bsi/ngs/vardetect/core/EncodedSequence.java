@@ -142,7 +142,7 @@ public class EncodedSequence {
         int start = -1;
         int stop = -1;
         
-        if(index>=0){
+        if(index>0){
             for(int i=index;i>=0;i--){ 
                 long imer = mers[i]&mask;
                 
@@ -324,7 +324,7 @@ public class EncodedSequence {
         int start = -1;
         int stop = -1;
         
-        if(index >= 0){
+        if(index > 0){
         
             for(int i=index;i>=0;i--){ 
                 long imer = mers[i]&mask;

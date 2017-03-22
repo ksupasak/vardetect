@@ -940,7 +940,8 @@ public class AlignmentResultRead {
          * 
          * String option1 filter option code "gy" mean we filter out the read match result that has orange and red count
          *                                   "g"  mean we filter out the read match result contain yellow orange and red count
-         *
+         *                                   "gyo" mean we filter out the read match result contain only red count
+         *                                  "all" mean no filter
          * int option2 filter option threshold indicate the maximum mer count. If read match result have mer count equal or more than this threshold the result has been filter out. (prevent full match read)
          * 
          * We adjust iniIndex into a view of strand + [the last index of strand - will be iniIndex of strand +]
