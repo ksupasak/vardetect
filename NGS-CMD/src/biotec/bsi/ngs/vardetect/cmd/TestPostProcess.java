@@ -24,9 +24,9 @@ public class TestPostProcess {
        public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "hg38_full_3661_mul_alignmentResult_th5_part";       
-        String path = "/Volumes/PromisePegasus/worawich/VMdev/dataScieneToolBox/projects/NGS/ERR/";
-        String saveFileName = "hg38_3661_alignmentResult_forLinuxSort";
+        String filename = "hg38_CHR16NewMethod_tha5.2_alignmentResult_part";       
+        String path = "/Volumes/PromisePegasus/worawich/VMdev/dataScieneToolBox/projects/NGS/Thalassemia/";
+        String saveFileName = "hg38_CHR16NewMethod_tha5.2_alignmentResult_forLinuxSort";
 
         String saveFileNameERR = "hg38_simData_mul_alignmentResult_th5_ERR_forLinuxSortV2";
         String saveFileName3661 = "hg38_simData_mul_alignmentResult_th5_forLinuxSort";
@@ -40,11 +40,11 @@ public class TestPostProcess {
         
         for(int i=1;i<=numPart;i++){
             
-            AlignmentResultRead readAlign = SequenceUtil.readAlignmentReportV2(path+filenameERR+i+".txt",100,18);
+            AlignmentResultRead readAlign = SequenceUtil.readAlignmentReportV2(path+filename+i+".txt",100,18);
             System.out.println("Begin create color array");
             Clustering.createColorArray(readAlign, 100, 18);        
             System.out.println("Done create color array");
-            readAlign.writeSortedCutColorResultToPathInFormatForLinuxSort(path, saveFilenameERR, "txt");
+            readAlign.writeSortedCutColorResultToPathInFormatForLinuxSort(path, saveFileName, "txt","gyo",83);
 //            VariationResult varRes = SequenceUtil.analysisResultFromFile(path+saveFileNameForPostProcess+".txt",18,100);
             readAlign = null;
             System.gc();

@@ -18,7 +18,7 @@ public class TestCreateRepeatMarker {
         String refPath = "/Volumes/PromisePegasus/worawich/VMdev/dataScieneToolBox/projects/NGS/hg38/hg38_filter.fa";
         int numMer = 18;
         
-        ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath,numMer);   
+        ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath,numMer);        
         
     }    
     

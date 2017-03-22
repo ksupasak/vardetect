@@ -38,6 +38,7 @@ public class RunAlignmentMultiThreadV4 {
     
      public static void main(String[] args) throws IOException, InterruptedException {
         // TODO code application logic here
+        long startAlignTime = System.currentTimeMillis();
         String refPath = args[0];                                       // First argument; indicate reference  file (include it path if it not in the current directory)
         String inputPath = args[1];                                     // Second argument; indicate input file (include it path if it not in the current directory)
         String filename = args[2];                                      // Third argument; indicate save file name
@@ -82,6 +83,9 @@ public class RunAlignmentMultiThreadV4 {
     
 //            System.out.println("Do sortCountCutResult");
 //            align.sortCountCutResultForMapV3(threshold);
+            long stopAlignTime = System.currentTimeMillis();
+            double totalAlignTime = ((stopAlignTime - startAlignTime)/1000)/60;
+            System.out.println(String.format("Alignment Time use : %.4f min",totalAlignTime));
             System.out.println("Do write Report");
             align.writeSortedCutResultMapToPathInFormatV3(ref.getPath(),savefilename, "txt");
             System.out.println("Done part " + count);
