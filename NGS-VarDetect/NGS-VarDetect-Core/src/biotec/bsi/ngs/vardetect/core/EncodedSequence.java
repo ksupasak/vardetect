@@ -584,7 +584,12 @@ public class EncodedSequence {
                         
                         for(int n=mainIdx+1;n<(inSeq.length()-numMer)+1;n++){                            // Loop for Small window scan (main index is current index from big window)
                             
-                                                  
+                            if(nextIndex>this.repeatMarkerIndex.length){
+                                System.out.println("Error");
+                            }
+                            if(nextIndex == this.mask2){
+                                break;
+                            }
                             nextMerPos = this.repeatMarkerIndex[nextIndex];
                             nextMer = nextMerPos&this.mask;
                             
@@ -594,8 +599,26 @@ public class EncodedSequence {
                             
                             if(nextMer != compareMer){
                                 break;
-                            }else if(this.linkIndexCheck.get(n).contains(nextIndex)){        // check repeat of nextindex (check contain of next index in ArrayList of past next index)
-                                break;
+                            }else if(this.linkIndexCheck.get(n) !=null){        // check repeat of nextindex (check contain of next index in ArrayList of past next index)
+                                if(this.linkIndexCheck.get(n).contains(nextIndex)){
+                                    break;
+                                }else{
+                                    if(this.linkIndexCheck.containsKey(n)){
+                                        ArrayList<Integer> dummyNextIndex = this.linkIndexCheck.get(n);
+                                        if(dummyNextIndex==null){
+                                            System.out.println("Error");
+                                        }
+                                        dummyNextIndex.add(nextIndex);
+                                        this.linkIndexCheck.put(n, dummyNextIndex);  
+                                    }else{
+                                        ArrayList<Integer> dummyNextIndex = new ArrayList();
+                                        dummyNextIndex.add(nextIndex);
+                                        this.linkIndexCheck.put(n, dummyNextIndex);
+                                    }
+
+                                    nextIndex = this.linkIndex[nextIndex];              // update next index with old nextIndex
+                                    merCount++; 
+                                }
                             }else{
                                
                                 if(this.linkIndexCheck.containsKey(n)){
@@ -610,8 +633,7 @@ public class EncodedSequence {
 
                                 nextIndex = this.linkIndex[nextIndex];              // update next index with old nextIndex
                                 merCount++;                                         // this merCount is what we want
-                            }
-                            
+                            }  
                         }
                         
                         j[i-start] = (merCount<<29)+addStrandNotation(mers[i]&mask2,strand);  
