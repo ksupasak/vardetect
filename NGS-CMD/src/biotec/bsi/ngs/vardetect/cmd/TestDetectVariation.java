@@ -24,10 +24,10 @@ public class TestDetectVariation {
        public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "hg38_CHR16NewMethod_tha5.2_alignmentResult_Sorted";
-        String path = "/Volumes/PromisePegasus/worawich/VMdev/dataScieneToolBox/projects/NGS/Thalassemia/";;
-        String saveFilename = "hg38_simData_mul_alignmentResult_th5_VariantReport";
-        String saveFilenameCov = "hg38_CHR16NewMethod_tha5.2_alignmentResult_VariantCoverageReport";
+        String filename = "hg38_FullNewMethod_Sim_alignmentResult_Sorted";
+        String path = "/Volumes/PromisePegasus/worawich/VMdev/dataScieneToolBox/projects/NGS/test_sim_01/";;
+        String saveFilename = "hg38_FullNewMethod_Sim_alignmentResult_VariantReport";
+        String saveFilenameCov = "hg38_FullNewMethod_Sim_alignmentResult_VariantCoverageReport";
         
 
         VariationResult varRes = SequenceUtil.analysisResultFromFile(path+filename+".txt",18,100,4);

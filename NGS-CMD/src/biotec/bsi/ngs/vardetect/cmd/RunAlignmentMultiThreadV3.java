@@ -21,7 +21,10 @@ import static biotec.bsi.ngs.vardetect.core.util.SequenceUtil.encodeSerialChromo
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil;
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_WholeGene;
 import biotec.bsi.ngs.vardetect.core.util.VisualizeResult;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -46,7 +49,8 @@ public class RunAlignmentMultiThreadV3 {
         int numMer = Integer.valueOf(args[4]);
         int threshold = Integer.valueOf(args[5]);                       // Fifth argument; indicate count number threshold
         int numThread = Integer.valueOf(args[6]);                       // Sixth argument; indicate number of thread
-        
+        Path inPath = Paths.get(inputPath);
+        Path folder = inPath.getParent();
 //       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
 
         System.out.println("Get reference sequence");
@@ -87,7 +91,7 @@ public class RunAlignmentMultiThreadV3 {
             double totalAlignTime = ((stopAlignTime - startAlignTime)/1000)/60;
             System.out.println(String.format("Alignment Time use : %.4f min",totalAlignTime));
             System.out.println("Do write Report");            
-            align.writeSortedCutResultMapToPathInFormatV3(ref.getPath(),savefilename, "txt");
+            align.writeSortedCutResultMapToPathInFormatV3(folder.toString()+File.separator,savefilename, "txt");
             System.out.println("Done part " + count);
             
             long endTime = System.currentTimeMillis();

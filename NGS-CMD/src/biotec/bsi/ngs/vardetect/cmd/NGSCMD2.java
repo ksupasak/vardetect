@@ -72,11 +72,10 @@ public class NGSCMD2 {
 /**
  * Use for generate short read sample (manual generate short read)
  */
-        String filename = "err1";       
+        String filename = "err2Read68SS3";       
         String path = "/Volumes/PromisePegasus/worawich/Download_dataset/err/";
         
-        String seq = "TAACCCTAACCCTAACCCTAaccctaaccctaaccctaaccctaacccta" +
-"accctaaccctaaccctaaccctaaccctaaccctaaccctaaccctaac";
+        String seq = "CGCCTGCCTCGGCCTCCCAAAGTGCTGGGATTACAGGCATGAGCCACCGCGCCCGGCCAAGAGTTCCTTTCTTAAATAAGAGGACAGAGATAATAAAATC";
         
         SequenceUtil.createShortReadFromLongSequence(seq, 100, path+filename);
         

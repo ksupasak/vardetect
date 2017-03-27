@@ -24,9 +24,9 @@ public class TestPostProcess {
        public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "hg38_CHR16NewMethod_tha5.2_alignmentResult_part";       
-        String path = "/Volumes/PromisePegasus/worawich/VMdev/dataScieneToolBox/projects/NGS/Thalassemia/";
-        String saveFileName = "hg38_CHR16NewMethod_tha5.2_alignmentResult_forLinuxSort";
+        String filename = "hg38_FullNewMethod_Sim_alignmentResult_part";       
+        String path = "/Volumes/PromisePegasus/worawich/VMdev/dataScieneToolBox/projects/NGS/test_sim_01/";
+        String saveFileName = "hg38_FullNewMethod_Sim_alignmentResult_forLinuxSort";
 
         String saveFileNameERR = "hg38_simData_mul_alignmentResult_th5_ERR_forLinuxSortV2";
         String saveFileName3661 = "hg38_simData_mul_alignmentResult_th5_forLinuxSort";
@@ -44,7 +44,7 @@ public class TestPostProcess {
             System.out.println("Begin create color array");
             Clustering.createColorArray(readAlign, 100, 18);        
             System.out.println("Done create color array");
-            readAlign.writeSortedCutColorResultToPathInFormatForLinuxSort(path, saveFileName, "txt","gyo",83);
+            readAlign.writeSortedCutColorResultToPathInFormatForLinuxSort(path, saveFileName, "txt","all",83);
 //            VariationResult varRes = SequenceUtil.analysisResultFromFile(path+saveFileNameForPostProcess+".txt",18,100);
             readAlign = null;
             System.gc();
