@@ -2620,6 +2620,7 @@ public class BinaryAligner extends Thread implements Aligner {
                 /* Do the same algorithm but use function for compliment */
                 Enumeration<ShortgunSequence> seqsComp = input.getInputSequence().elements();
                 while(seqsComp.hasMoreElements()){
+                    Map<Integer,ArrayList<Integer>> linkIndexCheck = new LinkedHashMap();                       // HashMap contain data that has been use to check for repeat jump
                     ShortgunSequence seq = seqsComp.nextElement();                                  // get ShortgunSequence from InputSequence
                     this.alnMerMap = new LinkedHashMap();
 
@@ -2646,7 +2647,7 @@ public class BinaryAligner extends Thread implements Aligner {
                         long m = SequenceUtil.encodeMer(sub, mer);
                         if(m!=-1){
                             m = m<<28;
-                            long posR[] = encoded.align3Compliment(m, compSeq, index, numMer);
+                            long posR[] = encoded.align3Compliment(m, compSeq, index, numMer, linkIndexCheck);
                             
                             if(posR == null){
                             

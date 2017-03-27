@@ -511,7 +511,7 @@ public class EncodedSequence {
 
     }
     
-    public long[] align3Compliment(long mer, String inSeq, int mainIdx, int numMer){
+    public long[] align3Compliment(long mer, String inSeq, int mainIdx, int numMer , Map<Integer,ArrayList<Integer>> inLinkIndexCheck){
         
         /**
          * Core function for alignment with RepeatMarker
@@ -523,7 +523,11 @@ public class EncodedSequence {
         this.subSequence = inSeq;
         this.mainIndex = mainIdx;
         this.numMer = numMer;
-        this.linkIndexCheck.remove(mainIdx-1);            // remove all linked index that coresponse to old main index
+        Map<Integer,ArrayList<Integer>> linkIndexCheck = inLinkIndexCheck;
+        if(linkIndexCheck.containsKey(mainIdx-1)){
+            linkIndexCheck.remove(mainIdx-1);            // remove all linked index that coresponse to old main index
+        }
+        
         
         int strand = 0; // Notation for strand +
         int index = alignWithRepeatMarker(mer, 0, this.repeatMarkerIndex.length-1); // call binary search function with initial left and right with 0 and maximum index point
@@ -583,10 +587,7 @@ public class EncodedSequence {
                         nextIndex = this.linkIndex[i];                              // i is current position that match to current mer of Big window
                         
                         for(int n=mainIdx+1;n<(inSeq.length()-numMer)+1;n++){                            // Loop for Small window scan (main index is current index from big window)
-                            
-                            if(nextIndex>this.repeatMarkerIndex.length){
-                                System.out.println("Error");
-                            }
+
                             if(nextIndex == this.mask2){
                                 break;
                             }
@@ -597,38 +598,45 @@ public class EncodedSequence {
                             long compareMer = SequenceUtil.encodeMer(sub, numMer);
                             compareMer = compareMer<<28;
                             
+                            
+                            
                             if(nextMer != compareMer){
                                 break;
-                            }else if(this.linkIndexCheck.get(n) !=null){        // check repeat of nextindex (check contain of next index in ArrayList of past next index)
-                                if(this.linkIndexCheck.get(n).contains(nextIndex)){
-                                    break;
-                                }else{
-                                    if(this.linkIndexCheck.containsKey(n)){
-                                        ArrayList<Integer> dummyNextIndex = this.linkIndexCheck.get(n);
+                            }else if(linkIndexCheck.isEmpty()!=true){        // check repeat of nextindex (check contain of next index in ArrayList of past next index)
+                                
+                                if(linkIndexCheck.containsKey(n)){
+                                    if(linkIndexCheck.get(n).contains(nextIndex)){
+                                       break;
+                                    }else{
+                                        ArrayList<Integer> dummyNextIndex = linkIndexCheck.get(n);
                                         if(dummyNextIndex==null){
                                             System.out.println("Error");
                                         }
                                         dummyNextIndex.add(nextIndex);
-                                        this.linkIndexCheck.put(n, dummyNextIndex);  
-                                    }else{
-                                        ArrayList<Integer> dummyNextIndex = new ArrayList();
-                                        dummyNextIndex.add(nextIndex);
-                                        this.linkIndexCheck.put(n, dummyNextIndex);
+                                        linkIndexCheck.put(n, dummyNextIndex);
+                                        
+                                        nextIndex = this.linkIndex[nextIndex];              // update next index with old nextIndex
+                                        merCount++;
                                     }
-
+                                }else{
+                                    
+                                    ArrayList<Integer> dummyNextIndex = new ArrayList();
+                                    dummyNextIndex.add(nextIndex);
+                                    linkIndexCheck.put(n, dummyNextIndex);
+                                    
                                     nextIndex = this.linkIndex[nextIndex];              // update next index with old nextIndex
-                                    merCount++; 
-                                }
+                                    merCount++;
+                                }     
                             }else{
                                
-                                if(this.linkIndexCheck.containsKey(n)){
-                                    ArrayList<Integer> dummyNextIndex = this.linkIndexCheck.get(n);
+                                if(linkIndexCheck.containsKey(n)){
+                                    ArrayList<Integer> dummyNextIndex = linkIndexCheck.get(n);
                                     dummyNextIndex.add(nextIndex);
-                                    this.linkIndexCheck.put(n, dummyNextIndex);  
+                                    linkIndexCheck.put(n, dummyNextIndex);  
                                 }else{
                                     ArrayList<Integer> dummyNextIndex = new ArrayList();
                                     dummyNextIndex.add(nextIndex);
-                                    this.linkIndexCheck.put(n, dummyNextIndex);
+                                    linkIndexCheck.put(n, dummyNextIndex);
                                 }
 
                                 nextIndex = this.linkIndex[nextIndex];              // update next index with old nextIndex

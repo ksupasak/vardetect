@@ -331,6 +331,7 @@ public class ThreadBinaryAlignerV4 implements Runnable {
         /* Do the same algorithm but use function for compliment */
         Iterator seqsComp = inputSequence.iterator();
         while(seqsComp.hasNext()){
+            Map<Integer,ArrayList<Integer>> linkIndexCheck = new LinkedHashMap();                       // HashMap contain data that has been use to check for repeat jump
             boolean skipRead = false;
             ShortgunSequence seq = (ShortgunSequence)seqsComp.next();                                  // get ShortgunSequence from InputSequence
             this.alnMerMap = new LinkedHashMap();
@@ -366,7 +367,7 @@ public class ThreadBinaryAlignerV4 implements Runnable {
                 if(m!=-1){
                     m = m<<28;
                     
-                    long posR[] = encodedRef.align3Compliment(m, compSeq, index, numMer);
+                    long posR[] = encodedRef.align3Compliment(m, compSeq, index, numMer,linkIndexCheck);
                     
                     if(posR==null){
 
