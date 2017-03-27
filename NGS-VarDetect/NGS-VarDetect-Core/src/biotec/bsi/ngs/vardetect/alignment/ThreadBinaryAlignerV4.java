@@ -80,6 +80,7 @@ public class ThreadBinaryAlignerV4 implements Runnable {
         /* Alignment algorithm */
         Iterator seqs = inputSequence.iterator();
         while(seqs.hasNext()){                                              // Loop over ShortgunSequence contain in InputSequence 
+            Map<Integer,ArrayList<Integer>> linkIndexCheck = new LinkedHashMap();                       // HashMap contain data that has been use to check for repeat jump
             boolean skipRead = false;
             
             ShortgunSequence seq = (ShortgunSequence)seqs.next();
@@ -118,7 +119,7 @@ public class ThreadBinaryAlignerV4 implements Runnable {
                 if(m!=-1){                                                          
                     m = m<<28;                                                      // shift left 28 bit for optimization binary search purpose 
 //                            long pos = encoded.align(m);
-                    long posR[] = encodedRef.align3(m, sub, index, numMer);
+                    long posR[] = encodedRef.align3(m, s, index, numMer, linkIndexCheck);
                     if(posR==null){        
                         long pos2[] = encodedRef.align2(m);                                // Do alignment with binary search (pos2[] cantain 64 bit long [mer code | position])
     //                            long pos2[] = encoded.fullAlign(m);
@@ -202,71 +203,81 @@ public class ThreadBinaryAlignerV4 implements Runnable {
                     }else if(posR!=null){
                        /******** New Part (fixed wrong mer count) Version 3 **********/
                         long mask29Bit = 536870911;
+                        boolean skipFlag = false;
                         for(int j=0;j<posR.length;j++){
-                            int merCount = (int)posR[j]>>29;       
-                            long alnCode = (posR[j]&mask29Bit) - index;     // posR is ~39 bit [merCount|strand|position] ; algncode is 29 bit [strand|alignPosition]. alignposition is position - index
+                            
+                            if(posR[j]==0){
+                                skipFlag = true;
+                            }else{
+                                skipFlag = false;
+                            }
+                            
+                            if(skipFlag == false){
+                                int merCount = (int)posR[j]>>29;       
+                                long alnCode = (posR[j]&mask29Bit) - index;     // posR is ~39 bit [merCount|strand|position] ; algncode is 29 bit [strand|alignPosition]. alignposition is position - index
 
 
-                            if(alnCodeCheckList.containsKey(alnCode)){
-
-                                iniIndex = alnCodeCheckList.get(alnCode);
-
-                                long indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
-
-                                ArrayList<Long> merList = this.alnMerMap.get(indexAlnCode);
-
-                                /**
-                                 * Case check to solve the problem. In case, when position-index is the same value but actually it different peak.
-                                 * To check continuity of this alnCode. We reserve index 0 of merList to store the recent index.
-                                 * Check continuity of index from different between recent index and current index.
-                                 */
-
-                                if(index-merList.get(0)==1){                                // Case check to solve the problem. In case, when position-index is the same value but actually it different peak
-                                    /**
-                                     * it's continue. So, iniIndex not change 
-                                     */
+                                if(alnCodeCheckList.containsKey(alnCode)){
 
                                     iniIndex = alnCodeCheckList.get(alnCode);
 
-                                    indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
-                                    merList.remove(0);
-                                    merList.add(0,(long)index);
-                                    for(int num=0;num<merCount;num++){
-                                        merList.add(0L);
-                                    }
+                                    long indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
 
-                                    this.alnMerMap.put(indexAlnCode, merList);
-                                }else{
+                                    ArrayList<Long> merList = this.alnMerMap.get(indexAlnCode);
+
                                     /**
-                                     * it's not continue. So, iniIndex has change to present index                                                                                  
+                                     * Case check to solve the problem. In case, when position-index is the same value but actually it different peak.
+                                     * To check continuity of this alnCode. We reserve index 0 of merList to store the recent index.
+                                     * Check continuity of index from different between recent index and current index.
                                      */
 
+                                    if(index-merList.get(0)==1){                                // Case check to solve the problem. In case, when position-index is the same value but actually it different peak
+                                        /**
+                                         * it's continue. So, iniIndex not change 
+                                         */
+
+                                        iniIndex = alnCodeCheckList.get(alnCode);
+
+                                        indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                        merList.remove(0);
+                                        merList.add(0,(long)index);
+                                        for(int num=0;num<merCount;num++){
+                                            merList.add(0L);
+                                        }
+
+                                        this.alnMerMap.put(indexAlnCode, merList);
+                                    }else{
+                                        /**
+                                         * it's not continue. So, iniIndex has change to present index                                                                                  
+                                         */
+
+                                        iniIndex = index;
+                                        alnCodeCheckList.put(alnCode, iniIndex);
+
+                                        indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+
+                                        merList = new ArrayList();
+                                        merList.add(0,(long)index);
+                                        for(int num=0;num<merCount;num++){
+                                            merList.add(0L);
+                                        }
+                                        this.alnMerMap.put(indexAlnCode,merList);
+                                    }
+                                    /**************************************************************************************************/
+
+                                }else{
                                     iniIndex = index;
                                     alnCodeCheckList.put(alnCode, iniIndex);
 
-                                    indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                    long indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
 
-                                    merList = new ArrayList();
+                                    ArrayList<Long> merList = new ArrayList();
                                     merList.add(0,(long)index);
                                     for(int num=0;num<merCount;num++){
                                         merList.add(0L);
                                     }
                                     this.alnMerMap.put(indexAlnCode,merList);
                                 }
-                                /**************************************************************************************************/
-
-                            }else{
-                                iniIndex = index;
-                                alnCodeCheckList.put(alnCode, iniIndex);
-
-                                long indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
-
-                                ArrayList<Long> merList = new ArrayList();
-                                merList.add(0,(long)index);
-                                for(int num=0;num<merCount;num++){
-                                    merList.add(0L);
-                                }
-                                this.alnMerMap.put(indexAlnCode,merList);
                             }
                         } 
                     }
@@ -367,7 +378,7 @@ public class ThreadBinaryAlignerV4 implements Runnable {
                 if(m!=-1){
                     m = m<<28;
                     
-                    long posR[] = encodedRef.align3Compliment(m, compSeq, index, numMer,linkIndexCheck);
+                    long posR[] = encodedRef.align3Compliment(m, compSeq, index, numMer, linkIndexCheck);
                     
                     if(posR==null){
 
@@ -450,72 +461,83 @@ public class ThreadBinaryAlignerV4 implements Runnable {
                     }else if(posR!=null){
                         /******** New Part (fixed wrong mer count) Version 3 **********/
                         long mask29Bit = 536870911;
+                        boolean skipFlag = false;
                         for(int j=0;j<posR.length;j++){
-                            int merCount = (int)posR[j]>>29;       
-                            long alnCode = (posR[j]&mask29Bit) - index;     // posR is ~39 bit [merCount|strand|position] ; algncode is 29 bit [strand|alignPosition]. alignposition is position - index
+                            
+                            if(posR[j]==0){
+                                skipFlag = true;
+                            }else{
+                                skipFlag = false;
+                            }
+                            
+                            if(skipFlag == false){
+                            
+                                int merCount = (int)posR[j]>>29;       
+                                long alnCode = (posR[j]&mask29Bit) - index;     // posR is ~39 bit [merCount|strand|position] ; algncode is 29 bit [strand|alignPosition]. alignposition is position - index
 
 
-                            if(alnCodeCheckList.containsKey(alnCode)){
-
-                                iniIndex = alnCodeCheckList.get(alnCode);
-
-                                long indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
-
-                                ArrayList<Long> merList = this.alnMerMap.get(indexAlnCode);
-
-                                /**
-                                 * Case check to solve the problem. In case, when position-index is the same value but actually it different peak.
-                                 * To check continuity of this alnCode. We reserve index 0 of merList to store the recent index.
-                                 * Check continuity of index from different between recent index and current index.
-                                 */
-
-                                if(index-merList.get(0)==1){                                // Case check to solve the problem. In case, when position-index is the same value but actually it different peak
-                                    /**
-                                     * it's continue. So, iniIndex not change 
-                                     */
+                                if(alnCodeCheckList.containsKey(alnCode)){
 
                                     iniIndex = alnCodeCheckList.get(alnCode);
 
-                                    indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
-                                    merList.remove(0);
-                                    merList.add(0,(long)index);
-                                    for(int num=0;num<merCount;num++){
-                                        merList.add(0L);
-                                    }
+                                    long indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
 
-                                    this.alnMerMap.put(indexAlnCode, merList);
-                                }else{
+                                    ArrayList<Long> merList = this.alnMerMap.get(indexAlnCode);
+
                                     /**
-                                     * it's not continue. So, iniIndex has change to present index                                                                                  
+                                     * Case check to solve the problem. In case, when position-index is the same value but actually it different peak.
+                                     * To check continuity of this alnCode. We reserve index 0 of merList to store the recent index.
+                                     * Check continuity of index from different between recent index and current index.
                                      */
 
+                                    if(index-merList.get(0)==1){                                // Case check to solve the problem. In case, when position-index is the same value but actually it different peak
+                                        /**
+                                         * it's continue. So, iniIndex not change 
+                                         */
+
+                                        iniIndex = alnCodeCheckList.get(alnCode);
+
+                                        indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                        merList.remove(0);
+                                        merList.add(0,(long)index);
+                                        for(int num=0;num<merCount;num++){
+                                            merList.add(0L);
+                                        }
+
+                                        this.alnMerMap.put(indexAlnCode, merList);
+                                    }else{
+                                        /**
+                                         * it's not continue. So, iniIndex has change to present index                                                                                  
+                                         */
+
+                                        iniIndex = index;
+                                        alnCodeCheckList.put(alnCode, iniIndex);
+
+                                        indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+
+                                        merList = new ArrayList();
+                                        merList.add(0,(long)index);
+                                        for(int num=0;num<merCount;num++){
+                                            merList.add(0L);
+                                        }
+                                        this.alnMerMap.put(indexAlnCode,merList);
+                                    }
+                                    /**************************************************************************************************/
+
+                                }else{
                                     iniIndex = index;
                                     alnCodeCheckList.put(alnCode, iniIndex);
 
-                                    indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                    long indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
 
-                                    merList = new ArrayList();
+                                    ArrayList<Long> merList = new ArrayList();
                                     merList.add(0,(long)index);
                                     for(int num=0;num<merCount;num++){
                                         merList.add(0L);
                                     }
                                     this.alnMerMap.put(indexAlnCode,merList);
+
                                 }
-                                /**************************************************************************************************/
-
-                            }else{
-                                iniIndex = index;
-                                alnCodeCheckList.put(alnCode, iniIndex);
-
-                                long indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
-
-                                ArrayList<Long> merList = new ArrayList();
-                                merList.add(0,(long)index);
-                                for(int num=0;num<merCount;num++){
-                                    merList.add(0L);
-                                }
-                                this.alnMerMap.put(indexAlnCode,merList);
-
                             }
                         }
                     }

@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Hashtable;
@@ -381,7 +382,7 @@ public class EncodedSequence {
         return null;
     }
     
-    public long[] align3(long mer, String inSeq, int mainIdx, int numMer){
+    public long[] align3(long mer, String inSeq, int mainIdx, int numMer, Map<Integer,ArrayList<Integer>> inLinkIndexCheck){
         
         /**
          * Core function for alignment with RepeatMarker
@@ -393,7 +394,11 @@ public class EncodedSequence {
         this.subSequence = inSeq;
         this.mainIndex = mainIdx;
         this.numMer = numMer;
-        this.linkIndexCheck.remove(mainIdx-1);            // remove all linked index that coresponse to old main index
+        Map<Integer,ArrayList<Integer>> linkIndexCheck = inLinkIndexCheck;
+        if(linkIndexCheck.containsKey(mainIdx-1)){
+            linkIndexCheck.remove(mainIdx-1);            // remove all linked index that coresponse to old main index
+        }
+        
         
         int strand = 1; // Notation for strand +
         int index = alignWithRepeatMarker(mer, 0, this.repeatMarkerIndex.length-1); // call binary search function with initial left and right with 0 and maximum index point
@@ -441,20 +446,29 @@ public class EncodedSequence {
                 
                 int merCount = 0;
                 int checkRepeatNextIndex = -1;
+                boolean skipFlag = false;
                 for(int i =start;i<stop;i++){                                       // This loop make program slow (In process to find the way to fix this)
                     /**
                      * Do small window scan for each index
                      */
                     
+                    if(linkIndexCheck.isEmpty()!=true && linkIndexCheck.containsKey(mainIdx)){
+                        if(linkIndexCheck.get(mainIdx).contains(i)){
+                            skipFlag = true;
+                        }
+                    }
                     
-                    if(i-start>=0&&i>=0){
+                    
+                    if(i-start>=0 && i>=0 && skipFlag == false){
                        
                         /// Start here => repeatScan();
                         nextIndex = this.linkIndex[i];                              // i is current position that match to current mer of Big window
                         
                         for(int n=mainIdx+1;n<(inSeq.length()-numMer)+1;n++){                            // Loop for Small window scan (main index is current index from big window)
                             
-                                                  
+                            if(nextIndex == this.mask2){
+                                break;
+                            }
                             nextMerPos = this.repeatMarkerIndex[nextIndex];
                             nextMer = nextMerPos&this.mask;
                             
@@ -462,34 +476,86 @@ public class EncodedSequence {
                             long compareMer = SequenceUtil.encodeMer(sub, numMer);
                             compareMer = compareMer<<28;
                             
+                            
+                            
                             if(nextMer != compareMer){
                                 break;
-                            }else if(this.linkIndexCheck.get(n).contains(nextIndex)){        // check repeat of nextindex (check contain of next index in ArrayList of past next index)
-                                break;
+                            }else if(linkIndexCheck.isEmpty()!=true){        // check repeat of nextindex (check contain of next index in ArrayList of past next index)
+                                
+                                if(linkIndexCheck.containsKey(n)){
+                                    if(linkIndexCheck.get(n).contains(nextIndex)){
+                                       break;
+                                    }else{
+                                        ArrayList<Integer> dummyNextIndex = linkIndexCheck.get(n);
+                                        if(dummyNextIndex==null){
+                                            System.out.println("Error");
+                                        }
+                                        dummyNextIndex.add(nextIndex);
+                                        linkIndexCheck.put(n, dummyNextIndex);
+                                        
+                                        nextIndex = this.linkIndex[nextIndex];              // update next index with old nextIndex
+                                        merCount++;
+                                    }
+                                }else{
+                                    
+                                    ArrayList<Integer> dummyNextIndex = new ArrayList();
+                                    dummyNextIndex.add(nextIndex);
+                                    linkIndexCheck.put(n, dummyNextIndex);
+                                    
+                                    nextIndex = this.linkIndex[nextIndex];              // update next index with old nextIndex
+                                    merCount++;
+                                }     
                             }else{
                                
-                                if(this.linkIndexCheck.containsKey(n)){
-                                    ArrayList<Integer> dummyNextIndex = this.linkIndexCheck.get(n);
+                                if(linkIndexCheck.containsKey(n)){
+                                    ArrayList<Integer> dummyNextIndex = linkIndexCheck.get(n);
                                     dummyNextIndex.add(nextIndex);
-                                    this.linkIndexCheck.put(n, dummyNextIndex);  
+                                    linkIndexCheck.put(n, dummyNextIndex);  
                                 }else{
                                     ArrayList<Integer> dummyNextIndex = new ArrayList();
                                     dummyNextIndex.add(nextIndex);
-                                    this.linkIndexCheck.put(n, dummyNextIndex);
+                                    linkIndexCheck.put(n, dummyNextIndex);
                                 }
 
                                 nextIndex = this.linkIndex[nextIndex];              // update next index with old nextIndex
                                 merCount++;                                         // this merCount is what we want
-                            }
-                            
+                            } 
+                                
+//                            nextMerPos = this.repeatMarkerIndex[nextIndex];
+//                            nextMer = nextMerPos&this.mask;
+//                            
+//                            String sub = inSeq.substring(n, n+numMer);                                 // cut String sequence into sub string sequence (mer length long) 
+//                            long compareMer = SequenceUtil.encodeMer(sub, numMer);
+//                            compareMer = compareMer<<28;
+//                            
+//                            if(nextMer != compareMer){
+//                                break;
+//                            }else if(this.linkIndexCheck.get(n).contains(nextIndex)){        // check repeat of nextindex (check contain of next index in ArrayList of past next index)
+//                                break;
+//                            }else{
+//                               
+//                                if(this.linkIndexCheck.containsKey(n)){
+//                                    ArrayList<Integer> dummyNextIndex = this.linkIndexCheck.get(n);
+//                                    dummyNextIndex.add(nextIndex);
+//                                    this.linkIndexCheck.put(n, dummyNextIndex);  
+//                                }else{
+//                                    ArrayList<Integer> dummyNextIndex = new ArrayList();
+//                                    dummyNextIndex.add(nextIndex);
+//                                    this.linkIndexCheck.put(n, dummyNextIndex);
+//                                }
+//
+//                                nextIndex = this.linkIndex[nextIndex];              // update next index with old nextIndex
+//                                merCount++;                                         // this merCount is what we want
+//                            }
                         }
                         
-                        j[i-start] = (merCount<<29)+addStrandNotation(mers[i]&mask2,strand);  
+                        j[i-start] = (merCount<<29)+addStrandNotation(mers[i]&mask2,strand);
+                        
                     }
+                    skipFlag = false;
                     merCount = 0;
 
                 }
-
 
                 return j;
             }else if(start == stop){
@@ -511,12 +577,12 @@ public class EncodedSequence {
 
     }
     
-    public long[] align3Compliment(long mer, String inSeq, int mainIdx, int numMer , Map<Integer,ArrayList<Integer>> inLinkIndexCheck){
+    public long[] align3Compliment(long mer, String inSeq, int mainIdx, int numMer, Map<Integer,ArrayList<Integer>> inLinkIndexCheck){
         
         /**
          * Core function for alignment with RepeatMarker
          * This function will return long[] 64 bit compose of merCount|strand|position (less than 10 bit|1 bit|28 bit) 
-         */
+         */        
         int nextIndex= -1; 
         long nextMerPos = -1; 
         long nextMer = -1;
@@ -573,15 +639,21 @@ public class EncodedSequence {
     //            System.out.println(" size "+(stop-start));
                 long j[] = new long[stop-start]; 
                 
-                int merCount = 1;                                               // merCount is always start at 1 because whenever it reach this point, it's mean that at least ome mer is already match
+                int merCount = 0;                                               // merCount is always start at 1 because whenever it reach this point, it's mean that at least ome mer is already match
                 int checkRepeatNextIndex = -1;
+                boolean skipFlag = false;
                 for(int i =start;i<stop;i++){                                       // This loop make program slow (In process to find the way to fix this)
                     /**
                      * Do small window scan for each index
                      */
                     
+                    if(linkIndexCheck.isEmpty()!=true && linkIndexCheck.containsKey(mainIdx)){
+                        if(linkIndexCheck.get(mainIdx).contains(i)){
+                            skipFlag = true;
+                        }
+                    }
                     
-                    if(i-start>=0&&i>=0){
+                    if(i-start>=0 && i>=0 && skipFlag==false){
                        
                         /// Start here => repeatScan();
                         nextIndex = this.linkIndex[i];                              // i is current position that match to current mer of Big window
@@ -646,7 +718,8 @@ public class EncodedSequence {
                         
                         j[i-start] = (merCount<<29)+addStrandNotation(mers[i]&mask2,strand);  
                     }
-                    merCount = 1;
+                    skipFlag = false;
+                    merCount = 0;
 
                 }
 
@@ -892,10 +965,10 @@ public class EncodedSequence {
         if(left>right)return -1;        // in case that left value higher than right that mean this mer not match
         else
             if(i<mer){                  // if selected reference mers code less than input mer
-                return align(mer, mid+1,right);     // adjust to new index by subtitude left position to mid+1 
+                return alignWithRepeatMarker(mer, mid+1,right);     // adjust to new index by subtitude left position to mid+1 
             }else
                 if(i>mer){              // if selected reference mers code higher than input mer
-                    return align(mer, left,mid-1);  // adjust to new index by subtitude right position to mid-1
+                    return alignWithRepeatMarker(mer, left,mid-1);  // adjust to new index by subtitude right position to mid-1
                 }else
                     if(i==mer){         // if equal mean this position is match
     //                        long j = mers[mid];

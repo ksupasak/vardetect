@@ -2383,6 +2383,7 @@ public class BinaryAligner extends Thread implements Aligner {
 
                 EncodedSequence encoded = SequenceUtil.createAllReferenceV2(chr, this.mer, 'a');   // Create or import all reference [chromosome reference, repeat index, repeat Marker]               
                 while(seqs.hasMoreElements()){                                              // Loop over ShortgunSequence contain in InputSequence 
+                    Map<Integer,ArrayList<Integer>> linkIndexCheck = new LinkedHashMap();                       // HashMap contain data that has been use to check for repeat jump
                     ShortgunSequence seq = seqs.nextElement();
                     this.alnMerMap = new LinkedHashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read
 
@@ -2410,7 +2411,7 @@ public class BinaryAligner extends Thread implements Aligner {
                              * align repeat should pass s (a sequence string) and all currently move information because we have to move small window inside it
                              */
                             
-                            long posR[] = encoded.align3(m, s, index, numMer);
+                            long posR[] = encoded.align3(m, s, index, numMer, linkIndexCheck);
                             
                             if(posR == null){
 
