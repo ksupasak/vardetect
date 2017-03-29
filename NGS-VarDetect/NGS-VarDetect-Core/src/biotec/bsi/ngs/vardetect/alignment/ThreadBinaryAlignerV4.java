@@ -113,13 +113,14 @@ public class ThreadBinaryAlignerV4 implements Runnable {
                 long m = SequenceUtil.encodeMer(sub, numMer);                          // encode sub string sequence (code is 36 bit max preserve the rest 28 bit for position)
 //                        System.out.println(""+sub+" "+sub.length()+": "+m);
                 
-                if(m == 51904601109L){
-                    System.out.println("");
-                }
+//                if(m == 51904601109L){
+//                    System.out.println("");
+//                }
                 if(m!=-1){                                                          
                     m = m<<28;                                                      // shift left 28 bit for optimization binary search purpose 
 //                            long pos = encoded.align(m);
                     long posR[] = encodedRef.align3(m, s, index, numMer, linkIndexCheck);
+//                    ArrayList<Long> posR = encodedRef.align3(m, s, index, numMer, linkIndexCheck);
                     if(posR==null){        
                         long pos2[] = encodedRef.align2(m);                                // Do alignment with binary search (pos2[] cantain 64 bit long [mer code | position])
     //                            long pos2[] = encoded.fullAlign(m);
@@ -206,14 +207,24 @@ public class ThreadBinaryAlignerV4 implements Runnable {
                         boolean skipFlag = false;
                         for(int j=0;j<posR.length;j++){
                             
-                            if(posR[j]==0){
-                                skipFlag = true;
-                            }else{
-                                skipFlag = false;
+//                            if(posR.get(j)==0){
+//                                skipFlag = true;
+//                            }else{
+//                                skipFlag = false;
+//                            }
+                            if(posR[j] == 0){
+                                /**
+                                 * Check for 0 value. posR Array store ~39bit of [merCount|strand|position] if it has value at least merCount must = 1. So, it impossible to have zero element.
+                                 * Also, the posR has design to keep only the element that have information and store at first element first then so on by order. 
+                                 * This mean if we found the first element that have 0 value the element follow by this is all 0 as well. It useless to continue looping. 
+                                 * So, we can break the loop to reduce computational time. 
+                                 */
+                                
+                                break;
                             }
                             
                             if(skipFlag == false){
-                                int merCount = (int)posR[j]>>29;       
+                                int merCount = (int)(posR[j]>>29);       
                                 long alnCode = (posR[j]&mask29Bit) - index;     // posR is ~39 bit [merCount|strand|position] ; algncode is 29 bit [strand|alignPosition]. alignposition is position - index
 
 
@@ -379,6 +390,7 @@ public class ThreadBinaryAlignerV4 implements Runnable {
                     m = m<<28;
                     
                     long posR[] = encodedRef.align3Compliment(m, compSeq, index, numMer, linkIndexCheck);
+//                    ArrayList<Long> posR = encodedRef.align3Compliment(m, compSeq, index, numMer, linkIndexCheck);
                     
                     if(posR==null){
 
@@ -464,15 +476,26 @@ public class ThreadBinaryAlignerV4 implements Runnable {
                         boolean skipFlag = false;
                         for(int j=0;j<posR.length;j++){
                             
-                            if(posR[j]==0){
-                                skipFlag = true;
-                            }else{
-                                skipFlag = false;
-                            }
+//                            if(posR.get(j)==0){
+//                                skipFlag = true;
+//                            }else{
+//                                skipFlag = false;
+//                            }
                             
+                            if(posR[j] == 0){
+                                /**
+                                 * Check for 0 value. posR Array store ~39bit of [merCount|strand|position] if it has value at least merCount must = 1. So, it impossible to have zero element.
+                                 * Also, the posR has design to keep only the element that have information and store at first element first then so on by order. 
+                                 * This mean if we found the first element that have 0 value the element follow by this is all 0 as well. It useless to continue looping. 
+                                 * So, we can break the loop to reduce computational time. 
+                                 */
+                                
+                                break;
+                            }
+
                             if(skipFlag == false){
                             
-                                int merCount = (int)posR[j]>>29;       
+                                int merCount = (int)(posR[j]>>29);       
                                 long alnCode = (posR[j]&mask29Bit) - index;     // posR is ~39 bit [merCount|strand|position] ; algncode is 29 bit [strand|alignPosition]. alignposition is position - index
 
 

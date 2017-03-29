@@ -554,8 +554,7 @@ public class BinaryAligner extends Thread implements Aligner {
                 ChromosomeSequence chr = chrs.nextElement();
                 Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
                 System.out.println("reading .. "+chr.getName()+"");
-
-                EncodedSequence encoded = SequenceUtil.createAllReferenceV2(chr, this.mer, 'a');   // Create or import all reference [chromosome reference, repeat index, repeat Marker]
+                EncodedSequence encoded = SequenceUtil.createAllReferenceV2(chr, this.mer, 'a');   // Create or import all reference [chromosome reference, repeat index, repeat Marker]                               
                 long chrnumber = chr.getChrNumber();
                 /*********/
                 int inputSize = input.getInputSequence().size();
@@ -2412,7 +2411,7 @@ public class BinaryAligner extends Thread implements Aligner {
                              */
                             
                             long posR[] = encoded.align3(m, s, index, numMer, linkIndexCheck);
-                            
+//                            ArrayList<Long> posR = encoded.align3(m, s, index, numMer, linkIndexCheck);
                             if(posR == null){
 
                                 long pos2[] = encoded.align2(m);                                // Do alignment with binary search (pos2[] cantain 64 bit long [mer code | position])
@@ -2503,7 +2502,18 @@ public class BinaryAligner extends Thread implements Aligner {
                                 /******** New Part (fixed wrong mer count) Version 3 **********/
                                 long mask29Bit = 536870911;
                                 for(int j=0;j<posR.length;j++){
-                                    int merCount = (int)posR[j]>>29;       
+                                    if(posR[j] == 0){
+                                        /**
+                                         * Check for 0 value. posR Array store ~39bit of [merCount|strand|position] if it has value at least merCount must = 1. So, it impossible to have zero element.
+                                         * Also, the posR has design to keep only the element that have information and store at first element first then so on by order. 
+                                         * This mean if we found the first element that have 0 value the element follow by this is all 0 as well. It useless to continue looping. 
+                                         * So, we can break the loop to reduce computational time. 
+                                         */
+
+                                        break;
+                                    }
+                                    
+                                    int merCount = (int)(posR[j]>>29);       
                                     long alnCode = (posR[j]&mask29Bit) - index;     // posR is ~39 bit [merCount|strand|position] ; algncode is 29 bit [strand|alignPosition]. alignposition is position - index
 
 
@@ -2649,7 +2659,8 @@ public class BinaryAligner extends Thread implements Aligner {
                         if(m!=-1){
                             m = m<<28;
                             long posR[] = encoded.align3Compliment(m, compSeq, index, numMer, linkIndexCheck);
-                            
+//                            ArrayList<Long> posR = encoded.align3Compliment(m, compSeq, index, numMer, linkIndexCheck);
+
                             if(posR == null){
                             
                                 long pos2[] = encoded.align2ComplimentV2(m);                            // Do alignment by alignment function specific for compliment sequence
@@ -2731,7 +2742,20 @@ public class BinaryAligner extends Thread implements Aligner {
                                 /******** New Part (fixed wrong mer count) Version 3 **********/
                                 long mask29Bit = 536870911;
                                 for(int j=0;j<posR.length;j++){
-                                    int merCount = (int)posR[j]>>29;       
+                                    if(posR[j] == 0){
+                                        /**
+                                         * Check for 0 value. posR Array store ~39bit of [merCount|strand|position] if it has value at least merCount must = 1. So, it impossible to have zero element.
+                                         * Also, the posR has design to keep only the element that have information and store at first element first then so on by order. 
+                                         * This mean if we found the first element that have 0 value the element follow by this is all 0 as well. It useless to continue looping. 
+                                         * So, we can break the loop to reduce computational time. 
+                                         */
+
+                                        break;
+                                    }
+                                    
+                                    
+                                    
+                                    int merCount = (int)(posR[j]>>29);       
                                     long alnCode = (posR[j]&mask29Bit) - index;     // posR is ~39 bit [merCount|strand|position] ; algncode is 29 bit [strand|alignPosition]. alignposition is position - index
 
 

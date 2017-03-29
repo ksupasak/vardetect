@@ -442,12 +442,13 @@ public class EncodedSequence {
             
             if(start<stop){
     //            System.out.println(" size "+(stop-start));
-                long j[] = new long[stop-start]; 
-                
-                int merCount = 0;
+//                ArrayList<Long> j = new ArrayList();                
+                long j[] = new long[(stop-start)+1]; 
+                int countMatch = 0;
+                long merCount = 1;
                 int checkRepeatNextIndex = -1;
                 boolean skipFlag = false;
-                for(int i =start;i<stop;i++){                                       // This loop make program slow (In process to find the way to fix this)
+                for(int i =start;i<=stop;i++){                                       // This loop make program slow (In process to find the way to fix this)
                     /**
                      * Do small window scan for each index
                      */
@@ -549,11 +550,13 @@ public class EncodedSequence {
 //                            }
                         }
                         
-                        j[i-start] = (merCount<<29)+addStrandNotation(mers[i]&mask2,strand);
-                        
+//                        j[i-start] = (merCount<<29)+addStrandNotation(this.repeatMarkerIndex[i]&mask2,strand);
+//                        j.add((merCount<<29)+addStrandNotation(this.repeatMarkerIndex[i]&mask2,strand));
+                        j[countMatch] = (merCount<<29)+addStrandNotation(this.repeatMarkerIndex[i]&mask2,strand);
+                        countMatch++;
                     }
                     skipFlag = false;
-                    merCount = 0;
+                    merCount = 1;
 
                 }
 
@@ -565,8 +568,10 @@ public class EncodedSequence {
                  * If it repeat it will fall into above check case (Because, with the repeat we can possibly scan down or scan up).
                  */
                 long j[] = new long[1];
+//                ArrayList<Long> j = new ArrayList();
                 int merCount = 1;
-                j[0] = (merCount<<29)+addStrandNotation(mers[start]&mask2,strand);
+                j[0] = (merCount<<29)+addStrandNotation(this.repeatMarkerIndex[start]&mask2,strand);
+//                j.add((merCount<<29)+addStrandNotation(this.repeatMarkerIndex[start]&mask2,strand));
                 return j;
 
             }else{
@@ -637,12 +642,13 @@ public class EncodedSequence {
             
             if(start<stop){
     //            System.out.println(" size "+(stop-start));
-                long j[] = new long[stop-start]; 
-                
-                int merCount = 0;                                               // merCount is always start at 1 because whenever it reach this point, it's mean that at least ome mer is already match
+                long j[] = new long[(stop-start)+1]; 
+//                ArrayList<Long> j = new ArrayList();
+                int countMatch = 0;
+                long merCount = 1;                                               // merCount is always start at 1 because whenever it reach this point, it's mean that at least ome mer is already match
                 int checkRepeatNextIndex = -1;
                 boolean skipFlag = false;
-                for(int i =start;i<stop;i++){                                       // This loop make program slow (In process to find the way to fix this)
+                for(int i =start;i<=stop;i++){                                       // This loop make program slow (In process to find the way to fix this)
                     /**
                      * Do small window scan for each index
                      */
@@ -716,10 +722,13 @@ public class EncodedSequence {
                             }  
                         }
                         
-                        j[i-start] = (merCount<<29)+addStrandNotation(mers[i]&mask2,strand);  
+//                        j[i-start] = (merCount<<29)+addStrandNotation(this.repeatMarkerIndex[i]&mask2,strand);
+//                        j.add((merCount<<29)+addStrandNotation(this.repeatMarkerIndex[i]&mask2,strand));
+                        j[countMatch] = (merCount<<29)+addStrandNotation(this.repeatMarkerIndex[i]&mask2,strand);
+                        countMatch++;
                     }
                     skipFlag = false;
-                    merCount = 0;
+                    merCount = 1;
 
                 }
 
@@ -732,8 +741,10 @@ public class EncodedSequence {
                  * If it repeat it will fall into above check case (Because, with the repeat we can possibly scan down or scan up).
                  */
                 long j[] = new long[1];
+//                ArrayList<Long> j = new ArrayList();
                 int merCount = 1;
-                j[0] = (merCount<<29)+addStrandNotation(mers[start]&mask2,strand);
+                j[0] = (merCount<<29)+addStrandNotation(this.repeatMarkerIndex[start]&mask2,strand);
+//                j.add((merCount<<29)+addStrandNotation(this.repeatMarkerIndex[start]&mask2,strand));
                 return j;
 
             }else{
