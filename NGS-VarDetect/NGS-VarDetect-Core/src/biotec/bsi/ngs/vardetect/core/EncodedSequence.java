@@ -39,6 +39,7 @@ public class EncodedSequence {
     //TreeMap<Long,Long> map;
     long[] mers;            // Store reference sequence of specific chr for mapping propose
     long[] mersComp;
+    long iniIndex;
     ArrayList<Long> repeatMarker;
     
     Map<Long,Long> map;
@@ -46,12 +47,14 @@ public class EncodedSequence {
 //    Map<Long,Long> repeatMarkerBack;
     Map<Long,Boolean> repeatIndex;
     Map<Integer,ArrayList<Integer>> linkIndexCheck;
+    Map<Long,Long> alnCodeCheckList;    
     long[] repeatMarkerIndex;
     int[] linkIndex;
     int mainIndex;
     int numMer;
     String name;
     String subSequence;
+    boolean repeatFlag;         // use to indicate the alignment process has align with repeatMarker (repeat Found)
     
     public long mask = -268435456; // Do & operation to get mer  
     public long mask2 = 268435455; // Do & operation to get position
@@ -65,6 +68,8 @@ public class EncodedSequence {
 //        this.repeatMarkerBack = new LinkedHashMap();
         this.repeatIndex = new LinkedHashMap();
         this.linkIndexCheck = new LinkedHashMap();
+        this.alnCodeCheckList = new HashMap();                    // This map is a checklist for alncode to indicate the iniIndex Map<Long,Long> => Map<alnCode,iniIndex>
+        this.repeatFlag = false;
     }
     
     public long addStrandNotation(long in, int strand){
@@ -412,7 +417,8 @@ public class EncodedSequence {
              */
             int start = -1;
             int stop = -1;
-
+            
+//            double startAon = System.currentTimeMillis();
             for(int i=index;i>=0;i--){ 
                 long imer = this.repeatMarkerIndex[i]&mask;
 
@@ -434,6 +440,8 @@ public class EncodedSequence {
                     stop = i;
                 }
             }
+//            double stopAon = System.currentTimeMillis();
+//            double totalAon = stopAon - startAon;
             /***********************************************/
             
             /**
@@ -448,6 +456,7 @@ public class EncodedSequence {
                 long merCount = 1;
                 int checkRepeatNextIndex = -1;
                 boolean skipFlag = false;
+//                double startTime = System.currentTimeMillis();
                 for(int i =start;i<=stop;i++){                                       // This loop make program slow (In process to find the way to fix this)
                     /**
                      * Do small window scan for each index
@@ -559,6 +568,8 @@ public class EncodedSequence {
                     merCount = 1;
 
                 }
+//                double endTime   = System.currentTimeMillis();
+//                double totalTime = endTime - startTime;
 
                 return j;
             }else if(start == stop){
@@ -748,6 +759,644 @@ public class EncodedSequence {
                 return j;
 
             }else{
+                return null;
+            } 
+            /*****************************************************/  
+        }
+
+    }
+    
+    public Map<Long,ArrayList<Integer>> align4(long mer, String inSeq, int mainIdx, int numMer, Map<Integer,ArrayList<Integer>> inLinkIndexCheck,  boolean initiateNewReadFlag, Map<Long,ArrayList<Integer>> inAlnMerMap){
+        
+        /**
+         * Core function for alignment with RepeatMarker
+         * This function will return long[] 64 bit compose of merCount|strand|position (less than 10 bit|1 bit|28 bit) 
+         */
+        int nextIndex= -1; 
+        long nextMerPos = -1; 
+        long nextMer = -1;
+        this.subSequence = inSeq;
+        this.mainIndex = mainIdx;
+        this.numMer = numMer;
+        Map<Integer,ArrayList<Integer>> linkIndexCheck = inLinkIndexCheck;
+        Map<Long,ArrayList<Integer>> alnMerMap = inAlnMerMap;     // Key is align code [strand|alignposition] and value is mer code
+        
+        if(initiateNewReadFlag == true){                                // initiate New alnCodeCheckList when flag is true (when consider new read sample)
+            this.alnCodeCheckList = new HashMap();                    // This map is a checklist for alncode to indicate the iniIndex Map<Long,Long> => Map<alnCode,iniIndex>
+        }
+
+        if(linkIndexCheck.containsKey(mainIdx-1)){
+            linkIndexCheck.remove(mainIdx-1);            // remove all linked index that coresponse to old main index
+        }
+        
+        
+        int strand = 1; // Notation for strand +
+        int index = alignWithRepeatMarker(mer, 0, this.repeatMarkerIndex.length-1); // call binary search function with initial left and right with 0 and maximum index point
+        
+        if(index == -1){
+            this.repeatFlag = false;
+            return null;
+        }else{
+            
+            /**
+             * index scanning [ Scan up and down ] 
+             */
+            int start = -1;
+            int stop = -1;
+            
+//            double startAon = System.currentTimeMillis();
+            for(int i=index;i>=0;i--){ 
+                long imer = this.repeatMarkerIndex[i]&mask;
+
+                if(imer!=mer){
+                    start = i+1;
+                    break;
+                }else{
+                    start = i;
+                }
+            }
+
+            for(int i=index;i<this.repeatMarkerIndex.length;i++){
+                long imer = this.repeatMarkerIndex[i]&mask;
+
+                if(imer!=mer){
+                    stop = i;
+                    break;
+                }else{
+                    stop = i;
+                }
+            }
+//            double stopAon = System.currentTimeMillis();
+//            double totalAon = stopAon - startAon;
+            /***********************************************/
+            
+            /**
+             * Small window scan and repeat continuity scan
+             */
+            
+            if(start<stop){
+    //            System.out.println(" size "+(stop-start));
+//                ArrayList<Long> j = new ArrayList();                
+                long j[] = new long[(stop-start)+1]; 
+                int countMatch = 0;
+                long merCount = 1;
+                int checkRepeatNextIndex = -1;
+                boolean skipFlag = false;
+//                double startTime = System.currentTimeMillis();
+                for(int i =start;i<=stop;i++){                                       // This loop make program slow (In process to find the way to fix this)
+                    /**
+                     * Do small window scan for each index
+                     */
+                    
+                    if(linkIndexCheck.isEmpty()!=true && linkIndexCheck.containsKey(mainIdx)){
+                        if(linkIndexCheck.get(mainIdx).contains(i)){
+                            skipFlag = true;
+                        }
+                    }
+                    
+                    
+                    if(i-start>=0 && i>=0 && skipFlag == false){
+                       
+                        /// Start here => repeatScan();
+                        nextIndex = this.linkIndex[i];                              // i is current position that match to current mer of Big window
+                        
+                        for(int n=mainIdx+1;n<(inSeq.length()-numMer)+1;n++){                            // Loop for Small window scan (main index is current index from big window)
+                            
+                            if(nextIndex == this.mask2){
+                                break;
+                            }
+                            nextMerPos = this.repeatMarkerIndex[nextIndex];
+                            nextMer = nextMerPos&this.mask;
+                            
+                            String sub = inSeq.substring(n, n+numMer);                                 // cut String sequence into sub string sequence (mer length long) 
+                            long compareMer = SequenceUtil.encodeMer(sub, numMer);
+                            compareMer = compareMer<<28;
+                            
+                            
+                            
+                            if(nextMer != compareMer){
+                                break;
+                            }else if(linkIndexCheck.isEmpty()!=true){        // check repeat of nextindex (check contain of next index in ArrayList of past next index)
+                                
+                                if(linkIndexCheck.containsKey(n)){
+                                    if(linkIndexCheck.get(n).contains(nextIndex)){
+                                       break;
+                                    }else{
+                                        ArrayList<Integer> dummyNextIndex = linkIndexCheck.get(n);
+                                        if(dummyNextIndex==null){
+                                            System.out.println("Error");
+                                        }
+                                        dummyNextIndex.add(nextIndex);
+                                        linkIndexCheck.put(n, dummyNextIndex);
+                                        
+                                        nextIndex = this.linkIndex[nextIndex];              // update next index with old nextIndex
+                                        merCount++;
+                                    }
+                                }else{
+                                    
+                                    ArrayList<Integer> dummyNextIndex = new ArrayList();
+                                    dummyNextIndex.add(nextIndex);
+                                    linkIndexCheck.put(n, dummyNextIndex);
+                                    
+                                    nextIndex = this.linkIndex[nextIndex];              // update next index with old nextIndex
+                                    merCount++;
+                                }     
+                            }else{
+                               
+                                if(linkIndexCheck.containsKey(n)){
+                                    ArrayList<Integer> dummyNextIndex = linkIndexCheck.get(n);
+                                    dummyNextIndex.add(nextIndex);
+                                    linkIndexCheck.put(n, dummyNextIndex);  
+                                }else{
+                                    ArrayList<Integer> dummyNextIndex = new ArrayList();
+                                    dummyNextIndex.add(nextIndex);
+                                    linkIndexCheck.put(n, dummyNextIndex);
+                                }
+
+                                nextIndex = this.linkIndex[nextIndex];              // update next index with old nextIndex
+                                merCount++;                                         // this merCount is what we want
+                            }        
+                        }
+                        
+                        /**
+                         * Add create alnMerMap part (We move this part from run() then put it inside align4.)
+                         * (Hope it help to reduce computational time because we can get rid off one loop in run() function)
+                         */
+                        long mask29Bit = 536870911;
+//                        int merCount = (int)(posR[j]>>29);       
+                        long alnCode = addStrandNotation(this.repeatMarkerIndex[i]&mask2,strand) - index;     // posR is ~39 bit [merCount|strand|position] ; algncode is 29 bit [strand|alignPosition]. alignposition is position - index
+
+
+                        if(alnCodeCheckList.containsKey(alnCode)){
+
+                            iniIndex = alnCodeCheckList.get(alnCode);
+
+                            long indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+
+                            ArrayList<Integer> merList = alnMerMap.get(indexAlnCode);
+
+                            /**
+                             * Case check to solve the problem. In case, when position-index is the same value but actually it different peak.
+                             * To check continuity of this alnCode. We reserve index 0 of merList to store the recent index.
+                             * Check continuity of index from different between recent index and current index.
+                             */
+
+                            if(index-merList.get(0)==1){                                // Case check to solve the problem. In case, when position-index is the same value but actually it different peak
+                                /**
+                                 * it's continue. So, iniIndex not change 
+                                 */
+
+                                iniIndex = alnCodeCheckList.get(alnCode);
+
+                                indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                merList.remove(0);
+                                merList.add(0,index);
+                                for(int num=0;num<merCount;num++){
+                                    merList.add(1);
+                                }
+
+                                alnMerMap.put(indexAlnCode, merList);
+                            }else{
+                                /**
+                                 * it's not continue. So, iniIndex has change to present index                                                                                  
+                                 */
+
+                                iniIndex = index;
+                                alnCodeCheckList.put(alnCode, iniIndex);
+
+                                indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+
+                                merList = new ArrayList();
+                                merList.add(0,index);
+                                for(int num=0;num<merCount;num++){
+                                    merList.add(1);
+                                }
+                                alnMerMap.put(indexAlnCode,merList);
+                            }
+                            /**************************************************************************************************/
+
+                        }else{
+                            iniIndex = index;
+                            alnCodeCheckList.put(alnCode, iniIndex);
+
+                            long indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+
+                            ArrayList<Integer> merList = new ArrayList();
+                            merList.add(0,index);
+                            for(int num=0;num<merCount;num++){
+                                merList.add(1);
+                            }
+                            alnMerMap.put(indexAlnCode,merList);
+                        }
+                        
+//                        j[countMatch] = (merCount<<29)+addStrandNotation(this.repeatMarkerIndex[i]&mask2,strand);
+//                        countMatch++;
+                    }
+                    skipFlag = false;
+                    merCount = 1;
+
+                }
+//                double endTime   = System.currentTimeMillis();
+//                double totalTime = endTime - startTime;
+                this.repeatFlag = true;
+                return alnMerMap;
+            }else if(start == stop){
+                /**
+                 * In case of index has value equal to 0 and 28bit value. We cannot scan up for the case that index is 0 and we cannot scan down for the case that index is 28bit(maximum index)
+                 * With this two case the scan protocol above will return the same value of start and stop index If it not repeat. So, we can check both value to determine this two special case.
+                 * If it repeat it will fall into above check case (Because, with the repeat we can possibly scan down or scan up).
+                 */
+                long j[] = new long[1];
+//                ArrayList<Long> j = new ArrayList();
+                int merCount = 1;
+                
+                long mask29Bit = 536870911;
+//                        int merCount = (int)(posR[j]>>29);       
+                long alnCode = addStrandNotation(this.repeatMarkerIndex[start]&mask2,strand) - index;     // posR is ~39 bit [merCount|strand|position] ; algncode is 29 bit [strand|alignPosition]. alignposition is position - index
+                
+                if(alnCodeCheckList.containsKey(alnCode)){
+
+                    iniIndex = alnCodeCheckList.get(alnCode);
+
+                    long indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+
+                    ArrayList<Integer> merList = alnMerMap.get(indexAlnCode);
+
+                    /**
+                     * Case check to solve the problem. In case, when position-index is the same value but actually it different peak.
+                     * To check continuity of this alnCode. We reserve index 0 of merList to store the recent index.
+                     * Check continuity of index from different between recent index and current index.
+                     */
+
+                    if(index-merList.get(0)==1){                                // Case check to solve the problem. In case, when position-index is the same value but actually it different peak
+                        /**
+                         * it's continue. So, iniIndex not change 
+                         */
+
+                        iniIndex = alnCodeCheckList.get(alnCode);
+
+                        indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                        merList.remove(0);
+                        merList.add(0,index);
+                        for(int num=0;num<merCount;num++){
+                            merList.add(1);
+                        }
+
+                        alnMerMap.put(indexAlnCode, merList);
+                    }else{
+                        /**
+                         * it's not continue. So, iniIndex has change to present index                                                                                  
+                         */
+
+                        iniIndex = index;
+                        alnCodeCheckList.put(alnCode, iniIndex);
+
+                        indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+
+                        merList = new ArrayList();
+                        merList.add(0,index);
+                        for(int num=0;num<merCount;num++){
+                            merList.add(1);
+                        }
+                        alnMerMap.put(indexAlnCode,merList);
+                    }
+                    /**************************************************************************************************/
+
+                }else{
+                    iniIndex = index;
+                    alnCodeCheckList.put(alnCode, iniIndex);
+
+                    long indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+
+                    ArrayList<Integer> merList = new ArrayList();
+                    merList.add(0,index);
+                    for(int num=0;num<merCount;num++){
+                        merList.add(1);
+                    }
+                    alnMerMap.put(indexAlnCode,merList);
+                }
+                
+                
+                
+//                j[0] = (merCount<<29)+addStrandNotation(this.repeatMarkerIndex[start]&mask2,strand);
+//                j.add((merCount<<29)+addStrandNotation(this.repeatMarkerIndex[start]&mask2,strand));
+                this.repeatFlag = true;
+                return alnMerMap;
+
+            }else{
+                this.repeatFlag = false;
+                return null;
+            } 
+            /*****************************************************/  
+        }
+
+    }
+    
+    public Map<Long,ArrayList<Integer>> align4Compliment(long mer, String inSeq, int mainIdx, int numMer, Map<Integer,ArrayList<Integer>> inLinkIndexCheck, boolean initiateNewReadFlag, Map<Long,ArrayList<Integer>> inAlnMerMap){
+        
+        /**
+         * Core function for alignment with RepeatMarker
+         * This function will return long[] 64 bit compose of merCount|strand|position (less than 10 bit|1 bit|28 bit) 
+         */        
+        int nextIndex= -1; 
+        long nextMerPos = -1; 
+        long nextMer = -1;
+        this.subSequence = inSeq;
+        this.mainIndex = mainIdx;
+        this.numMer = numMer;
+        Map<Integer,ArrayList<Integer>> linkIndexCheck = inLinkIndexCheck;
+        Map<Long,ArrayList<Integer>> alnMerMap = inAlnMerMap;     // Key is align code [strand|alignposition] and value is mer code
+        
+        if(initiateNewReadFlag == true){
+            this.alnCodeCheckList = new HashMap();                    // This map is a checklist for alncode to indicate the iniIndex Map<Long,Long> => Map<alnCode,iniIndex>
+        }
+        
+        if(linkIndexCheck.containsKey(mainIdx-1)){
+            linkIndexCheck.remove(mainIdx-1);            // remove all linked index that coresponse to old main index
+        }
+        
+        
+        int strand = 0; // Notation for strand +
+        int index = alignWithRepeatMarker(mer, 0, this.repeatMarkerIndex.length-1); // call binary search function with initial left and right with 0 and maximum index point
+        
+        if(index == -1){
+            this.repeatFlag = false;
+            return null;
+        }else{
+            
+            /**
+             * index scanning [ Scan up and down ] 
+             */
+            int start = -1;
+            int stop = -1;
+
+            for(int i=index;i>=0;i--){ 
+                long imer = this.repeatMarkerIndex[i]&mask;
+
+                if(imer!=mer){
+                    start = i+1;
+                    break;
+                }else{
+                    start = i;
+                }
+            }
+
+            for(int i=index;i<this.repeatMarkerIndex.length;i++){
+                long imer = this.repeatMarkerIndex[i]&mask;
+
+                if(imer!=mer){
+                    stop = i;
+                    break;
+                }else{
+                    stop = i;
+                }
+            }
+            /***********************************************/
+            
+            /**
+             * Small window scan and repeat continuity scan
+             */
+            
+            if(start<stop){
+    //            System.out.println(" size "+(stop-start));
+                long j[] = new long[(stop-start)+1]; 
+//                ArrayList<Long> j = new ArrayList();
+                int countMatch = 0;
+                long merCount = 1;                                               // merCount is always start at 1 because whenever it reach this point, it's mean that at least ome mer is already match
+                int checkRepeatNextIndex = -1;
+                boolean skipFlag = false;
+                for(int i =start;i<=stop;i++){                                       // This loop make program slow (In process to find the way to fix this)
+                    /**
+                     * Do small window scan for each index
+                     */
+                    
+                    if(linkIndexCheck.isEmpty()!=true && linkIndexCheck.containsKey(mainIdx)){
+                        if(linkIndexCheck.get(mainIdx).contains(i)){
+                            skipFlag = true;
+                        }
+                    }
+                    
+                    if(i-start>=0 && i>=0 && skipFlag==false){
+                       
+                        /// Start here => repeatScan();
+                        nextIndex = this.linkIndex[i];                              // i is current position that match to current mer of Big window
+                        
+                        for(int n=mainIdx+1;n<(inSeq.length()-numMer)+1;n++){                            // Loop for Small window scan (main index is current index from big window)
+
+                            if(nextIndex == this.mask2){
+                                break;
+                            }
+                            nextMerPos = this.repeatMarkerIndex[nextIndex];
+                            nextMer = nextMerPos&this.mask;
+                            
+                            String sub = inSeq.substring(n, n+numMer);                                 // cut String sequence into sub string sequence (mer length long) 
+                            long compareMer = SequenceUtil.encodeMer(sub, numMer);
+                            compareMer = compareMer<<28;
+                            
+                            
+                            
+                            if(nextMer != compareMer){
+                                break;
+                            }else if(linkIndexCheck.isEmpty()!=true){        // check repeat of nextindex (check contain of next index in ArrayList of past next index)
+                                
+                                if(linkIndexCheck.containsKey(n)){
+                                    if(linkIndexCheck.get(n).contains(nextIndex)){
+                                       break;
+                                    }else{
+                                        ArrayList<Integer> dummyNextIndex = linkIndexCheck.get(n);
+                                        if(dummyNextIndex==null){
+                                            System.out.println("Error");
+                                        }
+                                        dummyNextIndex.add(nextIndex);
+                                        linkIndexCheck.put(n, dummyNextIndex);
+                                        
+                                        nextIndex = this.linkIndex[nextIndex];              // update next index with old nextIndex
+                                        merCount++;
+                                    }
+                                }else{
+                                    
+                                    ArrayList<Integer> dummyNextIndex = new ArrayList();
+                                    dummyNextIndex.add(nextIndex);
+                                    linkIndexCheck.put(n, dummyNextIndex);
+                                    
+                                    nextIndex = this.linkIndex[nextIndex];              // update next index with old nextIndex
+                                    merCount++;
+                                }     
+                            }else{
+                               
+                                if(linkIndexCheck.containsKey(n)){
+                                    ArrayList<Integer> dummyNextIndex = linkIndexCheck.get(n);
+                                    dummyNextIndex.add(nextIndex);
+                                    linkIndexCheck.put(n, dummyNextIndex);  
+                                }else{
+                                    ArrayList<Integer> dummyNextIndex = new ArrayList();
+                                    dummyNextIndex.add(nextIndex);
+                                    linkIndexCheck.put(n, dummyNextIndex);
+                                }
+
+                                nextIndex = this.linkIndex[nextIndex];              // update next index with old nextIndex
+                                merCount++;                                         // this merCount is what we want
+                            }  
+                        }
+                        
+                        /**
+                         *  Add create alnMerMap
+                         */
+                        long alnCode = addStrandNotation(this.repeatMarkerIndex[i]&mask2,strand) - index;     // posR is ~39 bit [merCount|strand|position] ; algncode is 29 bit [strand|alignPosition]. alignposition is position - index
+
+
+                        if(alnCodeCheckList.containsKey(alnCode)){
+
+                            iniIndex = alnCodeCheckList.get(alnCode);
+
+                            long indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+
+                            ArrayList<Integer> merList = alnMerMap.get(indexAlnCode);
+
+                            /**
+                             * Case check to solve the problem. In case, when position-index is the same value but actually it different peak.
+                             * To check continuity of this alnCode. We reserve index 0 of merList to store the recent index.
+                             * Check continuity of index from different between recent index and current index.
+                             */
+
+                            if(index-merList.get(0)==1){                                // Case check to solve the problem. In case, when position-index is the same value but actually it different peak
+                                /**
+                                 * it's continue. So, iniIndex not change 
+                                 */
+
+                                iniIndex = alnCodeCheckList.get(alnCode);
+
+                                indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                merList.remove(0);
+                                merList.add(0,index);
+                                for(int num=0;num<merCount;num++){
+                                    merList.add(1);
+                                }
+
+                                alnMerMap.put(indexAlnCode, merList);
+                            }else{
+                                /**
+                                 * it's not continue. So, iniIndex has change to present index                                                                                  
+                                 */
+
+                                iniIndex = index;
+                                alnCodeCheckList.put(alnCode, iniIndex);
+
+                                indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+
+                                merList = new ArrayList();
+                                merList.add(0,index);
+                                for(int num=0;num<merCount;num++){
+                                    merList.add(1);
+                                }
+                                alnMerMap.put(indexAlnCode,merList);
+                            }
+                            /**************************************************************************************************/
+
+                        }else{
+                            iniIndex = index;
+                            alnCodeCheckList.put(alnCode, iniIndex);
+
+                            long indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+
+                            ArrayList<Integer> merList = new ArrayList();
+                            merList.add(0,index);
+                            for(int num=0;num<merCount;num++){
+                                merList.add(1);
+                            }
+                            alnMerMap.put(indexAlnCode,merList);
+
+                        }
+                        
+                    }
+                    skipFlag = false;
+                    merCount = 1;
+
+                }
+
+                this.repeatFlag = true;
+                return alnMerMap;
+            }else if(start == stop){
+                /**
+                 * In case of index has value equal to 0 and 28bit value. We cannot scan up for the case that index is 0 and we cannot scan down for the case that index is 28bit(maximum index)
+                 * With this two case the scan protocol above will return the same value of start and stop index If it not repeat. So, we can check both value to determine this two special case.
+                 * If it repeat it will fall into above check case (Because, with the repeat we can possibly scan down or scan up).
+                 */
+                long j[] = new long[1];
+//                ArrayList<Long> j = new ArrayList();
+                int merCount = 1;
+                           
+                long alnCode = addStrandNotation(this.repeatMarkerIndex[start]&mask2,strand) - index;     // posR is ~39 bit [merCount|strand|position] ; algncode is 29 bit [strand|alignPosition]. alignposition is position - index
+
+
+                if(alnCodeCheckList.containsKey(alnCode)){
+
+                    iniIndex = alnCodeCheckList.get(alnCode);
+
+                    long indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+
+                    ArrayList<Integer> merList = alnMerMap.get(indexAlnCode);
+
+                    /**
+                     * Case check to solve the problem. In case, when position-index is the same value but actually it different peak.
+                     * To check continuity of this alnCode. We reserve index 0 of merList to store the recent index.
+                     * Check continuity of index from different between recent index and current index.
+                     */
+
+                    if(index-merList.get(0)==1){                                // Case check to solve the problem. In case, when position-index is the same value but actually it different peak
+                        /**
+                         * it's continue. So, iniIndex not change 
+                         */
+
+                        iniIndex = alnCodeCheckList.get(alnCode);
+
+                        indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                        merList.remove(0);
+                        merList.add(0,index);
+                        for(int num=0;num<merCount;num++){
+                            merList.add(1);
+                        }
+
+                        alnMerMap.put(indexAlnCode, merList);
+                    }else{
+                        /**
+                         * it's not continue. So, iniIndex has change to present index                                                                                  
+                         */
+
+                        iniIndex = index;
+                        alnCodeCheckList.put(alnCode, iniIndex);
+
+                        indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+
+                        merList = new ArrayList();
+                        merList.add(0,index);
+                        for(int num=0;num<merCount;num++){
+                            merList.add(1);
+                        }
+                        alnMerMap.put(indexAlnCode,merList);
+                    }
+                    /**************************************************************************************************/
+
+                }else{
+                    iniIndex = index;
+                    alnCodeCheckList.put(alnCode, iniIndex);
+
+                    long indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+
+                    ArrayList<Integer> merList = new ArrayList();
+                    merList.add(0,index);
+                    for(int num=0;num<merCount;num++){
+                        merList.add(1);
+                    }
+                    alnMerMap.put(indexAlnCode,merList);
+
+                }
+                
+                this.repeatFlag = true;
+                return alnMerMap;
+
+            }else{
+                this.repeatFlag = false;
                 return null;
             } 
             /*****************************************************/  
@@ -1053,6 +1702,9 @@ public class EncodedSequence {
         return this.mers;
     }
     
+    public boolean getRepeatFlag(){
+        return this.repeatFlag;
+    }
     
     public void setMap(Map<Long, Long> map) {       //Currently not use (Use on old implementation hashmap version)
         this.map = map;

@@ -4224,7 +4224,7 @@ public class SequenceUtil {
         return null;
     }
      
-     public static EncodedSequence createAllReferenceV2(ChromosomeSequence chr, int mer, char option) throws IOException{
+    public static EncodedSequence createAllReferenceV2(ChromosomeSequence chr, int mer, char option) throws IOException{
         /**
          * This function will create or import all reference for alignment.
          * 1. Create or import chromosome reference [create from function encodedSerialChromosomeSequence]
@@ -4269,6 +4269,7 @@ public class SequenceUtil {
 
         if(indexFile.exists()!=true){
             System.out.println("Begin create Repeat Marker Index");
+            encoded = encodeSerialChromosomeSequenceV3(chr,mer,'a');
             DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(indexFile)));
                                                       
             long startTime = System.currentTimeMillis();
@@ -4279,8 +4280,7 @@ public class SequenceUtil {
             long chrnumber = chr.getChrNumber();
             merPos = encoded.getMers();
             boolean firstFlag = true;
-            for(int i=0;i<merPos.length;i++){
-
+            for(int i=0;i<merPos.length;i++){                
                 long codeMerPos = merPos[i];
                 long codeMer = (codeMerPos>>28)&mask36bit;
                 

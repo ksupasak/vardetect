@@ -41,6 +41,7 @@ public class BinaryAligner extends Thread implements Aligner {
     ArrayList<ThreadBinaryAligner> threadList;
     ArrayList<ThreadBinaryAlignerV3> threadListV3;
     ArrayList<ThreadBinaryAlignerV4> threadListV4;
+    ArrayList<ThreadBinaryAlignerV5> threadListV5;
     Map<Long,ArrayList<Long>> alnMerMap;     // Key is align code [strand|alignposition] and value is mer code
     Map<String,ArrayList<Long>> alnRes;      // Key is ReadName and value is array of long [count|chr|strand|Pos]    
     Map<Long,Byte> varType;
@@ -625,6 +626,124 @@ public class BinaryAligner extends Thread implements Aligner {
                 this.alnRes = threadListV4.get(i).getMapResult();
             }else{
                 this.alnRes.putAll(threadListV4.get(i).getMapResult());
+            }
+        }
+        
+        
+        alinResult.addMapResult(this.alnRes);
+ 
+        return alinResult;
+    }
+    
+    public AlignmentResultRead alignMultithreadV5(ReferenceSequence ref, InputSequence input, int numThread, int numMer, int threshold) throws InterruptedException {
+        /**
+         * This version 3 function give the v3 data structure of result
+         */
+        this.setReferenceSequence(ref);
+        return alignMultithreadV5(input,numThread,numMer,threshold);
+        
+    }
+    
+    public AlignmentResultRead alignMultithreadV5(InputSequence input, int numThread, int numMer, int threshold) throws InterruptedException{
+        
+        /**
+        * This method will create object that implement multi-thread capability in it
+        * This function will split input sequence into number of portion relate to number of user specify thread number 
+        * Then it will loop to create a set of thread and store in threadList
+        * Each portion of split input will be pass into each thread implement object and do there job
+        * At last we will wait for each thread finish there job and merge the result together
+        * 
+        * This version 3 function give the v3 data structure of result
+        */
+        
+        threadListV5 = new ArrayList();
+        this.numberOfThread = numThread;
+        //AlignmentResult res = new AlignmentResult(input);
+        AlignmentResultRead alinResult = new AlignmentResultRead();
+        
+        this.mer = numMer;
+
+        Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
+
+        while(chrs.hasMoreElements()){                                                      // Loop chromosome contain in ReferenceSequence
+            long startTime = System.currentTimeMillis();
+            try {
+                
+                int count = 0;
+                ChromosomeSequence chr = chrs.nextElement();
+                Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
+                System.out.println("reading .. "+chr.getName()+"");
+                EncodedSequence encoded = SequenceUtil.createAllReferenceV2(chr, this.mer, 'a');   // Create or import all reference [chromosome reference, repeat index, repeat Marker]                               
+                long chrnumber = chr.getChrNumber();
+                /*********/
+                int inputSize = input.getInputSequence().size();
+                double dummyNum = (double)inputSize/this.numberOfThread;
+                int numPerPartition = (int)Math.ceil(dummyNum);
+                
+                /* Create thread object follow by specific numThread */
+                /*  Separate case In order to use existing thread object or create new for first time*/
+                
+                if(threadListV5.isEmpty()){
+                 
+                    for(int i = 0 ; i < inputSize ; i+= numPerPartition){                        
+                        List splitInputSequence = input.getInputSequence().subList(i, Math.min(inputSize, i+numPerPartition));
+                        String threadName = "Thread_"+count; 
+                        ThreadBinaryAlignerV5 newThread = new ThreadBinaryAlignerV5(threadName,splitInputSequence,encoded,chr.getChrNumber(),mer,threshold);
+                        newThread.start();                        
+                        threadListV5.add(newThread);
+                        count++;
+                    }
+                }else{
+                    int dummynum = 0;
+                    for(int i = 0 ; i < inputSize ; i+= numPerPartition){
+                        List splitInputSequence = input.getInputSequence().subList(i, Math.min(inputSize, i+numPerPartition));
+                        ThreadBinaryAlignerV5 dummythread = threadListV5.get(dummynum);
+                        dummythread.setdata(splitInputSequence, encoded, chrnumber, mer);
+                        dummythread.start();
+                        dummynum++;
+                    }
+                }
+                              
+//                    for(int i = 0 ; i < inputSize ; i+= numPerPartition){
+//                        List splitInputSequence = input.getInputSequence().subList(i, Math.min(inputSize, i+numPerPartition));
+//                        String threadName = "Thread_"+count; 
+//                        ThreadBinaryAligner newThread = new ThreadBinaryAligner(threadName,splitInputSequence,encoded,chr.getChrNumber(),mer);
+//                        newThread.start();
+//
+//                        threadList.add(newThread);
+//                        count++;
+//                   
+                              
+                System.out.println("Number of thread check : " + threadListV5.size() + " Must equal to " + numThread);
+                for(int i=0;i<threadListV5.size();i++){
+                    /* Wait for specific thread to finish execute (finish method run()) */ 
+                    /* After run() method is finish thread stop execute but the thread object that we overwrite run() in it is still exist */
+                    threadListV5.get(i).join();                    
+                }
+                
+                /* End */
+                
+                encoded.lazyLoad();         // clear memmory
+                encoded = null;
+                
+                System.gc();
+
+            } catch (IOException ex) {
+                Logger.getLogger(BinaryAligner.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            long endTime = System.currentTimeMillis();
+            double totalTime = (endTime - startTime)/1000;
+            System.out.println("Done time use: "+ totalTime +" second");
+            System.out.println();
+        }
+        
+        for(int i=0;i<threadListV5.size();i++){
+            /* Loop to get align result map from each thread object */
+            /* Put all align map result into one Map result */
+            if(i==0){
+                this.alnRes = threadListV5.get(i).getMapResult();
+            }else{
+                this.alnRes.putAll(threadListV5.get(i).getMapResult());
             }
         }
         
