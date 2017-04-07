@@ -84,7 +84,7 @@ public class ThreadBinaryAlignerV5 implements Runnable {
             boolean skipRead = false;
             
             ShortgunSequence seq = (ShortgunSequence)seqs.next();
-            this.alnMerMap = new LinkedHashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read
+            Map<Long,ArrayList<Integer>> alnMerMap = new LinkedHashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read
 
 //                    System.out.println(""+chr.getName()+" "+encoded.getMers().length);
 
@@ -99,7 +99,7 @@ public class ThreadBinaryAlignerV5 implements Runnable {
             long iniIndex = 0;
             long recentIdx = 0;
             boolean firstMatchCheck = false;
-            boolean initiateNewReadFlag = true;                                 // this flag is indicate the first time that we consider the read (use to signal inside the Encoded object to renew alnCodeCheckList)
+//            boolean initiateNewReadFlag = true;                                 // this flag is indicate the first time that we consider the read (use to signal inside the Encoded object to renew alnCodeCheckList)
             /************/
             for(int i=0;i<(s.length()-numMer)+1;i++){                                  // (Windowing with one stepping) for loop over String sequence which has limit round at (string length - mer length) + one [maximum possible mer sequence]
                 int index = i;
@@ -120,7 +120,15 @@ public class ThreadBinaryAlignerV5 implements Runnable {
                 if(m!=-1){                                                          
                     m = m<<28;                                                      // shift left 28 bit for optimization binary search purpose 
 //                            long pos = encoded.align(m);
-                    this.alnMerMap = encodedRef.align4(m, s, index, numMer, linkIndexCheck, initiateNewReadFlag, this.alnMerMap);
+                    ArrayList output = encodedRef.align4(m, s, index, numMer, linkIndexCheck, alnCodeCheckList, alnMerMap);
+                    /**
+                     * Not sure this two line will slow the program or not.
+                     */
+                    alnMerMap = (Map<Long,ArrayList<Integer>>)output.get(0);        
+                    alnCodeCheckList = (Map<Long,Long>)output.get(1);
+                    /*********/
+                            
+//                    initiateNewReadFlag = false;
 //                    ArrayList<Long> posR = encodedRef.align3(m, s, index, numMer, linkIndexCheck);
                     if(encodedRef.getRepeatFlag()==false){        
                         long pos2[] = encodedRef.align2(m);                                // Do alignment with binary search (pos2[] cantain 64 bit long [mer code | position])
@@ -155,7 +163,7 @@ public class ThreadBinaryAlignerV5 implements Runnable {
 
                                     long indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
 
-                                    ArrayList<Integer> merList = this.alnMerMap.get(indexAlnCode);
+                                    ArrayList<Integer> merList = alnMerMap.get(indexAlnCode);
 
                                     /**
                                      * Case check to solve the problem. In case, when position-index is the same value but actually it different peak.
@@ -170,7 +178,7 @@ public class ThreadBinaryAlignerV5 implements Runnable {
                                         merList.remove(0);
                                         merList.add(0,index);
                                         merList.add(1);
-                                        this.alnMerMap.put(indexAlnCode, merList);
+                                        alnMerMap.put(indexAlnCode, merList);
                                     }else{
                                         iniIndex = index;
                                         alnCodeCheckList.put(alnCode, iniIndex);
@@ -180,7 +188,7 @@ public class ThreadBinaryAlignerV5 implements Runnable {
                                         merList = new ArrayList();
                                         merList.add(0,index);
                                         merList.add(1);
-                                        this.alnMerMap.put(indexAlnCode,merList);
+                                        alnMerMap.put(indexAlnCode,merList);
                                     }
                                     /*******************/
 
@@ -193,7 +201,7 @@ public class ThreadBinaryAlignerV5 implements Runnable {
                                     ArrayList<Integer> merList = new ArrayList();
                                     merList.add(0,index);
                                     merList.add(1);
-                                    this.alnMerMap.put(indexAlnCode,merList);
+                                    alnMerMap.put(indexAlnCode,merList);
 
                                 }
     //                                    merList = null;
@@ -215,11 +223,11 @@ public class ThreadBinaryAlignerV5 implements Runnable {
             
             if(this.alnRes.containsKey(seq.getReadName())&&skipRead==false){                     // Check for existing of ReadName (if exist put result code on existing ArrayList<Long>
                 ArrayList<Long> countChrIdxStrandAlnList = this.alnRes.get(seq.getReadName()); //get existing Arraylist
-                Set keySet = this.alnMerMap.keySet();
+                Set keySet = alnMerMap.keySet();
                 Iterator keyIter =keySet.iterator();
                 while(keyIter.hasNext()){
                     long idxStrandAln = (long)keyIter.next();                      // strandAln has 29 bit compose of [strand|alignPosition]
-                    long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
+                    long count = alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
                     long chrIdxStrandAln = (chrNum<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add count number on the front of strandAln which has 37 bit
                     long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
                     
@@ -230,11 +238,11 @@ public class ThreadBinaryAlignerV5 implements Runnable {
                 this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
             }else if(this.alnRes.containsKey(seq.getReadName())==false&&skipRead==false){
                 ArrayList<Long> countChrIdxStrandAlnList = new ArrayList();
-                Set keySet = this.alnMerMap.keySet();
+                Set keySet = alnMerMap.keySet();
                 Iterator keyIter =keySet.iterator();
                 while(keyIter.hasNext()){
                     long idxStrandAln = (long)keyIter.next();                      // strandAln has 29 bit compose of [strand|alignPosition]
-                    long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
+                    long count = alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
                     long chrIdxStrandAln = (chrNum<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add count number on the front of strandAln which has 37 bit
                     long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
                     
@@ -261,13 +269,13 @@ public class ThreadBinaryAlignerV5 implements Runnable {
         /*-------------------- Do compliment alignment -------------------------------*/
         /* Do the same algorithm but use function for compliment */
         Iterator seqsComp = inputSequence.iterator();
-        boolean initiateNewReadFlag = true;                                 // this flag is indicate the first time that we consider the read (use to signal inside the Encoded object to renew alnCodeCheckList)
+//        boolean initiateNewReadFlag = true;                                 // this flag is indicate the first time that we consider the read (use to signal inside the Encoded object to renew alnCodeCheckList)
 
         while(seqsComp.hasNext()){
             Map<Integer,ArrayList<Integer>> linkIndexCheck = new LinkedHashMap();                       // HashMap contain data that has been use to check for repeat jump
             boolean skipRead = false;
             ShortgunSequence seq = (ShortgunSequence)seqsComp.next();                                  // get ShortgunSequence from InputSequence
-            this.alnMerMap = new LinkedHashMap();
+            Map<Long,ArrayList<Integer>> alnMerMap = new LinkedHashMap();
 
 //                    System.out.println(""+chr.getName()+" "+encoded.getMers().length);
 
@@ -300,9 +308,15 @@ public class ThreadBinaryAlignerV5 implements Runnable {
                 if(m!=-1){
                     m = m<<28;
                     
-                    this.alnMerMap = encodedRef.align4Compliment(m, compSeq, index, numMer, linkIndexCheck, initiateNewReadFlag, this.alnMerMap);
+                    ArrayList output = encodedRef.align4Compliment(m, compSeq, index, numMer, linkIndexCheck, alnCodeCheckList, alnMerMap);
 //                    ArrayList<Long> posR = encodedRef.align3Compliment(m, compSeq, index, numMer, linkIndexCheck);
-                    
+                    /**
+                     * Not sure this two line will slow program or not
+                     */
+                    alnMerMap = (Map<Long,ArrayList<Integer>>)output.get(0);        
+                    alnCodeCheckList = (Map<Long,Long>)output.get(1);
+                    /***************/
+
                     if(encodedRef.getRepeatFlag()==false){
 
                         long pos2[] = encodedRef.align2ComplimentV2(m);                            // Do alignment by alignment function specific for compliment sequence
@@ -336,7 +350,7 @@ public class ThreadBinaryAlignerV5 implements Runnable {
 
                                     long indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
 
-                                    ArrayList<Integer> merList = this.alnMerMap.get(indexAlnCode);
+                                    ArrayList<Integer> merList = alnMerMap.get(indexAlnCode);
 
                                     /**
                                      * Case check to solve the problem. In case, when position-index is the same value but actually it different peak.
@@ -351,7 +365,7 @@ public class ThreadBinaryAlignerV5 implements Runnable {
                                         merList.remove(0);
                                         merList.add(0,index);
                                         merList.add(1);
-                                        this.alnMerMap.put(indexAlnCode, merList);
+                                        alnMerMap.put(indexAlnCode, merList);
                                     }else{
                                         iniIndex = index;
                                         alnCodeCheckList.put(alnCode, iniIndex);
@@ -361,7 +375,7 @@ public class ThreadBinaryAlignerV5 implements Runnable {
                                         merList = new ArrayList();
                                         merList.add(0,index);
                                         merList.add(1);
-                                        this.alnMerMap.put(indexAlnCode,merList);
+                                        alnMerMap.put(indexAlnCode,merList);
                                     }
                                     /*******************/
 
@@ -374,7 +388,7 @@ public class ThreadBinaryAlignerV5 implements Runnable {
                                     ArrayList<Integer> merList = new ArrayList();
                                     merList.add(0,index);
                                     merList.add(1);
-                                    this.alnMerMap.put(indexAlnCode,merList);
+                                    alnMerMap.put(indexAlnCode,merList);
 
                                 }
                                        
@@ -395,11 +409,11 @@ public class ThreadBinaryAlignerV5 implements Runnable {
             if(this.alnRes.containsKey(seq.getReadName())&&skipRead==false){                     // Check for existing of ReadName (if exist put result code on existing ArrayList<Long>
 
                 ArrayList<Long> countChrIdxStrandAlnList = this.alnRes.get(seq.getReadName()); //get existing Arraylist
-                Set keySet = this.alnMerMap.keySet();
+                Set keySet = alnMerMap.keySet();
                 Iterator keyIter =keySet.iterator();
                 while(keyIter.hasNext()){
                     long idxStrandAln = (long)keyIter.next();                      // strandAln has 37 bit compose of [iniIndex|strand|alignPosition]
-                    long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
+                    long count = alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
                     long chrIdxStrandAln = (chrNum<<37)+idxStrandAln;     // shift left 37 bit beacause we want to add chr number on the front of strandAln which has 37 bit
                     long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit
 
@@ -410,11 +424,11 @@ public class ThreadBinaryAlignerV5 implements Runnable {
                 this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
             }else if(this.alnRes.containsKey(seq.getReadName())==false && skipRead==false){
                 ArrayList<Long> countChrIdxStrandAlnList = new ArrayList();
-                Set keySet = this.alnMerMap.keySet();
+                Set keySet = alnMerMap.keySet();
                 Iterator keyIter =keySet.iterator();
                 while(keyIter.hasNext()){
                     long idxStrandAln = (long)keyIter.next();                      // strandAln has 37 bit compose of [iniIndex|strand|alignPosition]
-                    long count = this.alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
+                    long count = alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reseve for checking index continuity)
                     long chrIdxStrandAln = (chrNum)+idxStrandAln;     // shift left 37 bit beacause we want to add chr number on the front of strandAln which has 37 bit
                     long countChrIdxStrandAln = (count<<42)+chrIdxStrandAln;          // shift left 42 bit beacause we want to add count number on the front of chrStrandAln which has 42 bit 
                     

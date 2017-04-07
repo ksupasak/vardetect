@@ -47,7 +47,9 @@ public class EncodedSequence {
 //    Map<Long,Long> repeatMarkerBack;
     Map<Long,Boolean> repeatIndex;
     Map<Integer,ArrayList<Integer>> linkIndexCheck;
-    Map<Long,Long> alnCodeCheckList;    
+    Map<Long,ArrayList<Integer>> alnMerMap;
+    Map<Long,Long> alnCodeCheckList;
+    
     long[] repeatMarkerIndex;
     int[] linkIndex;
     int mainIndex;
@@ -68,6 +70,7 @@ public class EncodedSequence {
 //        this.repeatMarkerBack = new LinkedHashMap();
         this.repeatIndex = new LinkedHashMap();
         this.linkIndexCheck = new LinkedHashMap();
+        this.alnMerMap = new LinkedHashMap();
         this.alnCodeCheckList = new HashMap();                    // This map is a checklist for alncode to indicate the iniIndex Map<Long,Long> => Map<alnCode,iniIndex>
         this.repeatFlag = false;
     }
@@ -766,12 +769,13 @@ public class EncodedSequence {
 
     }
     
-    public Map<Long,ArrayList<Integer>> align4(long mer, String inSeq, int mainIdx, int numMer, Map<Integer,ArrayList<Integer>> inLinkIndexCheck,  boolean initiateNewReadFlag, Map<Long,ArrayList<Integer>> inAlnMerMap){
+    public ArrayList align4(long mer, String inSeq, int mainIdx, int numMer, Map<Integer,ArrayList<Integer>> inLinkIndexCheck,  Map<Long,Long> inAlnCodeCheckList, Map<Long,ArrayList<Integer>> inAlnMerMap){
         
         /**
          * Core function for alignment with RepeatMarker
          * This function will return long[] 64 bit compose of merCount|strand|position (less than 10 bit|1 bit|28 bit) 
          */
+        ArrayList output = new ArrayList(2);
         int nextIndex= -1; 
         long nextMerPos = -1; 
         long nextMer = -1;
@@ -780,10 +784,9 @@ public class EncodedSequence {
         this.numMer = numMer;
         Map<Integer,ArrayList<Integer>> linkIndexCheck = inLinkIndexCheck;
         Map<Long,ArrayList<Integer>> alnMerMap = inAlnMerMap;     // Key is align code [strand|alignposition] and value is mer code
-        
-        if(initiateNewReadFlag == true){                                // initiate New alnCodeCheckList when flag is true (when consider new read sample)
-            this.alnCodeCheckList = new HashMap();                    // This map is a checklist for alncode to indicate the iniIndex Map<Long,Long> => Map<alnCode,iniIndex>
-        }
+
+        Map<Long,Long> alnCodeCheckList = inAlnCodeCheckList;                    // This map is a checklist for alncode to indicate the iniIndex Map<Long,Long> => Map<alnCode,iniIndex>
+       
 
         if(linkIndexCheck.containsKey(mainIdx-1)){
             linkIndexCheck.remove(mainIdx-1);            // remove all linked index that coresponse to old main index
@@ -795,7 +798,9 @@ public class EncodedSequence {
         
         if(index == -1){
             this.repeatFlag = false;
-            return null;
+            output.add(0, alnMerMap);
+            output.add(1,alnCodeCheckList);
+            return output;
         }else{
             
             /**
@@ -940,7 +945,9 @@ public class EncodedSequence {
                              * To check continuity of this alnCode. We reserve index 0 of merList to store the recent index.
                              * Check continuity of index from different between recent index and current index.
                              */
-
+                            if(merList==null){
+                                System.out.println();
+                            }
                             if(index-merList.get(0)==1){                                // Case check to solve the problem. In case, when position-index is the same value but actually it different peak
                                 /**
                                  * it's continue. So, iniIndex not change 
@@ -999,7 +1006,9 @@ public class EncodedSequence {
 //                double endTime   = System.currentTimeMillis();
 //                double totalTime = endTime - startTime;
                 this.repeatFlag = true;
-                return alnMerMap;
+                output.add(0, alnMerMap);
+                output.add(1,alnCodeCheckList);
+                return output; 
             }else if(start == stop){
                 /**
                  * In case of index has value equal to 0 and 28bit value. We cannot scan up for the case that index is 0 and we cannot scan down for the case that index is 28bit(maximum index)
@@ -1081,23 +1090,28 @@ public class EncodedSequence {
 //                j[0] = (merCount<<29)+addStrandNotation(this.repeatMarkerIndex[start]&mask2,strand);
 //                j.add((merCount<<29)+addStrandNotation(this.repeatMarkerIndex[start]&mask2,strand));
                 this.repeatFlag = true;
-                return alnMerMap;
+                output.add(0, alnMerMap);
+                output.add(1,alnCodeCheckList);
+                return output;
 
             }else{
                 this.repeatFlag = false;
-                return null;
+                output.add(0, alnMerMap);
+                output.add(1,alnCodeCheckList);
+                return output;
             } 
             /*****************************************************/  
         }
 
     }
     
-    public Map<Long,ArrayList<Integer>> align4Compliment(long mer, String inSeq, int mainIdx, int numMer, Map<Integer,ArrayList<Integer>> inLinkIndexCheck, boolean initiateNewReadFlag, Map<Long,ArrayList<Integer>> inAlnMerMap){
+    public ArrayList align4Compliment(long mer, String inSeq, int mainIdx, int numMer, Map<Integer,ArrayList<Integer>> inLinkIndexCheck, Map<Long,Long> inAlnCodeCheckList, Map<Long,ArrayList<Integer>> inAlnMerMap){
         
         /**
          * Core function for alignment with RepeatMarker
          * This function will return long[] 64 bit compose of merCount|strand|position (less than 10 bit|1 bit|28 bit) 
-         */        
+         */
+        ArrayList output = new ArrayList(2);        
         int nextIndex= -1; 
         long nextMerPos = -1; 
         long nextMer = -1;
@@ -1106,10 +1120,8 @@ public class EncodedSequence {
         this.numMer = numMer;
         Map<Integer,ArrayList<Integer>> linkIndexCheck = inLinkIndexCheck;
         Map<Long,ArrayList<Integer>> alnMerMap = inAlnMerMap;     // Key is align code [strand|alignposition] and value is mer code
-        
-        if(initiateNewReadFlag == true){
-            this.alnCodeCheckList = new HashMap();                    // This map is a checklist for alncode to indicate the iniIndex Map<Long,Long> => Map<alnCode,iniIndex>
-        }
+
+        Map<Long,Long> alnCodeCheckList = inAlnCodeCheckList;                    // This map is a checklist for alncode to indicate the iniIndex Map<Long,Long> => Map<alnCode,iniIndex>
         
         if(linkIndexCheck.containsKey(mainIdx-1)){
             linkIndexCheck.remove(mainIdx-1);            // remove all linked index that coresponse to old main index
@@ -1121,7 +1133,9 @@ public class EncodedSequence {
         
         if(index == -1){
             this.repeatFlag = false;
-            return null;
+            output.add(0, alnMerMap);
+            output.add(1,alnCodeCheckList);
+            return output;
         }else{
             
             /**
@@ -1315,7 +1329,9 @@ public class EncodedSequence {
                 }
 
                 this.repeatFlag = true;
-                return alnMerMap;
+                output.add(0, alnMerMap);
+                output.add(1,alnCodeCheckList);
+                return output;
             }else if(start == stop){
                 /**
                  * In case of index has value equal to 0 and 28bit value. We cannot scan up for the case that index is 0 and we cannot scan down for the case that index is 28bit(maximum index)
@@ -1393,11 +1409,15 @@ public class EncodedSequence {
                 }
                 
                 this.repeatFlag = true;
-                return alnMerMap;
+                output.add(0, alnMerMap);
+                output.add(1,alnCodeCheckList);
+                return output;
 
             }else{
                 this.repeatFlag = false;
-                return null;
+                output.add(0, alnMerMap);
+                output.add(1,alnCodeCheckList);
+                return output;
             } 
             /*****************************************************/  
         }
