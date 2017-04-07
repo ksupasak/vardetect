@@ -48,7 +48,7 @@ public class ThreadBinaryAlignerV3 implements Runnable {
     private int numMer;
     private int threshold;                          // It is a minimum number of count that we accept
     private Map<Long,Long> alignMap;
-    private Map<Long,ArrayList<Long>> alnMerMap;     // Key is align code [strand|alignposition] and value is mer code
+    private Map<Long,ArrayList<Integer>> alnMerMap;     // Key is align code [strand|alignposition] and value is mer code
     private Map<String,ArrayList<Long>> alnRes;      // Key is ReadName and value is array of long [count|chr|strand|Pos]
     String flag;
             
@@ -180,7 +180,7 @@ public class ThreadBinaryAlignerV3 implements Runnable {
 
                                 long indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
 
-                                ArrayList<Long> merList = this.alnMerMap.get(indexAlnCode);
+                                ArrayList<Integer> merList = this.alnMerMap.get(indexAlnCode);
 
                                 /**
                                  * Case check to solve the problem. In case, when position-index is the same value but actually it different peak.
@@ -193,8 +193,8 @@ public class ThreadBinaryAlignerV3 implements Runnable {
 
                                     indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
                                     merList.remove(0);
-                                    merList.add(0,(long)index);
-                                    merList.add(m);
+                                    merList.add(0,index);
+                                    merList.add(1);
                                     this.alnMerMap.put(indexAlnCode, merList);
                                 }else{
                                     iniIndex = index;
@@ -203,8 +203,8 @@ public class ThreadBinaryAlignerV3 implements Runnable {
                                     indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
 
                                     merList = new ArrayList();
-                                    merList.add(0,(long)index);
-                                    merList.add(m);
+                                    merList.add(0,index);
+                                    merList.add(1);
                                     this.alnMerMap.put(indexAlnCode,merList);
                                 }
                                 /*******************/
@@ -215,9 +215,9 @@ public class ThreadBinaryAlignerV3 implements Runnable {
 
                                 long indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
 
-                                ArrayList<Long> merList = new ArrayList();
-                                merList.add(0,(long)index);
-                                merList.add(m);
+                                ArrayList<Integer> merList = new ArrayList();
+                                merList.add(0,index);
+                                merList.add(1);
                                 this.alnMerMap.put(indexAlnCode,merList);
 
                             }
@@ -420,7 +420,7 @@ public class ThreadBinaryAlignerV3 implements Runnable {
 
                                 long indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
 
-                                ArrayList<Long> merList = this.alnMerMap.get(indexAlnCode);
+                                ArrayList<Integer> merList = this.alnMerMap.get(indexAlnCode);
 
                                 /**
                                  * Case check to solve the problem. In case, when position-index is the same value but actually it different peak.
@@ -433,8 +433,8 @@ public class ThreadBinaryAlignerV3 implements Runnable {
 
                                     indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
                                     merList.remove(0);
-                                    merList.add(0,(long)index);
-                                    merList.add(m);
+                                    merList.add(0,index);
+                                    merList.add(1);
                                     this.alnMerMap.put(indexAlnCode, merList);
                                 }else{
                                     iniIndex = index;
@@ -443,8 +443,8 @@ public class ThreadBinaryAlignerV3 implements Runnable {
                                     indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
 
                                     merList = new ArrayList();
-                                    merList.add(0,(long)index);
-                                    merList.add(m);
+                                    merList.add(0,index);
+                                    merList.add(1);
                                     this.alnMerMap.put(indexAlnCode,merList);
                                 }
                                 /*******************/
@@ -455,9 +455,9 @@ public class ThreadBinaryAlignerV3 implements Runnable {
 
                                 long indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
 
-                                ArrayList<Long> merList = new ArrayList();
-                                merList.add(0,(long)index);
-                                merList.add(m);
+                                ArrayList<Integer> merList = new ArrayList();
+                                merList.add(0,index);
+                                merList.add(1);
                                 this.alnMerMap.put(indexAlnCode,merList);
 
                             }
