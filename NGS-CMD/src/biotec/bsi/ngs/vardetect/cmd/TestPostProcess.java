@@ -24,9 +24,9 @@ public class TestPostProcess {
        public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "hg38_FullNewMethod_Sim_alignmentResult_part";       
+        String filename = "hg38_FullOldMethod_speed_alignmentResult_part";       
         String path = "/Volumes/PromisePegasus/worawich/VMdev/dataScieneToolBox/projects/NGS/test_sim_01/";
-        String saveFileName = "hg38_FullNewMethod_Sim_alignmentResult_forLinuxSort";
+        String saveFileName = "hg38_FullOldMethod_speed_alignmentResult_forLinuxSort";
 
         String saveFileNameERR = "hg38_simData_mul_alignmentResult_th5_ERR_forLinuxSortV2";
         String saveFileName3661 = "hg38_simData_mul_alignmentResult_th5_forLinuxSort";

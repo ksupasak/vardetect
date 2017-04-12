@@ -92,7 +92,7 @@ public class RunAlignmentMultiThreadV5 {
             double totalAlignTime = ((stopAlignTime - startAlignTime)/1000)/60;
             System.out.println(String.format("Alignment Time use : %.4f min",totalAlignTime));
             System.out.println("Do write Report");
-            align.writeSortedCutResultMapToPathInFormatV3(folder.toString()+File.separator,savefilename, "bin");
+            align.writeSortedCutResultMapToPathInFormatV3(folder.toString()+File.separator,savefilename, "txt");
             System.out.println("Done part " + count);
             
             long endTime = System.currentTimeMillis();
