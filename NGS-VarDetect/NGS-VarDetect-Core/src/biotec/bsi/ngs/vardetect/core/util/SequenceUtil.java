@@ -354,6 +354,8 @@ public class SequenceUtil {
          * Option:
          *  1. "c" = check option [check for all reference file and create it if not exist but not load]
          *  2. "a" = align option [check for all reference file and create it if not exist or load if exist]
+         *  3. 'r' = cutRepeat option [this mean the main function will run with cut repeat protocol which will not consider any repeat at all, So there is no need to read or create linkIndex file. It use only repeatMarkerIdx.bin file)
+         *           But for this function option 'a' or 'r' are the same protocol  
          */
        
         EncodedSequence seq = new EncodedSequence();
@@ -366,7 +368,7 @@ public class SequenceUtil {
         File f = new File(chr.getFilePath()+".bin"); //File object
         File compF = new File(chr.getFilePath()+"_comp.bin");
 
-        if(f.exists() && option == 'a'){
+        if((f.exists() && option == 'a')||(f.exists() && option == 'r')){
            
             int count = 0 ;
 
@@ -4235,6 +4237,7 @@ public class SequenceUtil {
          * Option:
          *  1. 'c' = check option [check for all reference file and create it if not exist but not load]
          *  2. 'a' = align option [check for all reference file and create it if not exist or load if exist]
+         *  3. 'r' = cutRepeat option [this mean the main function will run with cut repeat protocol which will not consider any repeat at all, So there is no need to read or create linkIndex file. It use only repeatMarkerIdx.bin file)
          */
         
         long maskMinus28bit = -268435456; // Do & operation to get mer  (it is minus 28 bit plus 1 bit)
@@ -4256,15 +4259,15 @@ public class SequenceUtil {
         Map<Long,Long> repeatMarkerBack = new LinkedHashMap();
         ArrayList<Long> listRepeatMer = new ArrayList();                        // use for back unique part
         ArrayList<Map<Long,Long>> listRepeatMarker = new ArrayList();           // list of repeat marker first element is repeatMarker front unique and second is repeatMarker back unique 
-        ArrayList<Long> repeatMarkerIndex = new ArrayList();
+        ArrayList<Long> repeatMarkerIndex = new ArrayList();                    // contain all repeat (mer||position)
         EncodedSequence encoded = encodeSerialChromosomeSequenceV3(chr,mer,option);            // encoded selected chromosome (to import all information of this chr. If it already encode it load a file, if not it do the encode)        
         
         /**
          * Create Repeat Index by Chromosome and Map<Long,Long> of key=merPos and value=index of long[] merPos 
          */
         System.out.println(chr.getFilePath());   
-        File indexFile = new File(chr.getFilePath() + "_repeatMarkerIdx.bin");
-        File repeatMarkerFile = new File(chr.getFilePath() + "_linkIndex.bin");
+        File indexFile = new File(chr.getFilePath() + "_repeatMarkerIdx.bin");      // File that contain (mercode||position)
+        File repeatMarkerFile = new File(chr.getFilePath() + "_linkIndex.bin");     // File that contain linkIndex that coresespond to the indexFile above.
         System.out.println("Chromosome: "+chr.getName());
 
         if(indexFile.exists()!=true){
@@ -4328,7 +4331,27 @@ public class SequenceUtil {
                 eof = true;
             }
 
+        }else if((indexFile.exists()==true && option == 'r') || (indexFile.exists()==true && !repeatMarkerFile.exists())){
+            System.out.println("Begin read Repeat Marker Index");
+            boolean eof = false;
+
+            try{
+                DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(indexFile)));
+                int size = is.readInt();
+                repeatMI = new long[size];
+                int count = 0;
+                while(!eof){
+                    long repeatMerPos = is.readLong();
+                    repeatMI[count] = repeatMerPos;
+                    count++;
+                }   
+            }
+            catch(EOFException e){
+                eof = true;
+            }
         }
+        
+        
         encoded.addRepeatMarkerIndex(repeatMI);
         
         /**
@@ -4338,7 +4361,7 @@ public class SequenceUtil {
         
         int[] linkIndex = new int[repeatMI.length];
         
-        if(!repeatMarkerFile.exists()){
+        if(!repeatMarkerFile.exists() && option!='r'){
             System.out.println("Begin create Link Index");
             DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(repeatMarkerFile))); // create object for output data stream
             StringBuffer sb = chr.getSequence();

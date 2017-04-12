@@ -654,6 +654,8 @@ public class BinaryAligner extends Thread implements Aligner {
         * At last we will wait for each thread finish there job and merge the result together
         * 
         * This version 3 function give the v3 data structure of result
+        * 
+        * this version has build for cut repeat protocol (ignore all repeat consider only unique in each chromosome)
         */
         
         threadListV5 = new ArrayList();
@@ -673,7 +675,7 @@ public class BinaryAligner extends Thread implements Aligner {
                 ChromosomeSequence chr = chrs.nextElement();
                 Enumeration<ShortgunSequence> seqs = input.getInputSequence().elements();
                 System.out.println("reading .. "+chr.getName()+"");
-                EncodedSequence encoded = SequenceUtil.createAllReferenceV2(chr, this.mer, 'a');   // Create or import all reference [chromosome reference, repeat index, repeat Marker]                               
+                EncodedSequence encoded = SequenceUtil.createAllReferenceV2(chr, this.mer, 'r');   // Create or import all reference [chromosome reference, repeat index, repeat Marker]                               
                 long chrnumber = chr.getChrNumber();
                 /*********/
                 int inputSize = input.getInputSequence().size();

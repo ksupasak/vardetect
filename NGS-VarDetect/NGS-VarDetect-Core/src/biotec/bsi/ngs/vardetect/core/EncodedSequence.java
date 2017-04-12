@@ -1424,6 +1424,201 @@ public class EncodedSequence {
 
     }
     
+    public long[] align5(long mer){
+//        System.out.println("\n Do Strand + Alignment");
+        int strand = 1; // Notation for strand +
+        int index = align(mer, 0, mers.length-1); // call binary search function with initial left and right with 0 and maximum index point
+
+        /**
+         * New version
+         */
+        int start = -1;
+        int stop = -1;
+        
+        if(index > 0){
+        
+            for(int i=index;i>=0&&i>=index-1;i--){ 
+                long imer = mers[i]&mask;
+
+                if(imer!=mer){
+                    start = i+1;
+                    break;
+                }else{
+                    start = i;
+                }
+            }
+
+            for(int i=index;i<mers.length&&i<index+1;i++){
+                long imer = mers[i]&mask;
+
+                if(imer!=mer){
+                    stop = i;
+                    break;
+                }else{
+                    stop = i;
+                }
+            }
+
+            if(start<stop){
+    //            System.out.println(" size "+(stop-start));
+                long j[] = new long[stop-start]; 
+
+                for(int i =start;i<stop;i++){                                       // This loop make program slow (In process to find the way to fix this)
+                    if(i-start>=0&&i>=0)
+                    j[i-start] = addStrandNotation(mers[i]&mask2,strand);
+    //                    System.out.println();
+    //                    System.out.println("Check mers the value should be 64 bit : " + mersComp[i] );
+    //                    System.out.println("Check j the value should be 28 bit : " + j[i-start]);
+    //                    System.out.println();
+                }
+
+
+                return j;
+            }else if(start == stop){
+                /**
+                 * In case of index has value equal to 0 and 28bit value. We cannot scan up for the case that index is 0 and we cannot scan down for the case that index is 28bit(maximum index)
+                 * With this two case the scan protocol above will return the same value of start and stop index If it not repeat. So, we can check booth value to determine this two special case.
+                 * If it repeat it will fall into above check case (Because, with the repeat we can possibly scan down or scan up).
+                 */
+                long j[] = new long[1];
+                j[0] = addStrandNotation(mers[start]&mask2,strand);
+                return j;
+
+            }else{
+                return null;
+            }
+        }
+                
+        return null;
+    }
+    
+    public long[] align5Compliment(long mer){
+        int strand = 0; // notation for strand -
+//        createComplimentStrand(); // Caution this function will change value in mers
+        int index = alignComp(mer, 0, mers.length-1);       // Call function for compliment align 
+        
+        int start = -1;
+        int stop = -1;
+        
+        if(index>0){
+            for(int i=index;i>=0&&i>=index-1;i--){ 
+                long imer = mers[i]&mask;
+                
+                if(imer!=mer){
+                    start = i+1;
+                    break;
+                }else{
+                    start = i;
+                }
+            }
+            
+            for(int i=index;i<mers.length&&i<index+200;i++){
+                long imer = mers[i]&mask;
+                
+                if(imer!=mer){
+                    stop = i;
+                    break;
+                }else{
+                    stop = i;
+                }
+            }
+            if(start<stop){
+//            System.out.println(" size "+(stop-start));
+                long j[] = new long[stop-start]; 
+            
+                for(int i =start;i<stop;i++){
+                    if(i-start>=0&&i>=0)
+                    j[i-start] = addStrandNotation(mers[i]&mask2,strand);
+//                    System.out.println();
+//                    System.out.println("Check mers the value should be 64 bit : " + mersComp[i] );
+//                    System.out.println("Check j the value should be 28 bit : " + j[i-start]);
+//                    System.out.println();
+                }
+
+
+                return j;
+            }else if(start == stop){
+            /**
+                * In case of index has value equal to 0 and 28bit value. We cannot scan up for the case that index is 0 and we cannot scan down for the case that index is 28bit(maximum index)
+                * With this two case the scan protocol above will return the same value of start and stop index If it not repeat. So, we can check booth value to determine this two special case.
+                * If it repeat it will fall into above check case (Because, with the repeat we can possibly scan down or scan up).
+                */
+               long j[] = new long[1];
+               j[0] = addStrandNotation(mers[start]&mask2,strand);
+               return j;
+
+            }else{
+                return null;
+            } 
+            
+        }
+        return null;
+    }
+    
+    public long[] align6(long mer){
+        
+        /**
+         * It take a roll to search mer in repeatMarker. Just check the mer is repeat or not
+         * This function will return null if it not repeat and return -1 if it repeat 
+         */
+//        int nextIndex= -1; 
+//        long nextMerPos = -1; 
+//        long nextMer = -1;
+//        this.subSequence = inSeq;
+//        this.mainIndex = mainIdx;
+//        this.numMer = numMer;
+//        Map<Integer,ArrayList<Integer>> linkIndexCheck = inLinkIndexCheck;
+//        if(linkIndexCheck.containsKey(mainIdx-1)){
+//            linkIndexCheck.remove(mainIdx-1);            // remove all linked index that coresponse to old main index
+//        }
+        
+        
+//        int strand = 1; // Notation for strand +
+        int index = alignWithRepeatMarker(mer, 0, this.repeatMarkerIndex.length-1); // call binary search function with initial left and right with 0 and maximum index point
+        
+        if(index == -1){
+            return null;
+        }else{
+            long[] j = new long[1];
+            j[0] = -1;
+            return j;
+        }
+
+    }
+    
+    public long[] align6Compliment(long mer){
+        
+        /**
+         * It take a roll to search mer in repeatMarker. Just check the mer is repeat or not
+         * This function will return null if it not repeat and return -1 if it repeat 
+         */        
+//        int nextIndex= -1; 
+//        long nextMerPos = -1; 
+//        long nextMer = -1;
+//        this.subSequence = inSeq;
+//        this.mainIndex = mainIdx;
+//        this.numMer = numMer;
+//        Map<Integer,ArrayList<Integer>> linkIndexCheck = inLinkIndexCheck;
+//        if(linkIndexCheck.containsKey(mainIdx-1)){
+//            linkIndexCheck.remove(mainIdx-1);            // remove all linked index that coresponse to old main index
+//        }
+        
+        
+//        int strand = 0; // Notation for strand +
+        int index = alignWithRepeatMarker(mer, 0, this.repeatMarkerIndex.length-1); // call binary search function with initial left and right with 0 and maximum index point
+        
+        if(index == -1){
+            return null;
+        }else{
+            
+            long[] j = new long[1];
+            j[0] = -1;
+            return j;
+            
+        }
+
+    }
+    
     public long[] alignFullMerPos(long mer){
         /**
          * this function will return index on mers array (Reference chr.bin)

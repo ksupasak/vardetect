@@ -80,7 +80,7 @@ public class ThreadBinaryAlignerV5 implements Runnable {
         /* Alignment algorithm */
         Iterator seqs = inputSequence.iterator();
         while(seqs.hasNext()){                                              // Loop over ShortgunSequence contain in InputSequence 
-            Map<Integer,ArrayList<Integer>> linkIndexCheck = new LinkedHashMap();                       // HashMap contain data that has been use to check for repeat jump
+//            Map<Integer,ArrayList<Integer>> linkIndexCheck = new LinkedHashMap();                       // HashMap contain data that has been use to check for repeat jump
             boolean skipRead = false;
             
             ShortgunSequence seq = (ShortgunSequence)seqs.next();
@@ -120,19 +120,22 @@ public class ThreadBinaryAlignerV5 implements Runnable {
                 if(m!=-1){                                                          
                     m = m<<28;                                                      // shift left 28 bit for optimization binary search purpose 
 //                            long pos = encoded.align(m);
-                    ArrayList output = encodedRef.align4(m, s, index, numMer, linkIndexCheck, alnCodeCheckList, alnMerMap);
+//                    long[] output = encodedRef.align5(m);
+                    long[] output = null;
                     /**
                      * Not sure this two line will slow the program or not.
                      */
-                    alnMerMap = (Map<Long,ArrayList<Integer>>)output.get(0);        
-                    alnCodeCheckList = (Map<Long,Long>)output.get(1);
+//                    alnMerMap = (Map<Long,ArrayList<Integer>>)output.get(0);        
+//                    alnCodeCheckList = (Map<Long,Long>)output.get(1);
                     /*********/
                             
 //                    initiateNewReadFlag = false;
 //                    ArrayList<Long> posR = encodedRef.align3(m, s, index, numMer, linkIndexCheck);
-                    if(encodedRef.getRepeatFlag()==false){        
-                        long pos2[] = encodedRef.align2(m);                                // Do alignment with binary search (pos2[] cantain 64 bit long [mer code | position])
+//                    if(encodedRef.getRepeatFlag()==false){        
+                    if(output == null){   
+                        long pos2[] = encodedRef.align5(m);                                // Do alignment with binary search (pos2[] cantain 64 bit long [mer code | position])
     //                            long pos2[] = encoded.fullAlign(m);
+
                         long pos = -1;
                         if(pos2!=null&&pos2.length>0){
                             pos = pos2[0];
@@ -154,6 +157,9 @@ public class ThreadBinaryAlignerV5 implements Runnable {
 
                             /******** New Part (fixed wrong mer count) Version 3 **********/
                             for(int j=0;j<pos2.length;j++){
+                                if(pos2.length>1){
+                                    break;
+                                }
                                 long alnCode = pos2[j] - index;     // pos is 29 bit [strand|position] ; algncode is 29 bit [strand|alignPosition] but already subtract index (offset)
 
 
@@ -272,7 +278,7 @@ public class ThreadBinaryAlignerV5 implements Runnable {
 //        boolean initiateNewReadFlag = true;                                 // this flag is indicate the first time that we consider the read (use to signal inside the Encoded object to renew alnCodeCheckList)
 
         while(seqsComp.hasNext()){
-            Map<Integer,ArrayList<Integer>> linkIndexCheck = new LinkedHashMap();                       // HashMap contain data that has been use to check for repeat jump
+//            Map<Integer,ArrayList<Integer>> linkIndexCheck = new LinkedHashMap();                       // HashMap contain data that has been use to check for repeat jump
             boolean skipRead = false;
             ShortgunSequence seq = (ShortgunSequence)seqsComp.next();                                  // get ShortgunSequence from InputSequence
             Map<Long,ArrayList<Integer>> alnMerMap = new LinkedHashMap();
@@ -308,19 +314,21 @@ public class ThreadBinaryAlignerV5 implements Runnable {
                 if(m!=-1){
                     m = m<<28;
                     
-                    ArrayList output = encodedRef.align4Compliment(m, compSeq, index, numMer, linkIndexCheck, alnCodeCheckList, alnMerMap);
+//                    long[] output = encodedRef.align5Compliment(m);
+                    long[] output = null;
 //                    ArrayList<Long> posR = encodedRef.align3Compliment(m, compSeq, index, numMer, linkIndexCheck);
                     /**
                      * Not sure this two line will slow program or not
                      */
-                    alnMerMap = (Map<Long,ArrayList<Integer>>)output.get(0);        
-                    alnCodeCheckList = (Map<Long,Long>)output.get(1);
+//                    alnMerMap = (Map<Long,ArrayList<Integer>>)output.get(0);        
+//                    alnCodeCheckList = (Map<Long,Long>)output.get(1);
                     /***************/
 
-                    if(encodedRef.getRepeatFlag()==false){
-
-                        long pos2[] = encodedRef.align2ComplimentV2(m);                            // Do alignment by alignment function specific for compliment sequence
+//                    if(encodedRef.getRepeatFlag()==false){
+                    if(output == null){ 
+                        long pos2[] = encodedRef.align5Compliment(m);                            // Do alignment by alignment function specific for compliment sequence
     //                            long pos2[] = encoded.fullAlign(m);
+
                         long pos = -1;
                         if(pos2!=null&&pos2.length>0){
                             pos = pos2[0];
@@ -341,6 +349,10 @@ public class ThreadBinaryAlignerV5 implements Runnable {
                         if(pos2 != null){
                             /******** New Part (fixed wrong mer count) Version 3 **********/
                             for(int j=0;j<pos2.length;j++){
+                                if(pos2.length>1){
+                                    break;
+                                }
+                                
                                 long alnCode = pos2[j] - index;     // pos is 29 bit [strand|position] ; algncode is 29 bit [strand|alignPosition]
 
 

@@ -111,9 +111,7 @@ public class ThreadBinaryAlignerV3 implements Runnable {
                 long m = SequenceUtil.encodeMer(sub, numMer);                          // encode sub string sequence (code is 36 bit max preserve the rest 28 bit for position)
 //                        System.out.println(""+sub+" "+sub.length()+": "+m);
                 
-                if(m == 51904601109L){
-                    System.out.println("");
-                }
+                
                 if(m!=-1){                                                          
                     m = m<<28;                                                      // shift left 28 bit for optimization binary search purpose 
 //                            long pos = encoded.align(m);
