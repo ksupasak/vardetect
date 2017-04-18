@@ -856,7 +856,7 @@ public class ShortgunSequence {
 
     public void extractColorArray(){
         /**
-         * Suitable for version 3 data structure (data structure that has iniIdx in its)
+         * Suitable for version 3 data structure (data structure that has iniIdx in its) [..; chrName, align position, strand type, num count, initial index; ...]
          */
          
         for(int numP=0;numP<this.numPattern;numP++){
@@ -997,6 +997,171 @@ public class ShortgunSequence {
                         int iniIdxBack = this.listIniIdx.get(idx);
                         iniBack = iniIdxBack;
                         missingBase = (iniIdxBack-lastIdxFront)-1;
+                    }
+                    
+                    numG = this.listGreen.get(idx)+numG;
+                    numY = this.listYellow.get(idx)+numY;
+                    numO = this.listOrange.get(idx)+numO;
+                    numR = this.listRed.get(idx)+numR;
+//                    numMatch = this.listNumMatch.get(idx)+numMatch;
+                    strand = this.listStrand.get(idx);
+                    
+                    flagFirstTime = false;  
+                }
+
+                /**
+                 * put joined peak back
+                 */
+                this.listChr.add(chr);
+                this.listPos.add(iniPos);
+                this.listLastPos.add(lastPos);
+                this.listGreen.add(numG);
+                this.listYellow.add(numY);
+                this.listOrange.add((numO));
+                this.listRed.add(numR);
+                this.listNumMatch.add(numMatch);
+                this.listStrand.add(strand);
+                this.listIniIdx.add(iniIdx); 
+                
+                this.snpFlag.add(missingBase);
+                this.iniBackFlag.add(iniBack);
+            }
+            
+            
+        }
+        
+        /**
+         * Remove element part
+         */
+        Collections.sort(removeIdxList, Collections.reverseOrder());
+        for(int i = 0 ;i<removeIdxList.size();i++){
+            int idx = removeIdxList.get(i);
+            
+            this.listChr.remove(idx);
+            this.listPos.remove(idx);
+            this.listLastPos.remove(idx);
+            this.listGreen.remove(idx);
+            this.listYellow.remove(idx);
+            this.listOrange.remove(idx);
+            this.listRed.remove(idx);
+            this.listNumMatch.remove(idx);
+            this.listStrand.remove(idx);
+            this.listIniIdx.remove(idx);
+
+            this.snpFlag.remove(idx);
+            this.iniBackFlag.remove(idx);
+        }
+        
+    }
+    
+     public void joinPeak2(){
+        
+        /**
+         * Join the same sequence of peak that have been split for color detect purpose together
+         */
+        this.snpFlag = new ArrayList(); 
+        this.iniBackFlag = new ArrayList();
+        Map<Long,ArrayList<Integer>> tempMap = new LinkedHashMap();
+        long chrNew =0;
+        long posNew =0;
+        
+        /**
+         * Loop to collect data into Map which has chrPos code (Key) and ArrayList of index of each chrPos (value)
+         */
+        for(int i=0;i<this.listChr.size();i++){
+            chrNew = this.listChr.get(i);
+            posNew = this.listPos.get(i);
+            long chrPos = (chrNew<<28)+posNew;
+            if(tempMap.containsKey(chrPos)){
+                ArrayList<Integer> listIdx = tempMap.get(chrPos);
+                listIdx.add(i);
+                tempMap.put(chrPos, listIdx);
+            }else{
+                ArrayList<Integer> listIdx = new ArrayList();
+                listIdx.add(i);
+                tempMap.put(chrPos,listIdx);
+            }
+            
+            this.snpFlag.add(0);
+            this.iniBackFlag.add(0);
+        }
+        
+
+        Set keySet = tempMap.keySet();
+        Iterator keyIter = keySet.iterator();
+        
+        ArrayList<Integer> removeIdxList = new ArrayList();     // contain index that have to be delete at the end 
+        
+        /**
+         * start joining
+         */
+        while(keyIter.hasNext()){
+            
+            ArrayList<Integer> listIdx = tempMap.get(keyIter.next());
+            Map<Integer,Integer> dummyIdxMap = new TreeMap();  //   treemap is a map that rearrange key in numerical order          
+            
+            if(listIdx.size()>1){           // If size is more than one mean it has more than one peak with same chr and align position
+                /**
+                 * Joining
+                 */
+                int chr = 0;
+                long iniPos = 0;      
+                long lastPos = 0;
+                int numG = 0;
+                int numY = 0;
+                int numO = 0;
+                int numR = 0;
+                int numMatch = 0;
+                int iniIdx = 0;
+                String strand = null;
+                
+                int missingBase = 0;
+                int iniBack = 0;
+                
+                /**
+                 * Find front part and back part
+                 * loop store data in treeMap which will automatically rearrange order of key for us
+                 */
+                for(int i=0;i<listIdx.size();i++){
+                    int dummyIdx = listIdx.get(i);
+                    dummyIdx = dummyIdx;
+                    if(dummyIdx<0){
+                        dummyIdx = 0;
+                    }
+                    int dummyIniIdx = this.listIniIdx.get(dummyIdx);
+                    dummyIdxMap.put(dummyIniIdx, dummyIdx);
+                    
+                    removeIdxList.add(dummyIdx);                    // this variable store index of element in information list that have to be remove after joining                    
+                }
+                
+                /**
+                 * joining peak
+                 */
+                Set set = dummyIdxMap.keySet();
+                Iterator iter = set.iterator();
+                boolean flagFirstTime = true;
+                int lastIdxFront = 0;
+                while(iter.hasNext()){
+                    int key = (int)iter.next();
+                    int idx = dummyIdxMap.get(key);
+                                      
+                    chr = this.listChr.get(idx);
+                    if(flagFirstTime==true){
+                        iniPos = this.listPos.get(idx);
+                        iniIdx = this.listIniIdx.get(idx);
+                        numMatch = this.listNumMatch.get(idx);
+                        int numBase = (numMatch+this.merLength)-1;
+                        lastIdxFront = (iniIdx+numBase)-1;
+                    }else{
+//                        lastPos = (this.listLastPos.get(idx)+this.listIniIdx.get(idx))-iniIdx;  // not clear why we have to calculate it like this
+                        lastPos = this.listLastPos.get(idx);
+                        numMatch = this.listNumMatch.get(idx)+numMatch;
+                        int numBase = (this.listNumMatch.get(idx)+this.merLength)-1;
+                        int iniIdxBack = this.listIniIdx.get(idx);
+                        iniBack = iniIdxBack;
+                        missingBase = (iniIdxBack-lastIdxFront)-1;
+                        
+                        lastIdxFront = (iniBack+numBase)-1;
                     }
                     
                     numG = this.listGreen.get(idx)+numG;
