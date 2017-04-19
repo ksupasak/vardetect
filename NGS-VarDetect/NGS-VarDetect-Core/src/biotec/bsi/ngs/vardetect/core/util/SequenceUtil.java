@@ -3683,6 +3683,220 @@ public class SequenceUtil {
         return variation;
     }
     
+    public static Map<Integer,ArrayList<String[]>> detectVariation2(ArrayList<String> selectData , ArrayList<Byte> selectChr , ArrayList<Boolean> selectGreenChar , Map<Integer,ArrayList<Integer>> mapF , Map<Integer,Integer> mapB , int merLength , int readLength , int allowOverlapBase){
+        /**
+         * the variable in Map<Integer,ArrayList<String[]>> 
+         * => Integer is represent type of variation
+         *      '0' = SNP contain and others
+         *      '1' = fusion
+         *      '2' = large or small indel
+         *      '3' = others (wasted)
+         * => ArrayList<String[]> is represent the result of variation
+         */
+        
+        Map<Integer,ArrayList<String[]>> variation = new LinkedHashMap();
+        ArrayList<Integer> indexCheckList = new ArrayList();
+        
+        /**
+         * Begin variable detection 
+         * Loop each String data (peak information)
+         */
+        for(int i=0;i<selectData.size();i++){
+            String dataGet = selectData.get(i);
+            
+            /***    Extract data    ****/
+            String[] data = dataGet.split(",");
+            byte numChr = Byte.parseByte(data[0]);
+            long iniPos = Long.parseLong(data[1]);
+            long lastPos = Long.parseLong(data[2]);
+            byte numG = Byte.parseByte(data[3]);
+            byte numY = Byte.parseByte(data[4]);
+            byte numO = Byte.parseByte(data[5]);
+            byte numR = Byte.parseByte(data[6]);
+            String strand = data[7];
+            byte iniIdx = Byte.parseByte(data[8]);
+            String readName = data[9];
+            byte snpFlag = Byte.parseByte(data[10]);
+            /******************************/
+            
+            int matchCount = numG+numY+numO+numR;  
+  
+            int startIndex = iniIdx;
+            int stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
+            
+//            if(strand.equals("-")){
+//                startIndex = readLength - (iniIdx+(merLength+matchCount-1));
+//                stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
+//            }
+            
+            int expectNextIndex = stopIndex+1;
+            int limitExpectNextIndex = expectNextIndex-allowOverlapBase;
+            boolean greenChar = false;
+            if(numG>0){
+                greenChar = true;
+            }
+            /**
+             * Check junction
+             */
+            
+            ArrayList<String> wastedCheckList = new ArrayList();
+            
+            for(expectNextIndex = expectNextIndex ; expectNextIndex>=limitExpectNextIndex ; expectNextIndex--){       // this for loop has been use to vary the number of expectNextIndex in the range of allowOverLapBase
+                
+                if(mapF.containsKey(expectNextIndex)&&snpFlag==0){
+                    /**
+                     * Junction found
+                     */
+                    ArrayList<Integer> listSelectIndex = mapF.get(expectNextIndex);
+                    for(int j=0;j<listSelectIndex.size();j++){
+                        int selectIndex = listSelectIndex.get(j);
+                        String selectRead = selectData.get(selectIndex);
+                        byte numChrB = selectChr.get(selectIndex);
+                        boolean greenCharB = selectGreenChar.get(selectIndex);
+
+
+                        /**
+                         * Check fusion or large indel
+                         */
+                        if(numChr == numChrB){
+
+                            if(greenCharB == true || greenChar == true){                // case check to ensure that at least one side is green characteristic 
+                                /**
+                                * large or small indel
+                                */
+                                String[] pairedPeak = new String[2];  
+                                pairedPeak[0]=dataGet;
+                                pairedPeak[1]=selectRead;
+
+                                if(variation.containsKey(2)){
+                                    ArrayList<String[]> listPP = variation.get(2);
+                                    listPP.add(pairedPeak);
+                                    variation.put(2, listPP);
+                                }else{
+                                    ArrayList<String[]> listPP = new ArrayList();
+                                    listPP.add(pairedPeak);
+                                    variation.put(2, listPP);
+                                } 
+                            }else{
+
+                                /**
+                                 * Has no green at all (wasted) type 3
+                                 */
+                                String[] pairedPeak = new String[2];
+                                String pairedCheck = dataGet+"|"+selectRead;
+                                pairedPeak[0]=dataGet;
+                                pairedPeak[1]=selectRead;
+
+                                if(variation.containsKey(3)){
+                                    ArrayList<String[]> listPP = variation.get(3);
+                                    if(wastedCheckList.contains(pairedCheck)!=true){
+                                        listPP.add(pairedPeak);
+                                        wastedCheckList.add(pairedCheck);
+                                    }                                                            
+                                    variation.put(3, listPP);
+                                }else{
+                                    ArrayList<String[]> listPP = new ArrayList();
+                                    if(wastedCheckList.contains(pairedCheck)!=true){
+                                        listPP.add(pairedPeak);
+                                        wastedCheckList.add(pairedCheck);
+                                    }  
+                                    variation.put(3, listPP);
+                                } 
+                            }
+
+                        }else if(numChr != numChrB){
+                            /**
+                             * Fusion
+                             */
+                            if(greenCharB == true || greenChar == true){
+                                String[] pairedPeak = new String[2];  
+                                pairedPeak[0]=dataGet;
+                                pairedPeak[1]=selectRead;
+
+                                if(variation.containsKey(1)){
+                                    ArrayList<String[]> listPP = variation.get(1);
+                                    listPP.add(pairedPeak);
+                                    variation.put(1, listPP);
+                                }else{
+                                    ArrayList<String[]> listPP = new ArrayList();
+                                    listPP.add(pairedPeak);
+                                    variation.put(1, listPP);
+                                }
+                            }else{
+                                /**
+                                 * Has no green at all (wasted) type 3
+                                 */
+                                String[] pairedPeak = new String[2];
+                                String pairedCheck = dataGet+"|"+selectRead;
+                                pairedPeak[0]=dataGet;
+                                pairedPeak[1]=selectRead;
+
+                                if(variation.containsKey(3)){
+                                    ArrayList<String[]> listPP = variation.get(3);
+                                    if(wastedCheckList.contains(pairedCheck)!=true){
+                                        listPP.add(pairedPeak);
+                                        wastedCheckList.add(pairedCheck);
+                                    }                                 
+                                    variation.put(3, listPP);
+                                }else{
+                                    ArrayList<String[]> listPP = new ArrayList();
+                                    if(wastedCheckList.contains(pairedCheck)!=true){
+                                        listPP.add(pairedPeak);
+                                        wastedCheckList.add(pairedCheck);
+                                    }                                 
+                                    variation.put(3, listPP);
+                                } 
+                            }
+
+                        }
+                    }
+                }
+            }
+            if(snpFlag >= 1){
+
+                if(greenChar == true){
+                    String[] pairedPeak = new String[2];
+                    pairedPeak[0]=dataGet;
+
+                    if(variation.containsKey(0)){
+                        ArrayList<String[]> listPP = variation.get(0);
+                        listPP.add(pairedPeak);
+                        variation.put(0, listPP);
+                    }else{
+                        ArrayList<String[]> listPP = new ArrayList();
+                        listPP.add(pairedPeak);
+                        variation.put(0, listPP);
+                    }
+                }else{
+                    /**
+                     * Has no green at all (wasted) type 3
+                     * No need to have a check contain of wasted pair (No chance to get repeat because it has no for loop)
+                     */
+                    String[] pairedPeak = new String[2];
+                    String pairedCheck = dataGet;
+                    pairedPeak[0]=dataGet;
+
+                    if(variation.containsKey(3)){
+                        ArrayList<String[]> listPP = variation.get(3);
+                        listPP.add(pairedPeak);
+                        variation.put(3, listPP);
+                    }else{
+                        ArrayList<String[]> listPP = new ArrayList();
+                        listPP.add(pairedPeak);
+                        variation.put(3, listPP);
+                    }
+                }
+
+            }
+                
+            
+            
+        }
+        
+        return variation;
+    }
+    
+    
     public static InputSequence createShortReadFromLongSequence(String seq,int readLength,String fileName) throws IOException{
         /**
          * 

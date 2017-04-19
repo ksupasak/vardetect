@@ -899,7 +899,7 @@ public class ShortgunSequence {
         /**
         *  call join peak to join possible peak that may be the same sequence 
         */
-        joinPeak();
+        joinPeak2();
     }
     
     public void joinPeak(){
@@ -1153,15 +1153,15 @@ public class ShortgunSequence {
                         int numBase = (numMatch+this.merLength)-1;
                         lastIdxFront = (iniIdx+numBase)-1;
                     }else{
-//                        lastPos = (this.listLastPos.get(idx)+this.listIniIdx.get(idx))-iniIdx;  // not clear why we have to calculate it like this
-                        lastPos = this.listLastPos.get(idx);
+                        lastPos = (this.listLastPos.get(idx)+this.listIniIdx.get(idx))-iniIdx;  // Recalculate lastPos. Due to the listlastpos is contain position that already minus with it iniIdx but when we joint peak we have to recalculate it.
+                        // because the iniIdx have change to the ini Index of front peak not it own iniIndex at all. Then we plus it own iniIndex back and then minus with front peak iniIndex
                         numMatch = this.listNumMatch.get(idx)+numMatch;
                         int numBase = (this.listNumMatch.get(idx)+this.merLength)-1;
                         int iniIdxBack = this.listIniIdx.get(idx);
                         iniBack = iniIdxBack;
                         missingBase = (iniIdxBack-lastIdxFront)-1;
                         
-                        lastIdxFront = (iniBack+numBase)-1;
+                        lastIdxFront = (iniBack+numBase)-1;     // it has to be update every time in cast that there is more than one peak.
                     }
                     
                     numG = this.listGreen.get(idx)+numG;

@@ -252,7 +252,7 @@ public class Clustering {
          *  Use for create colorArray 
          *  please make sure that your inRes must implement iniIndex in its (because we use iniIndex to trace back to match mer index of each peak)
          *  
-         *  Suitable for version 3 data structure (data structure that has iniIdx in its)
+         *  Suitable for version 3 data structure (data structure that has iniIdx in its) [..; chrName, align position, strand type, num count, initial index; ...]
          */
         
         
@@ -318,7 +318,7 @@ public class Clustering {
             for(int index=0;index<numMer;index++){                  // Loop over index of possible mer (100-18)+1 = 83 (max index)
                                
                 ArrayList<Integer> chrCheckList = new ArrayList();
-                for(int p=0;p<listMatchArray.size();p++){           // Loop over listMatchArray size it is seemlessly as we loop over match pattern
+                for(int p=0;p<listMatchArray.size();p++){           // Loop over listMatchArray size it is the same as we loop over match pattern
                     int[] dummyMatchArray = listMatchArray.get(p);
                     
                     if(dummyMatchArray[index]==1){
