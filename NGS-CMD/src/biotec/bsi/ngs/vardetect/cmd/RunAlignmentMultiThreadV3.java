@@ -38,7 +38,9 @@ import java.util.Map;
  */
 
 public class RunAlignmentMultiThreadV3 {
-    
+    /**
+     * It run old version of alignment (version 2 alignment function)
+     */
      public static void main(String[] args) throws IOException, InterruptedException {
         // TODO code application logic here
         long startAlignTime = System.currentTimeMillis();
@@ -91,7 +93,7 @@ public class RunAlignmentMultiThreadV3 {
             double totalAlignTime = ((stopAlignTime - startAlignTime)/1000)/60;
             System.out.println(String.format("Alignment Time use : %.4f min",totalAlignTime));
             System.out.println("Do write Report");            
-            align.writeSortedCutResultMapToPathInFormatV3(folder.toString()+File.separator,savefilename, "txt");
+            align.writeSortedCutResultMapToPathInFormatV3(folder.toString()+File.separator,savefilename, "bin");
             System.out.println("Done part " + count);
             
             long endTime = System.currentTimeMillis();

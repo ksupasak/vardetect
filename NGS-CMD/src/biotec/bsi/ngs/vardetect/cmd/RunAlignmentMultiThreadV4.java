@@ -38,7 +38,9 @@ import java.util.Map;
  */
 
 public class RunAlignmentMultiThreadV4 {
-    
+    /**
+     * It run repeat marker version of alignment (version 3 and 4 alignment function)
+     */
      public static void main(String[] args) throws IOException, InterruptedException {
         // TODO code application logic here
         long startAlignTime = System.currentTimeMillis();
