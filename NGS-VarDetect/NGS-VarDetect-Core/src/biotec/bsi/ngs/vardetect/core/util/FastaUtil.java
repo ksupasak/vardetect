@@ -34,6 +34,7 @@ public class FastaUtil {
         
         File inputFile = new File(inputPath[0]);
         String path = inputFile.getParent();
+        boolean smallContigStatus = false;
         
 //        StringBuffer seq = new StringBuffer();
         Map<Long,String> index = new LinkedHashMap();
@@ -136,24 +137,31 @@ public class FastaUtil {
                                 
                                 
                                 
-                            }                        
+                            }
+                            smallContigStatus = false;
                         }else{
                             firstFlag = true;
+                            smallContigStatus = true;
                         }
                     } 
                 }
 
                 /**
-                 * for last set
+                 * for last contig
+                 * But add only long contig not small contig (<18 bp)
+                 * Can check from smallContigStatus
                  */
-                lastPos = seq.length()-1;           // index is start at 0 So, we have to minus 1 in order to get actual index
+                
+                if(smallContigStatus == false){
+                    lastPos = seq.length()-1;           // index is start at 0 So, we have to minus 1 in order to get actual index
 
-                chrList.add(chrCount);
-                iniPosList.add(iniPos);
-                lastPosList.add(lastPos);
-                contigNameList.add(scaffoldName);
-                refFileNameList.add(name);
-                listSeq.add(seq.toString());
+                    chrList.add(chrCount);
+                    iniPosList.add(iniPos);
+                    lastPosList.add(lastPos);
+                    contigNameList.add(scaffoldName);
+                    refFileNameList.add(name);
+                    listSeq.add(seq.toString());
+                }
                 /*******************************/
 
             }catch(IOException e){

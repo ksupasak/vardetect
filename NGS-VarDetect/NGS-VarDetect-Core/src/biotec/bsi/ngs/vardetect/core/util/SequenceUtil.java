@@ -2706,7 +2706,7 @@ public class SequenceUtil {
     }
     
     public static InputSequence readSampleFileV2(String filename, int readStart, int readLimit) throws IOException {
-        /* for specific input file 3661 3662 */
+        /* for specific input file 3661 3662 [Fasta format only]*/
         ShortgunSequence inSS = new ShortgunSequence(null);
         InputSequence tempInSS = new InputSequence();
         int count = 0;
@@ -2714,7 +2714,7 @@ public class SequenceUtil {
         Charset charset = Charset.forName("US-ASCII");
         Path path = Paths.get(filename);
         String name = null;
-        int actStart = readStart*2;     //this is actual start of line in file (compatible only specific file 3661 and 3662 .fasta file)
+        int actStart = readStart*2;     //this is actual start of line in file (compatible only specific file 3661 and 3662 .fasta file or in Fasta format
         int actStop = readLimit*2;
     //    String seq = "";
 
@@ -2777,6 +2777,76 @@ public class SequenceUtil {
             }          
             
 
+            return tempInSS;
+        }
+    }
+    
+    public static InputSequence readSampleFileV3(String filename, int readStart, int readLimit) throws IOException {
+        /**
+         * for specific input file Fasta format only
+         * 
+         * >readName
+         * ATCGD....
+         * AATTG....
+         * >readName
+         * AATTG....
+         * CCGTA....
+         * ......
+         * >readName
+         * ...
+         * 
+         */
+        
+        ShortgunSequence inSS = new ShortgunSequence(null);
+        InputSequence tempInSS = new InputSequence();
+        int count = 0;
+        int count2 = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(filename);
+        String name = null;
+        int actStart = readStart*2;     //this is actual start of line in file (compatible only specific file 3661 and 3662 .fasta file or in Fasta format
+        int actStop = readLimit*2;
+    //    String seq = "";
+        boolean forceBreakFlag =  false;
+    
+        StringBuilder seq = new StringBuilder();
+        
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;                   
+            while ((line = reader.readLine()) != null) {
+                String[] aon = line.split("\t");
+                if(line.charAt(0)=='>'){
+                    count++;
+                    if(seq.length()>0){
+                        inSS = new ShortgunSequence(seq.toString());
+                        inSS.addReadName(name);
+                        tempInSS.addRead(inSS);
+                        
+                        seq = new StringBuilder();
+                    }
+                    name = line.substring(1);
+                    
+                }else{                    
+                    if(count >= readStart){
+                        seq.append(line.toString()); 
+                    }     
+                }
+                if(count>readLimit){
+                    forceBreakFlag=true;
+                    break;
+                }
+            }                      
+            /**
+             * Add data for last seq of a file
+             * in order to check it is last seq of file or last seq from force break
+             * Can check from forceBreakFlag;
+             */
+            if(forceBreakFlag == false){
+                inSS = new ShortgunSequence(seq.toString());
+                inSS.addReadName(name);
+                tempInSS.addRead(inSS);
+            }
+            
             return tempInSS;
         }
     }
