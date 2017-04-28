@@ -77,7 +77,7 @@ public class RunAlignmentMultiThreadV3 {
             long startTime = System.currentTimeMillis();
             count++;
             String savefilename = filename+count;
-            InputSequence input = SequenceUtil.readSampleFileV2(inputPath,i,Math.min(numSample, i+propotion));
+            InputSequence input = SequenceUtil.readSampleFileV3(inputPath,i,Math.min(numSample, i+propotion));
             //input = SequenceUtil.readSampleFileV2(fixPath);
 
 
