@@ -52,6 +52,7 @@ public class RunAlignmentMultiThreadV5 {
         int numMer = Integer.valueOf(args[4]);
         int threshold = Integer.valueOf(args[5]);                       // Fifth argument; indicate count number threshold
         int numThread = Integer.valueOf(args[6]);                       // Sixth argument; indicate number of thread
+        String filetype = args[7]; 
         
 //       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
 
@@ -95,7 +96,7 @@ public class RunAlignmentMultiThreadV5 {
             double totalAlignTime = ((stopAlignTime - startAlignTime)/1000)/60;
             System.out.println(String.format("Alignment Time use : %.4f min",totalAlignTime));
             System.out.println("Do write Report");
-            align.writeSortedCutResultMapToPathInFormatV3(folder.toString()+File.separator,savefilename, "bin");
+            align.writeSortedCutResultMapToPathInFormatV3(folder.toString()+File.separator,savefilename, filetype);
             System.out.println("Done part " + count);
             
             long endTime = System.currentTimeMillis();

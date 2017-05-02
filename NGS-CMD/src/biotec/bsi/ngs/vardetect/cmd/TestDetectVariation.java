@@ -24,13 +24,15 @@ public class TestDetectVariation {
        public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "hg38_NewMethod_cutRepeat_speed_sim_4thread_th5_Sorted";
-        String path = "/Volumes/PromisePegasus/worawich/VMdev/dataScieneToolBox/projects/NGS/test_sim_01/";
+        String filename = "dm6_04_4thread_th5_linuxSorted";
+        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/";
 //        String saveFilename = "hg38_FullNewMethod_Sim_alignmentResult_VariantReport";
-        String saveFilenameCov = "hg38_NewMethod_cutRepeat_speed_sim_4thread_th5_VariantCoverageReport";
-        
+        String saveFilenameCov = "dm6_04_4thread_th5_VariantCoverageReport";
+        int readLength = 24;
+        int merLength = 18;
+        int overlap = 4;
 
-        VariationResult varRes = SequenceUtil.analysisResultFromFileV2(path+filename+".txt",18,100,4);
+        VariationResult varRes = SequenceUtil.analysisResultFromFileV2(path+filename+".txt",merLength,readLength,overlap);
         varRes.createVariantReport();
         varRes.analyzeCoverageFusion();
         varRes.writeVariantCoverageReportToFile(path, saveFilenameCov, 'F');
