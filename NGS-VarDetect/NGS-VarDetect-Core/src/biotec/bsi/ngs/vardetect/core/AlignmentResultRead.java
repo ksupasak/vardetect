@@ -44,6 +44,7 @@ public class AlignmentResultRead {
     private Map<String,ArrayList<Long>> alignmentResultMap;
     private Map<String,ArrayList<Long>> alignmentSortedCutResultMap;
     private Map<Long,long[]> countResultSortedCut;
+    private Map<String,Integer> readLenList;
     private Map<String,Map<Long,ArrayList<Long>>> newAlignmentResultMap;    // Hash Map that store alignment result togather with 
     private ArrayList<String> unMapList;                    // Store readname of unmap read (use in local alignment part)
     private ArrayList<String> mapList;                      // Store readname of map read (use in local alignment part)
@@ -70,6 +71,10 @@ public class AlignmentResultRead {
     
     public void addMapResult(Map inMap){
         this.alignmentResultMap = inMap; 
+    }
+    
+    public void addReadLenList(Map<String,Integer> inMap){
+        this.readLenList = inMap; 
     }
     
     public void addGroupReult(ArrayList<ClusterGroup> inGroupResult){
@@ -601,6 +606,7 @@ public class AlignmentResultRead {
                 long orangeInt = numCountPlusColor[7];
                 long greenInt = numCountPlusColor[8];
                 
+                
                 String strandNot = "no";                                                // Identify the strand type of this align Position
                 if(((positionCode>>28)&1) == 1){
                     strandNot = "+";
@@ -689,7 +695,7 @@ public class AlignmentResultRead {
             while(readNameIter.hasNext()){ 
                 String readName = (String) readNameIter.next();
                 ArrayList dummyResList = this.alignmentResultMap.get(readName);
-
+                int readLength = this.readLenList.get(readName);
                 if(dummyResList.isEmpty() == false){
                     writer.write(">" + readName);
                     writer.write("\n");
@@ -703,8 +709,8 @@ public class AlignmentResultRead {
                     long chrIdxStrandAln = code&this.mask_chrIdxStrandAln;
                     long alignPos = chrIdxStrandAln&mask;                                      // And with 28bit binary to get position
                     long chrNumber = chrIdxStrandAln>>37;
-                    long iniIdx = (chrIdxStrandAln>>29)&255;
-
+                    long iniIdx = (chrIdxStrandAln>>29)&255;                     
+                    
                     String strandNot = "no";                                                // Identify the strand type of this align Position
                     if(((chrIdxStrandAln>>28)&1) == 1){
                         strandNot = "+";
@@ -713,7 +719,7 @@ public class AlignmentResultRead {
                     }
 
     //                ps.format("%d,%d,%s,%d,%d", chrNumber,alignPos,strandNot,numCount,iniIdx);
-                    writer.write(String.format("%d,%d,%s,%d,%d", chrNumber,alignPos,strandNot,numCount,iniIdx));
+                    writer.write(String.format("%d,%d,%s,%d,%d,%d", chrNumber,alignPos,strandNot,numCount,iniIdx,readLength));
                     if (codeIter.hasNext()){
     //                    ps.format(";");
                         writer.write(";");
@@ -729,6 +735,11 @@ public class AlignmentResultRead {
             writer.flush();
             writer.close();
         }else if(fileType.equals("bin")){
+            
+            /**
+             * The order of data when write .bin is 
+             * ReandName|readLength|resultSize|resultCode1|resultCode2|resultCode3|...|ReadName|readLength|...
+             */
             File outputFile = new File(path+nameFile+"."+fileType);
             DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)));
             
@@ -737,8 +748,10 @@ public class AlignmentResultRead {
                 String readName = entry.getKey();
                 ArrayList<Long> resultList = entry.getValue();
                 int resultSize = resultList.size();
+                int readLength = this.readLenList.get(readName);
                 
                 os.writeUTF(readName);
+                os.writeInt(readLength);
                 os.writeInt(resultSize);
                 
                 for(int i =0;i<resultSize;i++){
@@ -970,6 +983,7 @@ public class AlignmentResultRead {
             boolean ignoreFlag = false;
             ShortgunSequence dummySS = this.shrtRead.get(i);
             String readName = dummySS.getReadName();
+            int readLength = dummySS.getReadLength();
             ArrayList<Integer> listChr = dummySS.getListChrMatch();
             ArrayList<Long> listIniPos = dummySS.getListPosMatch();
             ArrayList<Long> listLastPos = dummySS.getListLastPosMatch();
@@ -1034,21 +1048,21 @@ public class AlignmentResultRead {
     //                ps.format("\n");
                     if(option1.equals("gy")){
                         if(orange==0&&red==0){
-                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag));
+                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag,readLength));
                             writer.write("\n");
                         }
                     }else if(option1.equals("g")){
                         if(orange==0&&red==0&&yellow==0){
-                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag));
+                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag,readLength));
                             writer.write("\n");
                         }
                     }else if(option1.equals("gyo")){
                         if(red==0){
-                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag));
+                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag,readLength));
                             writer.write("\n");
                         }
                     }else if(option1.equals("all")){
-                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag));
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag,readLength));
                         writer.write("\n");
                     }
 

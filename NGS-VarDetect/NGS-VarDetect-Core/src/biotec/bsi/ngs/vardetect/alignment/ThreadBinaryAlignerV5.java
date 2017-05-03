@@ -50,6 +50,7 @@ public class ThreadBinaryAlignerV5 implements Runnable {
     private Map<Long,Long> alignMap;
     private Map<Long,ArrayList<Integer>> alnMerMap;     // Key is align code [strand|alignposition] and value is mer code
     private Map<String,ArrayList<Long>> alnRes;      // Key is ReadName and value is array of long [count|chr|strand|Pos]
+    private Map<String,Integer> readLen;            // Key is ReadName and Value is length of each read
     String flag;
             
     
@@ -60,6 +61,7 @@ public class ThreadBinaryAlignerV5 implements Runnable {
         chrNum = inchr;
         numMer = inMer;
         alnRes = new LinkedHashMap();
+        readLen = new LinkedHashMap();
         threshold = inThreshold;
         
         System.out.println("Creating " + threadName);
@@ -258,7 +260,8 @@ public class ThreadBinaryAlignerV5 implements Runnable {
                 }
                 this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
             }
-
+            
+            this.readLen.put(seq.getReadName(), s.length());
             /* Finish one read clear all data */
 //                    this.alnMerMap = null;
 //                    System.gc();
@@ -450,7 +453,7 @@ public class ThreadBinaryAlignerV5 implements Runnable {
                 }
                 this.alnRes.put(seq.getReadName(), countChrIdxStrandAlnList);
             }
-
+            this.readLen.put(seq.getReadName(), s.length());
             /*-----------------------------------------------------------------------------------------------------------*/
             /*************************************************************************************************************/
 
@@ -481,6 +484,10 @@ public class ThreadBinaryAlignerV5 implements Runnable {
     
     public Map<String,ArrayList<Long>> getMapResult(){
         return this.alnRes;
+    }
+    
+    public Map<String,Integer> getReadLenList(){
+        return this.readLen;
     }
         
 }

@@ -33,6 +33,7 @@ public class VariationResult {
     int redF; 
     int snpFlagF;
     int iniBackFlagF;
+    int readLengthF;
     String readNameF;
     String strandF;
 
@@ -46,6 +47,7 @@ public class VariationResult {
     int redB; 
     int snpFlagB;
     int iniBackFlagB;
+    int readLengthB;
     String readNameB;
     String strandB;
     
@@ -131,6 +133,8 @@ public class VariationResult {
                     readNameF = data[9];
                     strandF = data[7];
                     iniBackFlagF = Integer.parseInt(data[11]);
+                    readLengthF = Integer.parseInt(data[12]);
+                    
                 }
                 if(backPeak != null){
                     String[] data = backPeak.split(",");
@@ -146,42 +150,43 @@ public class VariationResult {
                     readNameB = data[9];
                     strandB = data[7];
                     iniBackFlagB = Integer.parseInt(data[11]);
+                    readLengthB = Integer.parseInt(data[12]);
                 }
                 
                 if(key == 0){
                     /**
                      * Variation type : SNP or other missing btw peak
                      */
-                    Variation newVar = new Variation(this.merLength,this.readLength);
+                    Variation newVar = new Variation(this.merLength);
                     newVar.addType('S');
-                    newVar.addFrontPeak(numChrF, iniPosF, lastPosF, greenF, yellowF, orangeF, redF, strandF, iniIndexF, readNameF, snpFlagF, iniBackFlagF);
+                    newVar.addFrontPeak(numChrF, iniPosF, lastPosF, greenF, yellowF, orangeF, redF, strandF, iniIndexF, readNameF, snpFlagF, iniBackFlagF, readLengthF);
                     this.listSNP.add(newVar);
                 }else if(key == 1){
                     /**
                      * Variation type : Fusion
                      */
-                    Variation newVar = new Variation(this.merLength,this.readLength);
+                    Variation newVar = new Variation(this.merLength);
                     newVar.addType('F');
-                    newVar.addFrontPeak(numChrF, iniPosF, lastPosF, greenF, yellowF, orangeF, redF, strandF, iniIndexF, readNameF, snpFlagF, iniBackFlagF);
-                    newVar.addBackPeak(numChrB, iniPosB, lastPosB, greenB, yellowB, orangeB, redB, strandB, iniIndexB, readNameB, snpFlagB, iniBackFlagB);
+                    newVar.addFrontPeak(numChrF, iniPosF, lastPosF, greenF, yellowF, orangeF, redF, strandF, iniIndexF, readNameF, snpFlagF, iniBackFlagF, readLengthF);
+                    newVar.addBackPeak(numChrB, iniPosB, lastPosB, greenB, yellowB, orangeB, redB, strandB, iniIndexB, readNameB, snpFlagB, iniBackFlagB, readLengthB);
                     this.listFusion.add(newVar);
                 }else if(key == 2){
                     /**
                      * Variation type : Indel both large and small
                      */
-                    Variation newVar = new Variation(this.merLength,this.readLength);
+                    Variation newVar = new Variation(this.merLength);
                     newVar.addType('I');
-                    newVar.addFrontPeak(numChrF, iniPosF, lastPosF, greenF, yellowF, orangeF, redF, strandF, iniIndexF, readNameF, snpFlagF, iniBackFlagF);
-                    newVar.addBackPeak(numChrB, iniPosB, lastPosB, greenB, yellowB, orangeB, redB, strandB, iniIndexB, readNameB, snpFlagB, iniBackFlagB);
+                    newVar.addFrontPeak(numChrF, iniPosF, lastPosF, greenF, yellowF, orangeF, redF, strandF, iniIndexF, readNameF, snpFlagF, iniBackFlagF, readLengthF);
+                    newVar.addBackPeak(numChrB, iniPosB, lastPosB, greenB, yellowB, orangeB, redB, strandB, iniIndexB, readNameB, snpFlagB, iniBackFlagB, readLengthB);
                     this.listIndel.add(newVar);
                 }else if(key == 3){
                     /**
                      * Variation type : others with No green in both side (wasted)
                      */
-                    Variation newVar = new Variation(this.merLength,this.readLength);
+                    Variation newVar = new Variation(this.merLength);
                     newVar.addType('O');
-                    newVar.addFrontPeak(numChrF, iniPosF, lastPosF, greenF, yellowF, orangeF, redF, strandF, iniIndexF, readNameF, snpFlagF, iniBackFlagF);
-                    newVar.addBackPeak(numChrB, iniPosB, lastPosB, greenB, yellowB, orangeB, redB, strandB, iniIndexB, readNameB, snpFlagB, iniBackFlagB);
+                    newVar.addFrontPeak(numChrF, iniPosF, lastPosF, greenF, yellowF, orangeF, redF, strandF, iniIndexF, readNameF, snpFlagF, iniBackFlagF, readLengthF);
+                    newVar.addBackPeak(numChrB, iniPosB, lastPosB, greenB, yellowB, orangeB, redB, strandB, iniIndexB, readNameB, snpFlagB, iniBackFlagB, readLengthB);
                     this.listOthers.add(newVar);
                 }
    

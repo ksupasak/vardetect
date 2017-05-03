@@ -363,6 +363,126 @@ public class Clustering {
         
     }
     
+    public static void createColorArrayV2(AlignmentResultRead inRes, int merLen){
+        /**
+         *  Use for create colorArray 
+         *  please make sure that your inRes must implement iniIndex in its (because we use iniIndex to trace back to match mer index of each peak)
+         *  
+         *  Suitable for version 3 data structure (data structure that has iniIdx in its) [..; chrName, align position, strand type, num count, initial index; ...]
+         *  Already Implement transmit read Length data (So, user no need to set read length)
+         */
+        
+        
+        int iniIdx;
+        int lastIdx;
+        int numMatch;
+//        int numMer = (int) (rLen-merLen)+1;
+//        int[] matchArray = new int[numMer];
+        ArrayList<ShortgunSequence> listRead = inRes.getResult();
+        ArrayList<int[]> listMatchArray = new ArrayList();
+        Map<String,String[]> colorPatternMap = new HashMap();
+        
+        for(int i =0;i<listRead.size();i++){ // Loop all Read
+            ShortgunSequence dummySS = listRead.get(i);            
+            int readLen = dummySS.getReadLength();
+            int numMer = (int) (readLen-merLen)+1;
+            int[] matchArray = new int[numMer];
+            
+            ArrayList<Integer> listChr = dummySS.getListChrMatch();                // all of Array below has same size (size indicate the number of match pattern)
+            ArrayList<Long> listPos = dummySS.getListPosMatch();
+            ArrayList<String> listStrand = dummySS.getListStrand();
+            ArrayList<Integer> listNumMatch = dummySS.getListNumMatch();
+            ArrayList<Integer> listIniIdx = dummySS.getListIniIdx();
+            long numPattern = listChr.size();
+            int[] iniIdxArray = new int[(int)numPattern];
+            int[] lastIdxArray = new int[(int)numPattern];
+            /**
+             * Start create match Array of each pattern of this read
+             *      integer array size numMer
+             *  code 1 = match ; code 0 = not match
+             */
+            listMatchArray = new ArrayList();
+            for(int numP=0;numP<numPattern;numP++){             // loop over match pattern
+                matchArray = new int[numMer];
+               
+                numMatch = listNumMatch.get(numP);
+                String strand = listStrand.get(numP);
+                
+                if(strand.equals("-")){                          // check for strand type (the iniIndx of type - must have recalculate with the equation in this case
+                    int dummyIniIdx = listIniIdx.get(numP);
+                    iniIdx = readLen - (dummyIniIdx + ((merLen+numMatch)-1));
+                    lastIdx = (iniIdx + numMatch)-1;
+//                    System.out.println("iniIdx check" + iniIdx);
+                }else{
+                    iniIdx = listIniIdx.get(numP);
+                    lastIdx = (iniIdx + numMatch)-1;
+                }
+                /**
+                 * add initial index and last index of each pattern for future use
+                 */
+                iniIdxArray[numP] = iniIdx;
+                lastIdxArray[numP] = lastIdx;
+                
+                
+                for(int merIdx = (int)iniIdx; merIdx<(iniIdx+numMatch); merIdx++){
+                    matchArray[merIdx] = 1;      
+                }
+                listMatchArray.add(matchArray);                 // At the end, this array should be the same size as number of match pattern         
+            }
+            
+            /**
+             * Start create color array of this read
+             * 
+             */
+            byte[] colorArray = new byte[numMer];                   // We reconsider to store in byte(8bit) not char(16bit) to save memory cousumpsion
+            for(int index=0;index<numMer;index++){                  // Loop over index of possible mer (100-18)+1 = 83 (max index)
+                               
+                ArrayList<Integer> chrCheckList = new ArrayList();
+                for(int p=0;p<listMatchArray.size();p++){           // Loop over listMatchArray size it is the same as we loop over match pattern
+                    int[] dummyMatchArray = listMatchArray.get(p);
+                    
+                    if(dummyMatchArray[index]==1){
+                        chrCheckList.add(listChr.get(p));
+                    }  
+                }
+                
+                if(chrCheckList.isEmpty()){
+                    colorArray[index] = 0;    // chrCheckList is empty, this mean no match at this index. we assign 0 to colorArray
+                }else{
+                    /**
+                     *  check duplicate from chrCheckList
+                     *  and assign color string to each mer index
+                     */
+                    Set<Integer> chrCheckSet = new HashSet<Integer>(chrCheckList);
+                    if(chrCheckSet.size()<chrCheckList.size()){         // check case if this true that mean chrCheckList has duplicate element in it
+                        if(chrCheckSet.size() == 1){    // Has duplicate and size is 1, this mean it match only one chr but various position (Orange)
+                            colorArray[index] = 3;
+                        }else{                          // Has duplicate and size is more than 1, this mean it match at same chr and other chr (Red)
+                            colorArray[index] = 4;
+                        }
+                    }else{
+                        if(chrCheckList.size()>1){      // Has no duplicate and size is more than 1, this mean it match at different chr (yellow)
+                            colorArray[index] = 2;
+                        }else if(chrCheckList.size()==1){   // Has no duplicate and size is 1, this mean it unique (Green)
+                            colorArray[index] = 1;
+                        }
+                    }
+                }
+ 
+            }
+           
+            /**
+             *  Store colorArray in Map which has key=read name and value=colorArray (has size equal to number of possible mer)
+             */
+            //colorPatternMap.put(dummySS.getReadName(), colorArray);
+//            dummySS.addReadLength(rLen);
+            dummySS.addMerLength(merLen);
+            dummySS.addColorArray(colorArray);      // store colorArray in Shortgun sequence (not sure with this one hope that store in the AlignmentResultRead that we feed as input when this function finish)
+            
+        }
+        
+    }
+    
     public static ArrayList<ClusterGroup> clusterFromFile(String filename, int maxBaseDiff, int minCoverage) throws IOException{
         /**
          * Suitable for linux sort format only

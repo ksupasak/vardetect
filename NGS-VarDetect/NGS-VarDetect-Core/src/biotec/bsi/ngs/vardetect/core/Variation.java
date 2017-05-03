@@ -24,6 +24,7 @@ public class Variation {
     String readNameF;
     String strandF;
     int numMatchF;
+    int readLengthF;
 
     int numChrB; 
     long iniPosB; 
@@ -38,29 +39,30 @@ public class Variation {
     String readNameB;
     String strandB;
     int numMatchB;
+    int readLengthB;
     
     char variationType;
     int merLength;
-    int readLength;
+//    int readLength;
     
     long breakPointF;
     long breakPointB;
     
-    public Variation(int merLen,int readLen){
+    public Variation(int merLen){
         /**
          * create new object Variation which has merLen and readLen as it has been assign
          * or with default 18 merLen and 100 readLen
          */
         this.merLength = merLen;
-        this.readLength = readLen; 
+//        this.readLength = readLen; 
     }
     
     public Variation(){
         this.merLength = 18;
-        this.readLength = 100; 
+//        this.readLength = 100; 
     }
     
-    public void addFrontPeak(int numChr,long iniPos,long lastPos,int numG,int numY,int numO,int numR,String strand,int iniIdx,String readName,int snpFlag,int iniBackFlag){
+    public void addFrontPeak(int numChr,long iniPos,long lastPos,int numG,int numY,int numO,int numR,String strand,int iniIdx,String readName,int snpFlag,int iniBackFlag, int inReadLen){
         this.numChrF = numChr;
         this.iniPosF = iniPos;
         this.lastPosF=lastPos;
@@ -74,10 +76,11 @@ public class Variation {
         this.snpFlagF=snpFlag;
         this.iniBackFlagF=iniBackFlag;
         this.numMatchF = numG+numY+numO+numR;
+        this.readLengthF = inReadLen;
         
         if(snpFlag == 0){
             if(this.strandF.equals("-")){
-                int reverseIniIdx = this.readLength-(this.iniIndexF+(this.merLength+this.numMatchF-1));
+                int reverseIniIdx = this.readLengthF-(this.iniIndexF+(this.merLength+this.numMatchF-1));
                 this.breakPointF = this.iniPosF+reverseIniIdx;   
             }else if(this.strandF.equals("+")){
                 this.breakPointF = this.lastPosF+this.iniIndexF;
@@ -92,7 +95,7 @@ public class Variation {
         }
     }
     
-    public void addBackPeak(int numChr,long iniPos,long lastPos,int numG,int numY,int numO,int numR,String strand,int iniIdx,String readName,int snpFlag,int iniBackFlag){
+    public void addBackPeak(int numChr,long iniPos,long lastPos,int numG,int numY,int numO,int numR,String strand,int iniIdx,String readName,int snpFlag,int iniBackFlag, int inReadLen){
         this.numChrB = numChr;
         this.iniPosB = iniPos;
         this.lastPosB=lastPos;
@@ -106,10 +109,11 @@ public class Variation {
         this.snpFlagB=snpFlag;
         this.iniBackFlagB=iniBackFlag;
         this.numMatchB = numG+numY+numO+numR;
+        this.readLengthB = inReadLen;
         
         if(this.strandB != null){
             if(this.strandB.equals("-")){
-                int reverseIniIdx = this.readLength-(this.iniIndexB+(this.merLength+this.numMatchB-1));
+                int reverseIniIdx = this.readLengthB-(this.iniIndexB+(this.merLength+this.numMatchB-1));
                 this.breakPointB = this.lastPosB+reverseIniIdx;   
             }else if(this.strandB.equals("+")){
                 this.breakPointB = this.iniPosB+this.iniIndexB;

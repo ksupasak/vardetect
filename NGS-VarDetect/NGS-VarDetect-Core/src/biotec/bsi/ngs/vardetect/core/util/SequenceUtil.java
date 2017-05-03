@@ -3020,7 +3020,7 @@ public class SequenceUtil {
         }
     }
     
-    public static AlignmentResultRead readAlignmentReportV2(String filename, int readLength, int mer) throws IOException {
+    public static AlignmentResultRead readAlignmentReportV2(String filename, int mer) throws IOException {
         /**
          *  Suitable for version 3 data structure (data structure that has iniIdx in its)
          */
@@ -3036,6 +3036,7 @@ public class SequenceUtil {
         AlignmentResultRead alnResult = new AlignmentResultRead();
         int count = 0;
         int count2 = 0;
+        int readLen = 0;
         Charset charset = Charset.forName("US-ASCII");
         Path path = Paths.get(filename);
         String name = null;
@@ -3073,14 +3074,15 @@ public class SequenceUtil {
                         listStrand.add(dummyData[2]);
                         listNumCount.add(Integer.parseInt(dummyData[3]));
                         listIniIdx.add(Integer.parseInt(dummyData[4]));
-                        
+                        readLen = Integer.parseInt(dummyData[5]);
                         int numBase = (mer+Integer.parseInt(dummyData[3]))-1;
                         long lastPos = (Long.parseLong(dummyData[1]) + numBase)-1;
                         
                         listLastPos.add(lastPos);
                         
-                    }
+                    }                    
                     inSS.addReadName(name);
+                    inSS.addReadLength(readLen);
                     inSS.addListChr(listChr);
                     inSS.addListPos(listPos);
                     inSS.addListLastPos(listLastPos);
@@ -3651,7 +3653,161 @@ public class SequenceUtil {
                  */
                 if(selectData.size()!=0){
                     /* Case check for avoid first time */
-                     Map<Integer,ArrayList<String[]>> variation = detectVariationV2(selectData,selectChr,selectGreenChar,mapF,mapB,merLength,readLength,allowOverLap);
+                     Map<Integer,ArrayList<String[]>> variation = detectVariationV2(selectData,selectChr,selectGreenChar,mapF,mapB,merLength,allowOverLap);
+                     varResult.addVariationMap(variation);
+                }
+
+                selectData = new ArrayList();
+                selectChr = new ArrayList();
+                selectGreenChar = new ArrayList();
+                mapF = new LinkedHashMap();
+                mapB = new LinkedHashMap();
+                
+                index = 0;
+                selectData.add(dataGet);
+                selectChr.add(numChr);
+                selectGreenChar.add(greenChar);
+                mapB.put(stopIndex, index);
+                if(mapF.containsKey(startIndex)){
+                    ArrayList<Integer> val = mapF.get(startIndex);
+                    val.add(index);
+                    mapF.put(startIndex, val);
+                }else{
+                    ArrayList<Integer> val = new ArrayList();
+                    val.add(index);
+                    mapF.put(startIndex, val);
+                }
+                
+            }
+            
+            oldReadName = readName;
+   
+        } 
+        
+        if(selectData.size()!=0){
+            /* Case check for avoid first time */
+             Map<Integer,ArrayList<String[]>> variation = detectVariationV2(selectData,selectChr,selectGreenChar,mapF,mapB,merLength,allowOverLap);
+             varResult.addVariationMap(variation);
+        }
+        
+        return varResult;
+    }
+    
+    public static VariationResult analysisResultFromFileV3(String filename, int merLength, int allowOverLap ) throws IOException{
+        /**
+        * Suitable with result format only (result format is a file that store peak result arrange by sample order (come first be the first). the peak result is in format data structure V3
+        * startIndex and stopIndex defined in this method is the index of DNA base in Read Ex. read length 100 base will has index 0 to 99 and has index of mer 0 to 83 [83 is come from 100 - 18]
+        * allowOverLap is indicate the number of DNA base that allow to over lap at the junction
+        * 
+        * This function is stand for extract data and flag each peak that does not have green count with false and vise versa
+        * It also calculate start and stop index then create MapF and MapB which has been use for detect variation
+        * then passing the information to detect variation function and store result to VariationResult object
+        * The input data must be sorted by order of Read (same read will group together) and iniIndex (numeric order)
+        * 
+        * Has implement transmit readlength protocol which allow user don't have to set readlength. It's will extract from input 
+        */
+        
+        VariationResult varResult = new VariationResult();
+        varResult.addMerLength(merLength);
+//        varResult.addReadLength(readLength);
+        
+        Charset charset = Charset.forName("US-ASCII");
+        //String[] ddSS = filename.split(".");
+        String saveFileName = filename.split("\\.")[0] + "_ClusterGroup.txt";
+        Path path = Paths.get(filename);
+
+        StringBuffer seq = new StringBuffer();
+        ArrayList<String> inData = new ArrayList();    
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;    
+            int count = 0;
+
+            System.out.println("reading");
+            while ((line = reader.readLine()) != null) {
+
+                inData.add(line);
+                count++;
+                if(count%1000000==0){
+                    System.out.println(count + " line past");
+                    //System.out.println("Recent chromosome: " + numChr);
+                }       
+
+            }
+//            writeClusterGroupToFile(filename,listGroup);
+        }
+        
+        System.out.println(" Done read ");
+        
+        ArrayList<String> selectData = new ArrayList();                     // Store list of long string that contain peak information (list of all peak in specific read)
+        ArrayList<Byte> selectChr = new ArrayList();                        // store list of chr number same order as selectData
+        ArrayList<Boolean> selectGreenChar = new ArrayList();
+        Map<Integer,ArrayList<Integer>> mapF = new LinkedHashMap();
+        Map<Integer,Integer> mapB = new LinkedHashMap();
+        int index = 0;
+        String oldReadName = null;
+        
+        for(int i=0;i<inData.size();i++){
+            String dataGet = inData.get(i);
+            
+            /***    Extract data    ****/
+            String[] data = dataGet.split(",");           
+            byte numChr = Byte.parseByte(data[0]);
+            long iniPos = Long.parseLong(data[1]);
+            long lastPos = Long.parseLong(data[2]);
+            byte numG = Byte.parseByte(data[3]);
+            byte numY = Byte.parseByte(data[4]);
+            byte numO = Byte.parseByte(data[5]);
+            byte numR = Byte.parseByte(data[6]);
+            String strand = data[7];
+            byte iniIdx = Byte.parseByte(data[8]);
+            String readName = data[9];
+            byte snpFlag = Byte.parseByte(data[10]);
+            int readLen = Integer.parseInt(data[12]);
+            /******************************/
+            
+            int matchCount = numG+numY+numO+numR;
+            int startIndex = iniIdx;
+            int stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
+            boolean greenChar = false;
+            
+            if(numG>0){
+                greenChar = true;
+            }
+            
+            
+            
+//            if(strand.equals("-")){
+//                startIndex = readLength - (iniIdx+(merLength+matchCount-1));
+//                stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
+//            }
+            
+            if(readName.equals(oldReadName)){
+                /* Same set of read (continue add data) */
+                index++;
+                selectData.add(dataGet);
+                selectChr.add(numChr);
+                selectGreenChar.add(greenChar);
+                mapB.put(stopIndex, index);
+                if(mapF.containsKey(startIndex)){
+                    ArrayList<Integer> val = mapF.get(startIndex);
+                    val.add(index);
+                    mapF.put(startIndex, val);
+                }else{
+                    ArrayList<Integer> val = new ArrayList();
+                    val.add(index);
+                    mapF.put(startIndex, val);
+                }
+                
+            }else{
+                /**
+                 * Found new set of Read 
+                 * 1. Do detect variation
+                 * 2. reset 
+                 * 3. Add new set of data       
+                 */
+                if(selectData.size()!=0){
+                    /* Case check for avoid first time */
+                     Map<Integer,ArrayList<String[]>> variation = detectVariationV2(selectData,selectChr,selectGreenChar,mapF,mapB,merLength,allowOverLap);
                      varResult.addVariationMap(variation);
                 }
 
@@ -3691,7 +3847,7 @@ public class SequenceUtil {
         
         if(selectData.size()!=0){
             /* Case check for avoid first time */
-             Map<Integer,ArrayList<String[]>> variation = detectVariationV2(selectData,selectChr,selectGreenChar,mapF,mapB,merLength,readLength,allowOverLap);
+             Map<Integer,ArrayList<String[]>> variation = detectVariationV2(selectData,selectChr,selectGreenChar,mapF,mapB,merLength,allowOverLap);
              varResult.addVariationMap(variation);
         }
         
@@ -3911,7 +4067,7 @@ public class SequenceUtil {
         return variation;
     }
     
-    public static Map<Integer,ArrayList<String[]>> detectVariationV2(ArrayList<String> selectData , ArrayList<Byte> selectChr , ArrayList<Boolean> selectGreenChar , Map<Integer,ArrayList<Integer>> mapF , Map<Integer,Integer> mapB , int merLength , int readLength , int allowOverlapBase){
+    public static Map<Integer,ArrayList<String[]>> detectVariationV2(ArrayList<String> selectData , ArrayList<Byte> selectChr , ArrayList<Boolean> selectGreenChar , Map<Integer,ArrayList<Integer>> mapF , Map<Integer,Integer> mapB , int merLength , int allowOverlapBase){
         /**
          * This function is suitable for detect variation from New alignment protocol (cut Repeat protocol) 
          * 
