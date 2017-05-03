@@ -24,9 +24,9 @@ public class TestPostProcess {
        public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "dm6_04_4thread_th5_alignmentResult_part";       
+        String filename = "dm6_03_4thread_th5_alignmentResult_part";       
         String path = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/";
-        String saveFileName = "dm6_04_4thread_th5_forLinuxSort";
+        String saveFileName = "dm6_03_4thread_th5_forLinuxSort";
 
         String saveFileNameERR = "hg38_simData_mul_alignmentResult_th5_ERR_forLinuxSortV2";
         String saveFileName3661 = "hg38_simData_mul_alignmentResult_th5_forLinuxSort";
@@ -37,15 +37,15 @@ public class TestPostProcess {
         String saveFilenameERR = "hg38_err1_alignmentResult_forLinuxSort_part";
         
         int numPart = 1;
-        int readLength = 24;
+//        int readLength = 24;
         int merLength = 18;
         int maxFullMatch = 100; // it's percentage value
         
         for(int i=1;i<=numPart;i++){
             
-            AlignmentResultRead readAlign = SequenceUtil.readAlignmentReportV2(path+filename+i+".txt",readLength,merLength);
+            AlignmentResultRead readAlign = SequenceUtil.readAlignmentReportV2(path+filename+i+".txt",merLength);
             System.out.println("Begin create color array");
-            Clustering.createColorArray(readAlign,readLength , merLength);        
+            Clustering.createColorArrayV2(readAlign, merLength);        
             System.out.println("Done create color array");
             readAlign.writeSortedCutColorResultToPathInFormatForLinuxSort(path, saveFileName, "txt","all",maxFullMatch);
 //            VariationResult varRes = SequenceUtil.analysisResultFromFile(path+saveFileNameForPostProcess+".txt",18,100);

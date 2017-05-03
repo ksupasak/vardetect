@@ -28,9 +28,9 @@ public class RunPostProcess {
     
         for(int i=1;i<=amountOfPart;i++){
             
-            AlignmentResultRead readAlign = SequenceUtil.readAlignmentReportV2(savePath+inputFileName+i+".txt",readLenght,merLenght);
+            AlignmentResultRead readAlign = SequenceUtil.readAlignmentReportV2(savePath+inputFileName+i+".txt",merLenght);
             System.out.println("Begin create color array");
-            Clustering.createColorArray(readAlign, 100, 18);        
+            Clustering.createColorArrayV2(readAlign, 18);        
             System.out.println("Done create color array");
             readAlign.writeSortedCutColorResultToPathInFormatForLinuxSort(savePath, outputFileName, "txt","gy",83);
             readAlign = null;
