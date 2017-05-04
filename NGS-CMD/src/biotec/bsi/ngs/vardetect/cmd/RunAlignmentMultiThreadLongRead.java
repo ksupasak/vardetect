@@ -37,11 +37,12 @@ import java.util.Map;
  * Clone of NGSCMD 4 (Test bed for new align implement)
  */
 
-public class RunAlignmentMultiThreadV4 {
+public class RunAlignmentMultiThreadLongRead {
     /**
-     * It run repeat marker version of alignment (version 3 and 4 alignment function)
+     * It run cut repeat version of alignment (Clone from version 5 alignment function) But use alignment function that support alignment long read 
      */
-     public static void main(String[] args) throws IOException, InterruptedException {
+    
+    public static void main(String[] args) throws IOException, InterruptedException {
         // TODO code application logic here
         long startAlignTime = System.currentTimeMillis();
         String refPath = args[0];                                       // First argument; indicate reference  file (include it path if it not in the current directory)
@@ -51,7 +52,8 @@ public class RunAlignmentMultiThreadV4 {
         int numMer = Integer.valueOf(args[4]);
         int threshold = Integer.valueOf(args[5]);                       // Fifth argument; indicate count number threshold
         int numThread = Integer.valueOf(args[6]);                       // Sixth argument; indicate number of thread
-        String fileType = args[7];
+        String filetype = args[7]; 
+        
 //       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
 
         System.out.println("Get reference sequence");
@@ -84,7 +86,7 @@ public class RunAlignmentMultiThreadV4 {
 
             Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
 
-            AlignmentResultRead align = aligner.alignMultithreadV4(ref, input, numThread, numMer, threshold);  // function align is located in binary aligner
+            AlignmentResultRead align = aligner.alignMultithreadLongRead(ref, input, numThread, numMer, threshold);  // function align is located in binary aligner
 
 
     
@@ -94,7 +96,7 @@ public class RunAlignmentMultiThreadV4 {
             double totalAlignTime = ((stopAlignTime - startAlignTime)/1000)/60;
             System.out.println(String.format("Alignment Time use : %.4f min",totalAlignTime));
             System.out.println("Do write Report");
-            align.writeSortedCutResultMapToPathInFormatV3(folder.toString()+File.separator,savefilename, fileType);
+            align.writeSortedCutResultMapToPathInFormatLongRead(folder.toString()+File.separator,savefilename, filetype);
             System.out.println("Done part " + count);
             
             long endTime = System.currentTimeMillis();
