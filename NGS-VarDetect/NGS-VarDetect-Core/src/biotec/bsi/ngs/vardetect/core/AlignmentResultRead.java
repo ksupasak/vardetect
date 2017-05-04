@@ -40,8 +40,11 @@ public class AlignmentResultRead {
     //private static long mask_Chr =
     private static long mask_chrStrandAln = 17179869183L;   // Do & operation to get aligncode compose of chr|strand|alignposition from value contain in alignmentResultMap
     private static long mask_chrIdxStrandAln = 4398046511103L;      //  Do & operation to get aligncode compose of chr|Idx|strand|alignposition from value contain in alignmentResultMap
+    private static long mask32bit = 4294967295L;
     private ClusterGroup group;
     private Map<String,ArrayList<Long>> alignmentResultMap;
+    private Map<String,ArrayList<Long>> alignmentResultMap1;
+    private Map<String,ArrayList<Long>> alignmentResultMap2;
     private Map<String,ArrayList<Long>> alignmentSortedCutResultMap;
     private Map<Long,long[]> countResultSortedCut;
     private Map<String,Integer> readLenList;
@@ -71,6 +74,14 @@ public class AlignmentResultRead {
     
     public void addMapResult(Map inMap){
         this.alignmentResultMap = inMap; 
+    }
+    
+    public void addMapResult1(Map inMap){
+        this.alignmentResultMap1 = inMap; 
+    }
+    
+    public void addMapResult2(Map inMap){
+        this.alignmentResultMap2 = inMap; 
     }
     
     public void addReadLenList(Map<String,Integer> inMap){
@@ -756,6 +767,96 @@ public class AlignmentResultRead {
                 
                 for(int i =0;i<resultSize;i++){
                     os.writeLong(resultList.get(i));
+                }
+            }
+            os.close();   
+        }
+    }
+    
+    public void writeSortedCutResultMapToPathInFormatLongRead(String path,String nameFile, String fileType) throws FileNotFoundException, IOException {
+        /**
+         * Suitable for version 3 data structure (data structure that has iniIdx in its)
+         */
+        
+//        PrintStream ps = new PrintStream(path+nameFile+"."+ fa);            // Create file object
+        if(fileType.equals("txt")){
+            FileWriter writer;        
+            /**
+             * Check File existing
+             */
+
+            File f = new File(path+nameFile+"."+ fileType); //File object        
+
+            writer = new FileWriter(path+nameFile+"."+ fileType);
+
+
+            Set set = this.alignmentResultMap1.keySet();
+            Iterator readNameIter = set.iterator();
+
+            while(readNameIter.hasNext()){ 
+                String readName = (String) readNameIter.next();
+                ArrayList<Long> dummyResList1 = this.alignmentResultMap1.get(readName);
+                ArrayList<Long> dummyResList2 = this.alignmentResultMap2.get(readName);
+                int readLength = this.readLenList.get(readName);
+                if(dummyResList1.isEmpty() == false){
+                    writer.write(">" + readName);
+                    writer.write("\n");
+    //                ps.println(">"+ readName);               
+                }
+                Iterator codeIter1 = dummyResList1.iterator();
+                Iterator codeIter2 = dummyResList1.iterator();
+                while(codeIter1.hasNext()){
+                    long idxStrandAln = (long)codeIter1.next();                    
+                    long chrCount = (long)codeIter2.next();
+                    long alignPos = idxStrandAln&mask;
+                    long iniIdx = idxStrandAln>>29;
+                    long numCount = chrCount&mask32bit;
+                    long chrNumber = chrCount>>32;
+                    
+                    String strandNot = "no";                                                // Identify the strand type of this align Position
+                    if(((idxStrandAln>>28)&1) == 1){
+                        strandNot = "+";
+                    }else if(((idxStrandAln>>28)&1) == 0){
+                        strandNot = "-";
+                    }
+                    writer.write(String.format("%d,%d,%s,%d,%d,%d", chrNumber,alignPos,strandNot,numCount,iniIdx,readLength));
+                    if (codeIter1.hasNext()){
+    //                    ps.format(";");
+                        writer.write(";");
+                    }
+                }
+                
+                if(dummyResList1.isEmpty() == false){
+    //                ps.format("\n");
+                    writer.write("\n");
+                }
+
+            }
+            writer.flush();
+            writer.close();
+        }else if(fileType.equals("bin")){
+            
+            /**
+             * The order of data when write .bin is 
+             * ReandName|readLength|resultSize|resultCode1(idxStrandAln)|resultCode1(chrCOunt)|resultCode2(idxStrandAln)|resultCode2(chrCount)|...|ReadName|readLength|...
+             */
+            File outputFile = new File(path+nameFile+"."+fileType);
+            DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)));
+            
+            
+            for(Map.Entry<String,ArrayList<Long>> entry : this.alignmentResultMap.entrySet()){
+                String readName = entry.getKey();
+                ArrayList<Long> idxStrandAlnList = entry.getValue();
+                int resultSize = idxStrandAlnList.size();
+                int readLength = this.readLenList.get(readName);
+                ArrayList<Long> chrCountList = this.alignmentResultMap2.get(readName);
+                os.writeUTF(readName);
+                os.writeInt(readLength);
+                os.writeInt(resultSize);
+                
+                for(int i =0;i<resultSize;i++){
+                    os.writeLong(idxStrandAlnList.get(i));
+                    os.writeLong(chrCountList.get(i));
                 }
             }
             os.close();   

@@ -42,8 +42,11 @@ public class BinaryAligner extends Thread implements Aligner {
     ArrayList<ThreadBinaryAlignerV3> threadListV3;
     ArrayList<ThreadBinaryAlignerV4> threadListV4;
     ArrayList<ThreadBinaryAlignerV5> threadListV5;
+    ArrayList<ThreadBinaryAlignerLongRead> threadListLongRead;
     Map<Long,ArrayList<Long>> alnMerMap;     // Key is align code [strand|alignposition] and value is mer code
-    Map<String,ArrayList<Long>> alnRes;      // Key is ReadName and value is array of long [count|chr|strand|Pos]
+    Map<String,ArrayList<Long>> alnRes;      // Key is ReadName and value is array of long [count|chr|iniIdx|strand|Pos]
+    Map<String,ArrayList<Long>> alnRes1;      // Key is ReadName and value is array of long [iniIndex|strand|Pos]
+    Map<String,ArrayList<Long>> alnRes2;      // Key is ReadName and value is array of long [chr|count]
     Map<String,Integer> readLen;      // Key is ReadName and value is Integer of read length    
     Map<Long,Byte> varType;
     Map<String,ArrayList<Byte>> varBox;
@@ -625,13 +628,16 @@ public class BinaryAligner extends Thread implements Aligner {
             /* Put all align map result into one Map result */
             if(i==0){
                 this.alnRes = threadListV4.get(i).getMapResult();
+                this.readLen = threadListV4.get(i).getReadLenList();
             }else{
                 this.alnRes.putAll(threadListV4.get(i).getMapResult());
+                this.readLen.putAll(threadListV4.get(i).getReadLenList());
             }
         }
         
         
         alinResult.addMapResult(this.alnRes);
+        alinResult.addReadLenList(this.readLen);
  
         return alinResult;
     }
@@ -792,7 +798,7 @@ public class BinaryAligner extends Thread implements Aligner {
         * Limit max chromosome at 31 chromosome (5bit)
         */
         
-        threadListV5 = new ArrayList();
+        threadListLongRead = new ArrayList();
         this.numberOfThread = numThread;
         //AlignmentResult res = new AlignmentResult(input);
         AlignmentResultRead alinResult = new AlignmentResultRead();
@@ -819,21 +825,21 @@ public class BinaryAligner extends Thread implements Aligner {
                 /* Create thread object follow by specific numThread */
                 /*  Separate case In order to use existing thread object or create new for first time*/
                 
-                if(threadListV5.isEmpty()){
+                if(threadListLongRead.isEmpty()){
                  
                     for(int i = 0 ; i < inputSize ; i+= numPerPartition){                        
                         List splitInputSequence = input.getInputSequence().subList(i, Math.min(inputSize, i+numPerPartition));
                         String threadName = "Thread_"+count; 
-                        ThreadBinaryAlignerV5 newThread = new ThreadBinaryAlignerV5(threadName,splitInputSequence,encoded,chr.getChrNumber(),mer,threshold);
+                        ThreadBinaryAlignerLongRead newThread = new ThreadBinaryAlignerLongRead(threadName,splitInputSequence,encoded,chr.getChrNumber(),mer,threshold);
                         newThread.start();                        
-                        threadListV5.add(newThread);
+                        threadListLongRead.add(newThread);
                         count++;
                     }
                 }else{
                     int dummynum = 0;
                     for(int i = 0 ; i < inputSize ; i+= numPerPartition){
                         List splitInputSequence = input.getInputSequence().subList(i, Math.min(inputSize, i+numPerPartition));
-                        ThreadBinaryAlignerV5 dummythread = threadListV5.get(dummynum);
+                        ThreadBinaryAlignerLongRead dummythread = threadListLongRead.get(dummynum);
                         dummythread.setdata(splitInputSequence, encoded, chrnumber, mer);
                         dummythread.start();
                         dummynum++;
@@ -850,11 +856,11 @@ public class BinaryAligner extends Thread implements Aligner {
 //                        count++;
 //                   
                               
-                System.out.println("Number of thread check : " + threadListV5.size() + " Must equal to " + numThread);
-                for(int i=0;i<threadListV5.size();i++){
+                System.out.println("Number of thread check : " + threadListLongRead.size() + " Must equal to " + numThread);
+                for(int i=0;i<threadListLongRead.size();i++){
                     /* Wait for specific thread to finish execute (finish method run()) */ 
                     /* After run() method is finish thread stop execute but the thread object that we overwrite run() in it is still exist */
-                    threadListV5.get(i).join();                    
+                    threadListLongRead.get(i).join();                    
                 }
                 
                 /* End */
@@ -873,21 +879,24 @@ public class BinaryAligner extends Thread implements Aligner {
             System.out.println();
         }
         
-        for(int i=0;i<threadListV5.size();i++){
+        for(int i=0;i<threadListLongRead.size();i++){
             /* Loop to get align result map from each thread object */
             /* Put all align map result into one Map result */
             if(i==0){
-                this.alnRes = threadListV5.get(i).getMapResult();
-                this.readLen = threadListV5.get(i).getReadLenList();
+                this.alnRes1 = threadListLongRead.get(i).getMapResult1();
+                this.alnRes2 = threadListLongRead.get(i).getMapResult2();
+                this.readLen = threadListLongRead.get(i).getReadLenList();
             }else{
-                this.alnRes.putAll(threadListV5.get(i).getMapResult());
-                this.readLen.putAll(threadListV5.get(i).getReadLenList());
+                this.alnRes1 = threadListLongRead.get(i).getMapResult1();
+                this.alnRes2 = threadListLongRead.get(i).getMapResult2();
+                this.readLen.putAll(threadListLongRead.get(i).getReadLenList());
             }
-        }
+        }       
         
         
-        alinResult.addMapResult(this.alnRes);
- 
+        alinResult.addMapResult1(this.alnRes1);
+        alinResult.addMapResult2(this.alnRes2);
+        alinResult.addReadLenList(this.readLen);
         return alinResult;
     }
     
