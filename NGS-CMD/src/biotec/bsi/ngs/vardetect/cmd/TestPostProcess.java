@@ -14,7 +14,9 @@ import biotec.bsi.ngs.vardetect.core.VariationResult;
 import biotec.bsi.ngs.vardetect.core.util.Clustering;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_WholeGene;
+import java.io.File;
 import java.io.IOException;
+
 
 /**
  *
@@ -23,11 +25,16 @@ import java.io.IOException;
 public class TestPostProcess {
        public static void main(String[] args) throws IOException {
         // TODO code application logic here
+   
+        String filename = "hg38_sim_4thread_th5_alignmentResult_LongRead_part";       
+        String path = "/Volumes/PromisePegasus/worawich/VMdev/dataScieneToolBox/projects/NGS/test_sim_01/";
+        String saveFileName = "hg38_sim_4thread_th5_alignmentResult_LongRead_forLinuxSort";
         
-        String filename = "dm6_03_4thread_th5_alignmentResult_part";       
-        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/";
-        String saveFileName = "dm6_03_4thread_th5_forLinuxSort";
-
+//        File pathVar = new File(args[1]);
+//        filename = pathVar.getName().split("\\.")[0];
+//        path = pathVar.getParent()+"/";
+//        saveFileName = pathVar.getPath().split("\\.")[0];
+        
         String saveFileNameERR = "hg38_simData_mul_alignmentResult_th5_ERR_forLinuxSortV2";
         String saveFileName3661 = "hg38_simData_mul_alignmentResult_th5_forLinuxSort";
         String saveFileNameForPostProcess = "hg38_simData_mul_alignmentResult_th5_PostLinuxSortedV2";
