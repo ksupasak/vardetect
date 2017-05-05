@@ -778,7 +778,7 @@ public class BinaryAligner extends Thread implements Aligner {
          * Compatible with long read 
          */
         this.setReferenceSequence(ref);
-        return alignMultithreadV5(input,numThread,numMer,threshold);
+        return alignMultithreadLongRead(input,numThread,numMer,threshold);
         
     }
     
@@ -887,8 +887,8 @@ public class BinaryAligner extends Thread implements Aligner {
                 this.alnRes2 = threadListLongRead.get(i).getMapResult2();
                 this.readLen = threadListLongRead.get(i).getReadLenList();
             }else{
-                this.alnRes1 = threadListLongRead.get(i).getMapResult1();
-                this.alnRes2 = threadListLongRead.get(i).getMapResult2();
+                this.alnRes1.putAll(threadListLongRead.get(i).getMapResult1());
+                this.alnRes2.putAll(threadListLongRead.get(i).getMapResult2());
                 this.readLen.putAll(threadListLongRead.get(i).getReadLenList());
             }
         }       

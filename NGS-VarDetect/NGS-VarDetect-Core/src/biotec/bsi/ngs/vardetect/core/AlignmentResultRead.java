@@ -41,6 +41,7 @@ public class AlignmentResultRead {
     private static long mask_chrStrandAln = 17179869183L;   // Do & operation to get aligncode compose of chr|strand|alignposition from value contain in alignmentResultMap
     private static long mask_chrIdxStrandAln = 4398046511103L;      //  Do & operation to get aligncode compose of chr|Idx|strand|alignposition from value contain in alignmentResultMap
     private static long mask32bit = 4294967295L;
+    private static int mask5bit = 31;
     private ClusterGroup group;
     private Map<String,ArrayList<Long>> alignmentResultMap;
     private Map<String,ArrayList<Long>> alignmentResultMap1;
@@ -804,14 +805,14 @@ public class AlignmentResultRead {
     //                ps.println(">"+ readName);               
                 }
                 Iterator codeIter1 = dummyResList1.iterator();
-                Iterator codeIter2 = dummyResList1.iterator();
+                Iterator codeIter2 = dummyResList2.iterator();
                 while(codeIter1.hasNext()){
                     long idxStrandAln = (long)codeIter1.next();                    
                     long chrCount = (long)codeIter2.next();
                     long alignPos = idxStrandAln&mask;
                     long iniIdx = idxStrandAln>>29;
                     long numCount = chrCount&mask32bit;
-                    long chrNumber = chrCount>>32;
+                    long chrNumber = (chrCount>>32);
                     
                     String strandNot = "no";                                                // Identify the strand type of this align Position
                     if(((idxStrandAln>>28)&1) == 1){
