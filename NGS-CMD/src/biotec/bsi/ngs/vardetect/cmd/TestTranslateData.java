@@ -5,29 +5,23 @@
  */
 package biotec.bsi.ngs.vardetect.cmd;
 
-import biotec.bsi.ngs.vardetect.alignment.AlignerFactory;
-import biotec.bsi.ngs.vardetect.core.Aligner;
 import biotec.bsi.ngs.vardetect.core.AlignmentResultRead;
-import biotec.bsi.ngs.vardetect.core.InputSequence;
-import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
-import biotec.bsi.ngs.vardetect.core.VariationResult;
 import biotec.bsi.ngs.vardetect.core.util.Clustering;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
-import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_WholeGene;
 import java.io.File;
 import java.io.IOException;
-
 
 /**
  *
  * @author worawich
  */
-public class TestPostProcess {
+public class TestTranslateData {
     public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/dm6_O1_4thread_th5_alignmentResult_longRead_part";
-        String indexFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/drosophila/d.melanogaster/dm6_filter.index";            // use for traceback to natural chromosome name
+        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/SimulateData/simLongRead/hg38_simLong_4thread_th5_alignmentResult_LongRead_part";
+        String indexFile = "";
+        String inputDataType = "bin";
         String saveFileType = "txt";
         int numPart = 1;
 //        int readLength = 24;
@@ -52,16 +46,16 @@ public class TestPostProcess {
         String filenameERR = "hg38_err1_alignmentResult_part";
         String saveFilenameERR = "hg38_err1_alignmentResult_forLinuxSort_part";
         
-        
+        AlignmentResultRead readAlign = null;
         
         for(int i=1;i<=numPart;i++){
             
-            AlignmentResultRead readAlign = SequenceUtil.readAlignmentReportV2(filename+i+".txt",merLength);
-//            AlignmentResultRead readAlign = SequenceUtil.readBinaryAlignmentReportV3(filename+i+".bin",merLength);
-            
-            readAlign.countAlignMatch();
-            readAlign.writeMatchCountReport(filename+i,indexFile);              // write bed graph format for overall vistualize
-            
+            if(inputDataType == "bin"){
+                readAlign = SequenceUtil.readBinaryAlignmentReportV3(filename+i+".bin",merLength);
+            }else if(inputDataType == "txt"){
+                readAlign = SequenceUtil.readAlignmentReportV2(path+filename+i+".txt",merLength);
+            }
+
             System.out.println("Begin create color array");
             Clustering.createColorArrayV2(readAlign, merLength);        
             System.out.println("Done create color array");
@@ -71,5 +65,4 @@ public class TestPostProcess {
             System.gc();
         }
     }
-  
 }
