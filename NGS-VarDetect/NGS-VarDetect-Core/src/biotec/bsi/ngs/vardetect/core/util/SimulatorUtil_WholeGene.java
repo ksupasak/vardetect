@@ -365,9 +365,20 @@ public class SimulatorUtil_WholeGene {
         return is;
     }
     
-    public static InputSequence simulateComplexWholeGeneRandomMixed(ReferenceSequence ref, int num_read, int ln_read, int num_shortgun , int posDiffL, int indelSizeS ) throws FileNotFoundException{
-        PrintStream ps = new PrintStream(ref.getPath()+"_Simulatedata.txt");
-        PrintStream ps2 = new PrintStream(ref.getPath()+"_Simulatedata.fa");
+    public static InputSequence simulateComplexWholeGeneRandomMixed(ReferenceSequence ref, int num_read, int ln_read, int num_shortgun , int posDiffL, int indelSizeS, String filename ) throws FileNotFoundException{
+        
+        /**
+         * num_read = number of read
+         * ln_read = length of read (same as length of shotgun read Ex. if you want short read long 50 bp you can set this to 50. If you want 10000 just set it 10000!)
+         * num_shortgun = number of sub read read of each read [the program will generate long sequence then randomly cut sequence in to small shotgun sequence]
+         * posDiffL = distant btw two cut peace of DNA which will be merge together to create insertion cutA|cutB|cutA  (cutA should be very far away from cutB))
+         * indelSizeS = it is the size of deletion
+         * 
+         */
+        
+        
+        PrintStream ps = new PrintStream(ref.getPath()+filename+".txt");
+        PrintStream ps2 = new PrintStream(ref.getPath()+filename+".fa");
         ps.println("Simulated Data\n");
         
         int numRead = 0;

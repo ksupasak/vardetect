@@ -486,6 +486,10 @@ public class SequenceUtil {
                             case 't': 
                                 t=3; // 11
                                 break;
+                            case 'U':
+                            case 'u': 
+                                t=3; // 11 (in cast of RNA T will change to U)
+                                break;
                             case 'C':
                             case 'c':
                                 t=1; // 01 
@@ -783,6 +787,9 @@ public class SequenceUtil {
                 case 't': 
                     t=3; // 11
                     break;
+                case 'u': 
+                    t=3; // 11 (in cast of RNA T will change to U)
+                    break;
                 case 'c':
                     t=1; // 01 
                     break;
@@ -907,6 +914,9 @@ public class SequenceUtil {
                     break;
                 case 't': 
                     t=3; // 11
+                    break;               
+                case 'u': 
+                    t=3; // 11 (in cast of RNA T will change to U)
                     break;
                 case 'c':
                     t=1; // 01 
@@ -1033,6 +1043,9 @@ public class SequenceUtil {
                     break;
                 case 't': 
                     t=3; // 11
+                    break;              
+                case 'u': 
+                    t=3; // 11 (in cast of RNA T will change to U)
                     break;
                 case 'c':
                     t=1; // 01 
@@ -1172,6 +1185,10 @@ public class SequenceUtil {
                 case 't': 
                 case 'T':
                     t=3; // 11
+                    break;
+                case 'U':
+                case 'u': 
+                    t=3; // 11 (in cast of RNA T will change to U)
                     break;
                 case 'c':
                 case 'C':
@@ -2478,7 +2495,7 @@ public class SequenceUtil {
                    break;
                case "11": 
                    dummySequenceBase = "T"; // 11
-                   break;
+                   break;               
                case "01":               
                    dummySequenceBase = "C"; // 01 
                    break;
@@ -2535,6 +2552,10 @@ public class SequenceUtil {
                    break;
                 case 't':   
                 case 'T': 
+                   dummyBase = "A"; // 11
+                   break;
+                case 'u':   
+                case 'U': 
                    dummyBase = "A"; // 11
                    break;
                 case 'c':
@@ -3089,6 +3110,7 @@ public class SequenceUtil {
                     inSS.addListStrand(listStrand);
                     inSS.addListNumMatch(listNumCount);
                     inSS.addListIniIdx(listIniIdx);
+                    inSS.addMerLength(mer);
                     alnResult.addResult(inSS);
                 } 
             }
@@ -3096,6 +3118,48 @@ public class SequenceUtil {
             return alnResult;
         }
     }
+    
+    public static Map<Long,String> readIndexFile(String filename) throws IOException {
+        /**
+         *  Read index file to create Map which has been use for reference the number of chromosome in alignment program to real chromosome that found in natural or portion of scaffold.
+         *  
+         * Key = Long of chr(5)|lastPosition(28)|iniPosition(28) in contig case (data.length = 4) and contain only chr in non contig case 
+         * String = name of specific key in natural or name of scaffold in case of reference have build from contig
+         * 
+         * it will return indexMap which ready to use for traceback
+         */
+        
+        Map<Long,String> indexMap = new LinkedHashMap();
+        
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(filename);
+        
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;
+            String[] data = null;      
+            while ((line = reader.readLine()) != null) {
+                data = line.split(",");
+                if(data.length==4){
+                    long iniPos = Long.parseLong(data[2]);
+                    long lastPos = Long.parseLong(data[3]);
+
+                    long chr = Long.parseLong(data[1]);
+                    String natural = data[0];
+
+                    long code = (((chr<<28)+lastPos)<<28)+iniPos;       // this code has structure like this chr|lastPos|iniPos
+                    indexMap.put(code,natural);
+                }else if(data.length==2){
+                    long chr = Long.parseLong(data[1].split("chr")[1]);
+                    String natural = data[0];
+                    long code = chr;       // For this case this code contain only chr
+                    indexMap.put(code,natural);
+                }
+            }
+        }
+        
+        return indexMap;
+    }
+    
     
     public static AlignmentResultRead readBinaryAlignmentReportV2(String filename, int readLength, int mer){
         /**
@@ -3203,6 +3267,120 @@ public class SequenceUtil {
         
     }
     
+     public static AlignmentResultRead readBinaryAlignmentReportV3(String filename, int mer){
+        /**
+         * Suitable to use with extend V3 data structure [have 2 long to store information : 1.iniIndex|Strand|AlnPos  2.chr|CountMarMatch 
+         * which has number of bit as follow [32|1|28] and [5|32] respectively]
+         * 
+         * 
+         * 
+         */
+        
+        long mask32bit = 4294967295L;
+        int mask5bit = 31;
+        long mask_chrIdxStrandAln = 4398046511103L;      //  Do & operation to get aligncode compose of chr|Idx|strand|alignposition from value contain in alignmentResultMap
+        long mask28bit = 268435455;
+        
+        
+        ArrayList<Integer> listChr = new ArrayList();
+        ArrayList<Long> listPos = new ArrayList();
+        ArrayList<Long> listLastPos = new ArrayList();
+        ArrayList<String> listStrand = new ArrayList();
+        ArrayList<Integer> listNumCount = new ArrayList();
+        ArrayList<Integer> listIniIdx = new ArrayList();
+        ArrayList listResultCode = new ArrayList();
+        ShortgunSequence inSS = new ShortgunSequence(null);
+        AlignmentResultRead alnResult = new AlignmentResultRead();
+        int count = 0;
+        int count2 = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(filename);
+        String name = null;
+//        int actStart = readStart*2;     //this is actual start of line in file (compatible only specific file 3661 and 3662 .fasta file)
+//        int actStop = readLimit*2;
+    //    String seq = "";
+        
+        StringBuffer seq = new StringBuffer();
+        
+        File inputFile = new File(filename);
+        boolean eof = false;
+        
+        try{
+            
+            DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(inputFile)));
+            
+            while(!eof){
+                String readName = is.readUTF();
+                int readLength  = is.readInt();
+                int resultSize = is.readInt();
+                
+                inSS = new ShortgunSequence(null);               
+                listChr = new ArrayList();
+                listPos = new ArrayList();
+                listLastPos = new ArrayList();
+                listStrand = new ArrayList();
+                listNumCount = new ArrayList();
+                listIniIdx = new ArrayList();
+                
+                for(int i=0;i<resultSize;i++){
+                    long code1 = is.readLong();     // code1 has structure like this [iniIndex(32)|strand(1)|alignPos(28)]
+                    long code2 = is.readLong();     // code1 has structure like this [chr(5)|count(32)]
+                    long numCount = code2&mask32bit;                                               
+                    long alignPos = code1&mask28bit;                                      
+                    long chrNumber = code2>>32;
+                    long iniIdx = (code1>>29)&mask32bit;
+
+                    String strandNot = "no";                                                // Identify the strand type of this align Position
+                    if(((code1>>28)&1) == 1){
+                        strandNot = "+";
+                    }else if(((code1>>28)&1) == 0){
+                        strandNot = "-";
+                    }
+                    
+                    listChr.add((int)chrNumber);
+                    listPos.add(alignPos);
+                    listStrand.add(strandNot);
+                    listNumCount.add((int)numCount);
+                    listIniIdx.add((int)iniIdx);
+
+                    int numBase = (mer+(int)numCount)-1;
+                    long lastPos = (alignPos + numBase)-1;
+
+                    listLastPos.add(lastPos);
+                }
+                
+                inSS.addReadName(readName);
+                inSS.addReadLength(readLength);
+                inSS.addListChr(listChr);
+                inSS.addListPos(listPos);
+                inSS.addListLastPos(listLastPos);
+                inSS.addListStrand(listStrand);
+                inSS.addListNumMatch(listNumCount);
+                inSS.addListIniIdx(listIniIdx);
+                inSS.addMerLength(mer);
+                alnResult.addResult(inSS);
+                
+            }
+        }catch(EOFException e){
+            eof = true;
+        }
+        
+        catch (FileNotFoundException e) {
+            System.out.println("Couldn't Find the File");
+
+            System.exit(0);}
+        
+
+        catch(IOException e){
+           System.out.println("An I/O Error Occurred");
+             System.exit(0);
+
+        }
+            
+            return alnResult;
+        
+    }
+    
     public static InputSequence readSamFile(String filename) throws IOException {
         /* for specific input file .sam file */
         ShortgunSequence inSS = new ShortgunSequence(null);
@@ -3278,6 +3456,10 @@ public class SequenceUtil {
                         case 't': 
                             t=3; // 11
                             break;
+                        case 'U':
+                        case 'u': 
+                            t=3; // 11
+                            break;   
                         case 'C':
                         case 'c':
                             t=1; // 01 
@@ -4466,6 +4648,10 @@ public class SequenceUtil {
                             case 't': 
                                 t=3; // 11
                                 break;
+                            case 'U':
+                            case 'u': 
+                                t=3; // 11
+                                break;
                             case 'C':
                             case 'c':
                                 t=1; // 01 
@@ -4700,6 +4886,10 @@ public class SequenceUtil {
                                 break;
                             case 'T':
                             case 't': 
+                                t=3; // 11
+                                break;
+                            case 'U':
+                            case 'u': 
                                 t=3; // 11
                                 break;
                             case 'C':
@@ -5272,5 +5462,46 @@ public class SequenceUtil {
         }
         
         return encoded;
+    }
+     
+    public static void countAlignMatch(AlignmentResultRead alnRes, int merLength){
+        
+        // move to alignmentresultread
+        Map<Long,Integer> countMap = new TreeMap();
+        ArrayList<ShortgunSequence> listSS = alnRes.getResult();
+        for(int i=0;i<listSS.size();i++){
+            ShortgunSequence ss = listSS.get(i);
+            
+            ArrayList<Integer> listChr = ss.getListChrMatch();
+            ArrayList<Long> listPos = ss.getListPosMatch();
+            ArrayList<Long> listLastPos = ss.getListLastPosMatch();
+            for(int j=0;j<listChr.size();j++){
+                long chr = listChr.get(j);
+                long iniPos = listPos.get(j);
+                long lastPos = listLastPos.get(j);
+                
+                long numBaseMatch = (lastPos - iniPos)+1;
+                
+                for(int num=(int)iniPos;num<=(int)lastPos;num++){
+                    long chrPos = (chr<<28)+num;
+                    
+                    if(countMap.containsKey(chrPos)){
+                        int count = countMap.get(chrPos)+1;
+                        countMap.put(chrPos, count);                       
+                    }else{
+                        int count = 1;
+                        countMap.put(chrPos, count);
+                    }
+                }
+            }
+        }
+        
+        // getData for write file
+        for(Map.Entry<Long,Integer> entry : countMap.entrySet()){
+            long chrPos = entry.getKey();
+            int count = entry.getValue();
+            
+            
+        }
     }
 }

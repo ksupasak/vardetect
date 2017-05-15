@@ -5,6 +5,7 @@
  */
 package biotec.bsi.ngs.vardetect.core;
 
+import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -23,6 +24,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 /**
  *
@@ -52,6 +54,7 @@ public class AlignmentResultRead {
     private Map<String,Map<Long,ArrayList<Long>>> newAlignmentResultMap;    // Hash Map that store alignment result togather with 
     private ArrayList<String> unMapList;                    // Store readname of unmap read (use in local alignment part)
     private ArrayList<String> mapList;                      // Store readname of map read (use in local alignment part)
+    private Map<Long,Integer> countMap;                     // Store count match of each chromosome and position. Key is chr|Position and Value is count number of that specific chr and position
     
     
     public AlignmentResultRead(){
@@ -520,6 +523,172 @@ public class AlignmentResultRead {
         }     
     }
     
+    public void writeMatchCountReport(String fullPathFilename) throws FileNotFoundException, IOException{
+    
+        /**
+         * Write Match count report which is a match count of each chromosome and position
+         * 
+         * Write it in Bed graph format as follow
+         * 
+         *          chromosome      startPosition       stopPosition        countNumber
+         *          chromosome      startPosition       stopPosition        countNumber
+         */
+        
+        int mask28bit = 268435455;
+        int mask5bit = 31;
+        int dummyCount = 0;
+        int dummyPosition = 0;
+        int selectChr = 0;
+        int selectIniPos = 0;
+        int selectLastPos = 0;
+        int selectCount = 0;
+        boolean writeFlag = false;
+        boolean firstFlag = true;
+        
+        String filename = fullPathFilename+".bed";
+        PrintStream ps;
+        FileWriter writer;        
+        /**
+         * Check File existing
+         */
+        
+        File f = new File(filename); //File object        
+//        if(f.exists()){
+//            // append if exist
+////            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(filename,true);
+//        }else{
+//            // create new
+////            ps = new PrintStream(filename);
+//            writer = new FileWriter(filename);
+//        }
+        writer = new FileWriter(filename);
+        // getData then write file
+        for(Map.Entry<Long,Integer> entry : countMap.entrySet()){
+            long chrPos = entry.getKey();
+            int dummyPos = (int)chrPos&mask28bit;
+            int dummyChr = (int)(chrPos>>28);
+            int count = entry.getValue();
+            
+            if(firstFlag == true){
+                selectIniPos = dummyPos;
+                selectLastPos = selectIniPos+1;
+                selectChr = dummyChr;
+                selectCount = count;
+                firstFlag = false;
+            }else{
+                if(count == selectCount && dummyChr == selectChr){
+                    selectLastPos = dummyPos+1; 
+                }else{
+                    writer.write(selectChr + "\t" + selectIniPos + "\t" + selectLastPos + "\t" + selectCount);
+                    writer.write("\n");
+                    
+                    selectIniPos = dummyPos;
+                    selectLastPos = selectIniPos+1;
+                    selectChr = dummyChr;
+                    selectCount = count;
+                   
+                }
+            }
+        }
+        
+        writer.flush();
+        writer.close();
+        
+        
+    }
+    
+    public void writeMatchCountReport(String fullPathFilename, String fullPathIndexFile) throws FileNotFoundException, IOException{
+    
+        /**
+         * Write Match count report which is a match count of each chromosome and position
+         * 
+         * Write it in Bed graph format as follow
+         * 
+         *          chromosome      startPosition       stopPosition        countNumber
+         *          chromosome      startPosition       stopPosition        countNumber
+         */
+
+        int mask28bit = 268435455;
+        int mask5bit = 31;
+        int dummyCount = 0;
+        int dummyPosition = 0;
+        long selectChr = 0;
+        int selectIniPos = 0;
+        int selectLastPos = 0;
+        int selectCount = 0;
+        boolean writeFlag = false;
+        boolean firstFlag = true;
+        boolean contigFlag = true;
+        
+        Map<Long,String> indexMap = SequenceUtil.readIndexFile(fullPathIndexFile);
+        Map.Entry<Long,String> entryCheck = indexMap.entrySet().iterator().next();
+        
+        long code = entryCheck.getKey();
+        long dummyLast = (code>>28)&mask28bit;
+        
+        
+        if(dummyLast ==0) contigFlag = false; 
+        
+        String filename = fullPathFilename+".bed";
+        PrintStream ps;
+        FileWriter writer;        
+        /**
+         * Check File existing
+         */
+        
+        File f = new File(filename); //File object        
+//        if(f.exists()){
+//            // append if exist
+////            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(filename,true);
+//        }else{
+//            // create new
+////            ps = new PrintStream(filename);
+//            writer = new FileWriter(filename);
+//        }
+        writer = new FileWriter(filename);
+        writer.write("track type=bedGraph\n");
+
+        if(contigFlag == false){
+            // getData then write file
+            for(Map.Entry<Long,Integer> entry : countMap.entrySet()){
+                long chrPos = entry.getKey();
+                int dummyPos = (int)chrPos&mask28bit;
+                int dummyChr = (int)(chrPos>>28);
+                int count = entry.getValue();
+
+                if(firstFlag == true){
+                    selectIniPos = dummyPos;
+                    selectLastPos = selectIniPos+1;
+                    selectChr = dummyChr;
+                    selectCount = count;
+                    firstFlag = false;
+                }else{
+                    if(count == selectCount && dummyChr == selectChr && selectLastPos == dummyPos){
+                        selectLastPos = dummyPos+1; 
+                    }else{
+                        
+                        String chrName = indexMap.get(selectChr);
+                        
+                        writer.write(chrName + " " + selectIniPos + " " + selectLastPos + " " + selectCount);
+                        writer.write("\n");
+
+                        selectIniPos = dummyPos;
+                        selectLastPos = selectIniPos+1;
+                        selectChr = dummyChr;
+                        selectCount = count;
+
+                    }
+                }
+            }
+
+            writer.flush();
+            writer.close();
+        }
+        
+    }
+    
     public AlignmentResultRead generateSortedCutResult(int threshold) {
 
         /* Must specify threshold for cut result (The result that less than threshold will be cut out)*/
@@ -777,6 +946,7 @@ public class AlignmentResultRead {
     public void writeSortedCutResultMapToPathInFormatLongRead(String path,String nameFile, String fileType) throws FileNotFoundException, IOException {
         /**
          * Suitable for version 3 data structure (data structure that has iniIdx in its)
+         * It is the extend version of data 3 structure we 2 map to store all alignment result because it long read we need 2 long to store it iniIndex and countMerMatch 
          */
         
 //        PrintStream ps = new PrintStream(path+nameFile+"."+ fa);            // Create file object
@@ -845,7 +1015,7 @@ public class AlignmentResultRead {
             DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(outputFile)));
             
             
-            for(Map.Entry<String,ArrayList<Long>> entry : this.alignmentResultMap.entrySet()){
+            for(Map.Entry<String,ArrayList<Long>> entry : this.alignmentResultMap1.entrySet()){
                 String readName = entry.getKey();
                 ArrayList<Long> idxStrandAlnList = entry.getValue();
                 int resultSize = idxStrandAlnList.size();
@@ -1363,6 +1533,39 @@ public class AlignmentResultRead {
                 
                 
         
+    }
+    
+    public void countAlignMatch(){
+        
+        
+        this.countMap = new TreeMap();
+        for(int i=0;i<this.shrtRead.size();i++){
+            ShortgunSequence ss = this.shrtRead.get(i);
+            
+            ArrayList<Integer> listChr = ss.getListChrMatch();
+            ArrayList<Long> listPos = ss.getListPosMatch();
+            ArrayList<Long> listLastPos = ss.getListLastPosMatch();
+            for(int j=0;j<listChr.size();j++){
+                long chr = listChr.get(j);
+                long iniPos = listPos.get(j);
+                long lastPos = listLastPos.get(j);
+                
+                long numBaseMatch = (lastPos - iniPos)+1;
+                
+                for(int num=(int)iniPos;num<=(int)lastPos;num++){
+                    long chrPos = (chr<<28)+num;
+                    
+                    if(countMap.containsKey(chrPos)){
+                        int count = countMap.get(chrPos)+1;
+                        countMap.put(chrPos, count);                       
+                    }else{
+                        int count = 1;
+                        countMap.put(chrPos, count);
+                    }
+                }
+            }
+        }
+
     }
     
 }

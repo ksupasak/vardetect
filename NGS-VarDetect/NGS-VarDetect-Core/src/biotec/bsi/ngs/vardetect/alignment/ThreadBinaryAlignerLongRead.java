@@ -78,12 +78,16 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
     
     @Override
     public void run(){
-        
+        int readCount = 0;
         System.out.println("Start " + threadName);
         System.out.println("Number of read : " + inputSequence.size());
         /* Alignment algorithm */
         Iterator seqs = inputSequence.iterator();
         while(seqs.hasNext()){                                              // Loop over ShortgunSequence contain in InputSequence 
+            ++readCount;
+            if(readCount%10000==0){
+                System.out.println("Thread"+threadName+" : "+readCount+" read passed (+)");
+            }
 //            Map<Integer,ArrayList<Integer>> linkIndexCheck = new LinkedHashMap();                       // HashMap contain data that has been use to check for repeat jump
             boolean skipRead = false;
             
@@ -109,10 +113,15 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
                 int index = i;
                 String sub = s.substring(i, i+numMer);                                 // cut String sequence into sub string sequence (mer length long) 
                 
-                if(sub.toUpperCase().equals("AAAAAAAAAAAAAAAAAA")||sub.toUpperCase().equals("TTTTTTTTTTTTTTTTTT")||sub.toUpperCase().equals("GGGGGGGGGGGGGGGGGG")||sub.toUpperCase().equals("CCCCCCCCCCCCCCCCCC")){
-                    skipRead = true;
-                    break;
-                }
+                /**
+                 * this case have to be cancel out because  we already check repeat all the time 
+                 * If this DNA pattern exist it should be map more than one location quit surely.
+                 */
+//                if(sub.toUpperCase().equals("AAAAAAAAAAAAAAAAAA")||sub.toUpperCase().equals("TTTTTTTTTTTTTTTTTT")||sub.toUpperCase().equals("GGGGGGGGGGGGGGGGGG")||sub.toUpperCase().equals("CCCCCCCCCCCCCCCCCC")){
+//                    skipRead = true;
+//                    break;
+//                }
+                //*************************************************
 
 //System.out.println("check sub length"+sub.length());
                 long m = SequenceUtil.encodeMer(sub, numMer);                          // encode sub string sequence (code is 36 bit max preserve the rest 28 bit for position)
@@ -285,8 +294,14 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
         /* Do the same algorithm but use function for compliment */
         Iterator seqsComp = inputSequence.iterator();
 //        boolean initiateNewReadFlag = true;                                 // this flag is indicate the first time that we consider the read (use to signal inside the Encoded object to renew alnCodeCheckList)
-
+        readCount = 0;
         while(seqsComp.hasNext()){
+            
+            ++readCount;
+            if(readCount%10000==0){
+                System.out.println("Thread"+threadName+" : "+readCount+" read passed (-)");
+            }
+            
 //            Map<Integer,ArrayList<Integer>> linkIndexCheck = new LinkedHashMap();                       // HashMap contain data that has been use to check for repeat jump
             boolean skipRead = false;
             ShortgunSequence seq = (ShortgunSequence)seqsComp.next();                                  // get ShortgunSequence from InputSequence
@@ -312,10 +327,16 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
                 int index = i;                                                              // index at aligncompliment and non compliment is not different. It not effect any thing. we just know strand notation is enough
                 String sub = compSeq.substring(i, i+numMer);
                 
-                if(sub.toUpperCase().equals("AAAAAAAAAAAAAAAAAA")||sub.toUpperCase().equals("TTTTTTTTTTTTTTTTTT")||sub.toUpperCase().equals("GGGGGGGGGGGGGGGGGG")||sub.toUpperCase().equals("CCCCCCCCCCCCCCCCCC")){
-                    skipRead = true;
-                    break;
-                }
+                /**
+                 * this case have to be cancel out because  we already check repeat all the time 
+                 * If this DNA pattern exist it should be map more than one location quit surely.
+                 */
+
+//                if(sub.toUpperCase().equals("AAAAAAAAAAAAAAAAAA")||sub.toUpperCase().equals("TTTTTTTTTTTTTTTTTT")||sub.toUpperCase().equals("GGGGGGGGGGGGGGGGGG")||sub.toUpperCase().equals("CCCCCCCCCCCCCCCCCC")){
+//                    skipRead = true;
+//                    break;
+//                }
+                //*************************************************
                 
                 //System.out.println("check sub length"+sub.length());
                 long m = SequenceUtil.encodeMer(sub, numMer);
