@@ -26,7 +26,7 @@ public class TestPostProcess {
     public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/dm6_O1_4thread_th5_alignmentResult_longRead_part";
+        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/dm6_O4_4thread_th5_alignmentResult_longRead_part";
         String indexFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/drosophila/d.melanogaster/dm6_filter.index";            // use for traceback to natural chromosome name
         String saveFileType = "txt";
         int numPart = 1;
@@ -60,7 +60,7 @@ public class TestPostProcess {
 //            AlignmentResultRead readAlign = SequenceUtil.readBinaryAlignmentReportV3(filename+i+".bin",merLength);
             
             readAlign.countAlignMatch();
-            readAlign.writeMatchCountReport(filename+i,indexFile);              // write bed graph format for overall vistualize
+            readAlign.writeMatchCountReport(filename+i,indexFile);              // write bed graph file format for overall vistualize
             
             System.out.println("Begin create color array");
             Clustering.createColorArrayV2(readAlign, merLength);        
