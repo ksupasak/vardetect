@@ -55,7 +55,7 @@ public class AlignmentResultRead {
     private ArrayList<String> unMapList;                    // Store readname of unmap read (use in local alignment part)
     private ArrayList<String> mapList;                      // Store readname of map read (use in local alignment part)
     private Map<Long,Integer> countMap;                     // Store count match of each chromosome and position. Key is chr|Position and Value is count number of that specific chr and position
-    
+    private Map<Long,ArrayList<Integer>> checkDupMap;                  // store Key = chr|position and Value = iniPosition on read. This map has been used for check duplication read has same ini position on read that match same chr same position 
     
     public AlignmentResultRead(){
         
@@ -1536,12 +1536,16 @@ public class AlignmentResultRead {
     }
     
     public void countAlignMatch(){
-        
+        /**
+         * This function will be count the number of read that match in specific chr at specific position
+         * It also remove the duplication read
+         */
         
         this.countMap = new TreeMap();
+        this.checkDupMap = new LinkedHashMap();
         for(int i=0;i<this.shrtRead.size();i++){
             ShortgunSequence ss = this.shrtRead.get(i);
-            
+            ArrayList<Integer> listIniIdx = ss.getListIniIdx();
             ArrayList<Integer> listChr = ss.getListChrMatch();
             ArrayList<Long> listPos = ss.getListPosMatch();
             ArrayList<Long> listLastPos = ss.getListLastPosMatch();
@@ -1549,6 +1553,7 @@ public class AlignmentResultRead {
                 long chr = listChr.get(j);
                 long iniPos = listPos.get(j);
                 long lastPos = listLastPos.get(j);
+                int iniIdx = listIniIdx.get(j);
                 
                 long numBaseMatch = (lastPos - iniPos)+1;
                 
@@ -1556,11 +1561,23 @@ public class AlignmentResultRead {
                     long chrPos = (chr<<28)+num;
                     
                     if(countMap.containsKey(chrPos)){
-                        int count = countMap.get(chrPos)+1;
-                        countMap.put(chrPos, count);                       
+                        ArrayList<Integer> listIni = checkDupMap.get(chrPos);
+                        
+                        if(listIni.contains(iniIdx)!=true){ 
+                            /**
+                             * Case check for remove duplicate read
+                             * The read that align at same chr and same position and have the same initial position on read
+                             * It is duplicate read.
+                            */
+                            int count = countMap.get(chrPos)+1;
+                            countMap.put(chrPos, count);
+                        }
                     }else{
                         int count = 1;
                         countMap.put(chrPos, count);
+                        ArrayList<Integer> listIni = new ArrayList();
+                        listIni.add(iniIdx);
+                        checkDupMap.put(chrPos, listIni);
                     }
                 }
             }
