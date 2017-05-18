@@ -95,7 +95,7 @@ public class RunAlignmentMultiThreadLongRead {
             long stopAlignTime = System.currentTimeMillis();
             double totalAlignTime = ((stopAlignTime - startAlignTime)/1000)/60;
             System.out.println(String.format("Alignment Time use : %.4f min",totalAlignTime));
-            System.out.println("Do write Report");
+            System.out.println("Do write Report");            
             align.writeSortedCutResultMapToPathInFormatLongRead(folder.toString()+File.separator,savefilename, filetype);
             System.out.println("Done part " + count);
             
