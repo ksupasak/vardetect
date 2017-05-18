@@ -494,8 +494,8 @@ public class VariationResult {
                         writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB));
                         writer.write("\n");
                     }
-                }
-                count++;
+                    count++;
+                }  
             }
         }
         if(varType == 'I'){
