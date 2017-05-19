@@ -77,22 +77,26 @@ public class Variation {
         this.iniBackFlagF=iniBackFlag;
         this.numMatchF = numG+numY+numO+numR;
         this.readLengthF = inReadLen;
+        /**
+         * Due to the new alignment protocol, the snpFlag is not working at all so we will comment it out No need to check snpFlag
+        */
+   
         
-        if(snpFlag == 0){
+//        if(snpFlag == 0){
             if(this.strandF.equals("-")){
                 int reverseIniIdx = this.readLengthF-(this.iniIndexF+(this.merLength+this.numMatchF-1));
                 this.breakPointF = this.iniPosF+reverseIniIdx;   
             }else if(this.strandF.equals("+")){
                 this.breakPointF = this.lastPosF+this.iniIndexF;
             }
-        }else{
-            if(this.strandF.equals("-")){
-//                int reverseIniIdx = this.readLength-(this.iniBackFlagF+(this.merLength+this.numMatchF-1));
-                this.breakPointF = this.iniPosF+this.iniBackFlagF;   
-            }else if(this.strandF.equals("+")){
-                this.breakPointF = this.iniPosF+this.iniBackFlagF;
-            }
-        }
+//        }else{
+//            if(this.strandF.equals("-")){
+////                int reverseIniIdx = this.readLength-(this.iniBackFlagF+(this.merLength+this.numMatchF-1));
+//                this.breakPointF = this.iniPosF+this.iniBackFlagF;   
+//            }else if(this.strandF.equals("+")){
+//                this.breakPointF = this.iniPosF+this.iniBackFlagF;
+//            }
+//        }
     }
     
     public void addBackPeak(int numChr,long iniPos,long lastPos,int numG,int numY,int numO,int numR,String strand,int iniIdx,String readName,int snpFlag,int iniBackFlag, int inReadLen){
