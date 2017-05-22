@@ -1232,7 +1232,7 @@ public class AlignmentResultRead {
          * We adjust iniIndex into a view of strand + [the last index of strand - will be iniIndex of strand +]
          */
         
-        String filename = path+nameFile+"."+fileFormat;
+        String filename = path+File.separator+nameFile+"."+fileFormat;
         PrintStream ps;
         FileWriter writer;        
         /**

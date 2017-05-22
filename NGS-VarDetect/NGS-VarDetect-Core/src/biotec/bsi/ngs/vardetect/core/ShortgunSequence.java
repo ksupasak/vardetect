@@ -1064,27 +1064,34 @@ public class ShortgunSequence {
         Map<Long,ArrayList<Integer>> tempMap = new LinkedHashMap();
         long chrNew =0;
         long posNew =0;
+        long strandNew =0;
+        
         
         /**
-         * Loop to collect data into Map which has chrPos code (Key) and ArrayList of index of each chrPos (value)
+         * Loop to collect data into Map which has chrStrandPos code (Key) and ArrayList of index of each chrPos (value)
          */
         for(int i=0;i<this.listChr.size();i++){
             chrNew = this.listChr.get(i);
             posNew = this.listPos.get(i);
-            long chrPos = (chrNew<<28)+posNew;
-            if(tempMap.containsKey(chrPos)){
-                ArrayList<Integer> listIdx = tempMap.get(chrPos);
+            if(this.listStrand.get(i).equals("+")){
+                strandNew = 1;
+            }else{
+                strandNew = 0;
+            }
+            long chrStrandPos = (chrNew<<29)+((strandNew<<28)+posNew);
+            if(tempMap.containsKey(chrStrandPos)){
+                ArrayList<Integer> listIdx = tempMap.get(chrStrandPos);
                 listIdx.add(i);
-                tempMap.put(chrPos, listIdx);
+                tempMap.put(chrStrandPos, listIdx);
             }else{
                 ArrayList<Integer> listIdx = new ArrayList();
                 listIdx.add(i);
-                tempMap.put(chrPos,listIdx);
+                tempMap.put(chrStrandPos,listIdx);
             }
             
             this.snpFlag.add(0);
             this.iniBackFlag.add(0);
-        }
+        }        
         
 
         Set keySet = tempMap.keySet();
@@ -1116,6 +1123,8 @@ public class ShortgunSequence {
                 String strand = null;
                 
                 int missingBase = 0;
+                int dummyMissingBase = 0;
+                int repeatBase = 0;
                 int iniBack = 0;
                 
                 /**
@@ -1123,8 +1132,7 @@ public class ShortgunSequence {
                  * loop store data in treeMap which will automatically rearrange order of key for us
                  */
                 for(int i=0;i<listIdx.size();i++){
-                    int dummyIdx = listIdx.get(i);
-                    dummyIdx = dummyIdx;
+                    int dummyIdx = listIdx.get(i); 
                     if(dummyIdx<0){
                         dummyIdx = 0;
                     }
@@ -1159,7 +1167,14 @@ public class ShortgunSequence {
                         int numBase = (this.listNumMatch.get(idx)+this.merLength)-1;
                         int iniIdxBack = this.listIniIdx.get(idx);
                         iniBack = iniIdxBack;
-                        missingBase = (iniIdxBack-lastIdxFront)-1;
+                        dummyMissingBase = (iniIdxBack-lastIdxFront)-1;
+                        if(dummyMissingBase < 0){
+                            // check for missing base are less than merlength (if number of base that missing is lower than mer length this missingBase value must be minus)
+                            repeatBase = Math.abs(dummyMissingBase);
+                        }else{
+                            missingBase = dummyMissingBase+missingBase;
+                        }
+                        
                         
                         lastIdxFront = (iniBack+numBase)-1;     // it has to be update every time in cast that there is more than one peak.
                     }
@@ -1167,11 +1182,12 @@ public class ShortgunSequence {
                     numG = this.listGreen.get(idx)+numG;
                     numY = this.listYellow.get(idx)+numY;
                     numO = this.listOrange.get(idx)+numO;
-                    numR = this.listRed.get(idx)+numR;
+                    numR = this.listRed.get(idx)+numR+repeatBase;           // we add all repeat Base into red count
 //                    numMatch = this.listNumMatch.get(idx)+numMatch;
                     strand = this.listStrand.get(idx);
                     
-                    flagFirstTime = false;  
+                    flagFirstTime = false;
+                    repeatBase=0;
                 }
 
                 /**

@@ -180,7 +180,7 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
 
                                     iniIndex = alnCodeCheckList.get(alnCode);
 
-                                    long indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                    long indexAlnCode = (iniIndex<<29)+alnCode;                 // For long read indexAlnCode has 61 bit [iniIndex|Strand|Position] iniIndex(32bit),Strnd(1bit),Position(28bit)
 
                                     ArrayList<Integer> merList = alnMerMap.get(indexAlnCode);
 
@@ -193,7 +193,7 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
                                     if(index-merList.get(0)==1){                                // Case check to solve the problem. In case, when position-index is the same value but actually it different peak
                                         iniIndex = alnCodeCheckList.get(alnCode);
 
-                                        indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                        indexAlnCode = (iniIndex<<29)+alnCode;                 // For long read indexAlnCode has 61 bit [iniIndex|Strand|Position] iniIndex(32bit),Strnd(1bit),Position(28bit)
                                         merList.remove(0);
                                         merList.add(0,index);
                                         merList.add(1);
@@ -202,7 +202,7 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
                                         iniIndex = index;
                                         alnCodeCheckList.put(alnCode, iniIndex);
 
-                                        indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                        indexAlnCode = (iniIndex<<29)+alnCode;                  // For long read indexAlnCode has 61 bit [iniIndex|Strand|Position] iniIndex(32bit),Strnd(1bit),Position(28bit)
 
                                         merList = new ArrayList();
                                         merList.add(0,index);
@@ -215,7 +215,7 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
                                     iniIndex = index;
                                     alnCodeCheckList.put(alnCode, iniIndex);
 
-                                    long indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                    long indexAlnCode = (iniIndex<<29)+alnCode;                  // For long read indexAlnCode has 61 bit [iniIndex|Strand|Position] iniIndex(32bit),Strnd(1bit),Position(28bit)
 
                                     ArrayList<Integer> merList = new ArrayList();
                                     merList.add(0,index);
@@ -239,40 +239,83 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
 
             /*************************************************************************************************************/
             /* -------------------------New Implement Part Cons. (Not Stroe in object)---------------------------------------------*/
-            
+            Map<Long,Long> smallPeakCountCheck = new LinkedHashMap();    // key = StrandAln , value = Count
+            long mask29bit = 536870911;
+            ArrayList<Long> selectStrandAlnList = new ArrayList();
             if(this.alnRes1.containsKey(seq.getReadName())&&skipRead==false){                     // Check for existing of ReadName (if exist put result code on existing ArrayList<Long>
                 ArrayList<Long> idxStrandAlnList = this.alnRes1.get(seq.getReadName()); //get existing Arraylist
                 ArrayList<Long> chrCountList = this.alnRes2.get(seq.getReadName()); //get existing Arraylist
                 Set keySet = alnMerMap.keySet();
                 Iterator keyIter =keySet.iterator();
+                              
                 while(keyIter.hasNext()){
-                    long idxStrandAln = (long)keyIter.next();                      // strandAln has 37 bit compose of [iniIndex|strand|alignPosition] => [32bit|1bit|28bit]
+                    long idxStrandAln = (long)keyIter.next();                      // strandAln has 61 bit compose of [iniIndex|strand|alignPosition] => [32bit|1bit|28bit]
+                    long count = alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reserve for checking index continuity)
+                    long StrandAln = idxStrandAln&mask29bit;
+                    
+                    if(smallPeakCountCheck.containsKey(StrandAln)){
+                        count = count + smallPeakCountCheck.get(StrandAln);
+                        smallPeakCountCheck.put(StrandAln, count);
+                    }else{
+                        smallPeakCountCheck.put(StrandAln, count);
+                    }
+   
+                    if(count>=threshold){                                            // case check to filter small count peak out (use user specify threshold)
+                        selectStrandAlnList.add(StrandAln);
+                    }
+                }
+                
+                keyIter = keySet.iterator();
+                while(keyIter.hasNext()){
+                    long idxStrandAln = (long)keyIter.next();                      // strandAln has 61 bit compose of [iniIndex|strand|alignPosition] => [32bit|1bit|28bit]
                     long count = alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reserve for checking index continuity)
                     long chrCount = (chrNum<<32)+count;                     // shift left 32 bit because we want to add chrnum at the front of count which has 32 bit length. We gret [chr|count] [5bit|32bit]
+                    long StrandAln = idxStrandAln&mask29bit;
                     
-                    if(count>=threshold){                                            // case check to filter small count peak out (use user specify threshold)
+                    if(selectStrandAlnList.contains(StrandAln)){                                            // case check to filter small count peak out (use user specify threshold)
                         idxStrandAlnList.add(idxStrandAln);
                         chrCountList.add(chrCount);
                     }
                 }
+                
                 this.alnRes1.put(seq.getReadName(), idxStrandAlnList);
                 this.alnRes2.put(seq.getReadName(), chrCountList);
             }else if(this.alnRes1.containsKey(seq.getReadName())==false&&skipRead==false){
                 ArrayList<Long> idxStrandAlnList = new ArrayList();
                 ArrayList<Long> chrCountList = new ArrayList();
                 Set keySet = alnMerMap.keySet();
-                Iterator keyIter =keySet.iterator();
+                Iterator keyIter =keySet.iterator();                
+                             
                 while(keyIter.hasNext()){
-                    long idxStrandAln = (long)keyIter.next();                      // strandAln has 37 bit compose of [iniIndex|strand|alignPosition] => [32bit|1bit|28bit]
+                    long idxStrandAln = (long)keyIter.next();                      // strandAln has 61 bit compose of [iniIndex|strand|alignPosition] => [32bit|1bit|28bit]
+                    long count = alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reserve for checking index continuity)
+                    long StrandAln = idxStrandAln&mask29bit;
+                    
+                    if(smallPeakCountCheck.containsKey(StrandAln)){
+                        count = count + smallPeakCountCheck.get(StrandAln);
+                        smallPeakCountCheck.put(StrandAln, count);
+                    }else{
+                        smallPeakCountCheck.put(StrandAln, count);
+                    }
+   
+                    if(count>=threshold){                                            // case check to filter small count peak out (use user specify threshold)
+                        selectStrandAlnList.add(StrandAln);
+                    }
+                }
+                
+                keyIter = keySet.iterator();
+                while(keyIter.hasNext()){
+                    long idxStrandAln = (long)keyIter.next();                      // strandAln has 61 bit compose of [iniIndex|strand|alignPosition] => [32bit|1bit|28bit]
                     long count = alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reserve for checking index continuity)
                     long chrCount = (chrNum<<32)+count;                     // shift left 32 bit because we want to add chrnum at the front of count which has 32 bit length. We gret [chr|count] [5bit|32bit]
+                    long StrandAln = idxStrandAln&mask29bit;
                     
-                    
-                    if(count>=threshold){                                              // case check to filter small count peak out (use user specify threshold)                        
+                    if(selectStrandAlnList.contains(StrandAln)){                                            // case check to filter small count peak out (use user specify threshold)
                         idxStrandAlnList.add(idxStrandAln);
                         chrCountList.add(chrCount);
                     }
                 }
+                
                 this.alnRes1.put(seq.getReadName(),idxStrandAlnList);
                 this.alnRes2.put(seq.getReadName(), chrCountList);
             } 
@@ -390,7 +433,7 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
 
                                     iniIndex = alnCodeCheckList.get(alnCode);
 
-                                    long indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                    long indexAlnCode = (iniIndex<<29)+alnCode;                 // For long read indexAlnCode has 61 bit [iniIndex|Strand|Position] iniIndex(32bit),Strnd(1bit),Position(28bit)
 
                                     ArrayList<Integer> merList = alnMerMap.get(indexAlnCode);
 
@@ -403,7 +446,7 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
                                     if(index-merList.get(0)==1){                                // Case check to solve the problem. In case, when position-index is the same value but actually it different peak
                                         iniIndex = alnCodeCheckList.get(alnCode);
 
-                                        indexAlnCode = (iniIndex<<29)+alnCode;                 // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                        indexAlnCode = (iniIndex<<29)+alnCode;                 // For long read indexAlnCode has 61 bit [iniIndex|Strand|Position] iniIndex(32bit),Strnd(1bit),Position(28bit)
                                         merList.remove(0);
                                         merList.add(0,index);
                                         merList.add(1);
@@ -412,7 +455,7 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
                                         iniIndex = index;
                                         alnCodeCheckList.put(alnCode, iniIndex);
 
-                                        indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                        indexAlnCode = (iniIndex<<29)+alnCode;                  // For long read indexAlnCode has 61 bit [iniIndex|Strand|Position] iniIndex(32bit),Strnd(1bit),Position(28bit)
 
                                         merList = new ArrayList();
                                         merList.add(0,index);
@@ -425,7 +468,7 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
                                     iniIndex = index;
                                     alnCodeCheckList.put(alnCode, iniIndex);
 
-                                    long indexAlnCode = (iniIndex<<29)+alnCode;                  // indexAlnCode has 37 bit [iniIndex|Strand|Position] iniIndex(8bit),Strnd(1bit),Position(28bit)
+                                    long indexAlnCode = (iniIndex<<29)+alnCode;                  // For long read indexAlnCode has 61 bit [iniIndex|Strand|Position] iniIndex(32bit),Strnd(1bit),Position(28bit)
 
                                     ArrayList<Integer> merList = new ArrayList();
                                     merList.add(0,index);
@@ -447,18 +490,39 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
 
             /*************************************************************************************************************/
             /* -------------------------New Implement Part Cons. (Not Stroe in object)---------------------------------------------*/
-            
+            Map<Long,Long> smallPeakCountCheck = new LinkedHashMap();    // key = StrandAln , value = Count
+            long mask29bit = 536870911;
+            ArrayList<Long> selectStrandAlnList = new ArrayList();
             if(this.alnRes1.containsKey(seq.getReadName())&&skipRead==false){                     // Check for existing of ReadName (if exist put result code on existing ArrayList<Long>
                 ArrayList<Long> idxStrandAlnList = this.alnRes1.get(seq.getReadName()); //get existing Arraylist
                 ArrayList<Long> chrCountList = this.alnRes2.get(seq.getReadName()); //get existing Arraylist
                 Set keySet = alnMerMap.keySet();
                 Iterator keyIter =keySet.iterator();
                 while(keyIter.hasNext()){
-                    long idxStrandAln = (long)keyIter.next();                      // strandAln has 37 bit compose of [iniIndex|strand|alignPosition] => [32bit|1bit|28bit]
+                    long idxStrandAln = (long)keyIter.next();                      // strandAln has 61 bit compose of [iniIndex|strand|alignPosition] => [32bit|1bit|28bit]
+                    long count = alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reserve for checking index continuity)
+                    long StrandAln = idxStrandAln&mask29bit;
+                    
+                    if(smallPeakCountCheck.containsKey(StrandAln)){
+                        count = count + smallPeakCountCheck.get(StrandAln);
+                        smallPeakCountCheck.put(StrandAln, count);
+                    }else{
+                        smallPeakCountCheck.put(StrandAln, count);
+                    }
+   
+                    if(count>=threshold){                                            // case check to filter small count peak out (use user specify threshold)
+                        selectStrandAlnList.add(StrandAln);
+                    }
+                }
+                
+                keyIter = keySet.iterator();
+                while(keyIter.hasNext()){
+                    long idxStrandAln = (long)keyIter.next();                      // strandAln has 61 bit compose of [iniIndex|strand|alignPosition] => [32bit|1bit|28bit]
                     long count = alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reserve for checking index continuity)
                     long chrCount = (chrNum<<32)+count;                     // shift left 32 bit because we want to add chrnum at the front of count which has 32 bit length. We gret [chr|count] [5bit|32bit]
+                    long StrandAln = idxStrandAln&mask29bit;
                     
-                    if(count>=threshold){                                            // case check to filter small count peak out (use user specify threshold)
+                    if(selectStrandAlnList.contains(StrandAln)){                                            // case check to filter small count peak out (use user specify threshold)
                         idxStrandAlnList.add(idxStrandAln);
                         chrCountList.add(chrCount);
                     }
@@ -471,12 +535,30 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
                 Set keySet = alnMerMap.keySet();
                 Iterator keyIter =keySet.iterator();
                 while(keyIter.hasNext()){
-                    long idxStrandAln = (long)keyIter.next();                      // strandAln has 37 bit compose of [iniIndex|strand|alignPosition] => [32bit|1bit|28bit]
+                    long idxStrandAln = (long)keyIter.next();                      // strandAln has 61 bit compose of [iniIndex|strand|alignPosition] => [32bit|1bit|28bit]
+                    long count = alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reserve for checking index continuity)
+                    long StrandAln = idxStrandAln&mask29bit;
+                    
+                    if(smallPeakCountCheck.containsKey(StrandAln)){
+                        count = count + smallPeakCountCheck.get(StrandAln);
+                        smallPeakCountCheck.put(StrandAln, count);
+                    }else{
+                        smallPeakCountCheck.put(StrandAln, count);
+                    }
+   
+                    if(count>=threshold){                                            // case check to filter small count peak out (use user specify threshold)
+                        selectStrandAlnList.add(StrandAln);
+                    }
+                }
+                
+                keyIter = keySet.iterator();
+                while(keyIter.hasNext()){
+                    long idxStrandAln = (long)keyIter.next();                      // strandAln has 61 bit compose of [iniIndex|strand|alignPosition] => [32bit|1bit|28bit]
                     long count = alnMerMap.get(idxStrandAln).size()-1;          // we can get number of count from number of member in merList and should minus with 1 (because index 0 has been reserve for checking index continuity)
                     long chrCount = (chrNum<<32)+count;                     // shift left 32 bit because we want to add chrnum at the front of count which has 32 bit length. We gret [chr|count] [5bit|32bit]
+                    long StrandAln = idxStrandAln&mask29bit;
                     
-                    
-                    if(count>=threshold){                                              // case check to filter small count peak out (use user specify threshold)                        
+                    if(selectStrandAlnList.contains(StrandAln)){                                            // case check to filter small count peak out (use user specify threshold)
                         idxStrandAlnList.add(idxStrandAln);
                         chrCountList.add(chrCount);
                     }
