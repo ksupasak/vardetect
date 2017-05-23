@@ -1148,7 +1148,8 @@ public class ShortgunSequence {
                 Set set = dummyIdxMap.keySet();
                 Iterator iter = set.iterator();
                 boolean flagFirstTime = true;
-                int lastIdxFront = 0;
+                int lastIdxFront = 0;               // last index of front with plus mer length (real index)
+                int lastIdxFront_noMer = 0;         // last index of front with out plus mer length (mer index)
                 while(iter.hasNext()){
                     int key = (int)iter.next();
                     int idx = dummyIdxMap.get(key);
@@ -1160,6 +1161,7 @@ public class ShortgunSequence {
                         numMatch = this.listNumMatch.get(idx);
                         int numBase = (numMatch+this.merLength)-1;
                         lastIdxFront = (iniIdx+numBase)-1;
+                        lastIdxFront_noMer = (iniIdx+numMatch)-1;
                     }else{
                         lastPos = (this.listLastPos.get(idx)+this.listIniIdx.get(idx))-iniIdx;  // Recalculate lastPos. Due to the listlastpos is contain position that already minus with it iniIdx but when we joint peak we have to recalculate it.
                         // because the iniIdx have change to the ini Index of front peak not it own iniIndex at all. Then we plus it own iniIndex back and then minus with front peak iniIndex
@@ -1168,15 +1170,23 @@ public class ShortgunSequence {
                         int iniIdxBack = this.listIniIdx.get(idx);
                         iniBack = iniIdxBack;
                         dummyMissingBase = (iniIdxBack-lastIdxFront)-1;
-                        if(dummyMissingBase < 0){
+                        if(iniIdxBack < lastIdxFront){
                             // check for missing base are less than merlength (if number of base that missing is lower than mer length this missingBase value must be minus)
-                            repeatBase = Math.abs(dummyMissingBase);
+                            repeatBase = (iniIdxBack-lastIdxFront_noMer)-1;                            
                         }else{
                             missingBase = dummyMissingBase+missingBase;
                         }
                         
+//                        if(dummyMissingBase < 0){
+//                            // check for missing base are less than merlength (if number of base that missing is lower than mer length this missingBase value must be minus)
+//                            repeatBase = Math.abs(dummyMissingBase);
+//                        }else{
+//                            missingBase = dummyMissingBase+missingBase;
+//                        }
                         
-                        lastIdxFront = (iniBack+numBase)-1;     // it has to be update every time in cast that there is more than one peak.
+                        
+                        lastIdxFront = (iniBack+numBase)-1;         // it has to be update every time in cast that there is more than one peak.
+                        lastIdxFront_noMer = (iniBack+this.listNumMatch.get(idx))-1;  // it has to be update every time in cast that there is more than one peak.
                     }
                     
                     numG = this.listGreen.get(idx)+numG;
