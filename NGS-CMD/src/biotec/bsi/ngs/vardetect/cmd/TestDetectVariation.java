@@ -24,15 +24,16 @@ public class TestDetectVariation {
        public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "hg38_sim_4thread_th5_alignmentResult_LongRead_Sorted";
+        String filename = "hg38_sim01_4thread_th5_alignmentResult_LongRead_Sorted";
         String path = "/Volumes/PromisePegasus/worawich/Download_dataset/SimulateData/test_sim_01/";
 //        String saveFilename = "hg38_FullNewMethod_Sim_alignmentResult_VariantReport";
-        String saveFilenameCov = "hg38_sim_4thread_th5_alignmentResult_LongRead_VariantCoverageReport";
+        String saveFilenameCov = "hg38_sim01_4thread_th5_alignmentResult_LongRead_VariantCoverageReport";
 //        int readLength = 24;
         int merLength = 18;
         int overlap = 4;
+        int percentMatch = 90;
 
-        VariationResult varRes = SequenceUtil.analysisResultFromFileV3(path+filename+".txt",merLength,overlap);
+        VariationResult varRes = SequenceUtil.analysisResultFromFileV3(path+filename+".txt",merLength,overlap,percentMatch);
         varRes.createVariantReport();
         varRes.analyzeCoverageFusion();
         varRes.writeVariantCoverageReportToFile(path, saveFilenameCov, 'F');
