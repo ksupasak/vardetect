@@ -1170,7 +1170,7 @@ public class ShortgunSequence {
                         int iniIdxBack = this.listIniIdx.get(idx);
                         iniBack = iniIdxBack;
                         dummyMissingBase = (iniIdxBack-lastIdxFront)-1;
-                        if(iniIdxBack < lastIdxFront){
+                        if(iniIdxBack <= lastIdxFront){
                             // check for missing base are less than merlength (if number of base that missing is lower than mer length this missingBase value must be minus)
                             repeatBase = (iniIdxBack-lastIdxFront_noMer)-1;                            
                         }else{
