@@ -26,10 +26,10 @@ public class TestPostProcess {
     public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/SimulateData/test_sim_01/hg38_sim01_4thread_th5_alignmentResult_LongRead_part";
+        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/Mycobacterium_tuberculosis/TB2_alnCR_8_5_alnRes_part";
         String indexFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/drosophila/d.melanogaster/dm6_filter.index";            // use for traceback to natural chromosome name
         String saveFileType = "txt";
-        int numPart = 1;
+        int numPart = 3;
 //        int readLength = 24;
         int merLength = 18;
         int maxFullMatch = 100; // it's percentage value
