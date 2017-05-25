@@ -124,6 +124,9 @@ public class Variation {
             }
         }
         
+        if(this.variationType == 'I'){
+            analyzeIndel();
+        }
     }
     
     public void addType(char type){
@@ -148,6 +151,22 @@ public class Variation {
     
     public long getBreakPointBack(){
         return this.breakPointB;
+    }
+    
+    public void analyzeIndel(){
+        long breakpointDiff = Math.abs(this.breakPointB - this.breakPointF)-1;
+        
+        if(breakpointDiff<=this.readLengthF){
+            // It is small Indel
+            int overallBaseMatch = ((this.numMatchF+this.merLength)-1)+((this.numMatchB+this.merLength)-1);
+            
+             
+            
+        }else{
+            // It is large indel
+            
+            
+        }
     }
     
 }
