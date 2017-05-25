@@ -26,10 +26,10 @@ public class TestPostProcess {
     public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/Mycobacterium_tuberculosis/TB2_alnCR_8_5_alnRes_part";
+        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/crab_transscriptome/early_premolt/crap_earlypremolt_alnCR_8_5_alnRes_part";
         String indexFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/drosophila/d.melanogaster/dm6_filter.index";            // use for traceback to natural chromosome name
         String saveFileType = "txt";
-        int numPart = 3;
+        int numPart = 23;
 //        int readLength = 24;
         int merLength = 18;
         int maxFullMatch = 100; // it's percentage value
@@ -56,8 +56,8 @@ public class TestPostProcess {
         
         for(int i=1;i<=numPart;i++){
             
-            AlignmentResultRead readAlign = SequenceUtil.readAlignmentReportV2(filename+i+".txt",merLength);
-//            AlignmentResultRead readAlign = SequenceUtil.readBinaryAlignmentReportV3(filename+i+".bin",merLength);
+//            AlignmentResultRead readAlign = SequenceUtil.readAlignmentReportV2(filename+i+".txt",merLength);
+            AlignmentResultRead readAlign = SequenceUtil.readBinaryAlignmentReportV3(filename+i+".bin",merLength);
             
             //readAlign.countAlignMatch();
             //readAlign.writeMatchCountReport(filename+i);              // write bed graph file format for overall vistualize

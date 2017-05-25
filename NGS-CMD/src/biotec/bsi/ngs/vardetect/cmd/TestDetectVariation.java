@@ -24,8 +24,8 @@ public class TestDetectVariation {
        public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "TB2_alnCR_8_5_alnRes_Sorted";
-        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/Mycobacterium_tuberculosis/";
+        String filename = "crap_earlypremolt_alnCR_8_5_alnRes_Sorted";
+        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/crab_transscriptome/early_premolt/";
 //        String saveFilename = "hg38_FullNewMethod_Sim_alignmentResult_VariantReport";
         String saveFilenameCov = "TB2_alnCR_8_5_alnRes_VariantCoverageReport";
 //        int readLength = 24;
