@@ -25,6 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.Vector;
 
 /**
  *
@@ -1339,6 +1340,131 @@ public class AlignmentResultRead {
                     }
 
                 }
+            }
+        }
+        writer.flush();
+        writer.close();
+    }
+    
+    public void writeAlignSequenceReadFasta(String path, String nameFile, String sampleFile, int propotion, String option1, int option2) throws FileNotFoundException, IOException{
+    
+        /**
+         * Suitable for version 3 data structure (data structure that has iniIdx in its)
+         * write result to file format for linux sort purpose
+         * 
+         * String option1 filter option code "gy" mean we filter out the read match result that has orange and red count
+         *                                   "g"  mean we filter out the read match result contain yellow orange and red count
+         *                                   "gyo" mean we filter out the read match result contain only red count
+         *                                  "all" mean no filter
+         * int option2 filter option threshold indicate the percentage of maximum mer count. If read match result have mer count equal or more than this threshold the result has been filter out. (100 will prevent full match read)
+         * 
+         * This function will map read name from result to input file and write the sequence that exist in the result to new fasta file
+         */
+        
+        String filename = path+File.separator+nameFile+".fa";
+        PrintStream ps;
+        FileWriter writer; 
+        ArrayList<String> selectReadNameList = new ArrayList();
+        /**
+         * Check File existing
+         */
+        
+        File f = new File(filename); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(filename,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(filename);
+        }
+        
+        /**
+         * Begin extract data to write
+         */
+        for(int i=0;i<this.shrtRead.size();i++){
+            boolean ignoreFlag = false;
+            boolean selectFlag = false;
+            ShortgunSequence dummySS = this.shrtRead.get(i);
+            String readName = dummySS.getReadName();
+            ArrayList<Integer> listChr = dummySS.getListChrMatch();
+            ArrayList<Integer> listGreen = dummySS.getListGreen();
+            ArrayList<Integer> listYellow = dummySS.getListYellow();
+            ArrayList<Integer> listOrange = dummySS.getListOrange();
+            ArrayList<Integer> listRed = dummySS.getListRed();
+            int numMaxMatch = ((option2 * dummySS.readLength)/100)-dummySS.merLength+1;
+            for(int numP=0;numP<listChr.size();numP++){
+
+                int green = listGreen.get(numP);
+                int yellow = listYellow.get(numP);
+                int orange = listOrange.get(numP);
+                int red = listRed.get(numP);
+                
+                int merMatch = green+yellow+orange+red;
+                if(merMatch == numMaxMatch){
+                    ignoreFlag = true;
+                }
+            }
+            if(ignoreFlag==false){
+                for(int numP=0;numP<listChr.size();numP++){
+
+                    int yellow = listYellow.get(numP);
+                    int orange = listOrange.get(numP);
+                    int red = listRed.get(numP);
+                    if(option1.equals("gy")){
+                        if(orange==0&&red==0){
+//                            if(selectReadNameList.contains(readName)!= true){
+//                                selectReadNameList.add(readName);
+//                            }
+                            selectFlag=true;
+                            break;
+                        }
+                    }else if(option1.equals("g")){
+                        if(orange==0&&red==0&&yellow==0){
+//                            if(selectReadNameList.contains(readName)!= true){
+//                                selectReadNameList.add(readName);
+//                            }
+                            selectFlag=true;
+                            break;
+                        }
+                    }else if(option1.equals("gyo")){
+                        if(red==0){
+//                            if(selectReadNameList.contains(readName)!= true){
+//                                selectReadNameList.add(readName);
+//                            }
+                            selectFlag=true;
+                            break;
+                        }
+                    }else if(option1.equals("all")){
+//                        if(selectReadNameList.contains(readName)!= true){
+//                            selectReadNameList.add(readName);
+//                        }
+                        selectFlag=true;
+                        break;
+                    }
+                }
+            }
+            
+            if(selectFlag==true){
+                selectReadNameList.add(readName);
+            }
+        }
+        
+        int numSample = SequenceUtil.getNumberSample(sampleFile);
+        int count = 0;
+        for (int i = 0 ; i < numSample ; i += propotion){                       // loop over the input sample ( number of loop is up to the number of read per time )
+            long startTime = System.currentTimeMillis();
+            count++;
+            String savefilename = filename+count;
+            Map<String,String> inputMap = SequenceUtil.readSampleFiletoMap(sampleFile,i,Math.min(numSample, i+propotion));
+            
+            for(int index= 0;index<selectReadNameList.size();index++){
+                String readNameCheck = selectReadNameList.get(index);
+                String selectSeq = inputMap.get(readNameCheck);
+                
+                if(selectSeq!=null){
+                    writer.write(">"+readNameCheck+"\n");
+                    writer.write(selectSeq+"\n");
+                }    
             }
         }
         writer.flush();

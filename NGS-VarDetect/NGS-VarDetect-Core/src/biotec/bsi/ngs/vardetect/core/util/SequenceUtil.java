@@ -57,6 +57,8 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 
 /**
@@ -69,187 +71,143 @@ public class SequenceUtil {
     
     public static ReferenceSequence getReferenceSequence(String filename,int mer) throws IOException {
 
-    ReferenceSequence ref = new ReferenceSequence();
-    ref.setFilename(filename);
-    
-    
-//   has index then index file .index  : list of chromosome
-//   read each chromosome then extract .fa to file and build bin
-
-    System.out.println(ref.getPath());
-    
-    File index_file = new File(filename+".index");
-    
-    boolean create_index = false;
-    boolean extract_chr = false;
-    
-    
-    if(index_file.exists()){
-        String chr= null;
-
-        BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(index_file)));
-        while((chr=br.readLine())!=null){
-            System.out.println(chr);
-            File chr_file = new File(ref.getPath()+File.separator+chr+".fa");           
-            if(chr_file.exists()){
-                
-                System.out.println("No chr" +chr_file);
-                
-                ChromosomeSequence c = new ChromosomeSequence(ref,chr,null);
-                ref.addChromosomeSequence(c);
-                 
-                 
-                 
-//                File bin_file = new File(c.getFilePath()+".bin");
-//                File comp_bin_file = new File(c.getFilePath()+"_comp.bin");
-//                File chr_repeatfile = new File(c.getFilePath()+"_repeatMarker.bin");
-//                if(bin_file.exists()==false){
-//                    if(c.getSequence()==null){
-//                   
-//                    }
-                    
-                    EncodedSequence encoded = SequenceUtil.createAllReferenceV2(c, mer,'c');
-//                    EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c,mer);
-//                    ArrayList<Long> repeatMarker = SequenceUtil.createRepeatMarkerReferenceV2(c, mer);                  
-                     
-                     
-//                }
-//                if(comp_bin_file.exists()==false){
-//                    EncodedSequence encoded = encodeSerialChromosomeSequenceV3(c,mer);
-//                }
-
-//                if(chr_repeatfile.exists()==false){
-//                    long[] repeatMarker = SequenceUtil.createRepeatMarkerReferenceV2(c, mer);
-//                }
-                 
-            }else{
-                extract_chr=true;
-                System.out.println("No chr" +chr_file);
-
-            }
-            
-            
-        } 
-    }else{
-        create_index = true;
-    }
-
-    
-    
-    
-    
-    if(create_index||extract_chr){
-        Charset charset = Charset.forName("US-ASCII");
-        Path path = Paths.get(filename);
-        String chr = null;
-    
-        StringBuffer seq = new StringBuffer();
-
-        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
-            String line = null;
-
-            while ((line = reader.readLine()) != null) {
-
-                if(line.charAt(0)=='>'){
-
-                    if(chr!=null){
-
-                        System.out.println("CHR : "+chr+" Size : "+seq.length());
-
-                        ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
-
-                        File chr_file = new File(c.getFilePath()+".fa");
-
-                        if(!chr_file.exists()){
-                            c.writeToFile("FA");
-                        }                   
-
-                        seq=null;
-                        c.lazyLoad();
-
-                        EncodedSequence encoded = SequenceUtil.createAllReferenceV2(c, mer, 'c');
-
-                        c.lazyLoad();
-
-                        ref.addChromosomeSequence(c);
+        ReferenceSequence ref = new ReferenceSequence();
+        ref.setFilename(filename);
 
 
-                    }
-                    seq = new StringBuffer();
-                    chr = line.substring(1,line.length());
+//       has index then index file .index  : list of chromosome
+//       read each chromosome then extract .fa to file and build bin
 
+        System.out.println(ref.getPath());
+
+        File index_file = new File(filename+".index");
+
+        boolean create_index = false;
+        boolean extract_chr = false;
+
+
+        if(index_file.exists()){
+            String chr= null;
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(index_file)));
+            while((chr=br.readLine())!=null){
+                System.out.println(chr);
+                File chr_file = new File(ref.getPath()+File.separator+chr+".fa");           
+                if(chr_file.exists()){
+
+                    System.out.println("No chr" +chr_file);
+
+                    ChromosomeSequence c = new ChromosomeSequence(ref,chr,null);
+                    ref.addChromosomeSequence(c);
+
+                    EncodedSequence encoded = SequenceUtil.createAllReferenceV2(c, mer,'c');                 
 
                 }else{
-
-                    seq.append(line.trim());
-
+                    extract_chr=true;
+                    System.out.println("No chr" +chr_file);
 
                 }
 
+
+            } 
+        }else{
+            create_index = true;
+        }
+
+        if(create_index||extract_chr){
+            Charset charset = Charset.forName("US-ASCII");
+            Path path = Paths.get(filename);
+            String chr = null;
+
+            StringBuffer seq = new StringBuffer();
+
+            try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+                String line = null;
+
+                while ((line = reader.readLine()) != null) {
+
+                    if(line.charAt(0)=='>'){
+
+                        if(chr!=null){
+
+                            System.out.println("CHR : "+chr+" Size : "+seq.length());
+
+                            ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+
+                            File chr_file = new File(c.getFilePath()+".fa");
+
+                            if(!chr_file.exists()){
+                                c.writeToFile("FA");
+                            }                   
+
+                            seq=null;
+                            c.lazyLoad();
+
+                            EncodedSequence encoded = SequenceUtil.createAllReferenceV2(c, mer, 'c');
+
+                            c.lazyLoad();
+
+                            ref.addChromosomeSequence(c);
+
+
+                        }
+                        seq = new StringBuffer();
+                        chr = line.substring(1,line.length());
+
+
+                    }else{
+
+                        seq.append(line.trim());
+
+
+                    }
+
+                }
+
+                if(seq.length()>0){
+
+                    System.out.println("CHR : "+chr+" Size : "+seq.length());
+                    ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+
+                    File chr_file = new File(c.getFilePath()+".fa");
+
+                    if(!chr_file.exists()){
+                        c.writeToFile("FA");
+                    }     
+
+                    seq = null;
+
+                    c.lazyLoad();
+
+                    EncodedSequence encoded = SequenceUtil.createAllReferenceV2(c, mer, 'c');           
+
+                    c.lazyLoad();
+
+                    ref.addChromosomeSequence(c);
+                }
+
+
+            }catch (IOException x) {
+                System.err.format("IOException: %s%n", x);
+            }    
+
+            if(create_index){
+
+                PrintStream ps = new PrintStream(new FileOutputStream(index_file));
+
+                Enumeration<ChromosomeSequence> e2 = ref.getChromosomes().elements();
+                while(e2.hasMoreElements()){
+                    ChromosomeSequence s = e2.nextElement();
+                    ps.println(s.getName());
+
+                }
+
+                ps.close();
             }
-    
-        if(seq.length()>0){
 
-            System.out.println("CHR : "+chr+" Size : "+seq.length());
-            ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
-
-            File chr_file = new File(c.getFilePath()+".fa");
-
-            if(!chr_file.exists()){
-                c.writeToFile("FA");
-            }     
-
-            seq = null;
-
-            c.lazyLoad();
-
-            EncodedSequence encoded = SequenceUtil.createAllReferenceV2(c, mer, 'c');           
-
-            c.lazyLoad();
-
-            ref.addChromosomeSequence(c);
         }
 
-    
-    }catch (IOException x) {
-        System.err.format("IOException: %s%n", x);
-    }    
-    
-//    if(extract_chr){
-//        Enumeration<ChromosomeSequence> e = ref.getChromosomes().elements();
-//        while(e.hasMoreElements()){
-//            ChromosomeSequence s = e.nextElement();
-//            File chr_file = new File(s.getFilePath()+".fa");
-//            if(!chr_file.exists()){
-//                s.writeToFile("FA");
-//            }
-//        }
-//    }
-    
-//    ========================= read all chromosome
-    if(create_index){
-//          File index_file = new File(ref.getPath()+".index");
-
-        PrintStream ps = new PrintStream(new FileOutputStream(index_file));
-         
-        
-        Enumeration<ChromosomeSequence> e2 = ref.getChromosomes().elements();
-        while(e2.hasMoreElements()){
-            ChromosomeSequence s = e2.nextElement();
-            ps.println(s.getName());
-            
-        }
-        
-        ps.close();
-    }
-
-    }
-    
-    
-
-    
-    
-    return ref;
+        return ref;
     
     }
     
@@ -2869,6 +2827,72 @@ public class SequenceUtil {
             }
             
             return tempInSS;
+        }
+    }
+    
+    public static Map<String,String> readSampleFiletoMap(String filename, int readStart, int readLimit) throws IOException {
+        /**
+         * for specific input file Fasta format only
+         * 
+         * >readName
+         * ATCGD....
+         * AATTG....
+         * >readName
+         * AATTG....
+         * CCGTA....
+         * ......
+         * >readName
+         * ...
+         * 
+         * Export as LinkedHashMap. Has been use for mapping read with result to get only read that exist in result
+         */
+        Map<String,String> sampleMap = new LinkedHashMap();
+        ShortgunSequence inSS = new ShortgunSequence(null);
+        InputSequence tempInSS = new InputSequence();
+        int count = 0;
+        int count2 = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(filename);
+        String name = null;
+        int actStart = readStart*2;     //this is actual start of line in file (compatible only specific file 3661 and 3662 .fasta file or in Fasta format
+        int actStop = readLimit*2;
+    //    String seq = "";
+        boolean forceBreakFlag =  false;
+    
+        StringBuilder seq = new StringBuilder();
+        
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;                   
+            while ((line = reader.readLine()) != null) {
+                String[] aon = line.split("\t");
+                if(line.charAt(0)=='>'){
+                    count++;
+                    if(seq.length()>0){
+                        sampleMap.put(name, seq.toString());
+                        seq = new StringBuilder();
+                    }
+                    name = line.substring(1);
+                    
+                }else{                    
+                    if(count >= readStart){
+                        seq.append(line.toString()); 
+                    }     
+                }
+                if(count>readLimit){
+                    forceBreakFlag=true;
+                    break;
+                }
+            }                      
+            /**
+             * Add data for last seq of a file
+             * in order to check it is last seq of file or last seq from force break
+             * Can check from forceBreakFlag;
+             */
+            if(forceBreakFlag == false){
+                sampleMap.put(name, seq.toString());
+            }
+            
+            return sampleMap;
         }
     }
     
@@ -5671,5 +5695,67 @@ public class SequenceUtil {
             
             
         }
+    }
+    
+    public static void truncateFastaFIles(String fastaFile,int startPoint,int length) throws IOException{
+        /**
+         * This function will truncate DNA sequence in fast file and export to new file
+         * User can specific the length of DNA sequence after truncate and start point to begin truncate 
+         */
+        
+        
+        String saveFile = fastaFile.split("\\.")[0]+"_trunc.fa";
+        FileWriter writer;        
+        /**
+         * Check File existing
+         */
+        
+        File f = new File(saveFile); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(saveFile,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(saveFile);
+        }
+        
+        
+        int endPoint = (startPoint+length)-1;
+        
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(fastaFile);
+        
+        StringBuilder seq = new StringBuilder();
+        String name = null;
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;                   
+            while ((line = reader.readLine()) != null) {
+                if(line.charAt(0)=='>'){
+                    if(seq.length()>0){
+                        String newSeq = seq.substring(startPoint, Math.min(endPoint, seq.length()));
+                        writer.write(">"+name+"\n");
+                        writer.write(newSeq+"\n");
+                        seq = new StringBuilder();
+                    }
+                    name = line.substring(1);
+                }else{                    
+                    seq.append(line.toString());                         
+                }
+            }
+            
+            /**
+             * Write last sample
+             */           
+            String newSeq = seq.substring(startPoint, Math.min(endPoint, seq.length()));
+            writer.write(">"+name+"\n");
+            writer.write(newSeq+"\n");
+            
+            writer.flush();
+            writer.close();
+        } catch (IOException ex) {
+            Logger.getLogger(SequenceUtil.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        
     }
 }
