@@ -39,15 +39,15 @@ public class TestBedCMD {
       
 //       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
         
-        String savefilename = "_SimulateLongRead";
-        System.out.println("Get reference sequence");
-        ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0],18); //runFile hg19.fa
-        //^^^^
-        //ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
-        System.out.println("Simulate Data");
-        //InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGene(ref, 5, 100, "20", "21");
-        //InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandom(ref,1, 100, 1);
-        InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandomMixed(ref, 12, 30000, 2, 30000,100,savefilename);
+//        String savefilename = "_SimulateLongRead";
+//        System.out.println("Get reference sequence");
+//        ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0],18); //runFile hg19.fa
+//        //^^^^
+//        //ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
+//        System.out.println("Simulate Data");
+//        //InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGene(ref, 5, 100, "20", "21");
+//        //InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandom(ref,1, 100, 1);
+//        InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandomMixed(ref, 12, 30000, 2, 30000,100,savefilename);
         
 //        Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
 //          
@@ -63,6 +63,11 @@ public class TestBedCMD {
 //        System.out.println("Begin create color array");
 //        Clustering.createColorArray(readAlign, 100, 18);
 //        System.out.println("Done create color array");
+
+          String fastaFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/dm6_O1_4thread_th5_alignmentResult_longRead_Sample.fa";
+          int startPoint = 0;
+          int length = 15;
+          SequenceUtil.truncateFastaFIles(fastaFile, startPoint, length);
     }
 
 }

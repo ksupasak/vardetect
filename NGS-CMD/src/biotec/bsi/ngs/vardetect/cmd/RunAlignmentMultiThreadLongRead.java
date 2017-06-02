@@ -39,7 +39,7 @@ import java.util.Map;
 
 public class RunAlignmentMultiThreadLongRead {
     /**
-     * It run cut repeat version of alignment (Clone from version 5 alignment function) But use alignment function that support alignment long read 
+     * It run cut repeat version of alignment (Clone from version 5 alignment function) But use alignment function that support long read alignment 
      */
     
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -54,21 +54,9 @@ public class RunAlignmentMultiThreadLongRead {
         int numThread = Integer.valueOf(args[6]);                       // Sixth argument; indicate number of thread
         String filetype = args[7]; 
         
-//       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
-
         System.out.println("Get reference sequence");
         ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath,numMer); //runFile hg19.fa
         
-        //ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
-        //System.out.println("Simulate Data");
-        //InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGene(ref, 5, 100, "20", "21");
-        //InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandom(ref,1, 100, 5);
-        
-        //InputSequence input = new InputSequence();
-//        input.addRead(inSS);
-        //input = SequenceUtil.readSampleFile(args[1]);
-        
-        //String fixPath = "/Users/worawich/VMdev/3661/output.fa";
         Path inPath = Paths.get(inputPath);
         Path folder = inPath.getParent();
         int numSample = SequenceUtil.getNumberSample(inputPath);
@@ -81,17 +69,11 @@ public class RunAlignmentMultiThreadLongRead {
             count++;
             String savefilename = filename+count;
             InputSequence input = SequenceUtil.readSampleFileV3(inputPath,i,Math.min(numSample, i+propotion));
-            //input = SequenceUtil.readSampleFileV2(fixPath);
-
-
+            
             Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
 
             AlignmentResultRead align = aligner.alignMultithreadLongRead(ref, input, numThread, numMer, threshold);  // function align is located in binary aligner
-
-
     
-//            System.out.println("Do sortCountCutResult");
-//            align.sortCountCutResultForMapV3(threshold);
             long stopAlignTime = System.currentTimeMillis();
             double totalAlignTime = ((stopAlignTime - startAlignTime)/1000)/60;
             System.out.println(String.format("Alignment Time use : %.4f min",totalAlignTime));
