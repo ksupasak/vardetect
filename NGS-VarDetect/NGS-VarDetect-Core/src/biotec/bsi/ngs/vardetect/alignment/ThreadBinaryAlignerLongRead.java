@@ -93,7 +93,7 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
             
             ShortgunSequence seq = (ShortgunSequence)seqs.next();
             Map<Long,ArrayList<Integer>> alnMerMap = new LinkedHashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read
-
+            
 //                    System.out.println(""+chr.getName()+" "+encoded.getMers().length);
 
             String s = seq.getSequence();                                           // get String sequence of selected ShortgunSequence
@@ -146,7 +146,7 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
 //                    ArrayList<Long> posR = encodedRef.align3(m, s, index, numMer, linkIndexCheck);
 //                    if(encodedRef.getRepeatFlag()==false){        
                     if(output == null){   
-                        long pos2[] = encodedRef.align5(m);                                // Do alignment with binary search (pos2[] cantain 64 bit long [mer code | position])
+                        long pos2[] = encodedRef.align5(m);                                // Do alignment with binary search (pos2[] cantain 29 bit long [strand | position])
     //                            long pos2[] = encoded.fullAlign(m);
 
                         long pos = -1;
@@ -170,9 +170,10 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
 
                             /******** New Part (fixed wrong mer count) Version 3 **********/
                             for(int j=0;j<pos2.length;j++){
-                                if(pos2.length>1){
-                                    break;
-                                }
+//                              
+//                                if(pos2.length>1){
+//                                    break;
+//                                }
                                 long alnCode = pos2[j] - index;     // pos is 29 bit [strand|position] ; algncode is 29 bit [strand|alignPosition] but already subtract index (offset)
 
 
@@ -351,7 +352,7 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
             Map<Long,ArrayList<Integer>> alnMerMap = new LinkedHashMap();
 
 //                    System.out.println(""+chr.getName()+" "+encoded.getMers().length);
-
+            
             String s = seq.getSequence();                                                   // get sequence form ShortgunSequence
             String invSeq = SequenceUtil.inverseSequence(s);                                // Do invert sequence (ATCG => GCTA)
             String compSeq = SequenceUtil.createComplimentV2(invSeq);                       // Do compliment on invert sequence (GCTA => CGAT)  
@@ -399,7 +400,7 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
 
 //                    if(encodedRef.getRepeatFlag()==false){
                     if(output == null){ 
-                        long pos2[] = encodedRef.align5Compliment(m);                            // Do alignment by alignment function specific for compliment sequence
+                        long pos2[] = encodedRef.align5Compliment(m);                            // Do alignment by alignment function specific for compliment sequence (pos2[] cantain 29 bit long [strand | position])
     //                            long pos2[] = encoded.fullAlign(m);
 
                         long pos = -1;
@@ -422,9 +423,9 @@ public class ThreadBinaryAlignerLongRead implements Runnable {
                         if(pos2 != null){
                             /******** New Part (fixed wrong mer count) Version 3 **********/
                             for(int j=0;j<pos2.length;j++){
-                                if(pos2.length>1){
-                                    break;
-                                }
+//                                if(pos2.length>1){
+//                                    break;
+//                                }
                                 
                                 long alnCode = pos2[j] - index;     // pos is 29 bit [strand|position] ; algncode is 29 bit [strand|alignPosition]
 

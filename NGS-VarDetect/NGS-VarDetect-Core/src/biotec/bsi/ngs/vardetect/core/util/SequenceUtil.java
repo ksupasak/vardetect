@@ -115,6 +115,10 @@ public class SequenceUtil {
         }
 
         if(create_index||extract_chr){
+            /**
+             * Extract chromosome and create index file
+             */
+            
             Charset charset = Charset.forName("US-ASCII");
             Path path = Paths.get(filename);
             String chr = null;
@@ -446,7 +450,7 @@ public class SequenceUtil {
                                 break;
                             case 'U':
                             case 'u': 
-                                t=3; // 11 (in cast of RNA T will change to U)
+                                t=3; // 11 (in case of RNA T has change to U)
                                 break;
                             case 'C':
                             case 'c':
@@ -475,7 +479,8 @@ public class SequenceUtil {
                     if(i%1000000==0)System.out.println("Encode "+chr.getName()+" "+i*sliding);
 
                     if(cmer>=0){  
-                        long x = (cmer<<(64- kmer*2))|pos;
+//                        long x = (cmer<<(64- kmer*2))|pos;
+                        long x = (cmer<<28)|pos;        // left Shift 28 bit is mean we reserve 28 bit for position (we fixed it) 
                         list[count++] = x;
                     }
 
@@ -2675,10 +2680,12 @@ public class SequenceUtil {
             String line = null;
                    
             while ((line = reader.readLine()) != null) {
-                String[] aon = line.split("\t");
-                if(line.charAt(0)=='>'){
-                    count++;   
-                } 
+                if(!line.isEmpty()){
+                    String[] aon = line.split("\t");
+                    if(line.charAt(0)=='>'){
+                        count++;   
+                    }
+                }
             }
         }
         return count;
@@ -2704,17 +2711,21 @@ public class SequenceUtil {
                    
             while ((line = reader.readLine()) != null) {
                 String[] aon = line.split("\t");
-                if(line.charAt(0)=='>'){
-                    
-                    name = line.substring(1);
-                    
+                if(line.isEmpty()){
+                    name = null;
                 }else{
-                    count++;
-                    if(count >= readStart){
-                        inSS = new ShortgunSequence(line.toString());
-                        inSS.addReadName(name);
-                        tempInSS.addRead(inSS);
-                    }     
+                    if(line.charAt(0)=='>'){
+
+                        name = line.substring(1);
+
+                    }else{
+                        count++;
+                        if(count >= readStart){
+                            inSS = new ShortgunSequence(line.toString());
+                            inSS.addReadName(name);
+                            tempInSS.addRead(inSS);
+                        }     
+                    }
                 }
                 if(count==readLimit){
                     break;
@@ -2793,22 +2804,25 @@ public class SequenceUtil {
         try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
             String line = null;                   
             while ((line = reader.readLine()) != null) {
-                String[] aon = line.split("\t");
-                if(line.charAt(0)=='>'){
-                    count++;
-                    if(seq.length()>0){
-                        inSS = new ShortgunSequence(seq.toString());
-                        inSS.addReadName(name);
-                        tempInSS.addRead(inSS);
-                        
-                        seq = new StringBuilder();
+                if(line.isEmpty()){
+                    name = null;
+                }else{
+                    if(line.charAt(0)=='>'){
+                        count++;
+                        if(seq.length()>0){
+                            inSS = new ShortgunSequence(seq.toString());
+                            inSS.addReadName(name);
+                            tempInSS.addRead(inSS);
+
+                            seq = new StringBuilder();
+                        }
+                        name = line.substring(1);
+
+                    }else{                    
+                        if(count >= readStart){
+                            seq.append(line.toString()); 
+                        }     
                     }
-                    name = line.substring(1);
-                    
-                }else{                    
-                    if(count >= readStart){
-                        seq.append(line.toString()); 
-                    }     
                 }
                 if(count>readLimit){
                     forceBreakFlag=true;
@@ -5757,5 +5771,47 @@ public class SequenceUtil {
         }
         
         
+    }
+    
+    public static void miRNASeparator(String fileName) throws IOException{
+        FileWriter writer = null;
+        String considerName = null;
+        String saveFile = null;
+        boolean appendFileFlag = false;
+        boolean firstTimeFlag = true;
+        
+        Path path = Paths.get(fileName);
+        Charset charset = Charset.forName("US-ASCII");
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)){
+            String line = null;
+            while ((line = reader.readLine()) != null) {
+                //process each line in some way
+                
+                if(line.charAt(0)=='>'){
+                    String presentName = line.substring(1,4);
+                    if(presentName.equals(considerName)!=true){
+                        saveFile = path.getParent()+File.separator+presentName+"_"+path.getFileName();
+                        File f = new File(saveFile); //File object        
+                        if(f.exists()){                          
+                            appendFileFlag = true;
+                        }else{
+                            appendFileFlag = false;
+                        }
+                        
+                        if(firstTimeFlag == false){
+                            writer.flush();
+                            writer.close();
+                        }
+                        writer = new FileWriter(saveFile,appendFileFlag);
+                        firstTimeFlag = false;
+                    }
+                    writer.write(">"+line+"\n");
+                }else{
+                    writer.write(line+"\n");
+                }
+            }
+            writer.flush();
+            writer.close();
+        }         
     }
 }

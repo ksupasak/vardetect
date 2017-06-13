@@ -1437,7 +1437,8 @@ public class EncodedSequence {
         
         if(index > 0){
         
-            for(int i=index;i>=0&&i>=index-1;i--){ 
+//            for(int i=index;i>=0&&i>=index-1;i--){ 
+            for(int i=index;i>=0;i--){     
                 long imer = mers[i]&mask;
 
                 if(imer!=mer){
@@ -1448,7 +1449,8 @@ public class EncodedSequence {
                 }
             }
 
-            for(int i=index;i<mers.length&&i<index+1;i++){
+//            for(int i=index;i<mers.length&&i<index+1;i++){
+            for(int i=index;i<mers.length;i++){
                 long imer = mers[i]&mask;
 
                 if(imer!=mer){
@@ -1501,7 +1503,8 @@ public class EncodedSequence {
         int stop = -1;
         
         if(index>0){
-            for(int i=index;i>=0&&i>=index-1;i--){ 
+//            for(int i=index;i>=0&&i>=index-1;i--){
+            for(int i=index;i>=0;i--){
                 long imer = mers[i]&mask;
                 
                 if(imer!=mer){
@@ -1512,7 +1515,8 @@ public class EncodedSequence {
                 }
             }
             
-            for(int i=index;i<mers.length&&i<index+200;i++){
+//            for(int i=index;i<mers.length&&i<index+1;i++){
+            for(int i=index;i<mers.length;i++){
                 long imer = mers[i]&mask;
                 
                 if(imer!=mer){

@@ -50,7 +50,7 @@ public class FastaUtil {
 //        boolean firstFlag = true;
 //        String scaffoldName = null;
         
-        File refFile = new File(path,"ContigRef.fa"); //File object
+        File refFile = new File(path,"Ref_"+inputFile.getName()); //File object
         FileWriter writer;
         if(refFile.exists()){
 //            ps = new PrintStream(new FileOutputStream(filename,true));
@@ -210,7 +210,7 @@ public class FastaUtil {
         
         
         
-        File f = new File(path,"ContigRef.index"); //File object
+        File f = new File(path,"Ref_"+inputFile.getName().split("\\.")[0]+".index"); //File object
         FileWriter writerIdx;
         if(f.exists()){
 //            ps = new PrintStream(new FileOutputStream(filename,true));
