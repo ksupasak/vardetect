@@ -64,10 +64,12 @@ public class TestBedCMD {
 //        Clustering.createColorArray(readAlign, 100, 18);
 //        System.out.println("Done create color array");
 
-          String fastaFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/dm6_O1_4thread_th5_alignmentResult_longRead_Sample.fa";
+          String fastaFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/dm6_O2_4thread_th5_alignmentResult_longRead_Sample.fa";
           int startPoint = 0;
           int length = 15;
           SequenceUtil.truncateFastaFIles(fastaFile, startPoint, length);
+          
+//          SequenceUtil.miRNASeparator(fastaFile);
     }
 
 }

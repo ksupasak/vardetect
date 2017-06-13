@@ -15,7 +15,7 @@ import java.io.IOException;
 public class TestContig {
     public static void main(String[] args) throws IOException{
     
-        String[] filename = {"/Volumes/PromisePegasus/worawich/Download_dataset/crab_transscriptome/referencecrab/fromgigadb/crab"};
+        String[] filename = {"/Volumes/PromisePegasus/worawich/Download_dataset/miRBase/dme_mature.fa"};
         
         
         FastaUtil.createReferenceFromContig(filename);

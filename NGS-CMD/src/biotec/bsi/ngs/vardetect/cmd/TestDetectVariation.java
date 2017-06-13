@@ -24,10 +24,10 @@ public class TestDetectVariation {
        public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "crap_earlypremolt_alnCR_8_5_alnRes_Sorted";
-        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/crab_transscriptome/early_premolt/";
+        String filename = "minitest_alignResult_fullSorted";
+        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/SimulateData/test_sim_01/";
 //        String saveFilename = "hg38_FullNewMethod_Sim_alignmentResult_VariantReport";
-        String saveFilenameCov = "TB2_alnCR_8_5_alnRes_VariantCoverageReport";
+        String saveFilenameCov = "minitest_alignResult_full_VariantCoverageReport";
 //        int readLength = 24;
         int merLength = 18;
         int overlap = 4;

@@ -40,6 +40,7 @@ import java.util.Map;
 public class RunAlignmentMultiThreadLongRead {
     /**
      * It run cut repeat version of alignment (Clone from version 5 alignment function) But use alignment function that support long read alignment 
+     * It use cut repeat protocol alignment function
      */
     
     public static void main(String[] args) throws IOException, InterruptedException {
@@ -72,7 +73,7 @@ public class RunAlignmentMultiThreadLongRead {
             
             Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
 
-            AlignmentResultRead align = aligner.alignMultithreadLongRead(ref, input, numThread, numMer, threshold);  // function align is located in binary aligner
+            AlignmentResultRead align = aligner.alignMultithreadLongReadRepeatCut(ref, input, numThread, numMer, threshold);  // function align is located in binary aligner
     
             long stopAlignTime = System.currentTimeMillis();
             double totalAlignTime = ((stopAlignTime - startAlignTime)/1000)/60;
