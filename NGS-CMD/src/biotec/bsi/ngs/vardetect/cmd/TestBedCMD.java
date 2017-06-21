@@ -16,6 +16,7 @@ import biotec.bsi.ngs.vardetect.core.InputSequence;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import biotec.bsi.ngs.vardetect.core.util.Clustering;
+import biotec.bsi.ngs.vardetect.core.util.FastaUtil;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import static biotec.bsi.ngs.vardetect.core.util.SequenceUtil.encodeSerialChromosomeSequenceV3;
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil;
@@ -37,39 +38,17 @@ public class TestBedCMD {
     public static void main(String[] args) throws IOException {
         // TODO code application logic here
       
-//       ReferenceSequence ref = SequenceUtil.readAndIndexReferenceSequence("/Users/soup/Desktop/hg19/hg19.fa");
-        
-//        String savefilename = "_SimulateLongRead";
-//        System.out.println("Get reference sequence");
-//        ReferenceSequence ref = SequenceUtil.getReferenceSequence(args[0],18); //runFile hg19.fa
-//        //^^^^
-//        //ChromosomeSequence c = ref.getChromosomeSequenceByName("chr21");
-//        System.out.println("Simulate Data");
-//        //InputSequence input =  SimulatorUtil_WholeGene.simulateWholeGene(ref, 5, 100, "20", "21");
-//        //InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandom(ref,1, 100, 1);
-//        InputSequence input =  SimulatorUtil_WholeGene.simulateComplexWholeGeneRandomMixed(ref, 12, 30000, 2, 30000,100,savefilename);
-        
-//        Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
-//          
-//        AlignmentResultRead align = aligner.alignV3(ref, input,18,5);  // function align is located in binary aligner
-//                
-//        System.out.println("Do sortCountCutResult");
-//        align.sortCountCutResultForMapV3(5);
-//        System.out.println("Do write Report");
-//        align.writeSortedCutResultMapToPathInFormatV3(ref.getPath(),savefilename, "txt");
-//        System.out.println("Done");
-//    
-//        AlignmentResultRead readAlign = SequenceUtil.readAlignmentReportV2("/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/hg19"+savefilename+".txt",18);
-//        System.out.println("Begin create color array");
-//        Clustering.createColorArray(readAlign, 100, 18);
-//        System.out.println("Done create color array");
 
-          String fastaFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/dm6_O2_4thread_th5_alignmentResult_longRead_Sample.fa";
-          int startPoint = 0;
-          int length = 15;
-          SequenceUtil.truncateFastaFIles(fastaFile, startPoint, length);
-          
+          String fastaFile = "/Volumes/PromisePegasus/worawich/Referense/drosophila/ensemble/Dm6_chr.fa";
+          String resultFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_300517/dm6_300517_OP3_R1_alignResult_Sorted.txt";
+          String sampleFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_300517/OP3_S3_L001_R1_001_cutadapt_filter.fa";       
+//          int startPoint = 0;
+//          int length = 15;
+//          SequenceUtil.truncateFastaFIles(fastaFile, startPoint, length);
+//          FastaUtil.filterSampleFile(fastaFile);
 //          SequenceUtil.miRNASeparator(fastaFile);
+//            FastaUtil.reIndexChrNameFastaFile(fastaFile);
+            FastaUtil.createSampleFromAlignResult(resultFile, sampleFile, 'c');
     }
 
 }

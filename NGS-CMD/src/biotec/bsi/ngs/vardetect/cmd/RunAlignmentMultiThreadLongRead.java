@@ -53,7 +53,8 @@ public class RunAlignmentMultiThreadLongRead {
         int numMer = Integer.valueOf(args[4]);
         int threshold = Integer.valueOf(args[5]);                       // Fifth argument; indicate count number threshold
         int numThread = Integer.valueOf(args[6]);                       // Sixth argument; indicate number of thread
-        String filetype = args[7]; 
+        int repeatThreshold = Integer.valueOf(args[7]);                 // Seventh argument; indicate number of repeat that we can accept. If the number of repeat is more that this thres hold it will be cut out
+        String filetype = args[8]; 
         
         System.out.println("Get reference sequence");
         ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath,numMer); //runFile hg19.fa
@@ -73,7 +74,7 @@ public class RunAlignmentMultiThreadLongRead {
             
             Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
 
-            AlignmentResultRead align = aligner.alignMultithreadLongReadRepeatCut(ref, input, numThread, numMer, threshold);  // function align is located in binary aligner
+            AlignmentResultRead align = aligner.alignMultithreadLongReadRepeatCut(ref, input, numThread, numMer, threshold, repeatThreshold);  // function align is located in binary aligner
     
             long stopAlignTime = System.currentTimeMillis();
             double totalAlignTime = ((stopAlignTime - startAlignTime)/1000)/60;
