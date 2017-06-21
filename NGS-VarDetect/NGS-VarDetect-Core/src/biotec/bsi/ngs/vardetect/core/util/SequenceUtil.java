@@ -3976,12 +3976,12 @@ public class SequenceUtil {
             byte numChr = Byte.parseByte(data[0]);
             long iniPos = Long.parseLong(data[1]);
             long lastPos = Long.parseLong(data[2]);
-            byte numG = Byte.parseByte(data[3]);
-            byte numY = Byte.parseByte(data[4]);
-            byte numO = Byte.parseByte(data[5]);
-            byte numR = Byte.parseByte(data[6]);
+            int numG = Integer.parseInt(data[3]);
+            int numY = Integer.parseInt(data[4]);
+            int numO = Integer.parseInt(data[5]);
+            int numR = Integer.parseInt(data[6]);
             String strand = data[7];
-            byte iniIdx = Byte.parseByte(data[8]);
+            int iniIdx = Byte.parseByte(data[8]);
             String readName = data[9];
             byte snpFlag = Byte.parseByte(data[10]);
             int readLen = Integer.parseInt(data[12]);

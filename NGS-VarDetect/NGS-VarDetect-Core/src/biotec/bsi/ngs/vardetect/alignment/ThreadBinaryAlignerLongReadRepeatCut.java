@@ -47,6 +47,7 @@ public class ThreadBinaryAlignerLongReadRepeatCut implements Runnable {
     private long chrNum;
     private int numMer;
     private int threshold;                          // It is a minimum number of count that we accept
+    private int repeatThreshold;
     private Map<Long,Long> alignMap;
     private Map<Long,ArrayList<Integer>> alnMerMap;     // Key is align code [strand|alignposition] and value is mer code
     private Map<String,ArrayList<Long>> alnRes1;      // Key is ReadName and value is array of long [iniIdx|strand|Pos]=>[32bit|1bit|28bit]
@@ -55,7 +56,7 @@ public class ThreadBinaryAlignerLongReadRepeatCut implements Runnable {
     String flag;
             
     
-    public ThreadBinaryAlignerLongReadRepeatCut(String name,List inSeq, EncodedSequence inEncodeRef,long inchr, int inMer , int inThreshold){
+    public ThreadBinaryAlignerLongReadRepeatCut(String name,List inSeq, EncodedSequence inEncodeRef,long inchr, int inMer , int inThreshold , int inRepeatThreshold){
         threadName = name;
         inputSequence = inSeq;
         encodedRef = inEncodeRef;
@@ -65,6 +66,7 @@ public class ThreadBinaryAlignerLongReadRepeatCut implements Runnable {
         alnRes2 = new LinkedHashMap();
         readLen = new LinkedHashMap();
         threshold = inThreshold;
+        repeatThreshold = inRepeatThreshold;
         
         System.out.println("Creating " + threadName);
     }
@@ -171,7 +173,7 @@ public class ThreadBinaryAlignerLongReadRepeatCut implements Runnable {
                             /******** New Part (fixed wrong mer count) Version 3 **********/
                             for(int j=0;j<pos2.length;j++){
 //                              
-                                if(pos2.length>1){
+                                if(pos2.length>=repeatThreshold){
                                     break;
                                 }
                                 long alnCode = pos2[j] - index;     // pos is 29 bit [strand|position] ; algncode is 29 bit [strand|alignPosition] but already subtract index (offset)
@@ -423,7 +425,7 @@ public class ThreadBinaryAlignerLongReadRepeatCut implements Runnable {
                         if(pos2 != null){
                             /******** New Part (fixed wrong mer count) Version 3 **********/
                             for(int j=0;j<pos2.length;j++){
-                                if(pos2.length>1){
+                                if(pos2.length>=repeatThreshold){
                                     break;
                                 }
                                 

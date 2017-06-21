@@ -5,8 +5,12 @@
  */
 package biotec.bsi.ngs.vardetect.core.util;
 
+import biotec.bsi.ngs.vardetect.core.InputSequence;
+import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import static biotec.bsi.ngs.vardetect.core.util.SequenceUtil.encodeSerialChromosomeSequenceV3;
 import java.io.*;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -231,6 +235,302 @@ public class FastaUtil {
         writerIdx.flush();
         writerIdx.close();
 
+    }
+    
+    public static void filterSampleFile(String inputPath) throws IOException{
+        int count = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(inputPath);
+        String name = null;
+        boolean forceBreakFlag =  false;
+    
+        StringBuilder seq = new StringBuilder();
+        
+        String filename = path.getParent()+File.separator+path.getFileName().toString().split("\\.")[0]+"_filter."+path.getFileName().toString().split("\\.")[1];
+        PrintStream ps;
+        FileWriter writer;        
+        /**
+         * Check File existing
+         */
+        
+        File f = new File(filename); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(filename,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(filename);
+        }
+        
+
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;                   
+            while ((line = reader.readLine()) != null) {
+                if(line.isEmpty()){
+                    name = null;
+                }else{
+                    if(line.charAt(0)=='>'){
+                        count++;
+                        if(seq.length()>0){
+                            writer.write(">"+name+"\n");
+                            writer.write(seq+"\n");
+                            seq = new StringBuilder();
+                        }
+                        name = line.substring(1);
+
+                    }else if(line.charAt(0)=='N'){
+                        name = null;
+                        seq = new StringBuilder();
+                    }else{                                           
+                        seq.append(line.toString()); 
+                    }
+                }    
+            }                      
+            /**
+             * Add data for last seq of a file
+             * in order to check it is last seq of file or last seq from force break
+             * Can check from forceBreakFlag;
+             */
+            
+            
+        }
+        
+        // for last line
+        if(seq.length()>0){
+            writer.write(">"+name+"\n");
+            writer.write(seq+"\n");   
+        }
+
+        writer.flush();
+        writer.close();
+        
+    }
+    
+    public static void reIndexChrNameFastaFile(String inputPath) throws IOException{
+        /**
+         * This function will reIndex of chromosome name which has non numeric representation to numeric number
+         * Save new file with name _reIndex
+         * And also save the index file for mapping back to original chr representation
+         */
+        
+        int count = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(inputPath);
+        String name = null;
+        boolean forceBreakFlag =  false;
+    
+        StringBuilder seq = new StringBuilder();
+        
+        String filename = path.getParent()+File.separator+path.getFileName().toString().split("\\.")[0]+"_reIndex."+path.getFileName().toString().split("\\.")[1];
+        String filenameIndex = path.getParent()+File.separator+path.getFileName().toString().split("\\.")[0]+"_reIndex.index";
+        PrintStream ps;
+        FileWriter writer;  
+        FileWriter writerIndex;
+        /**
+         * Check File existing
+         */
+        
+        File f = new File(filename); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(filename,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(filename);
+        }
+        writerIndex = new FileWriter(filenameIndex);
+
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;                   
+            while ((line = reader.readLine()) != null) {
+                if(line.isEmpty()){
+                    
+                }else{
+                    if(line.charAt(0)=='>'){
+                        count++;
+                        writer.write(">chr"+count+"\n");
+                        writerIndex.write(line+",>chr"+count+"\n");
+                    }else{                                           
+                        writer.write(line+"\n"); 
+                    }
+                }    
+            }
+        }
+        
+        writer.flush();
+        writer.close();
+        writerIndex.flush();
+        writerIndex.close();
+        
+    }
+    
+    public static void createSampleFromAlignResult(String alignResultFile, String sampleFile, char option) throws IOException{
+        /**
+         * This function will create Sample from alignment Result.
+         * Option:
+         *      'c' = It will cut out the front part of original Sample at specific index.Each sample have different cutting index. The cutting index is the first index that match on reference
+         *            the cutting can get from alignment Result. You must use alignResult_Sorted.txt as a input.
+         *      'r' = got complete sequence (not cut)
+         * 
+         */
+        String cutSampleFilename = null;
+        Map<String,String> cutSampleList = new LinkedHashMap();
+        int count = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path pathResult = Paths.get(alignResultFile);
+        Path pathSample = Paths.get(sampleFile);
+        String name = null;
+        boolean forceBreakFlag =  false;
+        
+        StringBuilder seq = new StringBuilder();
+        
+        if(option == 'c'){
+            cutSampleFilename = pathSample.getParent()+File.separator+pathSample.getFileName().toString().split("\\.")[0]+"_frontCutSample."+pathSample.getFileName().toString().split("\\.")[1];
+        }else if(option == 'r'){
+            cutSampleFilename = pathSample.getParent()+File.separator+pathSample.getFileName().toString().split("\\.")[0]+"_Sample."+pathSample.getFileName().toString().split("\\.")[1];
+        }
+        
+        
+        PrintStream ps;
+        FileWriter writer;  
+        
+        /**
+         * Check File existing
+         */
+        
+        File f = new File(cutSampleFilename); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(cutSampleFilename,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(cutSampleFilename);
+        }
+        
+        /**
+         * Read alignment result
+         * set to Arraylist
+         */
+        ArrayList<String> resultList = new ArrayList();
+        
+        try (BufferedReader reader = Files.newBufferedReader(pathResult, charset)) {
+            String line = null;                   
+            while ((line = reader.readLine()) != null) {                
+                resultList.add(line);                
+            }
+        }
+        
+        /**
+         * Read sample file
+         * set to Map
+         */
+        Map<String,String> sampleList = new LinkedHashMap();
+        try (BufferedReader reader = Files.newBufferedReader(pathSample, charset)) {
+            String line = null;                   
+            while ((line = reader.readLine()) != null) {                
+                if(line.charAt(0)=='>'){
+                    if(seq.length()>0){
+                        sampleList.put(name, seq.toString());
+                        seq = new StringBuilder();
+                    }
+                    name = line.substring(1);
+                }else{                                           
+                    seq.append(line.toString()); 
+                }                
+            }
+        }
+        
+        if(option == 'c'){
+            /**
+            * Cut sample
+            * write to file
+            */
+            
+            Map<String,Integer> sampleCutPoint = findSampleCutPoint(resultList);
+        
+        
+            for (Map.Entry<String, Integer> entry : sampleCutPoint.entrySet()){
+                String readName = entry.getKey();
+                int cutPoint = entry.getValue();
+
+                String sequence = sampleList.get(readName);
+                String cutSequence = sequence.substring(0, cutPoint);
+                if(cutPoint != 0){
+                    writer.write(">"+readName+"\n");
+                    writer.write(cutSequence+"\n");
+                }               
+    //            cutSampleList.put(name, cutSequence);
+            }
+            
+        }else if(option == 'r'){
+            /**
+             * Not cut sample
+             * write to file
+             */
+            
+            Map<String,Integer> sampleCutPoint = findSampleCutPoint(resultList);
+        
+        
+            for (Map.Entry<String, Integer> entry : sampleCutPoint.entrySet()){
+                String readName = entry.getKey();
+
+                String sequence = sampleList.get(readName);
+
+                writer.write(">"+readName+"\n");
+                writer.write(sequence+"\n");
+    //            cutSampleList.put(name, cutSequence);
+            }
+        }
+        
+        writer.flush();
+        writer.close();    
+    }
+    
+    public static Map<String,Integer> findSampleCutPoint(ArrayList<String> inResultList){
+        String oldReadName = null;
+        Map<String,Integer> sampleCutPoint = new LinkedHashMap();
+        ArrayList<Integer> iniIndexList = new ArrayList();
+        boolean firstTimeFlag = true;
+        
+        for(int i=0;i<inResultList.size();i++){
+            String dataGet = inResultList.get(i);
+            // continue this point find iniindex to use ass cut point
+            /***    Extract data    ****/
+            String[] data = dataGet.split(",");           
+            int iniIdx = Integer.parseInt(data[8]);
+            String readName = data[9];
+            /******************************/
+
+            if(readName.equals(oldReadName)){
+                /* Same set of read (continue add data) */
+                
+                iniIndexList.add(iniIdx);
+                
+            }else{
+                /**
+                 * Found new set of Read 
+                 * 1. find min iniIndex
+                 * 2. put to map
+                 * 3. create new iniIndexList       
+                 */
+                if(firstTimeFlag == false){
+                    int min = iniIndexList.get(0);
+                    for(Integer num: iniIndexList){
+                        if(num < min) min = num;
+                    }
+                    
+                    sampleCutPoint.put(oldReadName, min);
+                    
+                    iniIndexList = new ArrayList();
+                }  
+            }
+            
+            iniIndexList.add(iniIdx);
+            oldReadName = readName;
+            firstTimeFlag = false; 
+        }
+        
+        return sampleCutPoint;
     }
 
 }

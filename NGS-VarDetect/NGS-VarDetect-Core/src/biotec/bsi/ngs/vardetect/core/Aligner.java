@@ -32,8 +32,8 @@ public interface Aligner {
     public AlignmentResultRead alignMultithreadV5(InputSequence input, int numThread, int numMer, int threshold)throws InterruptedException;
     public AlignmentResultRead alignMultithreadLongRead(ReferenceSequence ref, InputSequence input, int numThread, int numMer, int threshold)throws InterruptedException;
     public AlignmentResultRead alignMultithreadLongRead(InputSequence input, int numThread, int numMer, int threshold)throws InterruptedException;
-    public AlignmentResultRead alignMultithreadLongReadRepeatCut(ReferenceSequence ref, InputSequence input, int numThread, int numMer, int threshold)throws InterruptedException;
-    public AlignmentResultRead alignMultithreadLongReadRepeatCut(InputSequence input, int numThread, int numMer, int threshold)throws InterruptedException;
+    public AlignmentResultRead alignMultithreadLongReadRepeatCut(ReferenceSequence ref, InputSequence input, int numThread, int numMer, int threshold, int repeatThreshold)throws InterruptedException;
+    public AlignmentResultRead alignMultithreadLongReadRepeatCut(InputSequence input, int numThread, int numMer, int threshold, int repeatThreshold)throws InterruptedException;
     public AlignmentResultRead localAlign(EncodedSequence ref, InputSequence input, int kmer, long numberOflocalRef);
     
 }

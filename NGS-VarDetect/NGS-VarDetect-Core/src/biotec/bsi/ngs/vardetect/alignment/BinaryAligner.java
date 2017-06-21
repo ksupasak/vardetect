@@ -901,17 +901,17 @@ public class BinaryAligner extends Thread implements Aligner {
         return alinResult;
     }
     
-     public AlignmentResultRead alignMultithreadLongReadRepeatCut(ReferenceSequence ref, InputSequence input, int numThread, int numMer, int threshold) throws InterruptedException {
+     public AlignmentResultRead alignMultithreadLongReadRepeatCut(ReferenceSequence ref, InputSequence input, int numThread, int numMer, int threshold, int repeatThreshold) throws InterruptedException {
         /**
          * This version 3 function give the v3 data structure of result
          * Compatible with long read 
          */
         this.setReferenceSequence(ref);
-        return alignMultithreadLongReadRepeatCut(input,numThread,numMer,threshold);
+        return alignMultithreadLongReadRepeatCut(input,numThread,numMer,threshold,repeatThreshold);
         
     }
     
-    public AlignmentResultRead alignMultithreadLongReadRepeatCut(InputSequence input, int numThread, int numMer, int threshold) throws InterruptedException{
+    public AlignmentResultRead alignMultithreadLongReadRepeatCut(InputSequence input, int numThread, int numMer, int threshold,int repeatThreshold) throws InterruptedException{
         
         /**
         * This method will create object that implement multi-thread capability in it
@@ -959,7 +959,7 @@ public class BinaryAligner extends Thread implements Aligner {
                     for(int i = 0 ; i < inputSize ; i+= numPerPartition){                        
                         List splitInputSequence = input.getInputSequence().subList(i, Math.min(inputSize, i+numPerPartition));
                         String threadName = "Thread_"+count; 
-                        ThreadBinaryAlignerLongReadRepeatCut newThread = new ThreadBinaryAlignerLongReadRepeatCut(threadName,splitInputSequence,encoded,chr.getChrNumber(),mer,threshold);
+                        ThreadBinaryAlignerLongReadRepeatCut newThread = new ThreadBinaryAlignerLongReadRepeatCut(threadName,splitInputSequence,encoded,chr.getChrNumber(),mer,threshold,repeatThreshold);
                         newThread.start();                        
                         threadListLongReadRepeatCut.add(newThread);
                         count++;
