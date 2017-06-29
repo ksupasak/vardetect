@@ -39,16 +39,20 @@ public class TestBedCMD {
         // TODO code application logic here
       
 
-          String fastaFile = "/Volumes/PromisePegasus/worawich/Referense/drosophila/ensemble/Dm6_chr.fa";
-          String resultFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_300517/dm6_300517_OP3_R1_alignResult_Sorted.txt";
-          String sampleFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_300517/OP3_S3_L001_R1_001_cutadapt_filter.fa";       
+        String fastaFile = "/Volumes/PromisePegasus/worawich/Referense/NC_001494.1_Jaagsiekte_sheep_retrovirus/sequence.fasta";
+        String resultFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_300517/dm6_300517_OP3_R1_alignResult_Sorted.txt";
+        String sampleFile = "/Volumes/PromisePegasus/worawich/Download_dataset/cancer/unmaped_cancer/TCGA-55-6543-o1A.unmapped.fa";
+        String nonVariantFile = "/Volumes/PromisePegasus/worawich/Download_dataset/cancer/unmaped_cancer/TCGA-55-6543_cancer_virus_alnRes_Sort.txt";
+        String coverageFile = "/Volumes/PromisePegasus/worawich/Download_dataset/cancer/unmaped_cancer/TCGA-55-6543_cancer_virus_alnRes_Sort_nonVariantCoverage.txt";
 //          int startPoint = 0;
 //          int length = 15;
 //          SequenceUtil.truncateFastaFIles(fastaFile, startPoint, length);
 //          FastaUtil.filterSampleFile(fastaFile);
 //          SequenceUtil.miRNASeparator(fastaFile);
 //            FastaUtil.reIndexChrNameFastaFile(fastaFile);
-            FastaUtil.createSampleFromAlignResult(resultFile, sampleFile, 'c');
+//            FastaUtil.createSampleFromAlignResult(resultFile, sampleFile, 'c');
+//        SequenceUtil.analysisNonVariantResultFromFile(nonVariantFile, 18, 2);
+        FastaUtil.createSampleFromCoverageReport(coverageFile, sampleFile);
     }
 
 }
