@@ -486,6 +486,117 @@ public class FastaUtil {
         writer.close();    
     }
     
+    public static void createSampleFromCoverageReport(String alignResultFile, String sampleFile) throws IOException{
+        /**
+         * This function will create Sample from Coverage report.
+         * Separately save to file per group
+         * Save to fast format (.fa)
+         */
+        String cutSampleFilename = null;
+       
+        Charset charset = Charset.forName("US-ASCII");
+        Path pathResult = Paths.get(alignResultFile);
+        Path pathSample = Paths.get(sampleFile);
+        String name = null;
+        StringBuilder seq = new StringBuilder();
+        
+        
+        
+        
+        
+        /**
+         * Read coverage report
+         * set to groupMap
+         */
+        int groupNumber = 0;
+        Map<Integer,ArrayList<String>> groupMap = new LinkedHashMap(); // Map contain key  is group number and value is list of read name in that group.
+        
+        try (BufferedReader reader = Files.newBufferedReader(pathResult, charset)) {
+            String line = null;                   
+            while ((line = reader.readLine()) != null) {
+                String[] splitData = line.split("\\s+");
+                if(splitData[0].equals("Group")){
+                    groupNumber = Integer.parseInt(splitData[2]);
+                }else{
+                    splitData = line.split(",");
+                    String readName = splitData[9];
+                    
+                    if(groupMap.containsKey(groupNumber)){
+                        ArrayList<String> readNameList = groupMap.get(groupNumber);
+                        readNameList.add(readName);
+                        groupMap.put(groupNumber, readNameList);
+                    }else{
+                        ArrayList<String> readNameList = new ArrayList();
+                        readNameList.add(readName);
+                        groupMap.put(groupNumber, readNameList);
+                    }
+                }                 
+            }
+        }
+        /***************************************************/
+        
+        /**
+         * Read sample file
+         * set to Map
+         */
+        Map<String,String> sampleList = new LinkedHashMap();  // key is name and value is sequence
+        try (BufferedReader reader = Files.newBufferedReader(pathSample, charset)) {
+            String line = null;                   
+            while ((line = reader.readLine()) != null) {                
+                if(line.charAt(0)=='>'){
+                    if(seq.length()>0){
+                        sampleList.put(name, seq.toString());
+                        seq = new StringBuilder();
+                    }
+                    name = line.substring(1);
+                }else{                                           
+                    seq.append(line.toString()); 
+                }                
+            }
+        }
+        /***************************************************/
+        
+        /**
+         * extract and write to file
+         */
+        
+        for (Map.Entry<Integer, ArrayList<String>> entry : groupMap.entrySet()){
+            groupNumber = entry.getKey();
+            ArrayList<String> readNameList = entry.getValue();
+            
+            cutSampleFilename = pathSample.getParent()+File.separator+pathSample.getFileName().toString().split("\\.")[0]+"Group_"+groupNumber+"_Sample.fa";
+            PrintStream ps;
+            FileWriter writer;  
+
+            /**
+             * Check File existing
+             */
+
+            File f = new File(cutSampleFilename); //File object        
+            if(f.exists()){
+    //            ps = new PrintStream(new FileOutputStream(filename,true));
+                writer = new FileWriter(cutSampleFilename,true);
+            }else{
+    //            ps = new PrintStream(filename);
+                writer = new FileWriter(cutSampleFilename);
+            }
+            
+            
+            for(int i=0;i<readNameList.size();i++){
+                String readName = readNameList.get(i);
+                String sequence = sampleList.get(readName);
+                
+                writer.write(">"+readName+"\n");
+                writer.write(sequence+"\n");
+            }
+            
+            writer.flush();
+            writer.close();
+        }
+        /*******************************/
+   
+    }
+    
     public static Map<String,Integer> findSampleCutPoint(ArrayList<String> inResultList){
         String oldReadName = null;
         Map<String,Integer> sampleCutPoint = new LinkedHashMap();

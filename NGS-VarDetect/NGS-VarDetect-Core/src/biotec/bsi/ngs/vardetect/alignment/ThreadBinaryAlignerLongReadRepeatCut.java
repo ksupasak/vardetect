@@ -86,10 +86,10 @@ public class ThreadBinaryAlignerLongReadRepeatCut implements Runnable {
         /* Alignment algorithm */
         Iterator seqs = inputSequence.iterator();
         while(seqs.hasNext()){                                              // Loop over ShortgunSequence contain in InputSequence 
-            ++readCount;
-            if(readCount%10000==0){
-                System.out.println("Thread"+threadName+" : "+readCount+" read passed (+)");
-            }
+//            ++readCount;
+//            if(readCount%10000==0){
+//                System.out.println("Thread"+threadName+" : "+readCount+" read passed (+)");
+//            }
 //            Map<Integer,ArrayList<Integer>> linkIndexCheck = new LinkedHashMap();                       // HashMap contain data that has been use to check for repeat jump
             boolean skipRead = false;
             
@@ -343,10 +343,10 @@ public class ThreadBinaryAlignerLongReadRepeatCut implements Runnable {
         readCount = 0;
         while(seqsComp.hasNext()){
             
-            ++readCount;
-            if(readCount%10000==0){
-                System.out.println("Thread"+threadName+" : "+readCount+" read passed (-)");
-            }
+//            ++readCount;
+//            if(readCount%10000==0){
+//                System.out.println("Thread"+threadName+" : "+readCount+" read passed (-)");
+//            }
             
 //            Map<Integer,ArrayList<Integer>> linkIndexCheck = new LinkedHashMap();                       // HashMap contain data that has been use to check for repeat jump
             boolean skipRead = false;

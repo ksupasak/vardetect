@@ -4028,7 +4028,8 @@ public class SequenceUtil {
                  * 3. Add new set of data       
                  */
                 if(selectData.size()!=0){
-                    /* Case check for avoid first time */
+                    /* Case check for avoid first time because every first time for new set of read the selectData and other variable has no value
+                        It's not ready to be add and find variant */
                      Map<Integer,ArrayList<String[]>> variation = detectVariationV2(selectData,selectChr,selectGreenChar,mapF,mapB,merLength,allowOverLap,percentMatch);
                      varResult.addVariationMap(variation);
                 }
@@ -4056,19 +4057,17 @@ public class SequenceUtil {
                 
             }
             
-            oldReadName = readName;
-            
-            
-            
-            
-            
-          
-            
+            oldReadName = readName; 
             
         } 
         
         if(selectData.size()!=0){
-            /* Case check for avoid first time */
+            /**
+             * this case is the same as avoid first time but the actual roll of it is to add the data and find variant of the last set of read
+             * because last set of read will not pass read name check in for loop it come out from the loop without finding variant
+             * So, this case will add data and find variant of last set of read into variation Map
+             */
+            
              Map<Integer,ArrayList<String[]>> variation = detectVariationV2(selectData,selectChr,selectGreenChar,mapF,mapB,merLength,allowOverLap,percentMatch);
              varResult.addVariationMap(variation);
         }
@@ -4237,6 +4236,177 @@ public class SequenceUtil {
         }
         
         return varResult;
+    }
+    
+    public static void analysisNonVariantResultFromFile(String filename, int merLength, int inThreshold) throws IOException{
+        /**
+        * Suitable with result format only (result format is a file that store peak result arrange by sample order (come first be the first). the peak result is in format data structure V3
+        * startIndex and stopIndex defined in this method is the index of DNA base in Read Ex. read length 100 base will has index 0 to 99 and has index of mer 0 to 83 [83 is come from (100 - 18)+1]
+        * 
+        * this function will not call detect variation function but will try to count and find coverage of each match pattern in each sample directly (no pairing and form junction)
+        * Then save report to file named "_nonVariantCoverage.txt"
+        * 
+        * This function will be useful for detect some portion of other alien DNA insert in host DNA
+        * the coverage is an indicator the make us feel more confident (it's not false positive)
+        * 
+        * The input data must be sorted by order of Read (same read will group together) and iniIndex (numeric order)
+        * 
+        * Has implement transmit readlength protocol which allow user don't have to set readlength. It's will extract from input 
+        */
+        int threshold = inThreshold;
+        VariationResult varResult = new VariationResult();
+        varResult.addMerLength(merLength);
+//        varResult.addReadLength(readLength);
+        
+        Charset charset = Charset.forName("US-ASCII");
+        //String[] ddSS = filename.split(".");
+        String saveFileName = filename.split("\\.")[0] + "_nonVariantCoverage.txt";
+        Path path = Paths.get(filename);
+
+        StringBuffer seq = new StringBuffer();
+        ArrayList<String> inData = new ArrayList();    
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;    
+            int count = 0;
+
+            System.out.println("reading");
+            while ((line = reader.readLine()) != null) {
+
+                inData.add(line);
+                count++;
+                if(count%1000000==0){
+                    System.out.println(count + " line past");
+                    //System.out.println("Recent chromosome: " + numChr);
+                }       
+
+            }
+//            writeClusterGroupToFile(filename,listGroup);
+        }
+        
+        System.out.println(" Done read ");
+        
+        ArrayList<String> selectData = new ArrayList();                     // Store list of long string that contain peak information (list of all peak in specific read)
+        ArrayList<Byte> selectChr = new ArrayList();                        // store list of chr number same order as selectData
+        ArrayList<Boolean> selectGreenChar = new ArrayList();
+        Map<Integer,ArrayList<Integer>> mapF = new LinkedHashMap();
+        Map<Integer,Integer> mapB = new LinkedHashMap();
+        int index = 0;
+        String oldReadName = null;
+        
+        Map<Long,ArrayList<Integer>> mapCoverageCount = new LinkedHashMap();  // key is iniRealPosition and value arrayList of index of align pattern
+        Map<Long,ArrayList<String>> readNameCheckMap = new LinkedHashMap();  // key is iniRealPosition and value arrayList of String (name of read) Check to avoid adding same read into same group
+        
+        for(int i=0;i<inData.size();i++){
+            String dataGet = inData.get(i);
+            /*** Counting Loop ***/
+            /***    Extract data    ****/
+            String[] data = dataGet.split(",");           
+            int numChr = Integer.parseInt(data[0]);
+            long iniPos = Long.parseLong(data[1]);
+            long lastPos = Long.parseLong(data[2]);
+            int numG = Integer.parseInt(data[3]);
+            int numY = Integer.parseInt(data[4]);
+            int numO = Integer.parseInt(data[5]);
+            int numR = Integer.parseInt(data[6]);
+            String strand = data[7];
+            int iniIdx = Byte.parseByte(data[8]);
+            String readName = data[9];
+            byte snpFlag = Byte.parseByte(data[10]);            
+            int readLen = Integer.parseInt(data[12]);
+            /******************************/
+            
+            int matchCount = numG+numY+numO+numR;
+            int startIndex = iniIdx;
+            int stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
+            boolean greenChar = false;
+            
+            
+            /*new code here crete Map collect startpos as key read name ass value and counting all of it */
+            long iniRealPos = 0;
+            if(strand.equals("-")){
+                int reverseIniIdx = readLen-(iniIdx+(merLength+matchCount-1));
+                iniRealPos = iniPos+reverseIniIdx;
+            }else if(strand.equals("+")){
+                iniRealPos = iniPos+iniIdx;
+            }
+            
+            
+            if(mapCoverageCount.containsKey(iniRealPos)){
+                ArrayList<Integer> indexList = mapCoverageCount.get(iniRealPos);
+                ArrayList<String> readNameList = readNameCheckMap.get(iniRealPos);
+                if(!readNameList.contains(readName)){
+                    indexList.add(i);
+                    readNameList.add(readName);
+                    mapCoverageCount.put(iniRealPos, indexList);
+                }
+            }else{
+                ArrayList<Integer> indexList = new ArrayList();
+                ArrayList<String> readNameList = new ArrayList();
+                indexList.add(i);
+                readNameList.add(readName);
+                mapCoverageCount.put(iniRealPos,indexList);
+                readNameCheckMap.put(iniRealPos, readNameList);
+            }
+            
+        }
+        
+        /**
+         * Write report part 
+         */
+        
+        FileWriter writer;        
+        /**
+         * Check File existing
+         */
+        
+        File f = new File(saveFileName); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(saveFileName,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(saveFileName);
+        }
+        int num = 0;
+        for (Map.Entry<Long, ArrayList<Integer>> entry : mapCoverageCount.entrySet()){
+            long startPosition = entry.getKey();
+            ArrayList<Integer> indexList = entry.getValue();
+            
+            if(indexList.size() >= threshold){
+                writer.write("Group : "+(++num)+"\tStart Position : "+startPosition+"\tCoverage : "+indexList.size()+"\n");
+                for(int j=0;j<indexList.size();j++){
+                    String alignPattern = inData.get(indexList.get(j));
+                    
+                    /***  Extract Data ***/
+                    String[] data = alignPattern.split(",");           
+                    int numChr = Integer.parseInt(data[0]);
+                    long iniPos = Long.parseLong(data[1]);
+                    long lastPos = Long.parseLong(data[2]);
+                    int numG = Integer.parseInt(data[3]);
+                    int numY = Integer.parseInt(data[4]);
+                    int numO = Integer.parseInt(data[5]);
+                    int numR = Integer.parseInt(data[6]);
+                    String strand = data[7];
+                    int iniIdx = Byte.parseByte(data[8]);
+                    String readName = data[9];
+                    byte snpFlag = Byte.parseByte(data[10]);
+                    int iniBackFlag = Integer.parseInt(data[11]);
+                    int readLen = Integer.parseInt(data[12]);
+                    /******************************/
+
+                    int matchCount = numG+numY+numO+numR;
+                    int startIndex = iniIdx;
+                    int stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
+                    boolean greenChar = false;
+                    
+                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", numChr,iniPos,lastPos,numG,numY,numO,numR,strand,iniIdx,readName,snpFlag,iniBackFlag,readLen));
+                    writer.write("\n");
+                }
+            }
+        }
+        
+        writer.flush();
+        writer.close();
     }
     
     public static Map<Integer,ArrayList<String[]>> detectVariation(ArrayList<String> selectData , ArrayList<Byte> selectChr , ArrayList<Boolean> selectGreenChar , Map<Integer,ArrayList<Integer>> mapF , Map<Integer,Integer> mapB , int merLength , int allowOverlapBase){
