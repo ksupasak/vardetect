@@ -321,7 +321,7 @@ public class FastaUtil {
     
         StringBuilder seq = new StringBuilder();
         
-        String filename = path.getParent()+File.separator+path.getFileName().toString().split("\\.")[0]+"_reIndex."+path.getFileName().toString().split("\\.")[1];
+        String filename = path.getParent()+File.separator+path.getFileName().toString().split("\\.")[0]+"_reIndex.fa";
         String filenameIndex = path.getParent()+File.separator+path.getFileName().toString().split("\\.")[0]+"_reIndex.index";
         PrintStream ps;
         FileWriter writer;  
@@ -349,7 +349,7 @@ public class FastaUtil {
                     if(line.charAt(0)=='>'){
                         count++;
                         writer.write(">chr"+count+"\n");
-                        writerIndex.write(line+",>chr"+count+"\n");
+                        writerIndex.write(path.getFileName()+","+line.substring(1)+",chr"+count+"\n");
                     }else{                                           
                         writer.write(line+"\n"); 
                     }
