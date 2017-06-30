@@ -6,7 +6,9 @@
 package biotec.bsi.ngs.vardetect.cmd;
 
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
+import biotec.bsi.ngs.vardetect.core.util.FastaUtil;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.nio.file.Files;
 
 /**
@@ -15,9 +17,12 @@ import java.nio.file.Files;
  */
 public class reIndexChromosome {
     
-    public static void main(String[] args){
+    public static void main(String[] args) throws IOException{
         
-       
+        String fastaFile = "/Volumes/PromisePegasus/worawich/Referense/TB_reference/H37Rv_NC_000962.3.txt";
+
+        FastaUtil.reIndexChrNameFastaFile(fastaFile);
+//            
     }
     
 }
