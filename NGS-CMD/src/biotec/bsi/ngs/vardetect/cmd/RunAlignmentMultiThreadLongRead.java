@@ -53,7 +53,8 @@ public class RunAlignmentMultiThreadLongRead {
         int numMer = Integer.valueOf(args[4]);
         int threshold = Integer.valueOf(args[5]);                       // Fifth argument; indicate count number threshold
         int numThread = Integer.valueOf(args[6]);                       // Sixth argument; indicate number of thread
-        int repeatThreshold = Integer.valueOf(args[7]);                 // Seventh argument; indicate number of repeat that we can accept. If the number of repeat is more that this thres hold it will be cut out
+        int repeatThreshold = Integer.valueOf(args[7]);                 // Seventh argument; indicate number of repeat that we can accept. If the number of repeat is more than this threshold it will be cut out
+                                                                        // If repeatThreshold has set to zero the protocol will change to not cut repeat protocol (consider all repeat)
         String filetype = args[8]; 
         
         System.out.println("Get reference sequence");

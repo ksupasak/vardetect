@@ -41,9 +41,9 @@ public class TestBedCMD {
 
         String fastaFile = "/Volumes/PromisePegasus/worawich/Referense/NC_001494.1_Jaagsiekte_sheep_retrovirus/sequence.fasta";
         String resultFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_300517/dm6_300517_OP3_R1_alignResult_Sorted.txt";
-        String sampleFile = "/Volumes/PromisePegasus/worawich/Download_dataset/cancer/unmaped_cancer/TCGA-55-6543-o1A.unmapped.fa";
-        String nonVariantFile = "/Volumes/PromisePegasus/worawich/Download_dataset/cancer/unmaped_cancer/TCGA-55-6543_cancer_virus_alnRes_Sort.txt";
-        String coverageFile = "/Volumes/PromisePegasus/worawich/Download_dataset/cancer/unmaped_cancer/TCGA-55-6543_cancer_virus_alnRes_Sort_nonVariantCoverage.txt";
+        String sampleFile = "/Volumes/PromisePegasus/worawich/Download_dataset/cancer/unmaped_cancer/TCGA-75-5147-01A.unmapped.fa";
+        String nonVariantFile = "/Volumes/PromisePegasus/worawich/Download_dataset/cancer/unmaped_cancer/TCGA_75_5147_virus_alignResult_Sort.txt";
+        String coverageFile = "/Volumes/PromisePegasus/worawich/Download_dataset/cancer/unmaped_cancer/TCGA_75_5147_virus_alignResult_Sort_nonVariantCoverage.txt";
 //          int startPoint = 0;
 //          int length = 15;
 //          SequenceUtil.truncateFastaFIles(fastaFile, startPoint, length);
@@ -52,7 +52,7 @@ public class TestBedCMD {
 //            FastaUtil.reIndexChrNameFastaFile(fastaFile);
 //            FastaUtil.createSampleFromAlignResult(resultFile, sampleFile, 'c');
 //        SequenceUtil.analysisNonVariantResultFromFile(nonVariantFile, 18, 2);
-        FastaUtil.createSampleFromCoverageReport(coverageFile, sampleFile);
+        FastaUtil.createSampleFromNonVariantCoverageReport(coverageFile, sampleFile);
     }
 
 }

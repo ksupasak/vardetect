@@ -24,23 +24,24 @@ public class TestDetectVariation {
        public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "hg38_ChimericSR11023_alignResult_Sort";
-        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/SR11023/STAR/";
+        String filename = "TCGA-55-6543_cancer_hg38virus_alnRes_Sort";
+        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/cancer/unmaped_cancer/";
 //        String saveFilename = "hg38_FullNewMethod_Sim_alignmentResult_VariantReport";
-        String saveFilenameCov = "hg38_ChimericSR11023_VariantCoverageReport";
+        String saveFilenameCov = "TCGA-55-6543_cancer_hg38virus_alnRes_VariantCoverageReport_th70";
 //        int readLength = 24;
         int merLength = 18;
         int overlap = 4;
-        int percentMatch = 90;
+        int percentMatch = 70;
+        int coverageThreshold = 2;
 
         VariationResult varRes = SequenceUtil.analysisResultFromFileV3(path+filename+".txt",merLength,overlap,percentMatch);
         varRes.createVariantReport();
         varRes.analyzeCoverageFusion();
-        varRes.writeVariantCoverageReportToFile(path, saveFilenameCov, 'F');
+        varRes.writeVariantCoverageReportToFile(path, saveFilenameCov, coverageThreshold, 'F');
         varRes.analyzeCoverageIndel();
-        varRes.writeVariantCoverageReportToFile(path, saveFilenameCov, 'I');
+        varRes.writeVariantCoverageReportToFile(path, saveFilenameCov, coverageThreshold, 'I');
         varRes.analyzeCoverageSNP();
-        varRes.writeVariantCoverageReportToFile(path, saveFilenameCov, 'S');
+        varRes.writeVariantCoverageReportToFile(path, saveFilenameCov, coverageThreshold, 'S');
 //        varRes.writeVarianReportToFile(path, saveFilename);
         System.gc();
       

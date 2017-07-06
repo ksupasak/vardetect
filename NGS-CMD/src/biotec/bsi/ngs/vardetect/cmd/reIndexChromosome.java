@@ -19,7 +19,7 @@ public class reIndexChromosome {
     
     public static void main(String[] args) throws IOException{
         
-        String fastaFile = "/Volumes/PromisePegasus/worawich/Referense/TB_reference/H37Rv_NC_000962.3.txt";
+        String fastaFile = "/Volumes/PromisePegasus/worawich/Referense/drosophila+miRNA/Dm6_miRNA.fa";
 
         FastaUtil.reIndexChrNameFastaFile(fastaFile);
 //            
