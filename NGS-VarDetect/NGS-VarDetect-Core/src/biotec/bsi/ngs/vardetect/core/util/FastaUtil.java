@@ -486,7 +486,7 @@ public class FastaUtil {
         writer.close();    
     }
     
-    public static void createSampleFromCoverageReport(String alignResultFile, String sampleFile) throws IOException{
+    public static void createSampleFromNonVariantCoverageReport(String alignResultFile, String sampleFile) throws IOException{
         /**
          * This function will create Sample from Coverage report.
          * Separately save to file per group

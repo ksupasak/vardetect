@@ -435,7 +435,7 @@ public class VariationResult {
         }
     }
     
-    public void writeVariantCoverageReportToFile(String path , String nameFile , char varType) throws IOException{
+    public void writeVariantCoverageReportToFile(String path , String nameFile , int coverageThreshold , char varType) throws IOException{
         /**
         * Suitable for version 3 data structure (data structure that has iniIdx in its)
         * write result to file format for variant report
@@ -479,22 +479,24 @@ public class VariationResult {
                     /**
                      * Write Report Part
                      */
-                    writer.write("Group "+count);
-                    writer.write("\tFront Break point : " + chrF +","+bpF);
-                    writer.write("\tBack Break point : " + chrB +","+bpB);
- 
                     ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
-                    writer.write("\tCoverage : " + coverageList.size());
-                    writer.write("\n");
-                    for(int i=0;i<coverageList.size();i++){
-                        Variation var = coverageList.get(i);
-                        
-                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF));
-                        writer.write(" || ");
-                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB));
+                    if(coverageList.size()<coverageThreshold){
+                        writer.write("Group "+count);
+                        writer.write("\tFront Break point : " + chrF +","+bpF);
+                        writer.write("\tBack Break point : " + chrB +","+bpB); 
+    //                    ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
+                        writer.write("\tCoverage : " + coverageList.size());
                         writer.write("\n");
+                        for(int i=0;i<coverageList.size();i++){
+                            Variation var = coverageList.get(i);
+
+                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF));
+                            writer.write(" || ");
+                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB));
+                            writer.write("\n");
+                        }
+                        count++;
                     }
-                    count++;
                 }  
             }
         }
@@ -519,22 +521,23 @@ public class VariationResult {
                     /**
                      * Write Report Part
                      */
-                    writer.write("Group "+count);
-                    writer.write("\tFront Break point : " + chrF +","+bpF);
-                    writer.write("\tBack Break point : " + chrB +","+bpB);
- 
                     ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
-                    writer.write("\tCoverage : " + coverageList.size());
-                    writer.write("\n");
-                    for(int i=0;i<coverageList.size();i++){
-                        Variation var = coverageList.get(i);
-                        
-                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF));
-                        writer.write(" || ");
-                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB));
+                    if(coverageList.size()<coverageThreshold){
+                        writer.write("Group "+count);
+                        writer.write("\tFront Break point : " + chrF +","+bpF);
+                        writer.write("\tBack Break point : " + chrB +","+bpB);
+                        writer.write("\tCoverage : " + coverageList.size());
                         writer.write("\n");
+                        for(int i=0;i<coverageList.size();i++){
+                            Variation var = coverageList.get(i);
+
+                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF));
+                            writer.write(" || ");
+                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB));
+                            writer.write("\n");
+                        }
+                        count++;
                     }
-                    count++;
                 }
                 
             }
@@ -554,26 +557,28 @@ public class VariationResult {
                 int chrB = (int)(bpBCode>>28);
                 
                 ArrayList<Variation> coverageList = this.coverageMapSNP.get(bpBCode);
-                /**
-                * Write Report Part
-                */
-                writer.write("Group "+count);
-                writer.write("\tBack Break point : " + chrB +","+bpB);  
-                writer.write("\tCoverage : " + coverageList.size());
-                writer.write("\n");
-                
-                for(int i=0;i<coverageList.size();i++){
+                if(coverageList.size()<coverageThreshold){
                     /**
-                     * Write Report Part
-                     */
-                    Variation var = coverageList.get(i);
-                        
-                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF));
-                    writer.write(" || ");
-                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB));
+                    * Write Report Part
+                    */
+                    writer.write("Group "+count);
+                    writer.write("\tBack Break point : " + chrB +","+bpB);  
+                    writer.write("\tCoverage : " + coverageList.size());
                     writer.write("\n");
+
+                    for(int i=0;i<coverageList.size();i++){
+                        /**
+                         * Write Report Part
+                         */
+                        Variation var = coverageList.get(i);
+
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF));
+                        writer.write(" || ");
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB));
+                        writer.write("\n");
+                    }
+                    count++;
                 }
-                count++;
             }
             
         }

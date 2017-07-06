@@ -922,7 +922,9 @@ public class BinaryAligner extends Thread implements Aligner {
         * 
         * This version 3 function give the v3 data structure of result
         * 
-        * this version has build for cut repeat protocol (ignore all repeat consider only unique in each chromosome)
+        * this version has build for cut repeat protocol (ignore all repeat consider only unique in each chromosome but it up to repeatThreshold)
+        * If repeat threshold has set to zero it will consider all the repeat (change to not cut repeat protocol)
+        * 
         * Compatible with longRead
         * Limit max chromosome at 31 chromosome (5bit)
         */

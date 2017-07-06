@@ -7,6 +7,7 @@ package biotec.bsi.ngs.vardetect.core;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.Vector;
@@ -18,8 +19,11 @@ import java.util.Vector;
 public class ReferenceAnnotation {
     
     ArrayList<Annotation> data;
-    Map<Long,Map<Long,ArrayList<Annotation>>> refAnno; 
-    
+    Map<Long,Map<Long,ArrayList<Annotation>>> refAnno;
+    Map<String,Integer> chrIndex = new LinkedHashMap();                 // store chr Index (Map that link btw original chr name and new chr name)
+    ArrayList<Long> annoBinaryTree = new ArrayList();                   // array of long of startCode and stopCode (sorted) [chr 5bit][start position 28bit][annotation index 31bit]
+    Map<Integer,Annotation> annoIndex = new LinkedHashMap();            // store Anootation and it index
+ 
     public ReferenceAnnotation(){
         data = new ArrayList<Annotation>();
         refAnno = new TreeMap();
@@ -31,7 +35,7 @@ public class ReferenceAnnotation {
          * TreeMap has two layer 
          *  1. key is startCode : value is TreeMap
          *  2. key is stopCode : value is ArrayList<Annotation>
-         * this TreeMap for matching propose
+         * this TreeMap for matching purpose
          */
         if(this.refAnno.containsKey(startCode)){
             Map<Long,ArrayList<Annotation>> refII = refAnno.get(startCode);
@@ -52,6 +56,18 @@ public class ReferenceAnnotation {
             refII.put(stopCode, listAnno);
             this.refAnno.put(startCode, refII);
         }
+    }
+    
+    public void putChrIndex(Map<String,Integer> inChrIndex){
+        this.chrIndex = inChrIndex;
+    }
+    
+    public void putAnnotationBinaryTree(ArrayList<Long> inAnnoBinaryTree){
+        this.annoBinaryTree = inAnnoBinaryTree;
+    }
+    
+    public void putAnnotationIndex(Map<Integer,Annotation> inAnnoIndex){
+        this.annoIndex = inAnnoIndex;
     }
     
     public void addData(Annotation in){

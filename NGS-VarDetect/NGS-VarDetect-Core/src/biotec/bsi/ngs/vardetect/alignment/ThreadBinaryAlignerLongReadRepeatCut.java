@@ -173,9 +173,10 @@ public class ThreadBinaryAlignerLongReadRepeatCut implements Runnable {
                             /******** New Part (fixed wrong mer count) Version 3 **********/
                             for(int j=0;j<pos2.length;j++){
 //                              
-                                if(pos2.length>=repeatThreshold){
+                                if(pos2.length>repeatThreshold&&repeatThreshold!=0){
                                     break;
                                 }
+                                
                                 long alnCode = pos2[j] - index;     // pos is 29 bit [strand|position] ; algncode is 29 bit [strand|alignPosition] but already subtract index (offset)
 
 
@@ -425,7 +426,7 @@ public class ThreadBinaryAlignerLongReadRepeatCut implements Runnable {
                         if(pos2 != null){
                             /******** New Part (fixed wrong mer count) Version 3 **********/
                             for(int j=0;j<pos2.length;j++){
-                                if(pos2.length>=repeatThreshold){
+                                if(pos2.length>=repeatThreshold&&repeatThreshold!=0){
                                     break;
                                 }
                                 
