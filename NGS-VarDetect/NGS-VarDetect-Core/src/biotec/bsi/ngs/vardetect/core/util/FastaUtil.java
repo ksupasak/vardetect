@@ -643,5 +643,34 @@ public class FastaUtil {
         
         return sampleCutPoint;
     }
+    
+    public static void separateContigToFile(String filename) throws IOException{
+        Path pathFile = Paths.get(filename);
+        
+        String savePath = pathFile.getParent()+File.separator;
+        Charset charset = Charset.forName("US-ASCII");
+        FileWriter writer = null;
+        boolean firstTimeFlag = true;
+               
+        try (BufferedReader reader = Files.newBufferedReader(pathFile, charset)) {
+            String line = null;                   
+            while ((line = reader.readLine()) != null) {                
+                if(line.charAt(0)== '>'){
+                    if(firstTimeFlag == false){
+                        writer.flush();
+                        writer.close();
+                    }
+                    firstTimeFlag = false;
+                    String saveFilename = line.substring(1);
+                    writer = new FileWriter(savePath+"contig_"+saveFilename+".fa");
+                    writer.write(line+"\n");
+                }else{
+                    writer.write(line+"\n");
+                }           
+            }
+        }
+        writer.flush();
+        writer.close();
+    }
 
 }

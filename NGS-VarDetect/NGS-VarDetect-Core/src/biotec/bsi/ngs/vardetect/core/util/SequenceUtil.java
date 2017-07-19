@@ -2241,7 +2241,7 @@ public class SequenceUtil {
                     long stop = Long.parseLong(setA[4]);
                     String score = setA[5];
                     String strand = setA[6];
-                    int frame = Integer.parseInt(setA[7]);
+                    String frame = setA[7];
                     String attribute = setA[8];
                     
                     if(source.equals(specificSource)){
@@ -2273,10 +2273,11 @@ public class SequenceUtil {
         ReferenceAnnotation refAnno = new ReferenceAnnotation();
         Path path = Paths.get(filename);
         StringBuffer seq = new StringBuffer();
-        Map<String,Integer> chrNameIndex = new LinkedHashMap();         // store chr Index (Map that link btw original chr name and new chr name)
+        Map<String,Long> chrNameIndex = new LinkedHashMap();         // store chr Index (Map that link btw original chr name and new chr name) key is chr name
+        Map<Long,String> chrNameIndexReverse = new LinkedHashMap();  // store chr Index (Map that link btw original chr name and new chr name) key is chr number
         Map<Integer,Annotation> annotationIndex = new LinkedHashMap();  // store Anootation and it index
         ArrayList<Long> annoBinaryTree = new ArrayList();               // store start and stop code for binary search purpose (may be no need to sort because the gff file already rearrange in ascending)
-        int chr = 0;
+        long chr = 0;               // define long for store chr because it has to be shift left 28 bit to create the code (if it int wwhen weshift left 28 bit it will exceed the limit of int and cause the minus number that we didn't expect)
         int annoIndex = 0;
         
         try (BufferedReader reader = new BufferedReader(new FileReader(filename));) {
@@ -2318,7 +2319,7 @@ public class SequenceUtil {
                     long stop = Long.parseLong(setA[4]);
                     String score = setA[5];
                     String strand = setA[6];
-                    int frame = Integer.parseInt(setA[7]);
+                    String frame = setA[7];
                     String attribute = setA[8];
                     
                     if(source.equals(specificSourceOrFeature)||feature.equals(specificSourceOrFeature)){
@@ -2327,8 +2328,8 @@ public class SequenceUtil {
                         long startCode = (chr<<28)+start;
                         long stopCode = (chr<<28)+stop;
                         
-                        long startChrPosIdx = (startCode<<33)+annoIndex;            // startChrPosIdx has structure like this [chr 5bit][start position 28bit][annotation index 31bit]
-                        long stopChrPosIdx = (stopCode<<33)+annoIndex;              // stopChrPosIdx has structure like this [chr 5bit][stop position 28bit][annotation index 31bit]
+                        long startChrPosIdx = (startCode<<23)+annoIndex;            // startChrPosIdx has structure like this [chr 5bit][start position 28bit][annotation index 31bit]
+                        long stopChrPosIdx = (stopCode<<23)+annoIndex;              // stopChrPosIdx has structure like this [chr 5bit][stop position 28bit][annotation index 31bit]
                         
                         annoBinaryTree.add(startChrPosIdx);
                         annoBinaryTree.add(stopChrPosIdx);
@@ -2345,7 +2346,7 @@ public class SequenceUtil {
         
         refAnno.putAnnotationBinaryTree(annoBinaryTree);
         refAnno.putAnnotationIndex(annotationIndex);
-        refAnno.putChrIndex(chrNameIndex);
+        refAnno.putChrIndex(chrNameIndex,chrNameIndexReverse);
         
         return refAnno;
     }
@@ -4501,9 +4502,10 @@ public class SequenceUtil {
         writer.close();
     }
     
-    public static void groupNonVariantResultWithGffFile(String inGffFile, String filename, int merLength, int inThreshold) throws IOException{
+    public static void groupNonVariantResultWithGffFile(String inGffFile, String filename) throws IOException{
         /**
-        * Suitable with result format only (result format is a file that store peak result arrange by sample order (come first be the first). the peak result is in format data structure V3
+        * Suitable with result format only (result format is a file that store peak result arrange by sample order (come first be the first or ..._alignResult_Sorted.txt file). the peak result is in format data structure V3
+        * 
         * startIndex and stopIndex defined in this method is the index of DNA base in Read Ex. read length 100 base will has index 0 to 99 and has index of mer 0 to 83 [83 is come from (100 - 18)+1]
         * 
         * this function will not call detect variation function but will try to count and find coverage of each match pattern in each sample directly (no pairing and form junction)
@@ -4519,9 +4521,7 @@ public class SequenceUtil {
         * 
         * inThreshold is threshold for minimum number of read in each group of coverage
         */
-        int threshold = inThreshold;
-        VariationResult varResult = new VariationResult();
-        varResult.addMerLength(merLength);
+        Map<Integer,ArrayList<Integer>> annotationGroup = new LinkedHashMap();          // store annotation index as key and arrayList of data index as value
 //        varResult.addReadLength(readLength);
         
         Charset charset = Charset.forName("US-ASCII");
@@ -4535,7 +4535,7 @@ public class SequenceUtil {
             String line = null;    
             int count = 0;
 
-            System.out.println("reading Sample Result");
+            System.out.println("Reading Sample Result");
             while ((line = reader.readLine()) != null) {
 
                 inData.add(line);
@@ -4549,49 +4549,13 @@ public class SequenceUtil {
 //            writeClusterGroupToFile(filename,listGroup);
         }
         
-        System.out.println(" Done read Sample Result");
+        System.out.println("Done read Sample Result");
         
+        System.out.println("Read Annotation File");
         ReferenceAnnotation refAnno = readAnnotationFileV2(inGffFile,"gene");
-        
+        System.out.println("Done read Annotation File");
         /*********************************/
-        /** continue Code below ***/
-        
-        path = Paths.get(inGffFile);
-
-//        StringBuffer seq = new StringBuffer();
-//        ArrayList<String> inData = new ArrayList();    
-        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
-            String line = null;    
-            int count = 0;
-
-            System.out.println("reading Sample Result");
-            while ((line = reader.readLine()) != null) {
-
-                inData.add(line);
-                count++;
-                if(count%1000000==0){
-                    System.out.println(count + " line past");
-                    //System.out.println("Recent chromosome: " + numChr);
-                }       
-
-            }
-//            writeClusterGroupToFile(filename,listGroup);
-        }
-        
-        System.out.println(" Done read Sample Result");
-        
-        
-        
-        ArrayList<String> selectData = new ArrayList();                     // Store list of long string that contain peak information (list of all peak in specific read)
-        ArrayList<Byte> selectChr = new ArrayList();                        // store list of chr number same order as selectData
-        ArrayList<Boolean> selectGreenChar = new ArrayList();
-        Map<Integer,ArrayList<Integer>> mapF = new LinkedHashMap();
-        Map<Integer,Integer> mapB = new LinkedHashMap();
-        int index = 0;
-        String oldReadName = null;
-        
-        Map<Long,ArrayList<Integer>> mapCoverageCount = new LinkedHashMap();  // key is iniRealPosition and value arrayList of index of align pattern
-        Map<Long,ArrayList<String>> readNameCheckMap = new LinkedHashMap();  // key is iniRealPosition and value arrayList of String (name of read) Check to avoid adding same read into same group
+        /** Start Grouping ***/
         
         for(int i=0;i<inData.size();i++){
             String dataGet = inData.get(i);
@@ -4612,50 +4576,30 @@ public class SequenceUtil {
             int readLen = Integer.parseInt(data[12]);
             /******************************/
             
-            int matchCount = numG+numY+numO+numR;
-            int startIndex = iniIdx;
-            int stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
-            boolean greenChar = false;
+            long chrPosStart = (((long)numChr<<28)+iniPos)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStop = (((long)numChr<<28)+lastPos)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
             
+            int annoGroupIndex = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStart, chrPosStop);
             
-            /*new code here crete Map collect startpos as key read name ass value and counting all of it */
-            long iniRealPos = 0;
-            if(strand.equals("-")){
-                int reverseIniIdx = readLen-(iniIdx+(merLength+matchCount-1));
-                iniRealPos = iniPos+reverseIniIdx;
-            }else if(strand.equals("+")){
-                iniRealPos = iniPos+iniIdx;
-            }
-            
-            
-            if(mapCoverageCount.containsKey(iniRealPos)){
-                ArrayList<Integer> indexList = mapCoverageCount.get(iniRealPos);
-                ArrayList<String> readNameList = readNameCheckMap.get(iniRealPos);
-                if(!readNameList.contains(readName)){
-                    indexList.add(i);
-                    readNameList.add(readName);
-                    mapCoverageCount.put(iniRealPos, indexList);
+            if(annoGroupIndex!=-1){
+                if(annotationGroup.containsKey(annoGroupIndex)){
+                    ArrayList<Integer> dummyDataIndexList = annotationGroup.get(annoGroupIndex);
+                    dummyDataIndexList.add(i);
+                    annotationGroup.put(annoGroupIndex, dummyDataIndexList);
+                }else{
+                    ArrayList<Integer> dummyDataIndexList = new ArrayList();
+                    dummyDataIndexList.add(i);
+                    annotationGroup.put(annoGroupIndex, dummyDataIndexList);
                 }
-            }else{
-                ArrayList<Integer> indexList = new ArrayList();
-                ArrayList<String> readNameList = new ArrayList();
-                indexList.add(i);
-                readNameList.add(readName);
-                mapCoverageCount.put(iniRealPos,indexList);
-                readNameCheckMap.put(iniRealPos, readNameList);
             }
-            
         }
-        
-        /**
-         * Write report part 
-         */
-        
+        /*********************************/
+        /********** Write Grouping Result **********/
         FileWriter writer;        
         /**
          * Check File existing
          */
-        
+        ArrayList<Integer> countRead = new ArrayList();
         File f = new File(saveFileName); //File object        
         if(f.exists()){
 //            ps = new PrintStream(new FileOutputStream(filename,true));
@@ -4664,46 +4608,39 @@ public class SequenceUtil {
 //            ps = new PrintStream(filename);
             writer = new FileWriter(saveFileName);
         }
-        int num = 0;
-        for (Map.Entry<Long, ArrayList<Integer>> entry : mapCoverageCount.entrySet()){
-            long startPosition = entry.getKey();
-            ArrayList<Integer> indexList = entry.getValue();
+        
+        Map<Integer,Annotation> refAnnoIndex = refAnno.getAnnotationIndex();
+        Map<Long,String> chrIndexReverse = refAnno.getChrIndexReverse();
+        int count = 1;
+        for(Map.Entry<Integer,ArrayList<Integer>> entry : annotationGroup.entrySet()){
+            int annoIndex = entry.getKey();
+            ArrayList<Integer> dataList = entry.getValue();
             
-            if(indexList.size() >= threshold){
-                writer.write("Group : "+(++num)+"\tStart Position : "+startPosition+"\tCoverage : "+indexList.size()+"\n");
-                for(int j=0;j<indexList.size();j++){
-                    String alignPattern = inData.get(indexList.get(j));
-                    
-                    /***  Extract Data ***/
-                    String[] data = alignPattern.split(",");           
-                    int numChr = Integer.parseInt(data[0]);
-                    long iniPos = Long.parseLong(data[1]);
-                    long lastPos = Long.parseLong(data[2]);
-                    int numG = Integer.parseInt(data[3]);
-                    int numY = Integer.parseInt(data[4]);
-                    int numO = Integer.parseInt(data[5]);
-                    int numR = Integer.parseInt(data[6]);
-                    String strand = data[7];
-                    int iniIdx = Integer.parseInt(data[8]);
-                    String readName = data[9];
-                    byte snpFlag = Byte.parseByte(data[10]);
-                    int iniBackFlag = Integer.parseInt(data[11]);
-                    int readLen = Integer.parseInt(data[12]);
-                    /******************************/
-
-                    int matchCount = numG+numY+numO+numR;
-                    int startIndex = iniIdx;
-                    int stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
-                    boolean greenChar = false;
-                    
-                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", numChr,iniPos,lastPos,numG,numY,numO,numR,strand,iniIdx,readName,snpFlag,iniBackFlag,readLen));
-                    writer.write("\n");
+            Annotation anno = refAnnoIndex.get(annoIndex);
+            long chrNum = anno.getChrName();
+            String chrName = chrIndexReverse.get(chrNum);
+            String feature = anno.getFeature();
+            String source = anno.getSource();
+            String strand = anno.getStrand();
+            String attribute = anno.getAttribute();
+            writer.write("Group"+(count++)+"\tAnnotation:"+chrName+" "+source+" "+feature+" "+strand+" "+attribute+"\tAmount:"+dataList.size()+"\n");
+            
+            for(int i=0;i<dataList.size();i++){
+                int dataIndex = dataList.get(i);
+                
+                writer.write(inData.get(dataIndex)+"\n");
+                
+                if(countRead.contains(dataIndex) == false){
+                    countRead.add(dataIndex);
                 }
             }
         }
         
+        writer.write("\n## Number of actual read that has been annotated : " + countRead.size());
+        
         writer.flush();
         writer.close();
+        
     }
     
     public static Map<Integer,ArrayList<String[]>> detectVariation(ArrayList<String> selectData , ArrayList<Byte> selectChr , ArrayList<Boolean> selectGreenChar , Map<Integer,ArrayList<Integer>> mapF , Map<Integer,Integer> mapB , int merLength , int allowOverlapBase){

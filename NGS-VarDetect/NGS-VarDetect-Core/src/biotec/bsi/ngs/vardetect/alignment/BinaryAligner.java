@@ -938,7 +938,7 @@ public class BinaryAligner extends Thread implements Aligner {
 
         Enumeration<ChromosomeSequence> chrs = ref.getChromosomes().elements();
 
-        while(chrs.hasMoreElements()){                                                      // Loop chromosome contain in ReferenceSequence
+        while(chrs.hasMoreElements()){                                                         // Loop chromosome contain in ReferenceSequence
             long startTime = System.currentTimeMillis();
             try {
                 

@@ -21,11 +21,11 @@ public class Annotation {
     private long stop;
     private String score;
     private String strand;
-    private int frame;
+    private String frame;
     private String attribute;
     
     //Vector<ChromosomeSequence> chrs ;
-    public Annotation(long inChrName,String inSource,String inFeature,long inStart,long inStop,String inScore,String inStrand,int inFrame,String inAttribute){
+    public Annotation(long inChrName,String inSource,String inFeature,long inStart,long inStop,String inScore,String inStrand,String inFrame,String inAttribute){
 
 //        this.geneName = inGeneName;
         this.chrName = inChrName;
@@ -64,7 +64,7 @@ public class Annotation {
     public String getStrand(){
         return strand;
     }
-    public int getFrame(){
+    public String getFrame(){
         return frame;
     }
     public String getAttribute(){
