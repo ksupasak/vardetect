@@ -26,7 +26,7 @@ public class TestPostProcess {
     public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_300517/OP4_R2_dm6_miRNA_cutRep_alignResult_part";
+        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_300517/OP3_S3_Fcut_miRNA_alignResult_part";
         String indexFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/drosophila/d.melanogaster/dm6_filter.index";            // use for traceback to natural chromosome name
         String sampleFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/O3_S3_L001_R2_001.fa";
         String saveFileType = "txt";
@@ -63,6 +63,7 @@ public class TestPostProcess {
             System.out.println("Begin create color array");
             Clustering.createColorArrayV2(readAlign, merLength);        
             System.out.println("Done create color array");
+//            readAlign.sortFilterResult("all",maxFullMatch);
             readAlign.writeSortedCutColorResultToPathInFormatForLinuxSort(path, saveFileName, saveFileType,"all",maxFullMatch);
 //*****for create set of sample that align********//            
 //            readAlign.writeAlignSequenceReadFasta(path, saveSampleFileName, sampleFile, propotion, "all",maxFullMatch);
