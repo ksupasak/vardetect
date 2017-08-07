@@ -11,6 +11,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -48,6 +49,23 @@ public class AlignmentResult {
 
     InputSequence input;
     
+    int numChr;
+    long iniPos;
+    long lastPos;
+    int green;
+    int yellow;
+    int orange;
+    int red;
+    String strand;
+    int iniIndex;
+    String sequenceName;
+    int snpFlag;
+    int iniBackFlag;
+    int readLength;
+    
+    public  AlignmentResult(){
+        
+    }
     public  AlignmentResult(InputSequence input){
         this.merPosMap = new HashMap();
         this.merPosMapV2 = new LinkedHashMap();
@@ -234,6 +252,77 @@ public class AlignmentResult {
         */
         //result.put(readName, code)
         
+    }
+    
+    public void addResultData(int numChr,long iniPos,long lastPos,int green,int yellow,int orange,int red,String strand,int iniIndex,String readName,int snpFlag,int iniBackFlag,int readLength){
+        /**
+         * Store data in in variable (object implement style)
+         */
+        this.numChr = numChr;
+        this.iniPos = iniPos;
+        this.lastPos = lastPos;
+        this.green = green;
+        this.yellow = yellow;
+        this.orange=orange;
+        this.red=red;
+        this.strand=strand;
+        this.iniIndex=iniIndex;
+        this.sequenceName=readName;
+        this.snpFlag=snpFlag;
+        this.iniBackFlag=iniBackFlag;
+        this.readLength=readLength; 
+    }
+
+    public int getNumChr() {
+        return numChr;
+    }
+
+    public long getIniPos() {
+        return iniPos;
+    }
+
+    public long getLastPos() {
+        return lastPos;
+    }
+
+    public int getGreen() {
+        return green;
+    }
+
+    public int getYellow() {
+        return yellow;
+    }
+
+    public int getOrange() {
+        return orange;
+    }
+
+    public int getRed() {
+        return red;
+    }
+
+    public String getStrand() {
+        return strand;
+    }
+
+    public int getIniIndex() {
+        return iniIndex;
+    }
+
+    public String getSequenceName() {
+        return sequenceName;
+    }
+
+    public int getSnpFlag() {
+        return snpFlag;
+    }
+
+    public int getIniBackFlag() {
+        return iniBackFlag;
+    }
+
+    public int getReadLength() {
+        return readLength;
     }
     
     public void createMap(String readName, Map merMap){
@@ -533,4 +622,34 @@ public class AlignmentResult {
             ps.println();
         }
     }
+    
+    public static Comparator<AlignmentResult> AlnResNameIniIdxComparator = new Comparator<AlignmentResult>() {
+
+	public int compare(AlignmentResult s1, AlignmentResult s2) {
+	   String sequenceName1 = s1.getSequenceName().toUpperCase();
+	   String sequenceName2 = s2.getSequenceName().toUpperCase();
+
+	   //ascending order (low to high)
+	   int compareValue = sequenceName1.compareTo(sequenceName2);
+           
+           if(compareValue == 0){
+               Integer iniIndex1 = s1.getIniIndex();
+               Integer iniIndex2 = s2.getIniIndex();
+               return iniIndex1.compareTo(iniIndex2);
+           }else{
+               return compareValue;
+           }
+
+	   //descending order (high to low)
+//            int compareValue = sequenceName2.compareTo(sequenceName1);
+//
+//            if(compareValue == 0){
+//                Integer iniIndex1 = s1.getIniIndex();
+//                Integer iniIndex2 = s2.getIniIndex();
+//                return iniIndex2.compareTo(iniIndex1);
+//            }else{
+//                return compareValue;
+//            }
+        }
+    };
 }

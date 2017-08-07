@@ -57,6 +57,8 @@ public class AlignmentResultRead {
     private ArrayList<String> mapList;                      // Store readname of map read (use in local alignment part)
     private Map<Long,Integer> countMap;                     // Store count match of each chromosome and position. Key is chr|Position and Value is count number of that specific chr and position
     private Map<Long,ArrayList<Integer>> checkDupMap;                  // store Key = chr|position and Value = iniPosition on read. This map has been used for check duplication read has same ini position on read that match same chr same position 
+    private ArrayList<AlignmentResult> AlignmentResultList;
+    private ArrayList<AlignmentResult> listAlignmentResult;
     
     public AlignmentResultRead(){
         
@@ -71,6 +73,7 @@ public class AlignmentResultRead {
        this.mask_chrIdxStrandAln = 4398046511103L;      //  Do & operation to get aligncode compose of chr|Idx|strand|alignposition from value contain in alignmentResultMap
        this.unMapList = new ArrayList();
        this.mapList = new ArrayList();
+       this.AlignmentResultList = new ArrayList(); 
     }
     
     public void addResult(ShortgunSequence inRead){
@@ -1708,6 +1711,108 @@ public class AlignmentResultRead {
                 }
             }
         }
+
+    }
+    
+    public void sortFilterResult(String option1, int option2){
+        /**
+         * String option1 filter option code "gy" mean we filter out the read match result that has orange and red count
+         *                                   "g"  mean we filter out the read match result contain yellow orange and red count
+         *                                   "gyo" mean we filter out the read match result contain only red count
+         *                                  "all" mean no filter
+         * int option2 filter option threshold indicate the percentage of maximum mer count. If read match result have mer count equal or more than this threshold the result has been filter out. (100 will prevent full match read)
+         * 
+         * We adjust iniIndex into a view of strand + [the last index of strand - will be iniIndex of strand +]
+         * 
+         * Begin extract data to sort
+         * 
+         */
+        for(int i=0;i<this.shrtRead.size();i++){
+            boolean ignoreFlag = false;
+            ShortgunSequence dummySS = this.shrtRead.get(i);
+            String readName = dummySS.getReadName();
+            int readLength = dummySS.getReadLength();
+            ArrayList<Integer> listChr = dummySS.getListChrMatch();
+            ArrayList<Long> listIniPos = dummySS.getListPosMatch();
+            ArrayList<Long> listLastPos = dummySS.getListLastPosMatch();
+            ArrayList<Integer> listIniIndex = dummySS.getListIniIdx();
+            ArrayList<String> listStrand = dummySS.getListStrand();
+            ArrayList<Integer> listGreen = dummySS.getListGreen();
+            ArrayList<Integer> listYellow = dummySS.getListYellow();
+            ArrayList<Integer> listOrange = dummySS.getListOrange();
+            ArrayList<Integer> listRed = dummySS.getListRed();
+            ArrayList<Integer> listSNPFlag = dummySS.getSNPFlag();
+            ArrayList<Integer> listIniBackFlag = dummySS.getIniBackFlag();
+            int numMaxMatch = ((option2 * dummySS.readLength)/100)-dummySS.merLength+1;
+                        
+            for(int numP=0;numP<listChr.size();numP++){
+
+                int green = listGreen.get(numP);
+                int yellow = listYellow.get(numP);
+                int orange = listOrange.get(numP);
+                int red = listRed.get(numP);
+
+                int merMatch = green+yellow+orange+red;
+                if(merMatch == numMaxMatch){
+                    ignoreFlag = true;
+                }
+            }
+            if(ignoreFlag==false){
+                for(int numP=0;numP<listChr.size();numP++){
+                    int numChr = listChr.get(numP);
+                    long iniPos = listIniPos.get(numP);
+                    long lastPos = listLastPos.get(numP);
+                    int iniIndex = listIniIndex.get(numP);
+                    int green = listGreen.get(numP);
+                    int yellow = listYellow.get(numP);
+                    int orange = listOrange.get(numP);
+                    int red = listRed.get(numP);
+                    int snpFlag = listSNPFlag.get(numP);
+                    int iniBackFlag = listIniBackFlag.get(numP);
+                    String strand = listStrand.get(numP);
+                    
+                    int matchCount = green+yellow+orange+red;
+                    int missingMer = 0;
+                    
+                    if(snpFlag!=0){         
+                        missingMer = (snpFlag+dummySS.getMerLength())-1;
+                        matchCount = matchCount+missingMer;
+                    }
+                    
+                    if(strand.equals("-")){
+                        iniIndex = dummySS.getReadLength() - (iniIndex+(dummySS.getMerLength()+matchCount-1));
+    //                    stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
+                    }
+                    
+                    if(option1.equals("gy")){
+                        if(orange==0&&red==0){
+                            AlignmentResult alnResult = new AlignmentResult();                  
+                            alnResult.addResultData(numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag,readLength);
+                            this.AlignmentResultList.add(alnResult);
+                        }
+                    }else if(option1.equals("g")){
+                        if(orange==0&&red==0&&yellow==0){
+                            AlignmentResult alnResult = new AlignmentResult();
+                            alnResult.addResultData(numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag,readLength);
+                            this.AlignmentResultList.add(alnResult);
+                        }
+                    }else if(option1.equals("gyo")){
+                        if(red==0){
+                            AlignmentResult alnResult = new AlignmentResult();
+                            alnResult.addResultData(numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag,readLength);
+                            this.AlignmentResultList.add(alnResult);
+                        }
+                    }else if(option1.equals("all")){
+                        AlignmentResult alnResult = new AlignmentResult();
+                        alnResult.addResultData(numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag,readLength);
+                        this.AlignmentResultList.add(alnResult);
+                    }
+                              
+                } 
+            }
+        }
+        
+        Collections.sort(this.AlignmentResultList, AlignmentResult.AlnResNameIniIdxComparator);
 
     }
     

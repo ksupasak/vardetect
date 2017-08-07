@@ -2518,7 +2518,8 @@ public class SequenceUtil {
 
     public static String decodeMer(long inCode, int kmer){
         
-        long template = 68719476735L;
+//        long template = 68719476735L;
+        long template = (long)Math.pow(4, kmer)-1;
         long dummyInCode = inCode&template;
         String binaryCode = Long.toBinaryString(dummyInCode);/// transform wrong
         long lengthBinary = binaryCode.length();
@@ -4346,6 +4347,8 @@ public class SequenceUtil {
         * 
         * inThreshold is threshold for minimum number of read in each group of coverage
         */
+        long mask = 268435455;
+        
         int threshold = inThreshold;
         VariationResult varResult = new VariationResult();
         varResult.addMerLength(merLength);
@@ -4416,29 +4419,32 @@ public class SequenceUtil {
             
             /*new code here crete Map collect startpos as key read name ass value and counting all of it */
             long iniRealPos = 0;
+            long chrRealPos = 0;
             if(strand.equals("-")){
                 int reverseIniIdx = readLen-(iniIdx+(merLength+matchCount-1));
                 iniRealPos = iniPos+reverseIniIdx;
+                chrRealPos = ((long)numChr<<28)+iniRealPos;
             }else if(strand.equals("+")){
                 iniRealPos = iniPos+iniIdx;
+                chrRealPos = ((long)numChr<<28)+iniRealPos;
             }
             
             
-            if(mapCoverageCount.containsKey(iniRealPos)){
-                ArrayList<Integer> indexList = mapCoverageCount.get(iniRealPos);
-                ArrayList<String> readNameList = readNameCheckMap.get(iniRealPos);
+            if(mapCoverageCount.containsKey(chrRealPos)){
+                ArrayList<Integer> indexList = mapCoverageCount.get(chrRealPos);
+                ArrayList<String> readNameList = readNameCheckMap.get(chrRealPos);
                 if(!readNameList.contains(readName)){
                     indexList.add(i);
                     readNameList.add(readName);
-                    mapCoverageCount.put(iniRealPos, indexList);
+                    mapCoverageCount.put(chrRealPos, indexList);
                 }
             }else{
                 ArrayList<Integer> indexList = new ArrayList();
                 ArrayList<String> readNameList = new ArrayList();
                 indexList.add(i);
                 readNameList.add(readName);
-                mapCoverageCount.put(iniRealPos,indexList);
-                readNameCheckMap.put(iniRealPos, readNameList);
+                mapCoverageCount.put(chrRealPos,indexList);
+                readNameCheckMap.put(chrRealPos, readNameList);
             }
             
         }
@@ -4462,11 +4468,14 @@ public class SequenceUtil {
         }
         int num = 0;
         for (Map.Entry<Long, ArrayList<Integer>> entry : mapCoverageCount.entrySet()){
-            long startPosition = entry.getKey();
+            long dummyKey = entry.getKey();
+            int chrNumber = (int)(dummyKey>>28);
+            long startPosition = dummyKey&mask;
+            
             ArrayList<Integer> indexList = entry.getValue();
             
             if(indexList.size() >= threshold){
-                writer.write("Group : "+(++num)+"\tStart Position : "+startPosition+"\tCoverage : "+indexList.size()+"\n");
+                writer.write("Group : "+(++num)+"\tChr : "+chrNumber+"\tStart Position : "+startPosition+"\tCoverage : "+indexList.size()+"\n");
                 for(int j=0;j<indexList.size();j++){
                     String alignPattern = inData.get(indexList.get(j));
                     
