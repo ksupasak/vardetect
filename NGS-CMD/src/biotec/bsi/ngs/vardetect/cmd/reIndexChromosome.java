@@ -19,8 +19,7 @@ public class reIndexChromosome {
     
     public static void main(String[] args) throws IOException{
         
-        String fastaFile = "/Volumes/PromisePegasus/worawich/Referense/hg38+virus/NC_001494/hg38_virusNC_001494.fa";
-
+        String fastaFile = "/Volumes/PromisePegasus/worawich/Referense/hg38+virus/hg38+6virus/hg38_filter_6virus.fa";
         FastaUtil.reIndexChrNameFastaFile(fastaFile);
 //            
     }

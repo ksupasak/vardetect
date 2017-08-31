@@ -51,7 +51,7 @@ public class RunAlignmentMultiThreadLongRead {
         String filename = args[2];                                      // Third argument; indicate save file name
         int propotion = Integer.valueOf(args[3]);                       // Forth argument; indicate the number of read per time
         int numMer = Integer.valueOf(args[4]);
-        int threshold = Integer.valueOf(args[5]);                       // Fifth argument; indicate count number threshold
+        int threshold = Integer.valueOf(args[5]);                       // Fifth argument; indicate count number of mer match threshold
         int numThread = Integer.valueOf(args[6]);                       // Sixth argument; indicate number of thread
         int repeatThreshold = Integer.valueOf(args[7]);                 // Seventh argument; indicate number of repeat that we can accept. If the number of repeat is more than this threshold it will be cut out
                                                                         // If repeatThreshold has set to zero the protocol will change to not cut repeat protocol (consider all repeat)

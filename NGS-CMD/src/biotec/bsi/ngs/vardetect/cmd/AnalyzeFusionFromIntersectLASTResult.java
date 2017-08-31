@@ -19,10 +19,11 @@ public class AnalyzeFusionFromIntersectLASTResult {
           * Plug in intersect result File and threshold for filter low coverage  
           */
          
-//        String intersectLASTResult1 = args[0];
+        String intersectLASTResult1 = args[0];
+        int threshold = Integer.parseInt(args[1]);
 
-        String intersectLASTResult1 = "/Volumes/PromisePegasus/worawich/Download_dataset/cancer/unmaped_cancer/LAST_result_eclipse/unmapped_cancer/TCGA-55-6543-o1A_unmapped_NC_001414_hg38Filter_LASTIntesectResult.txt";        
-        int threshold = 1;        
+//        String intersectLASTResult1 = "/Volumes/PromisePegasus/worawich/Download_dataset/cancer/unmaped_cancer/LAST_result_eclipse/unmapped_cancer/TCGA-55-6543-o1A_unmapped_NC_001414_hg38Filter_LASTIntesectResult.txt";        
+//        int threshold = 1;        
         LASTUtils.analyzeFusionFromIntersecResult(intersectLASTResult1, threshold);
                 
     }
