@@ -1137,7 +1137,7 @@ public class AlignmentResultRead {
          *                                   "g"  mean we cut out the read match result contain yellow orange and red count
          */
         
-        String filename = path+nameFile+"."+fileFormat;
+        String filename = path+File.separator+nameFile+"."+fileFormat;
         PrintStream ps;
         FileWriter writer;
         /**
@@ -1159,6 +1159,7 @@ public class AlignmentResultRead {
         for(int i=0;i<this.shrtRead.size();i++){
             ShortgunSequence dummySS = this.shrtRead.get(i);
             String readName = dummySS.getReadName();
+            int readLength = dummySS.getReadLength();
             ArrayList<Integer> listChr = dummySS.getListChrMatch();
             ArrayList<Long> listIniPos = dummySS.getListPosMatch();
             ArrayList<Long> listLastPos = dummySS.getListLastPosMatch();
@@ -1205,14 +1206,17 @@ public class AlignmentResultRead {
 //                ps.format("\n");
                 if(option1.equals("gy")){
                     if(orange==0&&red==0){
-                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBlackFlag));
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBlackFlag,readLength));
                         writer.write("\n");
                     }
                 }else if(option1.equals("g")){
                     if(orange==0&&red==0&&yellow==0){
-                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBlackFlag));
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBlackFlag,readLength));
                         writer.write("\n");
                     }
+                }else if(option1.equals("all")){
+                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBlackFlag,readLength));
+                    writer.write("\n");
                 }
                 
             }

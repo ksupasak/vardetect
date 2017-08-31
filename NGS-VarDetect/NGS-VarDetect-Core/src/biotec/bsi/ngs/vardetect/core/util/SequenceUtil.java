@@ -1313,8 +1313,8 @@ public class SequenceUtil {
             //System.out.println(lengthA);
             //System.out.println(lengthB);
 
-            System.out.println(cutA.toString().contains("N"));
-            System.out.println(cutB.toString().contains("N"));
+//            System.out.println(cutA.toString().contains("N"));
+//            System.out.println(cutB.toString().contains("N"));
                                 
             if(cutA.toString().contains("N") || cutA.toString().equals(cutA.toString().toLowerCase())){
                 iniA = r.nextInt(rangeA);
@@ -1337,9 +1337,9 @@ public class SequenceUtil {
             concatenateCut.addType(type);
             concatenateCut.addCutInfo(cutA, cutB);
             
-            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
-            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
-            System.out.println("Concatenate chromosome: " + concatenateCut);
+//            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
+//            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
+//            System.out.println("Concatenate chromosome: " + concatenateCut);
             
         }else if(type == 1){
             /* strand +- */
@@ -1351,9 +1351,9 @@ public class SequenceUtil {
             concatenateCut.addType(type);
             concatenateCut.addCutInfo(cutA, cutB);
             
-            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
-            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
-            System.out.println("Concatenate chromosome: " + concatenateCut);
+//            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
+//            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
+//            System.out.println("Concatenate chromosome: " + concatenateCut);
             
         }else if(type == 2){
             /* strand -+ */
@@ -1365,9 +1365,9 @@ public class SequenceUtil {
             concatenateCut.addType(type);
             concatenateCut.addCutInfo(cutA, cutB);
             
-            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
-            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
-            System.out.println("Concatenate chromosome: " + concatenateCut);
+//            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
+//            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
+//            System.out.println("Concatenate chromosome: " + concatenateCut);
             
         }else{
             /* strand -- */
@@ -1381,9 +1381,9 @@ public class SequenceUtil {
             concatenateCut.addType(type);
             concatenateCut.addCutInfo(cutA, cutB);
             
-            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
-            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
-            System.out.println("Concatenate chromosome: " + concatenateCut);
+//            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
+//            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
+//            System.out.println("Concatenate chromosome: " + concatenateCut);
             
         }
          
@@ -1422,7 +1422,7 @@ public class SequenceUtil {
             //System.out.println(lengthA);
             //System.out.println(lengthB);
 
-            System.out.println(cutA.toString().contains("N"));
+//            System.out.println(cutA.toString().contains("N"));
                                 
             if(cutA.toString().contains("N") || cutA.toString().equals(cutA.toString().toLowerCase())){
                 iniA = r.nextInt(rangeA);
@@ -1510,8 +1510,8 @@ public class SequenceUtil {
         while(checkA == 1 || checkB == 1){
             int difA=0,difB=0;
                     
-            System.out.println(cutA.toString().contains("N"));
-            System.out.println(cutB.toString().contains("N"));
+//            System.out.println(cutA.toString().contains("N"));
+//            System.out.println(cutB.toString().contains("N"));
                                 
             if(cutA.toString().contains("N") || cutA.toString().equals(cutA.toString().toLowerCase())){
                 while(difA < posDiff){
@@ -1542,9 +1542,9 @@ public class SequenceUtil {
             concatenateCut.addType(type);
             concatenateCut.addCutInfo(cutA, cutB);
             
-            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
-            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
-            System.out.println("Concatenate chromosome: " + concatenateCut);
+//            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
+//            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
+//            System.out.println("Concatenate chromosome: " + concatenateCut);
             
         }else if(type == 1){
             /* strand +- */
@@ -1556,9 +1556,9 @@ public class SequenceUtil {
             concatenateCut.addType(type);
             concatenateCut.addCutInfo(cutA, cutB);
             
-            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
-            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
-            System.out.println("Concatenate chromosome: " + concatenateCut);
+//            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
+//            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
+//            System.out.println("Concatenate chromosome: " + concatenateCut);
             
         }else if(type == 2){
             /* strand -+ */
@@ -1570,9 +1570,9 @@ public class SequenceUtil {
             concatenateCut.addType(type);
             concatenateCut.addCutInfo(cutA, cutB);
             
-            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
-            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
-            System.out.println("Concatenate chromosome: " + concatenateCut);
+//            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
+//            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
+//            System.out.println("Concatenate chromosome: " + concatenateCut);
             
         }else{
             /* strand -- */
@@ -1586,9 +1586,9 @@ public class SequenceUtil {
             concatenateCut.addType(type);
             concatenateCut.addCutInfo(cutA, cutB);
             
-            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
-            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
-            System.out.println("Concatenate chromosome: " + concatenateCut);
+//            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
+//            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
+//            System.out.println("Concatenate chromosome: " + concatenateCut);
             
         }
          
@@ -1634,8 +1634,8 @@ public class SequenceUtil {
         
         while(checkA == 1 || checkB == 1){
             int difA=0,difB=0;
-            System.out.println(cutA.toString().contains("N"));
-            System.out.println(cutB.toString().contains("N"));
+//            System.out.println(cutA.toString().contains("N"));
+//            System.out.println(cutB.toString().contains("N"));
                                 
             if(cutA.toString().contains("N") || cutA.toString().equals(cutA.toString().toLowerCase())){
                 while(difA < posDiff){
@@ -1667,6 +1667,16 @@ public class SequenceUtil {
         Random indelStyle= new Random();
         int type = indelStyle.nextInt(4);
         
+        /**
+         * Just my opinion : Read that contain indel may not have complicate combination of strand like +- or -+
+         * they have simple combination of strand like ++ or -- 
+         * For now I will create only ++ and -- combination of strand
+         * I will interrupt the type number of case type =1 and 2. Change it to 0 and 3
+         * type 1 (+-) force change to type 0 (++)
+         * type 2 (-+) force change to type 3 (--)
+         */
+        
+        
         if(type == 0){
             /* strand ++ */
             
@@ -1678,11 +1688,12 @@ public class SequenceUtil {
 //                dummyCut = cutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + cutB.toString() + cutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
             }
 
-            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
-            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
+//            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
+//            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
             //System.out.println("Concatenate chromosome: " + concatenateCut);
             
         }else if(type == 1){
+            type =0;
             /* strand +- */
             String invCutB = SequenceUtil.inverseSequence(cutB.toString());
             String compCutB = SequenceUtil.createComplimentV2(invCutB);
@@ -1695,11 +1706,12 @@ public class SequenceUtil {
 //                dummyCut = cutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + compCutB.toString() + cutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
             }
 
-            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
-            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
+//            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
+//            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
             //System.out.println("Concatenate chromosome: " + concatenateCut);
             
         }else if(type == 2){
+            type=3;
             /* strand -+ */
             String invCutA = SequenceUtil.inverseSequence(cutA.toString());
             String compCutA = SequenceUtil.createComplimentV2(invCutA);
@@ -1709,12 +1721,12 @@ public class SequenceUtil {
                 dummyCut = compCutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + compCutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
             }else if (indelType == 'I'){    // 'I' mean Insertion
                 
-                dummyCut = cutA.toString().substring(0, cutA.length()/2) + cutB.toString() + cutA.toString().substring(cutA.length()/2,cutA.length());
+                dummyCut = compCutA.toString().substring(0, cutA.length()/2) + cutB.toString() + compCutA.toString().substring(cutA.length()/2,cutA.length());
 //                dummyCut = compCutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + cutB.toString() + compCutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
             }
             
-            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
-            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
+//            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
+//            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
             //System.out.println("Concatenate chromosome: " + concatenateCut);
             
         }else{
@@ -1729,12 +1741,12 @@ public class SequenceUtil {
                 dummyCut = compCutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + compCutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
             }else if (indelType == 'I'){    // 'I' mean Insertion
                 
-                dummyCut = cutA.toString().substring(0, cutA.length()/2) + cutB.toString() + cutA.toString().substring(cutA.length()/2,cutA.length());
+                dummyCut = compCutA.toString().substring(0, cutA.length()/2) + cutB.toString() + compCutA.toString().substring(cutA.length()/2,cutA.length());
 //                dummyCut = compCutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + compCutB.toString() + compCutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
             }
             
-            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
-            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
+//            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
+//            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
             //System.out.println("Concatenate chromosome: " + concatenateCut);
             
         }
@@ -2575,14 +2587,14 @@ public class SequenceUtil {
         int kmer = testSeq.length();
         long mask = ((long)(Math.pow(2,(kmer*2)))-1) ;
         
-        System.out.println("createCompliment : Check merCode = " + kmer);
-        System.out.println("createCompliment : Check merCode = " + mask);
+//        System.out.println("createCompliment : Check merCode = " + kmer);
+//        System.out.println("createCompliment : Check merCode = " + mask);
         
         long merCode = encodeMer(inSeq,kmer);
         long dummyNewMer = (~merCode)&mask;
         
-        System.out.println("createCompliment : Check merCode = " + merCode);
-        System.out.println("createCompliment : Check newMer = " + dummyNewMer);
+//        System.out.println("createCompliment : Check merCode = " + merCode);
+//        System.out.println("createCompliment : Check newMer = " + dummyNewMer);
         
         String outSeq = decodeMer(dummyNewMer,kmer);
         
@@ -2865,8 +2877,9 @@ public class SequenceUtil {
     
     public static InputSequence readSampleFileV3(String filename, int readStart, int readLimit) throws IOException {
         /**
-         * for specific input file Fasta format only
+         * For specific input file Fasta and fastq format only
          * 
+         * EX fasta
          * >readName
          * ATCGD....
          * AATTG....
@@ -2877,6 +2890,18 @@ public class SequenceUtil {
          * >readName
          * ...
          * 
+         * EX fastq
+         * @readName
+         * ATCGD....
+         * +
+         * quality code
+         * @readName
+         * AATTG....
+         * +
+         * quality code
+         * @readName
+         * ...
+         * 
          */
         
         ShortgunSequence inSS = new ShortgunSequence(null);
@@ -2884,56 +2909,114 @@ public class SequenceUtil {
         int count = 0;
         int count2 = 0;
         Charset charset = Charset.forName("US-ASCII");
-        Path path = Paths.get(filename);
-        String name = null;
-        int actStart = readStart*2;     //this is actual start of line in file (compatible only specific file 3661 and 3662 .fasta file or in Fasta format
-        int actStop = readLimit*2;
-    //    String seq = "";
-        boolean forceBreakFlag =  false;
-    
-        StringBuilder seq = new StringBuilder();
-        
-        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
-            String line = null;                   
-            while ((line = reader.readLine()) != null) {
-                if(line.isEmpty()){
-                    name = null;
-                }else{
-                    if(line.charAt(0)=='>'){
-                        count++;
-                        if(seq.length()>0){
-                            inSS = new ShortgunSequence(seq.toString());
-                            inSS.addReadName(name);
-                            tempInSS.addRead(inSS);
+        String[] strdummy = filename.split("\\.");
+        String inputFileType = strdummy[strdummy.length-1];
+        if(inputFileType.endsWith("fa")||inputFileType.endsWith("fasta")){
+            Path path = Paths.get(filename);
+            String name = null;
+            int actStart = readStart*2;     //this is actual start of line in file (compatible only specific file 3661 and 3662 .fasta file or in Fasta format
+            int actStop = readLimit*2;
+        //    String seq = "";
+            boolean forceBreakFlag =  false;
 
-                            seq = new StringBuilder();
+            StringBuilder seq = new StringBuilder();
+
+            try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+                String line = null;                   
+                while ((line = reader.readLine()) != null) {
+                    if(line.isEmpty()){
+                        name = null;
+                    }else{
+                        if(line.charAt(0)=='>'){
+                            count++;
+                            if(seq.length()>0){
+                                inSS = new ShortgunSequence(seq.toString());
+                                inSS.addReadName(name);
+                                tempInSS.addRead(inSS);
+
+                                seq = new StringBuilder();
+                            }
+                            name = line.substring(1);
+
+                        }else{                    
+                            if(count >= readStart){
+                                seq.append(line.toString()); 
+                            }     
                         }
-                        name = line.substring(1);
-
-                    }else{                    
-                        if(count >= readStart){
-                            seq.append(line.toString()); 
-                        }     
                     }
+                    if(count>readLimit){
+                        forceBreakFlag=true;
+                        break;
+                    }
+                }                      
+                /**
+                 * Add data for last seq of a file
+                 * in order to check it is last seq of file or last seq from force break
+                 * Can check from forceBreakFlag;
+                 */
+                if(forceBreakFlag == false){
+                    inSS = new ShortgunSequence(seq.toString());
+                    inSS.addReadName(name);
+                    tempInSS.addRead(inSS);
                 }
-                if(count>readLimit){
-                    forceBreakFlag=true;
-                    break;
-                }
-            }                      
-            /**
-             * Add data for last seq of a file
-             * in order to check it is last seq of file or last seq from force break
-             * Can check from forceBreakFlag;
-             */
-            if(forceBreakFlag == false){
-                inSS = new ShortgunSequence(seq.toString());
-                inSS.addReadName(name);
-                tempInSS.addRead(inSS);
+
+                return tempInSS;
             }
-            
-            return tempInSS;
+        }else if(inputFileType.endsWith("fastq")){
+            Path path = Paths.get(filename);
+            String name = null;            
+        //    String seq = "";
+            boolean forceBreakFlag =  false;
+
+            StringBuilder seq = new StringBuilder();
+
+            try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+                String line = null;
+                byte counter = 1;
+                while ((line = reader.readLine()) != null) {
+                    
+                    if(line.isEmpty()){
+                        name = null;
+                    }else{
+                        if(line.charAt(0)=='@'){
+                            counter++;
+                            count++;
+                            if(seq.length()>0){
+                                inSS = new ShortgunSequence(seq.toString());
+                                inSS.addReadName(name);
+                                tempInSS.addRead(inSS);
+
+                                seq = new StringBuilder();
+                            }
+                            name = line.substring(1);
+
+                        }else if(counter==2){                    
+                            if(count >= readStart){
+                                seq.append(line.toString());
+                                counter=1;
+                            }     
+                        }
+                    }
+                    if(count>readLimit){
+                        forceBreakFlag=true;
+                        break;
+                    }
+                }                      
+                /**
+                 * Add data for last seq of a file
+                 * in order to check it is last seq of file or last seq from force break
+                 * Can check from forceBreakFlag;
+                 */
+                if(forceBreakFlag == false){
+                    inSS = new ShortgunSequence(seq.toString());
+                    inSS.addReadName(name);
+                    tempInSS.addRead(inSS);
+                }
+
+                return tempInSS;
+            }
         }
+        return null;
     }
     
     public static Map<String,String> readSampleFiletoMap(String filename, int readStart, int readLimit) throws IOException {

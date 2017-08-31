@@ -67,7 +67,7 @@ public class ChromosomeSequence {
             BufferedReader chr_reader = new BufferedReader(new InputStreamReader(new FileInputStream(this.getFilePath()+".fa")));
             System.out.println(chr_reader.readLine());
             StringBuffer sb = new StringBuffer(chr_reader.readLine());
-//            System.out.println(sb.subSequence(10000, 10100));
+            System.out.println(sb.subSequence(10000, 10100));
             this.setSequence(sb);
         }catch(IOException e){
             

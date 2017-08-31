@@ -404,7 +404,7 @@ public class SimulatorUtil_WholeGene {
                 numberChrB = Integer.toString(rand1.nextInt(25-1)+1);
             }
 
-            System.out.println("Begin Simulate");
+//            System.out.println("Begin Simulate");
             
             if (numberChrA.equalsIgnoreCase("24")){
                 numberChrA = "Y";
@@ -425,15 +425,15 @@ public class SimulatorUtil_WholeGene {
             Random rand2 = new Random(); /* For random positionn on cancatenate sequence */
         
             Vector<ChromosomeSequence> chrs = ref.getChromosomes();
-            System.out.println(chrs.size());
-            System.out.println("Chromosome loop");
-            System.out.println("namechrA => " + namechrA);
-            System.out.println("namechrB => " + namechrB);
+//            System.out.println(chrs.size());
+//            System.out.println("Chromosome loop");
+//            System.out.println("namechrA => " + namechrA);
+//            System.out.println("namechrB => " + namechrB);
             for(int chrNum=0;chrNum<chrs.size();chrNum++){
 
-                System.out.println("chr number: " + chrNum);
+//                System.out.println("chr number: " + chrNum);
                 ChromosomeSequence chr = chrs.elementAt(chrNum);
-                System.out.println("Chromosome name: "+chr.getName());
+//                System.out.println("Chromosome name: "+chr.getName());
 
                 if (chr.getName().equalsIgnoreCase(namechrA) && chr.getName().equalsIgnoreCase(namechrB)){
                     chrA = chr;
@@ -446,7 +446,7 @@ public class SimulatorUtil_WholeGene {
                     } 
                 }
             }
-            System.out.println("concatenate");
+//            System.out.println("concatenate");
             ConcatenateCut concatenateSequence = SequenceUtil.concatenateComplexChromosome(chrA, chrB, ln_read-1, ln_read-1); 
             CharSequence iniTemplate = concatenateSequence.getSequence();
             
@@ -470,16 +470,16 @@ public class SimulatorUtil_WholeGene {
                     }
                 }
 
-                System.out.println("iniread : "+iniread);
-                System.out.println("ln_read : "+ln_read);
+//                System.out.println("iniread : "+iniread);
+//                System.out.println("ln_read : "+ln_read);
                 
                 read = iniTemplate.subSequence(iniread, iniread+ln_read).toString();
 
 
-                System.out.println("Initial position: " + iniread);
-                System.out.println("Number of base from " + namechrA + " : " + ((ln_read-iniread)-1));
-                System.out.println("Number of base from " + namechrB + " : " + (iniread+1));
-                System.out.println(read);
+//                System.out.println("Initial position: " + iniread);
+//                System.out.println("Number of base from " + namechrA + " : " + ((ln_read-iniread)-1));
+//                System.out.println("Number of base from " + namechrB + " : " + (iniread+1));
+//                System.out.println(read);
 
                 ShortgunSequence ss = new ShortgunSequence(read);
                 
@@ -528,7 +528,7 @@ public class SimulatorUtil_WholeGene {
         for(int i = 0;i<proportion;i++){
             String numberChrA = Integer.toString(rand1.nextInt(25-1)+1);
 
-            System.out.println("Begin Simulate SNP contained samples");
+//            System.out.println("Begin Simulate SNP contained samples");
             
             if (numberChrA.equalsIgnoreCase("24")){
                 numberChrA = "Y";
@@ -543,15 +543,15 @@ public class SimulatorUtil_WholeGene {
             Random rand2 = new Random(); /* For random positionn on cancatenate sequence */
         
             Vector<ChromosomeSequence> chrs = ref.getChromosomes();
-            System.out.println(chrs.size());
-            System.out.println("Chromosome loop");
-            System.out.println("namechrA => " + namechrA);
+//            System.out.println(chrs.size());
+//            System.out.println("Chromosome loop");
+//            System.out.println("namechrA => " + namechrA);
 
             for(int chrNum=0;chrNum<chrs.size();chrNum++){
 
-                System.out.println("chr number: " + chrNum);
+//                System.out.println("chr number: " + chrNum);
                 ChromosomeSequence chr = chrs.elementAt(chrNum);
-                System.out.println("Chromosome name: "+chr.getName());
+//                System.out.println("Chromosome name: "+chr.getName());
 
                 if (chr.getName().equalsIgnoreCase(namechrA)){
                     chrA = chr;
@@ -585,15 +585,15 @@ public class SimulatorUtil_WholeGene {
                     }
                 }
 
-                System.out.println("iniread : "+iniread);
-                System.out.println("ln_read : "+ln_read);
+//                System.out.println("iniread : "+iniread);
+//                System.out.println("ln_read : "+ln_read);
                 
                 read = iniTemplate.subSequence(iniread, iniread+ln_read).toString();
 
 
-                System.out.println("Initial position: " + iniread);
-                System.out.println("Raw Read: " + iniTemplate);
-                System.out.println("Complete SNP Read: " + read);
+//                System.out.println("Initial position: " + iniread);
+//                System.out.println("Raw Read: " + iniTemplate);
+//                System.out.println("Complete SNP Read: " + read);
                 
 
                 ShortgunSequence ss = new ShortgunSequence(read);
@@ -642,7 +642,7 @@ public class SimulatorUtil_WholeGene {
             String numberChrA = Integer.toString(rand1.nextInt(25-1)+1);
             String numberChrB = numberChrA;                                     // We fixed that indel must have same chromosome
            
-            System.out.println("Begin Simulate large indel samples");
+//            System.out.println("Begin Simulate large indel samples");
             
             if (numberChrA.equalsIgnoreCase("24")){
                 numberChrA = "Y";
@@ -663,15 +663,15 @@ public class SimulatorUtil_WholeGene {
             Random rand2 = new Random(); /* For random positionn on cancatenate sequence */
         
             Vector<ChromosomeSequence> chrs = ref.getChromosomes();
-            System.out.println(chrs.size());
-            System.out.println("Chromosome loop");
-            System.out.println("namechrA => " + namechrA);
-            System.out.println("namechrB => " + namechrB);
+//            System.out.println(chrs.size());
+//            System.out.println("Chromosome loop");
+//            System.out.println("namechrA => " + namechrA);
+//            System.out.println("namechrB => " + namechrB);
             for(int chrNum=0;chrNum<chrs.size();chrNum++){
 
-                System.out.println("chr number: " + chrNum);
+//                System.out.println("chr number: " + chrNum);
                 ChromosomeSequence chr = chrs.elementAt(chrNum);
-                System.out.println("Chromosome name: "+chr.getName());
+//                System.out.println("Chromosome name: "+chr.getName());
 
                 if (chr.getName().equalsIgnoreCase(namechrA) && chr.getName().equalsIgnoreCase(namechrB)){
                     chrA = chr;
@@ -708,17 +708,17 @@ public class SimulatorUtil_WholeGene {
                     }
                 }
 
-                System.out.println("iniread : "+iniread);
-                System.out.println("ln_read : "+ln_read);
+//                System.out.println("iniread : "+iniread);
+//                System.out.println("ln_read : "+ln_read);
                 
                 read = iniTemplate.subSequence(iniread, iniread+ln_read).toString();
 
 
-                System.out.println("Initial position: " + iniread);
-                System.out.println("Number of base from " + namechrA + " : " + ((ln_read-iniread)-1));
-                System.out.println("Number of base from " + namechrB + " : " + (iniread+1));
-                System.out.println("Raw read: " + iniTemplate);
-                System.out.println("Complete large indel read: " + read);
+//                System.out.println("Initial position: " + iniread);
+//                System.out.println("Number of base from " + namechrA + " : " + ((ln_read-iniread)-1));
+//                System.out.println("Number of base from " + namechrB + " : " + (iniread+1));
+//                System.out.println("Raw read: " + iniTemplate);
+//                System.out.println("Complete large indel read: " + read);
 
                 ShortgunSequence ss = new ShortgunSequence(read);
                 
@@ -775,7 +775,7 @@ public class SimulatorUtil_WholeGene {
 
             //InputSequence is = simulateWholeGene(ref,num_shortgun,ln_read,Integer.toString(numberChrA),Integer.toString(numberChrB));
 
-            System.out.println("Begin Simulate small Insertion samples");
+//            System.out.println("Begin Simulate small Insertion samples");
             
             if (numberChrA.equalsIgnoreCase("24")){
                 numberChrA = "Y";
@@ -796,15 +796,15 @@ public class SimulatorUtil_WholeGene {
             Random rand2 = new Random(); /* For random positionn on cancatenate sequence */
         
             Vector<ChromosomeSequence> chrs = ref.getChromosomes();
-            System.out.println(chrs.size());
-            System.out.println("Chromosome loop");
-            System.out.println("namechrA => " + namechrA);
-            System.out.println("namechrB => " + namechrB);
+//            System.out.println(chrs.size());
+//            System.out.println("Chromosome loop");
+//            System.out.println("namechrA => " + namechrA);
+//            System.out.println("namechrB => " + namechrB);
             for(int chrNum=0;chrNum<chrs.size();chrNum++){
 
-                System.out.println("chr number: " + chrNum);
+//                System.out.println("chr number: " + chrNum);
                 ChromosomeSequence chr = chrs.elementAt(chrNum);
-                System.out.println("Chromosome name: "+chr.getName());
+//                System.out.println("Chromosome name: "+chr.getName());
 
                 if (chr.getName().equalsIgnoreCase(namechrA) && chr.getName().equalsIgnoreCase(namechrB)){
                     chrA = chr;
@@ -841,15 +841,15 @@ public class SimulatorUtil_WholeGene {
                     }
                 }
 
-                System.out.println("iniread : "+iniread);
-                System.out.println("ln_read : "+ln_read);
+//                System.out.println("iniread : "+iniread);
+//                System.out.println("ln_read : "+ln_read);
                 
                 read = iniTemplate.subSequence(iniread, iniread+ln_read).toString();
 
 
-                System.out.println("Initial position: " + iniread);
-                System.out.println("Raw read: "+iniTemplate);
-                System.out.println("Complete Read: "+read);
+//                System.out.println("Initial position: " + iniread);
+//                System.out.println("Raw read: "+iniTemplate);
+//                System.out.println("Complete Read: "+read);
 
                 ShortgunSequence ss = new ShortgunSequence(read);
                 
@@ -896,7 +896,7 @@ public class SimulatorUtil_WholeGene {
 
             //InputSequence is = simulateWholeGene(ref,num_shortgun,ln_read,Integer.toString(numberChrA),Integer.toString(numberChrB));
 
-            System.out.println("Begin Simulate small deletion samples");
+//            System.out.println("Begin Simulate small deletion samples");
             
             if (numberChrA.equalsIgnoreCase("24")){
                 numberChrA = "Y";
@@ -917,15 +917,15 @@ public class SimulatorUtil_WholeGene {
             Random rand2 = new Random(); /* For random positionn on cancatenate sequence */
         
             Vector<ChromosomeSequence> chrs = ref.getChromosomes();
-            System.out.println(chrs.size());
-            System.out.println("Chromosome loop");
-            System.out.println("namechrA => " + namechrA);
-            System.out.println("namechrB => " + namechrB);
+//            System.out.println(chrs.size());
+//            System.out.println("Chromosome loop");
+//            System.out.println("namechrA => " + namechrA);
+//            System.out.println("namechrB => " + namechrB);
             for(int chrNum=0;chrNum<chrs.size();chrNum++){
 
-                System.out.println("chr number: " + chrNum);
+//                System.out.println("chr number: " + chrNum);
                 ChromosomeSequence chr = chrs.elementAt(chrNum);
-                System.out.println("Chromosome name: "+chr.getName());
+//                System.out.println("Chromosome name: "+chr.getName());
 
                 if (chr.getName().equalsIgnoreCase(namechrA) && chr.getName().equalsIgnoreCase(namechrB)){
                     chrA = chr;
@@ -962,15 +962,15 @@ public class SimulatorUtil_WholeGene {
                     }
                 }
 
-                System.out.println("iniread : "+iniread);
-                System.out.println("ln_read : "+ln_read);
+//                System.out.println("iniread : "+iniread);
+//                System.out.println("ln_read : "+ln_read);
                 
                 read = iniTemplate.subSequence(iniread, iniread+ln_read).toString();
 
 
-                System.out.println("Initial position: " + iniread);
-                System.out.println("Raw read: "+iniTemplate);
-                System.out.println("Complete Read: "+read);
+//                System.out.println("Initial position: " + iniread);
+//                System.out.println("Raw read: "+iniTemplate);
+//                System.out.println("Complete Read: "+read);
 
                 ShortgunSequence ss = new ShortgunSequence(read);               
                 

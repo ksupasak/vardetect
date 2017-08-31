@@ -480,7 +480,7 @@ public class VariationResult {
                      * Write Report Part
                      */
                     ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
-                    if(coverageList.size()<coverageThreshold){
+                    if(coverageList.size()>coverageThreshold){
                         writer.write("Group "+count);
                         writer.write("\tFront Break point : " + chrF +","+bpF);
                         writer.write("\tBack Break point : " + chrB +","+bpB); 
@@ -490,9 +490,9 @@ public class VariationResult {
                         for(int i=0;i<coverageList.size();i++){
                             Variation var = coverageList.get(i);
 
-                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF));
+                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
                             writer.write(" || ");
-                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB));
+                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
                             writer.write("\n");
                         }
                         count++;
@@ -522,8 +522,18 @@ public class VariationResult {
                      * Write Report Part
                      */
                     ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
-                    if(coverageList.size()<coverageThreshold){
+                    if(coverageList.size()>coverageThreshold){
+                        /**
+                         * pick one variation to get indel information 
+                         */
+                        Variation tempVar = coverageList.get(0);
+                        String indelType = tempVar.getIndelType();
+                        long indelBase = tempVar.getIndelBase();
+                        /***/
+                        
                         writer.write("Group "+count);
+                        writer.write("\tIndel Type : " + indelType);
+                        writer.write("\tIndel Base : " + indelBase);
                         writer.write("\tFront Break point : " + chrF +","+bpF);
                         writer.write("\tBack Break point : " + chrB +","+bpB);
                         writer.write("\tCoverage : " + coverageList.size());
@@ -531,9 +541,9 @@ public class VariationResult {
                         for(int i=0;i<coverageList.size();i++){
                             Variation var = coverageList.get(i);
 
-                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF));
+                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
                             writer.write(" || ");
-                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB));
+                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
                             writer.write("\n");
                         }
                         count++;
@@ -557,7 +567,7 @@ public class VariationResult {
                 int chrB = (int)(bpBCode>>28);
                 
                 ArrayList<Variation> coverageList = this.coverageMapSNP.get(bpBCode);
-                if(coverageList.size()<coverageThreshold){
+                if(coverageList.size()>coverageThreshold){
                     /**
                     * Write Report Part
                     */
