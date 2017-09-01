@@ -1276,6 +1276,15 @@ public class AlignmentResultRead {
             ArrayList<Integer> listSNPFlag = dummySS.getSNPFlag();
             ArrayList<Integer> listIniBackFlag = dummySS.getIniBackFlag();
             int numMaxMatch = ((option2 * dummySS.readLength)/100)-dummySS.merLength+1;
+            
+            /**
+             * Find writing order (order by iniIndex)
+             */
+                    // Code here
+            /**
+             * 
+             */
+            
             for(int numP=0;numP<listChr.size();numP++){
                 int numChr = listChr.get(numP);
                 long iniPos = listIniPos.get(numP);
