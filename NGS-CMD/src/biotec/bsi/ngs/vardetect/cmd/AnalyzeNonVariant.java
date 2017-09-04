@@ -21,9 +21,9 @@ public class AnalyzeNonVariant {
          * input file would be in format alignResult_Sort.txt
          */
         
-        String nonVariantFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_300517/OP2_R1_dm6_miRNA_cutRep_alignResult_Sorted.txt";
+        String nonVariantFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/OP3_S3_dm6_miRNA_mer12_alignResult_forLinuxSort.txt";
         
-        int merLength = 18;
+        int merLength = 12;
         int coverageThreshold = 1;
         SequenceUtil.analysisNonVariantResultFromFile(nonVariantFile, merLength, coverageThreshold);
  

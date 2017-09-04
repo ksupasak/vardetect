@@ -24,16 +24,18 @@ public class TestDetectVariation {
        public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "3661_unmapped_alignResult_Sort";
-        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/Thalasemia_Data/3661/";
+        String filename = "OP3_S3_dm6_miRNA_mer8_alignResult_Sort";
+        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/";
 //        String saveFilename = "hg38_FullNewMethod_Sim_alignmentResult_VariantReport";
-        String saveFilenameCov = "3661_unmapped_alignResult_VariantCoverageReport_match90";
+        
 //        int readLength = 24;
-        int merLength = 18;
+        int merLength = 8;
         int overlap = 4;
-        int percentMatch = 90;
+        int percentMatch = 50;
         int coverageThreshold = 2;
-
+        
+        String saveFilenameCov = "OP3_S3_dm6_miRNA_mer8_alignResult_VariantCoverageReport_match" + percentMatch;
+        
         VariationResult varRes = SequenceUtil.analysisResultFromFileV3(path+filename+".txt",merLength,overlap,percentMatch);
         varRes.createVariantReport();
         varRes.analyzeCoverageFusion();
