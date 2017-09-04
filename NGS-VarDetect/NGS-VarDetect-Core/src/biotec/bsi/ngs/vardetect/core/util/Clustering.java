@@ -424,7 +424,7 @@ public class Clustering {
                 lastIdxArray[numP] = lastIdx;
                 
                 
-                for(int merIdx = (int)iniIdx; merIdx<(iniIdx+numMatch); merIdx++){
+                for(int merIdx = (int)iniIdx; merIdx<(iniIdx+numMatch); merIdx++){                    
                     matchArray[merIdx] = 1;      
                 }
                 listMatchArray.add(matchArray);                 // At the end, this array should be the same size as number of match pattern         
