@@ -54,6 +54,16 @@ public class VariationResult {
     int merLength;
     int readLength;
     
+    byte percentMatch;
+
+    public byte getPercentMatch() {
+        return percentMatch;
+    }
+
+    public void setPercentMatch(byte percentMatch) {
+        this.percentMatch = percentMatch;
+    }
+    
     private ArrayList<Variation> listFusion;
     private ArrayList<Variation> listSNP;
     private ArrayList<Variation> listIndel;
@@ -366,7 +376,18 @@ public class VariationResult {
     public void analyzeCoverageIndel(){
  
         for(int i =0;i<this.listIndel.size();i++){                         // loop over list of variation (Indel type)
+            
             Variation dummyVar = this.listIndel.get(i);
+            /**
+             * Case check for insertion => if number of insertion base has more than number of match base on back part
+             * we will skip it
+             */
+            if(dummyVar.getIndelType().equals("insert")){
+                if(dummyVar.indelBase >= dummyVar.numMatchB){
+                    continue;
+                }
+            }
+            /******************************/
             long bpF = dummyVar.getBreakPointFront();
             long bpB = dummyVar.getBreakPointBack();
             
@@ -435,13 +456,28 @@ public class VariationResult {
         }
     }
     
-    public void writeVariantCoverageReportToFile(String path , String nameFile , int coverageThreshold , char varType) throws IOException{
+    public void writeVariantCoverageReportToFile(String nameFile , int coverageThreshold , char varType) throws IOException{
         /**
         * Suitable for version 3 data structure (data structure that has iniIdx in its)
         * write result to file format for variant report
         */
         
-        String filename = path+nameFile+varType+".txt";
+        String[] dummy = nameFile.split("\\.");
+        String filename = "";
+        switch (varType) {
+            case 'F':
+                filename = dummy[0]+"_match"+this.percentMatch+"_CoverageReport_Fusion"+".txt";
+                break;
+            case 'I':
+                filename = dummy[0]+"_match"+this.percentMatch+"_CoverageReport_Indel"+".txt";
+                break;
+            case 'S':
+                filename = dummy[0]+"_match"+this.percentMatch+"_CoverageReport_SNP"+".txt";
+                break;
+            default:
+                break;
+        }
+
         PrintStream ps;
         FileWriter writer;        
         /**
@@ -600,7 +636,189 @@ public class VariationResult {
         writer.close();
     }
     
-    
+    public void writeVariantCoverageVirtualizeReportToFile(String nameFile , int coverageThreshold , char varType) throws IOException{
+        /**
+        * Suitable for version 3 data structure (data structure that has iniIdx in its)
+        * write result to file format for variant report
+        * create virtual sequence (give a point of view of support read)
+        */
+        String[] dummy = nameFile.split("\\.");
+        String filename = "";
+        switch (varType) {
+            case 'F':
+                filename = dummy[0]+"_match"+this.percentMatch+"_VirtualCoverageReport_Fusion"+".txt";
+                break;
+            case 'I':
+                filename = dummy[0]+"_match"+this.percentMatch+"_VirtualCoverageReport_Indel"+".txt";
+                break;
+            case 'S':
+                filename = dummy[0]+"_match"+this.percentMatch+"_VirtualCoverageReport_SNP"+".txt";
+                break;
+            default:
+                break;
+        }
+        
+        PrintStream ps;
+        FileWriter writer;        
+        /**
+         * Check File existing
+         */
+        
+        File f = new File(filename); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(filename,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(filename);
+        }
+        
+        
+        if(varType == 'F'){
+            int count = 1;
+            writer.write("Variation type : Fusion\n");
+            Set set = this.coverageMapFusion.keySet();
+            Iterator iterKey = set.iterator();
+            while(iterKey.hasNext()){
+                long bpFCode = (long)iterKey.next();
+                long bpF = bpFCode&this.mask28bit;
+                int chrF = (int)(bpFCode>>28);
+                
+                Map<Long,ArrayList<Variation>> coverageMapII = this.coverageMapFusion.get(bpFCode);
+                Set setII = coverageMapII.keySet();
+                Iterator iterKeyII = setII.iterator();
+                while(iterKeyII.hasNext()){
+                    long bpBCode = (long)iterKeyII.next();
+                    long bpB = bpBCode&this.mask28bit;
+                    int chrB = (int)(bpBCode>>28);
+                    
+                    /**
+                     * Write Report Part
+                     */
+                    ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
+                    if(coverageList.size()>coverageThreshold){
+                        writer.write("Group "+count);
+                        writer.write("\tFront Break point : " + chrF +","+bpF);
+                        writer.write("\tBack Break point : " + chrB +","+bpB); 
+    //                    ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
+                        writer.write("\tCoverage : " + coverageList.size());
+                        writer.write("\n");
+                        for(int i=0;i<coverageList.size();i++){
+                            Variation var = coverageList.get(i);
+                            
+                            writer.write(var.virtualSequence());
+                            writer.write("\n");
+//                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
+//                            writer.write(" || ");
+//                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
+//                            writer.write("\n");
+                        }
+                        count++;
+                    }
+                }  
+            }
+        }
+        if(varType == 'I'){
+            int count = 1;
+            writer.write("Variation type : Indel\n");
+            Set set = this.coverageMapIndel.keySet();
+            Iterator iterKey = set.iterator();
+            while(iterKey.hasNext()){
+                long bpFCode = (long)iterKey.next();
+                long bpF = bpFCode&this.mask28bit;
+                int chrF = (int)(bpFCode>>28);
+                
+                Map<Long,ArrayList<Variation>> coverageMapII = this.coverageMapIndel.get(bpFCode);
+                Set setII = coverageMapII.keySet();
+                Iterator iterKeyII = setII.iterator();
+                while(iterKeyII.hasNext()){
+                    long bpBCode = (long)iterKeyII.next();
+                    long bpB = bpBCode&this.mask28bit;
+                    int chrB = (int)(bpBCode>>28);
+                    
+                    /**
+                     * Write Report Part
+                     */
+                    ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
+                    if(coverageList.size()>coverageThreshold){
+                        /**
+                         * pick one variation to get indel information 
+                         */
+                        Variation tempVar = coverageList.get(0);
+                        String indelType = tempVar.getIndelType();
+                        long indelBase = tempVar.getIndelBase();
+                        /***/
+                        
+                        writer.write("Group "+count);
+                        writer.write("\tIndel Type : " + indelType);
+                        writer.write("\tIndel Base : " + indelBase);
+                        writer.write("\tFront Break point : " + chrF +","+bpF);
+                        writer.write("\tBack Break point : " + chrB +","+bpB);
+                        writer.write("\tCoverage : " + coverageList.size());
+                        writer.write("\n");
+                        for(int i=0;i<coverageList.size();i++){
+                            Variation var = coverageList.get(i);
+                            
+                            writer.write(var.virtualSequence());
+                            writer.write("\n");
+//                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
+//                            writer.write(" || ");
+//                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
+//                            writer.write("\n");
+                        }
+                        count++;
+                    }
+                }
+                
+            }
+            
+        }
+        if(varType == 'S'){
+            int count = 1;
+            writer.write("Variation type : SNP and other miss match\n");
+            Set set = this.coverageMapSNP.keySet();
+            Iterator iterKey = set.iterator();
+            while(iterKey.hasNext()){
+//                long bpFCode = (long)iterKey.next();
+//                long bpF = bpFCode&this.mask28bit;
+//                int chrF = (int)bpFCode>>28;
+                long bpBCode = (long)iterKey.next();
+                long bpB = bpBCode&this.mask28bit;
+                int chrB = (int)(bpBCode>>28);
+                
+                ArrayList<Variation> coverageList = this.coverageMapSNP.get(bpBCode);
+                if(coverageList.size()>coverageThreshold){
+                    /**
+                    * Write Report Part
+                    */
+                    writer.write("Group "+count);
+                    writer.write("\tBack Break point : " + chrB +","+bpB);  
+                    writer.write("\tCoverage : " + coverageList.size());
+                    writer.write("\n");
+
+                    for(int i=0;i<coverageList.size();i++){
+                        /**
+                         * Write Report Part
+                         */
+                        Variation var = coverageList.get(i);
+                        
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF));
+                        writer.write(" || ");
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB));
+                        writer.write("\n");
+                    }
+                    count++;
+                }
+            }
+            
+        }
+        if(varType == 'O'){
+            
+        }
+
+        writer.flush();
+        writer.close();
+    }
     
  
             

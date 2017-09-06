@@ -4089,7 +4089,7 @@ public class SequenceUtil {
         return varResult;
     }
     
-    public static VariationResult analysisResultFromFileV3(String filename, int merLength, int allowOverLap , int percentMatch) throws IOException{
+    public static VariationResult analysisResultFromFileV3(String filename, int merLength, int allowOverLap , byte percentMatch) throws IOException{
         /**
         * Suitable with result format only (result format is a file that store peak result arrange by sample order (come first be the first). the peak result is in format data structure V3
         * startIndex and stopIndex defined in this method is the index of DNA base in Read Ex. read length 100 base will has index 0 to 99 and has index of mer 0 to 83 [83 is come from (100 - 18)+1]
@@ -4246,6 +4246,8 @@ public class SequenceUtil {
              Map<Integer,ArrayList<String[]>> variation = detectVariationV2(selectData,selectChr,selectGreenChar,mapF,mapB,merLength,allowOverLap,percentMatch);
              varResult.addVariationMap(variation);
         }
+        
+        varResult.setPercentMatch(percentMatch);
         
         return varResult;
     }

@@ -49,7 +49,7 @@ public class Variation {
     long breakPointB;
     
     long indelBase;
-    String indelType;
+    String indelType = "";
     
     public Variation(int merLen){
         /**
@@ -413,5 +413,155 @@ public class Variation {
                 }
             }
         }   
+    }
+    
+    public String virtualSequence(){
+        /**
+         * Create virtual sequence as string
+         */
+        int virtualLen = (2*this.readLengthF)+1;    // virtual length has size 2 time of read length plus 1 (plus one is reserve for junction which does not involve with base in virtual length) Ex len = 10 ; virtual = (2*10)+1 = 21 this allow both size have 10 emty slot for base and the middle is junction slot
+        int junctionIndex = this.readLengthF;       // index of junction (put sign "|" on this index)
+        
+        int numBaseMatchF = (this.numMatchF + this.merLength)-1;        // number of base matched (front)
+        int numBaseMatchB = (this.numMatchB + this.merLength)-1;        // number of base matched (back)
+        int lastIdxF = (this.iniIndexF + numBaseMatchF)-1;
+        int idealIniIdxB = lastIdxF + 1;
+        int overlapBase = idealIniIdxB - this.iniIndexB;                // if it minus value it mean insertion. Positive is mean overlap and Zero is mean no overlap
+        
+        if(overlapBase < 0){
+            // overlap base < 0 is mean insertion. So, no need to change. we set overlapbase to 0.
+            overlapBase = 0;
+        }
+        numBaseMatchB = numBaseMatchB - overlapBase;                    // calculate new numBaseMatchB if it has overlap (if it not the overlap base is 0. So, no effect at all)
+        int newIniIndexB = this.iniIndexB+overlapBase;                  // re calculate iniIndexB if it has overlap (if it not the overlap base is 0. So, no effect at all)
+        
+//        int virtualIniIndexB = this.iniIndexB*2;                        // the virtual sequence has been create 2 time biger. So for the rigth iniIndexB on the virtual sequence should be multiple by 2 as well
+//        int overlapBase = 0;
+//        if(virtualIniIndexB < junctionIndex){
+//            /**
+//             * if back part has overlap with front part. We have to recalculate numBaseMatchB by minus the overlap base out from old numBaseMathB
+//             */
+//            int lastIdxF = (this.iniIndexF + numBaseMatchF)-1;
+//            overlapBase = Math.abs(this.iniIndexB - lastIdxF);
+//            numBaseMatchB = numBaseMatchB - overlapBase;
+//        }        
+        
+        int emptySlotPlusUnMatchF = junctionIndex - numBaseMatchF;             // number of empty slot and unMatch slot before match base (front part)
+        int numBaseF = numBaseMatchF + this.iniIndexF;
+        int emptySlotF = junctionIndex - numBaseF;             // number of empty slot before sequence slot(front part) which in clude un match base slot and match slot
+        
+        int remainBaseB = this.readLengthB - (numBaseMatchB + newIniIndexB);      // number of base remain un match on back part;
+        int numBaseB = numBaseMatchB + remainBaseB;
+        int lastIdxBaseMatchB = junctionIndex + numBaseMatchB;      // last index of match before empty slot (back part)
+        int lastIdxBaseB = junctionIndex + numBaseB;
+        
+        int lastIdxInsertBase = 0;
+        int junctionIndexTwo = 0;
+        if(this.indelType.equals("insert")){
+            /**
+            * Insertion case => define new variable and adjust old variable for virtualize the insert portion Ex =====|----|=====  this mean 4 insertion between front and back
+            */
+           lastIdxInsertBase = junctionIndex + (int)this.indelBase;
+           junctionIndexTwo = lastIdxInsertBase + 1;
+           lastIdxBaseMatchB = lastIdxBaseMatchB + (int)this.indelBase+1;       // plus 1 to compensate for junction index
+           lastIdxBaseB = lastIdxBaseB + (int)this.indelBase+1;                 // plus 1 to compensate for junction index
+        }
+        
+        StringBuilder builder = new StringBuilder();
+        
+        for(int i=0;i<virtualLen;i++){
+            
+            if(this.indelType.equals("insert")){
+                
+                if(i<emptySlotF){
+                    builder.append(" ");
+                }else if(i>=emptySlotF && i<emptySlotPlusUnMatchF){
+                    builder.append("-");    
+                }else if(i>=emptySlotPlusUnMatchF && i<junctionIndex){
+                    builder.append("=");
+                }else if(i == junctionIndex){
+                    builder.append("|");
+                }else if(i> junctionIndex && i<=lastIdxInsertBase){
+                    builder.append("-");
+                }else if(i == junctionIndexTwo){
+                    builder.append("|");
+                }else if(i>junctionIndexTwo && i<=lastIdxBaseMatchB){
+                    builder.append("=");
+                }else if(i>lastIdxBaseMatchB && i<=lastIdxBaseB){
+                    builder.append("-");
+                }else{
+                    builder.append(" ");
+                }
+            }else{
+                if(i<emptySlotF){
+                    builder.append(" ");
+                }else if(i>=emptySlotF && i<emptySlotPlusUnMatchF){
+                    builder.append("-");    
+                }else if(i>=emptySlotPlusUnMatchF && i<junctionIndex){
+                    builder.append("=");
+                }else if(i == junctionIndex){
+                    builder.append("|");
+                }else if(i>junctionIndex && i<=lastIdxBaseMatchB){
+                    builder.append("=");
+                }else if(i>lastIdxBaseMatchB && i<=lastIdxBaseB){
+                    builder.append("-");
+                }else{
+                    builder.append(" ");
+                }
+            }
+//            if(this.indelType.endsWith("insert")){
+//                if(i<emptySlotF){
+//                    builder.append(" ");
+//                }else if(i>=emptySlotF && i<emptySlotPlusUnMatchF){
+//                    builder.append("-");    
+//                }else if(i>=emptySlotPlusUnMatchF && i<junctionIndex){
+//                    builder.append("=");
+//                }else if(i == junctionIndex){
+//                    builder.append("|");
+//                }else if(i>junctionIndex && i<=lastIdxBaseMatchB){
+//                    builder.append("=");
+//                }else if(i>lastIdxBaseMatchB && i<=lastIdxBaseB){
+//                    builder.append("-");
+//                }else if(i>lastIdxBaseB){
+//                    builder.append(" ");
+//                }else{
+//                    builder.append("-");
+//                }
+//                
+//            }else{
+//                if(i<emptySlotF){
+//                    builder.append(" ");
+//                }else if(i>=emptySlotF && i<emptySlotPlusUnMatchF){
+//                    builder.append("-");    
+//                }else if(i>=emptySlotF && i<junctionIndex){
+//                    builder.append("=");
+//                }else if(i == junctionIndex){
+//                    builder.append("|");
+//                }else if(i>junctionIndex && i<=lastIdxBaseMatchB){
+//                    builder.append("=");
+//                }else{
+//                    builder.append(" ");
+//                }
+
+//                if(i<emptySlotF){
+//                    builder.append(" ");
+//                }else if(i>=emptySlotF && i<emptySlotPlusUnMatchF){
+//                    builder.append("-");    
+//                }else if(i>=emptySlotPlusUnMatchF && i<junctionIndex){
+//                    builder.append("=");
+//                }else if(i == junctionIndex){
+//                    builder.append("|");
+//                }else if(i>junctionIndex && i<=lastIdxBaseMatchB){
+//                    builder.append("=");
+//                }else if(i>lastIdxBaseMatchB && i<=lastIdxBaseB){
+//                    builder.append("-");
+//                }else{
+//                    builder.append(" ");
+//                }
+//            }
+            
+        }
+        
+        return builder.toString();
     }
 }
