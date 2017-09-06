@@ -26,13 +26,13 @@ public class TestPostProcess {
     public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/OP3_S3_dm6_miRNA_mer12_alignResult_part";
+        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/Thalasemia_Data/3662/3662_unmapped_alignResult_part";
         String indexFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/drosophila/d.melanogaster/dm6_filter.index";            // use for traceback to natural chromosome name
         String sampleFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/O3_S3_L001_R2_001.fa";
         String saveFileType = "txt";
-        int numPart = 1;
+        int numPart = 2;
 //        int readLength = 24;
-        int merLength = 12;
+        int merLength = 18;
         int maxFullMatch = 100; // it's percentage value
         int propotion = 1000000;
 //        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/SimulateData/simLongRead/";
