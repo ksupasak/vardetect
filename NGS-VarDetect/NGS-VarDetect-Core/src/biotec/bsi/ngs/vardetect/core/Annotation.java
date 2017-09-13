@@ -70,5 +70,12 @@ public class Annotation {
     public String getAttribute(){
         return attribute;
     }
+   
+    @Override
+    public String toString(){
+        
+        String str = chrName+" "+source+" "+feature+" "+strand+" "+attribute;
+        return str;
+    }
     
 }

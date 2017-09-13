@@ -5,6 +5,7 @@
  */
 package biotec.bsi.ngs.vardetect.core;
 
+import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -69,6 +70,7 @@ public class VariationResult {
     private ArrayList<Variation> listIndel;
     private ArrayList<Variation> listOthers;
     private Map<Long,Map<Long,ArrayList<Variation>>> coverageMapFusion;
+    private Map<Long,Map<Long,ArrayList<Integer>>> sumNumMatchCoverageMapFusion;          // store ArrayList of Integer [sumNumMatchFront,sumNumMatchBack]
     private Map<Long,Map<Long,ArrayList<Variation>>> coverageMapIndel;
     private Map<Long,ArrayList<Variation>> coverageMapSNP;
     private Map<Long,Map<Long,ArrayList<Variation>>> coverageMapOther;
@@ -85,6 +87,7 @@ public class VariationResult {
         this.coverageMapIndel = new TreeMap();
         this.coverageMapOther = new TreeMap();
         this.coverageMapSNP = new TreeMap();
+        this.sumNumMatchCoverageMapFusion = new TreeMap();
     }
     
     public void addMerLength(int merLen){
@@ -318,6 +321,7 @@ public class VariationResult {
             
             if(this.coverageMapFusion.containsKey(bpFCode)){                      // check similarity of front breakpoint
                 Map<Long,ArrayList<Variation>> coverageMapFusionII = this.coverageMapFusion.get(bpFCode);
+                Map<Long,ArrayList<Integer>> sumNumMatchCoverageMapFusionII = this.sumNumMatchCoverageMapFusion.get(bpFCode);
                 if(coverageMapFusionII.containsKey(bpBCode)){                       // check similarity of back breakpoit
                     /**
                      * put variation data to existing ArrayList<Variation>
@@ -326,18 +330,40 @@ public class VariationResult {
                     ArrayList<Variation> coverageList = coverageMapFusionII.get(bpBCode);
                     coverageList.add(dummyVar);
                     coverageMapFusionII.put(bpBCode, coverageList);
+                    
+                    ArrayList<Integer> sumNumMatchList = sumNumMatchCoverageMapFusionII.get(bpBCode);           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+                    int sumNumMatchOldF = sumNumMatchList.get(0);
+                    int sumNumMatchOldB = sumNumMatchList.get(1);
+                    int sumNumMatchNewF = sumNumMatchOldF+dummyVar.numMatchF;
+                    int sumNumMatchNewB = sumNumMatchOldB+dummyVar.numMatchB;
+                    sumNumMatchList.add(0, sumNumMatchNewF);
+                    sumNumMatchList.add(1, sumNumMatchNewB);
+                    sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
                 }else{
                     ArrayList<Variation> coverageList = new ArrayList();
                     coverageList.add(dummyVar);
                     coverageMapFusionII.put(bpBCode, coverageList);
+                    
+                    ArrayList<Integer> sumNumMatchList = new ArrayList();           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+                    sumNumMatchList.add(0, dummyVar.numMatchF);
+                    sumNumMatchList.add(1, dummyVar.numMatchB);
+                    sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
                 }
                 this.coverageMapFusion.put(bpFCode, coverageMapFusionII);
+                this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapFusionII);
             }else{
                 Map<Long,ArrayList<Variation>> coverageMapFusionII = new TreeMap();
                 ArrayList<Variation> coverageList = new ArrayList();
                 coverageList.add(dummyVar);
                 coverageMapFusionII.put(bpBCode, coverageList);
                 this.coverageMapFusion.put(bpFCode, coverageMapFusionII);
+                
+                Map<Long,ArrayList<Integer>> sumNumMatchCoverageMapFusionII = new TreeMap();
+                ArrayList<Integer> sumNumMatchList = new ArrayList();           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+                sumNumMatchList.add(0, dummyVar.numMatchF);
+                sumNumMatchList.add(1, dummyVar.numMatchB);
+                sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
+                this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapFusionII);
             } 
         }
     }
@@ -396,6 +422,7 @@ public class VariationResult {
             
             if(this.coverageMapIndel.containsKey(bpFCode)){                      // check similarity of front breakpoint
                 Map<Long,ArrayList<Variation>> coverageMapII = this.coverageMapIndel.get(bpFCode);
+                Map<Long,ArrayList<Integer>> sumNumMatchCoverageMapFusionII = this.sumNumMatchCoverageMapFusion.get(bpFCode);
                 if(coverageMapII.containsKey(bpBCode)){                       // check similarity of back breakpoit
                     /**
                      * put variation data to existing ArrayList<Variation>
@@ -404,18 +431,40 @@ public class VariationResult {
                     ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
                     coverageList.add(dummyVar);
                     coverageMapII.put(bpBCode, coverageList);
+                    
+                    ArrayList<Integer> sumNumMatchList = sumNumMatchCoverageMapFusionII.get(bpBCode);           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+                    int sumNumMatchOldF = sumNumMatchList.get(0);
+                    int sumNumMatchOldB = sumNumMatchList.get(1);
+                    int sumNumMatchNewF = sumNumMatchOldF+dummyVar.numMatchF;
+                    int sumNumMatchNewB = sumNumMatchOldB+dummyVar.numMatchB;
+                    sumNumMatchList.add(0, sumNumMatchNewF);
+                    sumNumMatchList.add(1, sumNumMatchNewB);
+                    sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
                 }else{
                     ArrayList<Variation> coverageList = new ArrayList();
                     coverageList.add(dummyVar);
                     coverageMapII.put(bpBCode, coverageList);
+                    
+                    ArrayList<Integer> sumNumMatchList = new ArrayList();           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+                    sumNumMatchList.add(0, dummyVar.numMatchF);
+                    sumNumMatchList.add(1, dummyVar.numMatchB);
+                    sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
                 }
                 this.coverageMapIndel.put(bpFCode, coverageMapII);
+                this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapFusionII);
             }else{
                 Map<Long,ArrayList<Variation>> coverageMapII = new TreeMap();
                 ArrayList<Variation> coverageList = new ArrayList();
                 coverageList.add(dummyVar);
                 coverageMapII.put(bpBCode, coverageList);
                 this.coverageMapIndel.put(bpFCode, coverageMapII);
+                
+                Map<Long,ArrayList<Integer>> sumNumMatchCoverageMapFusionII = new TreeMap();
+                ArrayList<Integer> sumNumMatchList = new ArrayList();           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+                sumNumMatchList.add(0, dummyVar.numMatchF);
+                sumNumMatchList.add(1, dummyVar.numMatchB);
+                sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
+                this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapFusionII);
             } 
         }
     }
@@ -698,8 +747,8 @@ public class VariationResult {
                     ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
                     if(coverageList.size()>coverageThreshold){
                         writer.write("Group "+count);
-                        writer.write("\tFront Break point : " + chrF +","+bpF);
-                        writer.write("\tBack Break point : " + chrB +","+bpB); 
+                        writer.write("\tFront Break point : " + chrF +":"+bpF);
+                        writer.write("\tBack Break point : " + chrB +":"+bpB); 
     //                    ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
                         writer.write("\tCoverage : " + coverageList.size());
                         writer.write("\n");
@@ -752,8 +801,8 @@ public class VariationResult {
                         writer.write("Group "+count);
                         writer.write("\tIndel Type : " + indelType);
                         writer.write("\tIndel Base : " + indelBase);
-                        writer.write("\tFront Break point : " + chrF +","+bpF);
-                        writer.write("\tBack Break point : " + chrB +","+bpB);
+                        writer.write("\tFront Break point : " + chrF +":"+bpF);
+                        writer.write("\tBack Break point : " + chrB +":"+bpB);
                         writer.write("\tCoverage : " + coverageList.size());
                         writer.write("\n");
                         for(int i=0;i<coverageList.size();i++){
@@ -821,6 +870,265 @@ public class VariationResult {
     }
     
  
+    public void writeVariantCoverageVirtualizeWithAnnotationReportToFile(String nameFile ,String gffFile, int coverageThreshold , char varType) throws IOException{
+        /**
+        * Suitable for version 3 data structure (data structure that has iniIdx in its)
+        * write result to file format for variant report
+        * create virtual sequence (give a point of view of support read)
+        */
+        
+        ReferenceAnnotation refAnno = SequenceUtil.readAnnotationFileV2(gffFile, "gene");
+        Map<Integer,Annotation> refAnnoIndex = refAnno.getAnnotationIndex();
+        
+        String[] dummy = nameFile.split("\\.");
+        String filename = "";
+        switch (varType) {
+            case 'F':
+                filename = dummy[0]+"_match"+this.percentMatch+"_VirtualCoverageAnnotatedReport_Fusion"+".txt";
+                break;
+            case 'I':
+                filename = dummy[0]+"_match"+this.percentMatch+"_VirtualCoverageAnnotatedReport_Indel"+".txt";
+                break;
+            case 'S':
+                filename = dummy[0]+"_match"+this.percentMatch+"_VirtualCoverageAnnotatedReport_SNP"+".txt";
+                break;
+            default:
+                break;
+        }
+        
+        PrintStream ps;
+        FileWriter writer;        
+        /**
+         * Check File existing
+         */
+        
+        File f = new File(filename); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(filename,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(filename);
+        }
+        
+        
+        if(varType == 'F'){
+            int count = 1;
+            writer.write("Variation type : Fusion\n");
+            Set set = this.coverageMapFusion.keySet();
+            Iterator iterKey = set.iterator();
+            while(iterKey.hasNext()){
+                long bpFCode = (long)iterKey.next();
+                long bpF = bpFCode&this.mask28bit;
+                int chrF = (int)(bpFCode>>28);
+                
+                Map<Long,ArrayList<Variation>> coverageMapII = this.coverageMapFusion.get(bpFCode);
+                Map<Long,ArrayList<Integer>> sumNumMatchMapII = this.sumNumMatchCoverageMapFusion.get(bpFCode);
+                Set setII = coverageMapII.keySet();
+                Iterator iterKeyII = setII.iterator();
+                while(iterKeyII.hasNext()){
+                    long bpBCode = (long)iterKeyII.next();
+                    long bpB = bpBCode&this.mask28bit;
+                    int chrB = (int)(bpBCode>>28);
+                    
+                    /**
+                     * Write Report Part
+                     */
+                    ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
+                    ArrayList<Integer> sumNumMatchList = sumNumMatchMapII.get(bpBCode);
+                    if(coverageList.size()>coverageThreshold){
+                        /**
+                         * Calculate average numMatch for Front and Back part and Map to annotation binary tree for gene information
+                         * create code chrPosStart and chrPosStop both front and back (use for binary search)
+                         */
+                        
+                        int avgNumMatchF = sumNumMatchList.get(0)/coverageList.size();
+                        int avgNumMatchB = sumNumMatchList.get(1)/coverageList.size();
+                        
+                        long avgIniPosF = bpF-avgNumMatchF;
+                        long avgLastPosB = bpB+avgNumMatchB;
+                        
+                        long chrPosStartF = (((long)chrF<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+                        long chrPosStopF = (((long)chrF<<28)+bpF)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+                        long chrPosStartB = (((long)chrB<<28)+bpB)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+                        long chrPosStopB = (((long)chrB<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+                        int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+                        int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+                        
+                        String strAnnoF = "null";
+                        String strAnnoB = "null";
+                        if(annoGroupIndexF >= 0){
+                            Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                            strAnnoF = annoF.toString();
+                        }
+                        if(annoGroupIndexB >= 0){
+                            Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                            strAnnoB = annoB.toString();
+                        }
+                        
+                        
+                        /****************/
+                        
+                        writer.write("Group "+count);
+                        writer.write("\tFront Break point = " + chrF +":"+bpF);
+                        writer.write("\tAnnotation = " + strAnnoF);
+                        writer.write("\tBack Break point = " + chrB +":"+bpB);
+                        writer.write("\tAnnotation = " + strAnnoB);
+    //                    ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
+                        writer.write("\tCoverage : " + coverageList.size());
+                        writer.write("\n");
+                        for(int i=0;i<coverageList.size();i++){
+                            Variation var = coverageList.get(i);
+                            
+                            writer.write(var.virtualSequence());
+                            writer.write("\n");
+//                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
+//                            writer.write(" || ");
+//                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
+//                            writer.write("\n");
+                        }
+                        count++;
+                    }
+                }  
+            }
+        }
+        if(varType == 'I'){
+            int count = 1;
+            writer.write("Variation type : Indel\n");
+            Set set = this.coverageMapIndel.keySet();
+            Iterator iterKey = set.iterator();
+            while(iterKey.hasNext()){
+                long bpFCode = (long)iterKey.next();
+                long bpF = bpFCode&this.mask28bit;
+                int chrF = (int)(bpFCode>>28);
+                
+                Map<Long,ArrayList<Variation>> coverageMapII = this.coverageMapIndel.get(bpFCode);
+                Map<Long,ArrayList<Integer>> sumNumMatchMapII = this.sumNumMatchCoverageMapFusion.get(bpFCode);
+                Set setII = coverageMapII.keySet();
+                Iterator iterKeyII = setII.iterator();
+                while(iterKeyII.hasNext()){
+                    long bpBCode = (long)iterKeyII.next();
+                    long bpB = bpBCode&this.mask28bit;
+                    int chrB = (int)(bpBCode>>28);
+                    
+                    /**
+                     * Write Report Part
+                     */
+                    ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
+                    ArrayList<Integer> sumNumMatchList = sumNumMatchMapII.get(bpBCode);
+                    if(coverageList.size()>coverageThreshold){
+                        /**
+                         * pick one variation to get indel information 
+                         */
+                        Variation tempVar = coverageList.get(0);
+                        String indelType = tempVar.getIndelType();
+                        long indelBase = tempVar.getIndelBase();
+                        /***/
+                                               
+                        /**
+                         * Calculate average numMatch for Front and Back part and Map to annotation binary tree for gene information
+                         * create code chrPosStart and chrPosStop both front and back (use for binary search)
+                         */
+                        
+                        int avgNumMatchF = sumNumMatchList.get(0)/coverageList.size();
+                        int avgNumMatchB = sumNumMatchList.get(1)/coverageList.size();
+                        
+                        long avgIniPosF = bpF-avgNumMatchF;
+                        long avgLastPosB = bpB+avgNumMatchB;
+                        
+                        long chrPosStartF = (((long)chrF<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+                        long chrPosStopF = (((long)chrF<<28)+bpF)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+                        long chrPosStartB = (((long)chrB<<28)+bpB)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+                        long chrPosStopB = (((long)chrB<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+                        int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+                        int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+                        
+                        String strAnnoF = "null";
+                        String strAnnoB = "null";
+                        if(annoGroupIndexF >= 0){
+                            Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                            strAnnoF = annoF.toString();
+                        }
+                        if(annoGroupIndexB >= 0){
+                            Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                            strAnnoB = annoB.toString();
+                        }
+                        
+                        /****************/
+                        
+                        writer.write("Group "+count);
+                        writer.write("\tIndel Type : " + indelType);
+                        writer.write("\tIndel Base : " + indelBase);
+                        writer.write("\tFront Break point : " + chrF +":"+bpF);
+                        writer.write("\tAnnotation = " + strAnnoF);
+                        writer.write("\tBack Break point : " + chrB +":"+bpB);
+                        writer.write("\tAnnotation = " + strAnnoB);
+                        writer.write("\tCoverage : " + coverageList.size());
+                        writer.write("\n");
+                        for(int i=0;i<coverageList.size();i++){
+                            Variation var = coverageList.get(i);
+                            
+                            writer.write(var.virtualSequence());
+                            writer.write("\n");
+//                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
+//                            writer.write(" || ");
+//                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
+//                            writer.write("\n");
+                        }
+                        count++;
+                    }
+                }
+                
+            }
             
+        }
+        if(varType == 'S'){
+            int count = 1;
+            writer.write("Variation type : SNP and other miss match\n");
+            Set set = this.coverageMapSNP.keySet();
+            Iterator iterKey = set.iterator();
+            while(iterKey.hasNext()){
+//                long bpFCode = (long)iterKey.next();
+//                long bpF = bpFCode&this.mask28bit;
+//                int chrF = (int)bpFCode>>28;
+                long bpBCode = (long)iterKey.next();
+                long bpB = bpBCode&this.mask28bit;
+                int chrB = (int)(bpBCode>>28);
+                
+                ArrayList<Variation> coverageList = this.coverageMapSNP.get(bpBCode);
+                if(coverageList.size()>coverageThreshold){
+                    /**
+                    * Write Report Part
+                    */
+                    writer.write("Group "+count);
+                    writer.write("\tBack Break point : " + chrB +","+bpB);  
+                    writer.write("\tCoverage : " + coverageList.size());
+                    writer.write("\n");
+
+                    for(int i=0;i<coverageList.size();i++){
+                        /**
+                         * Write Report Part
+                         */
+                        Variation var = coverageList.get(i);
+                        
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF));
+                        writer.write(" || ");
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB));
+                        writer.write("\n");
+                    }
+                    count++;
+                }
+            }
+            
+        }
+        if(varType == 'O'){
+            
+        }
+
+        writer.flush();
+        writer.close();
+    }
     
 }

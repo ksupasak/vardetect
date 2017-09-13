@@ -1336,7 +1336,9 @@ public class SequenceUtil {
             concatenateCut.addSequence(dummyConcatenateCut);
             concatenateCut.addType(type);
             concatenateCut.addCutInfo(cutA, cutB);
-            
+            int breakPointF = (iniA+cutLengthA)-1;
+            int breakPointB = iniB;
+            concatenateCut.addBreakPoint(breakPointF,breakPointB);
 //            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
 //            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
 //            System.out.println("Concatenate chromosome: " + concatenateCut);
@@ -1351,6 +1353,9 @@ public class SequenceUtil {
             concatenateCut.addType(type);
             concatenateCut.addCutInfo(cutA, cutB);
             
+            int breakPointF = (iniA+cutLengthA)-1;
+            int breakPointB = (iniB+cutLengthA)-1;
+            concatenateCut.addBreakPoint(breakPointF,breakPointB);
 //            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
 //            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
 //            System.out.println("Concatenate chromosome: " + concatenateCut);
@@ -1365,6 +1370,9 @@ public class SequenceUtil {
             concatenateCut.addType(type);
             concatenateCut.addCutInfo(cutA, cutB);
             
+            int breakPointF = iniA;
+            int breakPointB = iniB;
+            concatenateCut.addBreakPoint(breakPointF,breakPointB);
 //            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
 //            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
 //            System.out.println("Concatenate chromosome: " + concatenateCut);
@@ -1381,6 +1389,9 @@ public class SequenceUtil {
             concatenateCut.addType(type);
             concatenateCut.addCutInfo(cutA, cutB);
             
+            int breakPointF = iniA;
+            int breakPointB = (iniB+cutLengthA)-1;;
+            concatenateCut.addBreakPoint(breakPointF,breakPointB);
 //            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
 //            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
 //            System.out.println("Concatenate chromosome: " + concatenateCut);
@@ -1542,6 +1553,9 @@ public class SequenceUtil {
             concatenateCut.addType(type);
             concatenateCut.addCutInfo(cutA, cutB);
             
+            int breakPointF = (iniA+cutLengthA)-1;
+            int breakPointB = iniB;
+            concatenateCut.addBreakPoint(breakPointF,breakPointB);
 //            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
 //            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
 //            System.out.println("Concatenate chromosome: " + concatenateCut);
@@ -1555,7 +1569,10 @@ public class SequenceUtil {
             concatenateCut.addSequence(dummyConcatenateCut);
             concatenateCut.addType(type);
             concatenateCut.addCutInfo(cutA, cutB);
-            
+
+            int breakPointF = (iniA+cutLengthA)-1;
+            int breakPointB = (iniB+cutLengthA)-1;
+            concatenateCut.addBreakPoint(breakPointF,breakPointB);
 //            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
 //            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
 //            System.out.println("Concatenate chromosome: " + concatenateCut);
@@ -1570,6 +1587,9 @@ public class SequenceUtil {
             concatenateCut.addType(type);
             concatenateCut.addCutInfo(cutA, cutB);
             
+            int breakPointF = iniA;
+            int breakPointB = iniB;
+            concatenateCut.addBreakPoint(breakPointF,breakPointB);
 //            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
 //            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
 //            System.out.println("Concatenate chromosome: " + concatenateCut);
@@ -1586,6 +1606,9 @@ public class SequenceUtil {
             concatenateCut.addType(type);
             concatenateCut.addCutInfo(cutA, cutB);
             
+            int breakPointF = iniA;
+            int breakPointB = (iniB+cutLengthA)-1;;
+            concatenateCut.addBreakPoint(breakPointF,breakPointB);
 //            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
 //            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
 //            System.out.println("Concatenate chromosome: " + concatenateCut);
@@ -1617,6 +1640,9 @@ public class SequenceUtil {
         int rangeB = lengthB - 0 ;
         int dif = 0;
         int iniA=0,iniB=0;
+        int lastA=0;
+        int breakPointF = 0;
+        int breakPointB = 0;
         Random r = new Random();
         while(dif < posDiff){
             iniA = r.nextInt(rangeA);
@@ -1626,8 +1652,10 @@ public class SequenceUtil {
         
         if(indelType == 'D'){            // 'D' mean Deletion
             cutA = chrA.getSequence().subSequence(iniA, (iniA+cutLengthA*2)+indelSize);
+            lastA = ((iniA+cutLengthA*2)+indelSize)-1;
         }else if (indelType == 'I'){    // 'I' mean Insertion
-            cutA = chrA.getSequence().subSequence(iniA, (iniA+cutLengthA*2)-indelSize);  
+            cutA = chrA.getSequence().subSequence(iniA, (iniA+cutLengthA*2)-indelSize);
+            lastA = ((iniA+cutLengthA*2)-indelSize)-1;
         }
         
         cutB = chrB.getSequence().subSequence(iniB, iniB+indelSize);
@@ -1645,8 +1673,10 @@ public class SequenceUtil {
                 
                 if(indelType == 'D'){            // 'D' mean Deletion
                     cutA = chrA.getSequence().subSequence(iniA, (iniA+cutLengthA*2)+indelSize);
+                    lastA = ((iniA+cutLengthA*2)+indelSize)-1;
                 }else if (indelType == 'I'){    // 'I' mean Insertion
-                    cutA = chrA.getSequence().subSequence(iniA, (iniA+cutLengthA*2)-indelSize);  
+                    cutA = chrA.getSequence().subSequence(iniA, (iniA+cutLengthA*2)-indelSize);
+                    lastA = ((iniA+cutLengthA*2)-indelSize)-1;
                 }
                 
             }else checkA = 0;                        
@@ -1671,9 +1701,9 @@ public class SequenceUtil {
          * Just my opinion : Read that contain indel may not have complicate combination of strand like +- or -+
          * they have simple combination of strand like ++ or -- 
          * For now I will create only ++ and -- combination of strand
-         * I will interrupt the type number of case type =1 and 2. Change it to 0 and 3
-         * type 1 (+-) force change to type 0 (++)
-         * type 2 (-+) force change to type 3 (--)
+         * I will interrupt the type number of case type =1 and 2. Change it to 0 and 3 (Force change type 1 => 0 and type 2 => 3)
+         * type 1 (+-) force change to type 0 (++) and generate process to type 0 as well
+         * type 2 (-+) force change to type 3 (--) nd generate process to type 3 as well
          */
         
         
@@ -1682,10 +1712,14 @@ public class SequenceUtil {
             
             if(indelType == 'D'){            // 'D' mean Deletion
                 dummyCut = cutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + cutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
+                breakPointF = (iniA + (cutA.length()/2)-(indelSize/2))-1;
+                breakPointB = (iniA+cutA.length()/2)+(indelSize-indelSize/2);         
             }else if (indelType == 'I'){    // 'I' mean Insertion
                 
                 dummyCut = cutA.toString().substring(0, cutA.length()/2) + cutB.toString() + cutA.toString().substring(cutA.length()/2,cutA.length());
 //                dummyCut = cutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + cutB.toString() + cutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
+                breakPointF = (iniA + (cutA.length()/2))-1;
+                breakPointB = iniA + cutA.length()/2;  
             }
 
 //            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
@@ -1700,9 +1734,13 @@ public class SequenceUtil {
             
             if(indelType == 'D'){            // 'D' mean Deletion
                 dummyCut = cutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + cutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
+                breakPointF = (iniA + (cutA.length()/2)-(indelSize/2))-1;
+                breakPointB = (iniA+cutA.length()/2)+(indelSize-indelSize/2);
             }else if (indelType == 'I'){    // 'I' mean Insertion
                 
                 dummyCut = cutA.toString().substring(0, cutA.length()/2) + cutB.toString() + cutA.toString().substring(cutA.length()/2,cutA.length());
+                breakPointF = (iniA + (cutA.length()/2))-1;
+                breakPointB = iniA + cutA.length()/2;
 //                dummyCut = cutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + compCutB.toString() + cutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
             }
 
@@ -1719,10 +1757,14 @@ public class SequenceUtil {
             if(indelType == 'D'){            // 'D' mean Deletion
 
                 dummyCut = compCutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + compCutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
+                breakPointF = lastA - ((cutA.length()/2)-(indelSize/2)-1);
+                breakPointB = lastA - ((cutA.length()/2)+(indelSize-indelSize/2));
             }else if (indelType == 'I'){    // 'I' mean Insertion
                 
                 dummyCut = compCutA.toString().substring(0, cutA.length()/2) + cutB.toString() + compCutA.toString().substring(cutA.length()/2,cutA.length());
 //                dummyCut = compCutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + cutB.toString() + compCutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
+                breakPointF = lastA - ((cutA.length()/2)-1);
+                breakPointB = lastA - cutA.length()/2;
             }
             
 //            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
@@ -1739,9 +1781,13 @@ public class SequenceUtil {
             if(indelType == 'D'){            // 'D' mean Deletion
 
                 dummyCut = compCutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + compCutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
+                breakPointF = lastA - ((cutA.length()/2)-(indelSize/2)-1);
+                breakPointB = lastA - ((cutA.length()/2)+(indelSize-indelSize/2));
             }else if (indelType == 'I'){    // 'I' mean Insertion
                 
                 dummyCut = compCutA.toString().substring(0, cutA.length()/2) + cutB.toString() + compCutA.toString().substring(cutA.length()/2,cutA.length());
+                breakPointF = lastA - ((cutA.length()/2)-1);
+                breakPointB = lastA - cutA.length()/2;
 //                dummyCut = compCutA.toString().substring(0, (cutA.length()/2)-(indelSize/2)) + compCutB.toString() + compCutA.toString().substring((cutA.length()/2)+(indelSize-indelSize/2),cutA.length());
             }
             
@@ -1754,6 +1800,7 @@ public class SequenceUtil {
         smallIndelSample.addCutInfo(cutA);
         smallIndelSample.addIndelInfo(cutB);
         smallIndelSample.addSequence(dummyCut);
+        smallIndelSample.addBreakPoint(breakPointF,breakPointB);
         
         cutA = null;
         cutB = null;
@@ -2285,11 +2332,12 @@ public class SequenceUtil {
         ReferenceAnnotation refAnno = new ReferenceAnnotation();
         Path path = Paths.get(filename);
         StringBuffer seq = new StringBuffer();
-        Map<String,Long> chrNameIndex = new LinkedHashMap();         // store chr Index (Map that link btw original chr name and new chr name) key is chr name
+        Map<String,Long> chrNameIndex = new LinkedHashMap();         // store chr Index (Map that link btw original chr name and new chr name) key is chr name ()
         Map<Long,String> chrNameIndexReverse = new LinkedHashMap();  // store chr Index (Map that link btw original chr name and new chr name) key is chr number
         Map<Integer,Annotation> annotationIndex = new LinkedHashMap();  // store Anootation and it index
         ArrayList<Long> annoBinaryTree = new ArrayList();               // store start and stop code for binary search purpose (may be no need to sort because the gff file already rearrange in ascending)
         long chr = 0;               // define long for store chr because it has to be shift left 28 bit to create the code (if it int wwhen weshift left 28 bit it will exceed the limit of int and cause the minus number that we didn't expect)
+        long chrCount=1;            // this variable has index begin at 1 because it has to be count one step ahead of real chr index (In no human case this chrCount will be use as chr index instead)
         int annoIndex = 0;
         
         try (BufferedReader reader = new BufferedReader(new FileReader(filename));) {
@@ -2318,23 +2366,46 @@ public class SequenceUtil {
                     setA = line.split("\\s+");
                     
                     String chrName = setA[0];
+                    /**
+                     * Case check for chromosome Name  (Handle with special case if it is human genome because human chromosome has been represent by real number not combine number like 2L or 2R in drosophila )
+                     * For human x is tranform to number 23 and y is 24 
+                     * For mitocondria or mt is number 25
+                     * 
+                     */
+                    if(isInteger(chrName)){
+                        chr = Long.parseLong(chrName);
+                    }else{
+                        if(chrName.toLowerCase().equals("x")){
+                            chr = 23;
+                        }else if(chrName.toLowerCase().equals("y")){
+                            chr = 24;
+                        }else if(chrName.toLowerCase().equals("mt")){
+                            chr = 25;
+                        }else{
+                            chr = chrCount;
+                        }
+                    }
+                    /****************************/
+                    
                     if(chrNameIndex.containsKey(chrName)){
                         chr = chrNameIndex.get(chrName);
                     }else{
-                        chr++;
+                        chrCount++;
                         chrNameIndex.put(chrName, chr);
                     }
                     
                     String source = setA[1];
                     String feature = setA[2];
-                    long start = Long.parseLong(setA[3]);
-                    long stop = Long.parseLong(setA[4]);
-                    String score = setA[5];
-                    String strand = setA[6];
-                    String frame = setA[7];
-                    String attribute = setA[8];
+                    if(source.equals(specificSourceOrFeature)||feature.equals(specificSourceOrFeature)){        // case check for specific line that we want (specify by user via specificSourceOrFeature variable)
+
+                        long start = Long.parseLong(setA[3]);
+                        long stop = Long.parseLong(setA[4]);
+                        String score = setA[5];
+                        String strand = setA[6];
+                        String frame = setA[7];
+                        String attribute = setA[8];
                     
-                    if(source.equals(specificSourceOrFeature)||feature.equals(specificSourceOrFeature)){
+//                    if(source.equals(specificSourceOrFeature)||feature.equals(specificSourceOrFeature)){
                         annoIndex++;
                         anno = new Annotation(chr,source,feature,start,stop,score,strand,frame,attribute);
                         long startCode = (chr<<28)+start;
@@ -6352,5 +6423,14 @@ public class SequenceUtil {
         
         System.out.println(" Done read Sample Result");
         
+    }
+    
+    public static boolean isInteger(String input){
+        try{
+            Integer.parseInt(input);
+            return true;
+        }catch(NumberFormatException e){
+            return false;
+        }
     }
 }

@@ -12,7 +12,7 @@ package biotec.bsi.ngs.vardetect.core;
 public class Smallindelsample {                                                       // Act as a storage for concatenate cut for easy get data
     private CharSequence sequence,cutA,cutB;
     private String type,chrA,chrB;
-    private int iniA,iniB,indelSize; // initial position on each chrmosome
+    private int iniA,iniB,indelSize,breakPointF,breakPointB; // initial position on each chrmosome
     private char indelType;
     
     public Smallindelsample(){
@@ -76,6 +76,19 @@ public class Smallindelsample {                                                 
     }
     public int getIndelSize(){
         return this.indelSize;
+    }
+
+    public void addBreakPoint(int breakPointF, int breakPointB) {
+        this.breakPointF = breakPointF;
+        this.breakPointB = breakPointB;
+    }
+
+    public int getBreakPointF() {
+        return breakPointF;
+    }
+
+    public int getBreakPointB() {
+        return breakPointB;
     }
 }
 

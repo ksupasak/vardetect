@@ -12,7 +12,7 @@ package biotec.bsi.ngs.vardetect.core;
 public class ConcatenateCut {                                                       // Act as a storage for concatenate cut for easy get data
     private CharSequence sequence,cutA,cutB;
     private String type,chrA,chrB;
-    private int iniA,iniB; // initial position on each chrmosome
+    private int iniA,iniB,breakPointF,breakPointB; // initial position on each chrmosome
     
     public ConcatenateCut(){
         
@@ -65,5 +65,18 @@ public class ConcatenateCut {                                                   
     }
     public CharSequence getcutB(){
         return this.cutB;
+    }
+
+    public void addBreakPoint(int breakPointF, int breakPointB) {
+        this.breakPointF = breakPointF;
+        this.breakPointB = breakPointB;
+    }
+
+    public int getBreakPointF() {
+        return breakPointF;
+    }
+
+    public int getBreakPointB() {
+        return breakPointB;
     }
 }
