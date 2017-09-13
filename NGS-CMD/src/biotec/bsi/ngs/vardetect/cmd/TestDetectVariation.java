@@ -26,6 +26,7 @@ public class TestDetectVariation {
         // TODO code application logic here
         
         String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/Thalasemia_Data/3661/3661_unmapped_alignResult_Sort.txt";
+        String gffFile = "/Volumes/PromisePegasus/worawich/Referense/hg38/gff3/Homo_sapiens.GRCh38.87.chr.gff3";
 //        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/SimulateData/hg38_sim_3/";
 //        String saveFilename = "hg38_FullNewMethod_Sim_alignmentResult_VariantReport";
         
@@ -46,12 +47,17 @@ public class TestDetectVariation {
 //        varRes.writeVariantCoverageReportToFile(path, saveFilenameCov, coverageThreshold, 'S');
 //        varRes.writeVarianReportToFile(path, saveFilename);
 
+//        varRes.analyzeCoverageFusion();
+//        varRes.writeVariantCoverageReportToFile(filename, coverageThreshold, 'F');
+//        varRes.writeVariantCoverageVirtualizeReportToFile(filename, coverageThreshold, 'F');
+//        varRes.analyzeCoverageIndel();
+//        varRes.writeVariantCoverageReportToFile(filename, coverageThreshold, 'I');
+//        varRes.writeVariantCoverageVirtualizeReportToFile(filename, coverageThreshold, 'I');
+        
         varRes.analyzeCoverageFusion();
-        varRes.writeVariantCoverageReportToFile(filename, coverageThreshold, 'F');
-        varRes.writeVariantCoverageVirtualizeReportToFile(filename, coverageThreshold, 'F');
+        varRes.writeVariantCoverageVirtualizeWithAnnotationReportToFile(filename, gffFile, coverageThreshold, 'F');
         varRes.analyzeCoverageIndel();
-        varRes.writeVariantCoverageReportToFile(filename, coverageThreshold, 'I');
-        varRes.writeVariantCoverageVirtualizeReportToFile(filename, coverageThreshold, 'I');
+        varRes.writeVariantCoverageVirtualizeWithAnnotationReportToFile(filename, gffFile, coverageThreshold, 'I');
 
         System.gc();
       

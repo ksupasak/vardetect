@@ -20,10 +20,17 @@ public class RunSimulateSample {
     public static void main(String args[]) throws IOException{
         String refPath = "/Volumes/PromisePegasus/worawich/Referense/hg38/hg38_filter.fa";
         int numMer = 18;
-        ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath,numMer); //runFile hg19.fa
+        int numRead = 100;
+        int readLen = 100;
+        int readCoverage = 30;
+        int diffL = 10000;
+        int indelSize = 10;
+        String filename = "hg38_sim_L";
+        char variantType = 'L';                 // 4 variant type F=fusion L=large indel I=insert D=delete 
+        ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath,numMer); //runFile reference
         
         InputSequence tempInSS = new InputSequence();
-        tempInSS = SimulatorUtil_WholeGene.simulateComplexWholeGeneRandomMixed(ref, 200, 100, 10, 10000, 9,"hg38_sim_2");
+        tempInSS = SimulatorUtil_WholeGene.simulateComplexWholeGeneRandomSingleType(ref, numRead, readLen, readCoverage, diffL, indelSize,filename,variantType);
         System.out.println("done");
 
     }
