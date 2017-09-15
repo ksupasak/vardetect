@@ -11,8 +11,16 @@ package biotec.bsi.ngs.vardetect.core;
  */
 public class ConcatenateCut {                                                       // Act as a storage for concatenate cut for easy get data
     private CharSequence sequence,cutA,cutB;
-    private String type,chrA,chrB;
-    private int iniA,iniB,breakPointF,breakPointB; // initial position on each chrmosome
+    private String type,chrA,chrB,oldCutA,oldCutB,snpBase;
+    private int iniA,iniB,breakPointF,breakPointB,indelSize,posSNP; // initial position on each chrmosome
+
+    public int getIndelSize() {
+        return indelSize;
+    }
+
+    public void setIndelSize(int indelSize) {
+        this.indelSize = indelSize;
+    }
     
     public ConcatenateCut(){
         
@@ -78,5 +86,31 @@ public class ConcatenateCut {                                                   
 
     public int getBreakPointB() {
         return breakPointB;
+    }
+
+    public void setSNPInfo(int posSNP, String snpBase) {
+        this.posSNP = posSNP;
+        this.snpBase = snpBase;
+    }
+
+    public String getSnpBase() {
+        return snpBase;
+    }
+
+    public int getPosSNP() {
+        return posSNP;
+    }
+
+    public void addOldCutSequence(String oldCutA, String oldCutB) {
+        this.oldCutA = oldCutA;
+        this.oldCutB = oldCutB;
+    }
+
+    public String getOldCutA() {
+        return oldCutA;
+    }
+
+    public String getOldCutB() {
+        return oldCutB;
     }
 }

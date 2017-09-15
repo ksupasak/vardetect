@@ -164,6 +164,9 @@ public class Variation {
          * 3. Re-correct break point and number of mer match to relate to real indel base (แก้ไขให้สัมพันธ์กับจำนวน indel base จริงๆ)
          * The re-correction can cause the break point of the pattern not equal to break point from blat (but not too much different)
          */
+        if(this.readNameF.equals("Read11SS04")){
+            System.out.println();
+        }
         
         this.indelBase = Math.abs(this.iniPosF - this.iniPosB);      // indel base (base on position minus index calculation)
         long breakpointDiff = Math.abs(this.breakPointB - this.breakPointF)-1;

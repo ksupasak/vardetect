@@ -1626,6 +1626,263 @@ public class SequenceUtil {
         return concatenateCut;
     }
     
+    public static ConcatenateCut createComplexLargeIndelFixRange(ChromosomeSequence chrA,ChromosomeSequence chrB, int cutLengthA, int cutLengthB, int minIndelSize, int maxIndelSize){
+        /**
+         * create complex large indel. User can set range of indel size
+         * and randomly place SNP on read
+         * 
+         */
+
+        Random indelType = new Random();
+        int type = indelType.nextInt(4);
+        
+        int check,checkA = 1,checkB = 1;
+        String cutA,cutB,oldCutA,oldCutB,dummyConcatenateCut;
+        ConcatenateCut concatenateCut = new ConcatenateCut(); 
+        CharSequence checkN = "N";
+        
+        int lengthA = chrA.getSequence().length();
+        int lengthB = chrB.getSequence().length();
+        int rangeA = lengthA - 0 ;
+        int rangeB = lengthB - 0 ;
+        int indelSize = 0;
+        int dif = 0;
+        int iniA=0,iniB=0,lastA=0;
+        Random r = new Random();
+        int posSNP = 0;
+        String snpBase = "N";
+        while(dif <= minIndelSize || dif > maxIndelSize){
+            iniA = r.nextInt(rangeA);
+            lastA = (iniA+cutLengthA)-1;
+            indelSize = minIndelSize + r.nextInt((maxIndelSize-minIndelSize)+1);
+            iniB = lastA + indelSize;
+            dif = Math.abs(lastA - iniB);                  // the value of dif has benn strict to positive by the case check of while loop
+        }
+        
+        cutA = chrA.getSequence().substring(iniA, iniA+cutLengthA);
+        cutB = chrB.getSequence().substring(iniB, iniB+cutLengthB);
+
+        while(checkA == 1 || checkB == 1){
+            int difA=0,difB=0;
+                    
+//            System.out.println(cutA.toString().contains("N"));
+//            System.out.println(cutB.toString().contains("N"));
+                                
+            if(cutA.toString().contains("N") || cutA.toString().equals(cutA.toString().toLowerCase())){
+                while(difA <= minIndelSize || difA > maxIndelSize){
+                    iniA = r.nextInt(rangeA);
+                    lastA = (iniA+cutLengthA)-1;
+                    indelSize = minIndelSize + r.nextInt((maxIndelSize-minIndelSize)+1);
+                    iniB = lastA + indelSize;
+                    difA = Math.abs(lastA - iniB);                  // the value of dif has benn strict to positive by the case check of while loop
+                }
+                cutA = chrA.getSequence().substring(iniA, iniA+cutLengthA);
+                cutB = chrB.getSequence().substring(iniB, iniB+cutLengthB);                
+            }else checkA = 0;                        
+        
+            if(cutB.toString().contains("N") || cutB.toString().equals(cutB.toString().toLowerCase())){
+                while(difB <= minIndelSize || difB > maxIndelSize){
+                    iniA = r.nextInt(rangeA);
+                    lastA = (iniA+cutLengthA)-1;
+                    indelSize = minIndelSize + r.nextInt((maxIndelSize-minIndelSize)+1);
+                    iniB = lastA + indelSize;
+                    difB = Math.abs(lastA - iniB);                  // the value of dif has benn strict to positive by the case check of while loop
+                }
+                cutA = chrA.getSequence().substring(iniA, iniA+cutLengthA);
+                cutB = chrB.getSequence().substring(iniB, iniB+cutLengthB);
+            }else checkB = 0;
+        }
+        
+        /**
+         * Randomly insert 1 SNP in cutA or cutB on random position
+         */
+        Random random = new Random();
+        int selectPart = random.nextInt(2);             // if 0 = frontPart or cutA; if 1 = backPart or cutB
+        oldCutA = cutA;                                 // store cutA before insert SNP (possibly not change if SNP inser to cutB)
+        oldCutB = cutB;                                 // store cutB before insert SNP (possibly not change if SNP inser to cutA)
+        if(selectPart == 0){
+            // insert SNP on cutA
+            posSNP = random.nextInt(cutLengthA);
+            char base = cutA.charAt(posSNP);
+            if(base == 'A' || base == 'a'){
+                snpBase = "G";
+                cutA = cutA.substring(0, posSNP) + snpBase + cutA.substring(posSNP+1);
+            }else if(base == 'T' || base == 't'){
+                snpBase = "C";
+                cutA = cutA.substring(0, posSNP) + snpBase + cutA.substring(posSNP+1);
+            }else if(base == 'G' || base == 'g'){
+                snpBase = "A";
+                cutA = cutA.substring(0, posSNP) + snpBase + cutA.substring(posSNP+1);
+            }else if(base == 'C' || base == 'c'){
+                snpBase = "T";
+                cutA = cutA.substring(0, posSNP) + snpBase + cutA.substring(posSNP+1);
+            }
+            
+        }else if(selectPart == 1){
+            // insert SNP on cutB
+            posSNP = random.nextInt(cutLengthB);
+            char base = cutB.charAt(posSNP);
+            if(base == 'A' || base == 'a'){
+                snpBase = "G";
+                cutB = cutB.substring(0, posSNP) + snpBase + cutB.substring(posSNP+1);
+            }else if(base == 'T' || base == 't'){
+                snpBase = "C";
+                cutB = cutB.substring(0, posSNP) + snpBase + cutB.substring(posSNP+1);
+            }else if(base == 'G' || base == 'g'){
+                snpBase = "A";
+                cutB = cutB.substring(0, posSNP) + snpBase + cutB.substring(posSNP+1);
+            }else if(base == 'C' || base == 'c'){
+                snpBase = "T";
+                cutB = cutB.substring(0, posSNP) + snpBase + cutB.substring(posSNP+1);
+            }
+        }
+        
+        /***********************************************************/
+        concatenateCut.addOldCutSequence(oldCutA,oldCutB);
+        concatenateCut.addBasicInfo(chrA.getName(), chrB.getName(), iniA, iniB);
+        
+//        Random indelType = new Random();
+//        int type = indelType.nextInt(4);
+        
+        if(type == 0){
+            /* strand ++ */
+            dummyConcatenateCut = cutA.toString()+cutB.toString();
+            concatenateCut.addSequence(dummyConcatenateCut);
+            concatenateCut.addType(type);
+            concatenateCut.addCutInfo(cutA, cutB);
+            
+            int breakPointF = (iniA+cutLengthA)-1;
+            int breakPointB = iniB;
+            concatenateCut.addBreakPoint(breakPointF,breakPointB);
+            concatenateCut.setIndelSize(indelSize);
+            
+            /**
+             * Re calculate SNP before add to concatenate cut
+             */
+            if(selectPart == 0){
+                // SNP has insert in cutA (no change)
+                posSNP = posSNP;
+            }else if(selectPart == 1){
+                // SNP has insert in cutB
+                posSNP = posSNP + cutA.length();
+            }
+            concatenateCut.setSNPInfo(posSNP,snpBase);
+            /********************************************************/
+//            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
+//            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
+//            System.out.println("Concatenate chromosome: " + concatenateCut);
+            
+        }else if(type == 1){
+            /* strand +- */
+            String invCutB = SequenceUtil.inverseSequence(cutB.toString());
+            String compCutB = SequenceUtil.createComplimentV2(invCutB);
+            
+            dummyConcatenateCut = cutA.toString()+compCutB;
+            concatenateCut.addSequence(dummyConcatenateCut);
+            concatenateCut.addType(type);
+            concatenateCut.addCutInfo(cutA, cutB);
+
+            int breakPointF = (iniA+cutLengthA)-1;
+            int breakPointB = (iniB+cutLengthA)-1;
+            concatenateCut.addBreakPoint(breakPointF,breakPointB);
+            indelSize = (indelSize + cutLengthA)-1;                 // update indel size relate to strand pattern
+            concatenateCut.setIndelSize(indelSize);
+            
+            /**
+             * Re calculate SNP before add to concatenate cut
+             */
+            if(selectPart == 0){
+                // SNP has insert in cutA (no change)
+                posSNP = posSNP;
+            }else if(selectPart == 1){
+                // SNP has insert in cutB
+                posSNP = (cutA.length() + (cutB.length() - posSNP))-1;
+            }
+            concatenateCut.setSNPInfo(posSNP,snpBase);
+            /********************************************************/
+//            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (+) from position " + iniA + " : " + cutA);
+//            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
+//            System.out.println("Concatenate chromosome: " + concatenateCut);
+            
+        }else if(type == 2){
+            /* strand -+ */
+            String invCutA = SequenceUtil.inverseSequence(cutA.toString());
+            String compCutA = SequenceUtil.createComplimentV2(invCutA);
+            
+            dummyConcatenateCut = compCutA + cutB.toString();
+            concatenateCut.addSequence(dummyConcatenateCut);
+            concatenateCut.addType(type);
+            concatenateCut.addCutInfo(cutA, cutB);
+            
+            int breakPointF = iniA;
+            int breakPointB = iniB;
+            concatenateCut.addBreakPoint(breakPointF,breakPointB);
+            indelSize = (indelSize + cutLengthA)-1;                 // update indel size relate to strand pattern
+            concatenateCut.setIndelSize(indelSize);
+            
+            /**
+             * Re calculate SNP before add to concatenate cut
+             */
+            if(selectPart == 0){
+                // SNP has insert in cutA 
+                posSNP = (cutA.length() - posSNP)-1;
+            }else if(selectPart == 1){
+                // SNP has insert in cutB
+                posSNP = posSNP + cutA.length();
+            }
+            concatenateCut.setSNPInfo(posSNP,snpBase);
+            /********************************************************/
+//            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
+//            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (+) from position " + iniB + " : " + cutB);
+//            System.out.println("Concatenate chromosome: " + concatenateCut);
+            
+        }else{
+            /* strand -- */
+            String invCutA = SequenceUtil.inverseSequence(cutA.toString());
+            String compCutA = SequenceUtil.createComplimentV2(invCutA);
+            String invCutB = SequenceUtil.inverseSequence(cutB.toString());
+            String compCutB = SequenceUtil.createComplimentV2(invCutB);
+        
+            dummyConcatenateCut = compCutA + compCutB;
+            concatenateCut.addSequence(dummyConcatenateCut);
+            concatenateCut.addType(type);
+            concatenateCut.addCutInfo(cutA, cutB);
+            
+            int breakPointF = iniA;
+            int breakPointB = (iniB+cutLengthA)-1;;
+            concatenateCut.addBreakPoint(breakPointF,breakPointB);
+            indelSize = (indelSize + (2*cutLengthA))-2;                         // update indel size relate to strand pattern
+            concatenateCut.setIndelSize(indelSize);
+            
+            /**
+             * Re calculate SNP before add to concatenate cut
+             */
+            if(selectPart == 0){
+                // SNP has insert in cutA 
+                posSNP = (cutA.length() - posSNP)-1;
+            }else if(selectPart == 1){
+                // SNP has insert in cutB
+                posSNP = (cutA.length() + (cutB.length() - posSNP))-1;
+            }
+            concatenateCut.setSNPInfo(posSNP,snpBase);
+            /********************************************************/
+//            System.out.println("Random cut of chr" + chrA.getChrNumber() + " Strand (-) from position " + (rangeA - iniA) + " : " + compCutA);
+//            System.out.println("Random cut of chr" + chrB.getChrNumber() + " Strand (-) from position " + (rangeB - iniB) + " : " + compCutB);
+//            System.out.println("Concatenate chromosome: " + concatenateCut);
+            
+        }
+         
+        cutA = null;
+        cutB = null;
+        System.gc();
+            
+            // not finish
+        //}
+        
+        
+        return concatenateCut;
+    }
+    
     public static Smallindelsample createComplexSmallIndel(ChromosomeSequence chrA,ChromosomeSequence chrB, int cutLengthA, int cutLengthB, int posDiff, char indelType, int indelSize){
         //chrA.getsequence
         Smallindelsample smallIndelSample = new Smallindelsample();
