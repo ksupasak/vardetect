@@ -1653,9 +1653,11 @@ public class SequenceUtil {
         String snpBase = "N";
         while(dif <= minIndelSize || dif > maxIndelSize){
             iniA = r.nextInt(rangeA);
-            lastA = (iniA+cutLengthA)-1;
+            lastA = (iniA+cutLengthA)-1;                    
             indelSize = minIndelSize + r.nextInt((maxIndelSize-minIndelSize)+1);
-            iniB = lastA + indelSize;
+            iniB = (lastA + indelSize)+1;                       // must be plus 1 to make a gap between lastA and iniB equal to indel size Ex. indelsize=4,cutlenA=5,iniA=1 => lastA = 1+5-1 = 5 
+                                                                // So, if you want indelSize=4 the gap between lastA and iniB should be index 6,7,8 and 9. This mean iniB should be 10 to make a 4 base gap size.
+                                                                // Finally ==> iniB = (5+4)+1 = 10 
             dif = Math.abs(lastA - iniB);                  // the value of dif has benn strict to positive by the case check of while loop
         }
         
@@ -1673,7 +1675,7 @@ public class SequenceUtil {
                     iniA = r.nextInt(rangeA);
                     lastA = (iniA+cutLengthA)-1;
                     indelSize = minIndelSize + r.nextInt((maxIndelSize-minIndelSize)+1);
-                    iniB = lastA + indelSize;
+                    iniB = (lastA + indelSize)+1;
                     difA = Math.abs(lastA - iniB);                  // the value of dif has benn strict to positive by the case check of while loop
                 }
                 cutA = chrA.getSequence().substring(iniA, iniA+cutLengthA);
@@ -1685,7 +1687,7 @@ public class SequenceUtil {
                     iniA = r.nextInt(rangeA);
                     lastA = (iniA+cutLengthA)-1;
                     indelSize = minIndelSize + r.nextInt((maxIndelSize-minIndelSize)+1);
-                    iniB = lastA + indelSize;
+                    iniB = (lastA + indelSize)+1;
                     difB = Math.abs(lastA - iniB);                  // the value of dif has benn strict to positive by the case check of while loop
                 }
                 cutA = chrA.getSequence().substring(iniA, iniA+cutLengthA);
