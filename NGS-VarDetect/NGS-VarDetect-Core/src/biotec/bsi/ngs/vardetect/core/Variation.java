@@ -129,6 +129,8 @@ public class Variation {
         
         if(this.variationType == 'I'){
             analyzeIndel();
+        }else if(this.variationType == 'F'){
+            analyzeFusion();
         }
     }
     
@@ -163,8 +165,19 @@ public class Variation {
          * 2. Find indel base in case of insertion and deletion
          * 3. Re-correct break point and number of mer match to relate to real indel base (แก้ไขให้สัมพันธ์กับจำนวน indel base จริงๆ)
          * The re-correction can cause the break point of the pattern not equal to break point from blat (but not too much different)
+         * 
+         * Implement new way to find indel base in case of strand -+,+- and -- (with strange orientation)
+         *  indel base that calculate from alnposF - alnPosB is not correct for above three case
+         *  We have to re calculate with another way 
+         *          in case -+ ; alnposF will be change to breakPointF - index of breakpointF on original read  (not implement)
+         *          in case +- ; alnPosB will be change to breakPointB - index of breakPointB on original read  (not implement)
+         *          in case -- ; Both alnPosF and alnPosB will be change to breakPointF - index of breakpointF on original read and breakPointB - index of breakPointB on original read consecutively (Done)
+         *          
+         *  And also Add case check to distinguish -- with correct order and strange order
+         *      we can check by if strand type is -- check the breakPoint => if breakPointF > breakPointB it mean strand -- with correct order
+         *      if breakPointF < breakPointB it mean strand -- with incorrect order use special method to find indel base 
          */
-        if(this.readNameF.equals("Read11SS04")){
+        if(this.readNameF.equals("Read12SS00")){
             System.out.println();
         }
         
@@ -177,7 +190,7 @@ public class Variation {
 //            int lastIndexF = numBaseF-1;
 //            this.indelBase = this.iniIndexB - lastIndexF;
             
-            if(this.strandF.endsWith("+") && this.strandB.endsWith("+")){
+            if(this.strandF.equals("+") && this.strandB.equals("+")){
                 /**
                  * for strand ++ 
                  */
@@ -190,7 +203,7 @@ public class Variation {
                     int calIndelBase = (int)Math.abs(this.breakPointF - this.breakPointB)-1;
                     
                     if(this.indelBase > calIndelBase){
-                        int lastIndexF = (this.numMatchF+this.merLength-2);
+                        int lastIndexF = (this.iniIndexF+this.numMatchF+this.merLength-2);
                         int overlapBase = Math.abs(this.iniIndexB-lastIndexF)+1;
                         
                         /*
@@ -230,11 +243,26 @@ public class Variation {
                         } 
                     }
                 }
-            }else if(this.strandF.endsWith("-") && this.strandB.endsWith("-")){
+            }else if(this.strandF.equals("-") && this.strandB.equals("-")){
                 /**
                  * for strand -- 
                  * classify criteria change vise versa with strand ++
                  */
+                
+                if(this.breakPointF < this.breakPointB){
+                    // intercept for re calculate indel base if it is -- with wrong order
+                    // use new method for calculate indelbase                    
+                    
+                    int breakPointIndexF = (this.iniIndexF + this.numMatchF + this.merLength -1)-1;      // can use iniIndex directly because we already tranform it to original read index
+                    long breakPointAlnPosF = this.breakPointF - breakPointIndexF;                       // calculate position minus index only at break point 
+                    
+                    int breakPointIndexB = this.iniIndexB;
+                    long breakPointAlnPosB = this.breakPointB - breakPointIndexB;
+                    
+                    // re calculate indelBase with new breakpoint index
+                    this.indelBase = Math.abs(breakPointAlnPosF - breakPointAlnPosB);
+                }
+
                 if(this.iniPosB>this.iniPosF){
                     /**
                      * It is insertion
@@ -244,13 +272,13 @@ public class Variation {
                     int numBaseF = (this.numMatchF+this.iniIndexF+this.merLength-1);
                     int lastIndexF = numBaseF-1;
                     int calIndelBase = (this.iniIndexB - lastIndexF)-1;
-                    
+
                     if(this.indelBase > calIndelBase){
                         /*
                         Re-correct mercount and break point (For front part only because we decide to do on front part if it cannot we do back part instead)
                         if mer count on front part is too less to Re-correct we will change it to backpart
                         */
-                         
+
                         if(calIndelBase<0){
                             // case 2 : overlap more than insert base (overlap all insert base and some base on back part)
                             // overlapBase = insert base + number of base that overlap on back part
@@ -272,26 +300,109 @@ public class Variation {
 //                    this.indelBase = Math.abs(this.breakPointF - this.breakPointB)-1;
                     this.indelType = "delete";
                     int calIndelBase = (int)Math.abs(this.breakPointF - this.breakPointB)-1;
-                    
+
                     if(this.indelBase > calIndelBase){
-                        int lastIndexF = (this.numMatchF+this.merLength-2);
+                        int lastIndexF = (this.iniIndexF+this.numMatchF+this.merLength-2);
                         int overlapBase = Math.abs(this.iniIndexB-lastIndexF)+1;
-                        
+
                         /*
                         Re-correct mercount and break point (For front part only because we decide to do on front part if it cannot we do back part instead)
                         if mer count on front part is too less to Re-correct we will change it to backpart
                         */
-                        
+
                         reCorrectMatchCount(overlapBase);  
                     }
                 }
+
             }    
         }else{
-            // It is large indel (cannot indicate the number of indel)
-            this.indelType = "large indel";   
+            /**
+             * It is Large indel
+             * We will act with large indel as deletion (No case check for insert or delete like small indel)
+             * So, we use deletion method as common.
+             */
+            this.indelType = "large indel";
+            
+            if(this.strandF.equals("+") && this.strandB.equals("+")){
+                /**
+                 * For strand ++ 
+                 * Act as deletion
+                 * calculate delete base from breakpoint
+                 * use indelBase calculated from normal method and have re correct Match Count.
+                 */
+
+                int calIndelBase = (int)Math.abs(this.breakPointF - this.breakPointB)-1;
+
+                if(this.indelBase > calIndelBase){
+                    int lastIndexF = (this.iniIndexF+this.numMatchF+this.merLength-2);
+                    int overlapBase = Math.abs(this.iniIndexB-lastIndexF)+1;
+
+                    /*
+                    Re-correct mercount and break point (For front part only because we decide to do on front part if it cannot we do back part instead)
+                    if mer count on front part is too less to Re-correct we will change it to backpart
+                    */
+
+                    reCorrectMatchCount(overlapBase);  
+                }
+
+            }else if(this.strandF.equals("-") && this.strandB.equals("-")){
+                /**
+                 * For strand -- 
+                 * classify criteria change vise versa with strand ++
+                 * Act as deletion
+                 */
+                int calIndelBase = (int)Math.abs(this.breakPointF - this.breakPointB)-1;
+                if(this.breakPointF < this.breakPointB){
+                    // intercept for re calculate indel base if it is -- with wrong order
+                    // Have some evidence that it not suit all the case to re calculate indel base with new method (incase that breakpoint is shift and we use index of shift breakpoint to calculate indelBase. the indelbase that we get is wrong)
+                    // So, we set indelBase equal to calIndelBase and no recorrect Match Count.
+                    
+//                    int breakPointIndexF = (this.iniIndexF + this.numMatchF + this.merLength -1)-1;      // can use iniIndex directly because we already tranform it to original read index
+//                    long breakPointAlnPosF = this.breakPointF - breakPointIndexF;                       // calculate position minus index only at break point 
+//                    
+//                    int breakPointIndexB = this.iniIndexB;
+//                    long breakPointAlnPosB = this.breakPointB - breakPointIndexB;
+//                    
+//                    // re calculate indelBase with new breakpoint index
+//                    this.indelBase = Math.abs(breakPointAlnPosF - breakPointAlnPosB);
+                    this.indelBase = calIndelBase;
+                    
+                }else{
+                    /**
+                     * For strand -- with correct order 
+                     * No change with indelBase calculation method and have re correct Match Count.
+                     */
+                    if(this.indelBase > calIndelBase){
+                        int lastIndexF = (this.iniIndexF+this.numMatchF+this.merLength-2);
+                        int overlapBase = Math.abs(this.iniIndexB-lastIndexF)+1;
+
+                        /*
+                        Re-correct mercount and break point (For front part only because we decide to do on front part if it cannot we do back part instead)
+                        if mer count on front part is too less to Re-correct we will change it to backpart
+                        */
+
+                        reCorrectMatchCount(overlapBase);  
+                    }
+                }
+            }   
         }
     }
 
+    public void analyzeFusion(){
+        /**
+         * Find out the the breakpoint is overlap or not
+         * Then re-correct breakpoint to get rid off overlap breakPoint 
+         */
+        
+        int lastIdxFront = (this.iniIndexF + this.numMatchF + this.merLength)-2;
+        if(lastIdxFront >= this.iniIndexB){
+            // Have overlap base around junction. Do reCorrectMatchCount.
+            int overlapBase = Math.abs(this.iniIndexB - lastIdxFront)+1;
+            reCorrectMatchCount(overlapBase);
+        }
+        
+    }
+    
     public long getIndelBase() {
         return indelBase;
     }
@@ -301,7 +412,14 @@ public class Variation {
     }
     
     public void reCorrectMatchCount(int overlapBase){
-        if(overlapBase < this.numMatchF){
+        /**
+         * Use for recorrect matchCount relate to indelBase that has been calculate from alnPos (position minus index)
+         */
+        
+        // Actually we can recorrect matchCount on wither front or back part
+        // the check case has been use to comfirm that front part has enough number of match count to be re-correct
+        // of not it will change to back part instead
+        if(overlapBase < this.numMatchF){ 
             // Re-correct on Front part
             if(this.orangeF > overlapBase){
                 this.orangeF = this.orangeF - overlapBase;

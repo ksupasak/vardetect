@@ -1056,6 +1056,12 @@ public class ShortgunSequence {
     
      public void joinPeak2(){
         
+        if(this.readName.equals("Read00SS03")){
+            System.out.println();
+        }
+        if(this.readName.equals("Read12SS06")){
+            System.out.println();
+        }
         /**
          * Join the same sequence of peak that have been split for color detect purpose together
          */
@@ -1127,6 +1133,8 @@ public class ShortgunSequence {
                 int repeatBase = 0;
                 int iniBack = 0;
                 
+                int compensateBase = 0;             // amount of base that have to plus back to merMatch in greenColor (this amount of base is missing because of the SNP or any missing base that does not effect alignment order) See the detail of this problem in noteBook I love science     
+                                                    // compensate base will be calculate from merlength - 1 and have to be plus back at every time we join peak which mean if we have three pak to join. We have to plus it to time to gree color mer match count
                 /**
                  * Find front part and back part
                  * loop store data in treeMap which will automatically rearrange order of key for us
@@ -1150,6 +1158,15 @@ public class ShortgunSequence {
                 boolean flagFirstTime = true;
                 int lastIdxFront = 0;               // last index of front with plus mer length (real index)
                 int lastIdxFront_noMer = 0;         // last index of front with out plus mer length (mer index)
+                
+//                /**
+//                 * Set of variable use to check overlap between peak
+//                 */
+//                int lastIdxFrontPeak = 0;
+//                int iniIndexBackPeak = 0;
+//                int overlapMer  = 0;            // we will use overlapmer to subtract the mercount of back peak out
+//                /************************/
+                
                 while(iter.hasNext()){
                     int key = (int)iter.next();
                     int idx = dummyIdxMap.get(key);
@@ -1162,6 +1179,10 @@ public class ShortgunSequence {
                         int numBase = (numMatch+this.merLength)-1;
                         lastIdxFront = (iniIdx+numBase)-1;
                         lastIdxFront_noMer = (iniIdx+numMatch)-1;
+                        
+                        compensateBase = 0;
+                        
+//                        lastIdxFrontPeak = (iniIdx + numBase)-1;
                     }else{
                         lastPos = (this.listLastPos.get(idx)+this.listIniIdx.get(idx))-iniIdx;  // Recalculate lastPos. Due to the listlastpos is contain position that already minus with it iniIdx but when we joint peak we have to recalculate it.
                         // because the iniIdx have change to the ini Index of front peak not it own iniIndex at all. Then we plus it own iniIndex back and then minus with front peak iniIndex
@@ -1172,9 +1193,16 @@ public class ShortgunSequence {
                         dummyMissingBase = (iniIdxBack-lastIdxFront)-1;
                         if(iniIdxBack <= lastIdxFront){
                             // check for missing base are less than merlength (if number of base that missing is lower than mer length this missingBase value must be minus)
-                            repeatBase = (iniIdxBack-lastIdxFront_noMer)-1;                            
+                            // ถ้าจำนวน reapeat mer มีจำนวนต่ำกว่าขนาดของ mer จะทำให้เมื่อดูค่า lastIdx ของ peak หน้าเทียบกับ peak หลังแล้วมันจะซ้อนทับกันอยู่ ดังนั้นเราจะใช้เหตุการณ์นี้เป็นจุดสังเกตุเพื่อกู้คืน base ที่หายไปเพราะ repeat
+                            // แต่ถ้าจำนวน mer ที่ repeat มีมากกว่าหรือเท่ากับขนาด mer จะทำให่เกิดเหตุการณ์ที่มีลักษณะคล้ายกับเหตุการณ์ของการเจอ SNP ทำให้เราคงต้องใช้วิธีเดียวกันกับ SNP เพื่อใช้กู้คืนเบสเหล่านั้น
+                            // ดังนั้นในเคสนี้เราจะให้ค่า compesateBase เท่ากับ 0
+                            repeatBase = (iniIdxBack-lastIdxFront_noMer)-1;
+                            compensateBase = 0;                                 // In case that two peak occur cause from repeat (the number of repeat should be less than mer length). No need to add compensate base to mer match count                           
                         }else{
+                            // เคส SNP หรือ missing เบสที่ไม่ทำให้ลำดับของการ align เปลี่ยนไป หรือ กรณีที่ repeat mer มีจำนวนมากกว่าหรือเท่ากับขนาด mer จะใช้วิธีการกู้คืนแบบ SNP
+                            // คือ 1. บวกเพิ่มด้วย compensateBase 2.เพิ่ม ,issingBase เข้าไปที่ red color
                             missingBase = dummyMissingBase+missingBase;
+                            compensateBase = this.merLength -1;
                         }
                         
 //                        if(dummyMissingBase < 0){
@@ -1189,10 +1217,17 @@ public class ShortgunSequence {
                         lastIdxFront_noMer = (iniBack+this.listNumMatch.get(idx))-1;  // it has to be update every time in cast that there is more than one peak.
                     }
                     
-                    numG = this.listGreen.get(idx)+numG;
+                    /**
+                     * Both missing and repeat Base will have more significantly when it occur between two peak that can join peak
+                     * So, we will add both repeatBase and missingBase Bake to mer count as red color
+                     */
+                    
+                    numG = this.listGreen.get(idx)+numG + compensateBase;
                     numY = this.listYellow.get(idx)+numY;
                     numO = this.listOrange.get(idx)+numO;
-                    numR = this.listRed.get(idx)+numR+repeatBase;           // we add all repeat Base into red count
+                    numR = this.listRed.get(idx)+numR+repeatBase+missingBase;           // we add all repeat Base into red count and missingBase as well 
+                    
+                    
 //                    numMatch = this.listNumMatch.get(idx)+numMatch;
                     strand = this.listStrand.get(idx);
                     

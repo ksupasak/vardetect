@@ -1673,7 +1673,7 @@ public class SimulatorUtil_WholeGene {
         return is;
     }
   
-    public static InputSequence simulateComplexWholeGeneRandomSingleTypeFixRange(ReferenceSequence ref, int num_read, int ln_read, int num_shortgun , int minIndelSize, int maxIndelSize, int posDiffL, int indelSizeS, String filename, char variantType) throws FileNotFoundException{
+    public static InputSequence simulateComplexWholeGeneRandomSingleTypeFixRange(ReferenceSequence ref, int num_read, int ln_read, int num_shortgun , int minIndelSize, int maxIndelSize, int posDiffL, int indelSizeS, String filename, char variantType, char insertSNPFlag) throws FileNotFoundException{
         
         /**
          * num_read = number of read
@@ -1686,7 +1686,7 @@ public class SimulatorUtil_WholeGene {
          *  - large indel   (L)
          *  - small delete  (I)
          *  - small insert  (D)
-         * 
+         * inserSNPFlag = Flag char value use to tell the function to insert SNP on read or not. T = true (insert) and F is false (not insert)
          */
         
         
@@ -1761,7 +1761,12 @@ public class SimulatorUtil_WholeGene {
                     }
                 }
     //            System.out.println("concatenate");
-                ConcatenateCut concatenateSequence = SequenceUtil.concatenateComplexChromosome(chrA, chrB, ln_read-1, ln_read-1); 
+                ConcatenateCut concatenateSequence = new ConcatenateCut();
+                if(insertSNPFlag == 'T'){
+                    concatenateSequence = SequenceUtil.concatenateComplexSNPChromosome(chrA, chrB, ln_read-1, ln_read-1);
+                }else{
+                    concatenateSequence = SequenceUtil.concatenateComplexChromosome(chrA, chrB, ln_read-1, ln_read-1);
+                }
                 CharSequence iniTemplate = concatenateSequence.getSequence();
 
                 ps.println("Random cut of " + concatenateSequence.getchrA() + " at position " + String.valueOf(concatenateSequence.getiniA()) + " : " + concatenateSequence.getcutA().toString());
@@ -2003,8 +2008,12 @@ public class SimulatorUtil_WholeGene {
                         } 
                     }
                 }
-
-                ConcatenateCut concatenateSequence = SequenceUtil.createComplexLargeIndelFixRange(chrA, chrB, ln_read-1, ln_read-1, minIndelSize, maxIndelSize);        // most is the same as fusion but same chromosome only
+                ConcatenateCut concatenateSequence = new ConcatenateCut();
+                if(insertSNPFlag == 'T'){
+                    concatenateSequence = SequenceUtil.createComplexSNPLargeIndelFixRange(chrA, chrB, ln_read-1, ln_read-1, minIndelSize, maxIndelSize);        // most is the same as fusion but same chromosome only
+                }else{
+                    concatenateSequence = SequenceUtil.createComplexLargeIndelFixRange(chrA, chrB, ln_read-1, ln_read-1, minIndelSize, maxIndelSize);        // most is the same as fusion but same chromosome only
+                }
                 CharSequence iniTemplate = concatenateSequence.getSequence();
 
                 ps.println("Random cut of " + concatenateSequence.getchrA() + " at position " + String.valueOf(concatenateSequence.getiniA()) + " : " + concatenateSequence.getOldCutA());
@@ -2084,9 +2093,10 @@ public class SimulatorUtil_WholeGene {
         /**
          * Generate small indel samples
          */
-        ps.println("Simulated small indel reads");
+        
         
         if(variantType == 'I'){
+            ps.println("Simulated small insert reads");
             /**
              * Generate small insertion
              */
@@ -2214,6 +2224,7 @@ public class SimulatorUtil_WholeGene {
             /**
              * Generate small deletion
              */
+            ps.println("Simulated small delete reads");
             for(int i = 0;i<proportion;i++){
                 String numberChrA = Integer.toString(rand1.nextInt(25-1)+1);
                 String numberChrB = numberChrA;

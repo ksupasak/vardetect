@@ -1323,11 +1323,22 @@ public class AlignmentResultRead {
                     int matchCount = green+yellow+orange+red;
                     int missingMer = 0;
                     
-                    if(snpFlag!=0){         
-                        missingMer = (snpFlag+dummySS.getMerLength())-1;
-                        matchCount = matchCount+missingMer;
-                    }
+//                    if(snpFlag!=0){         
+//                        missingMer = (snpFlag+dummySS.getMerLength())-1;
+//                        matchCount = matchCount+missingMer;
+//                    }
+                    /**
+                     * Cut this pat out because we already do it in joinPeakV2
+                     * we add missing mer into red color count
+                     */
+//                    if(snpFlag!=0){         
+//                        missingMer = snpFlag;
+//                        matchCount = matchCount+missingMer;
+//                    }
                     
+                    if(dummySS.getReadName().equals("Read12SS07")){
+                        System.out.println();
+                    }
                     if(strand.equals("-")){
                         iniIndex = dummySS.getReadLength() - (iniIndex+(dummySS.getMerLength()+matchCount-1));
     //                    stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
