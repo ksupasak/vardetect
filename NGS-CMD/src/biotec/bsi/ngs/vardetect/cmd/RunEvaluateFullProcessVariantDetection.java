@@ -54,6 +54,7 @@ public class RunEvaluateFullProcessVariantDetection {
         int maxMultiplier = 5;              // use to be the exponent of indelSizeBase
         int indelSizeBase = 10;     
         char variantType = 'L';             // 4 variant type F=fusion L=large indel I=insert D=delete
+        char insertSNPFlag = 'T';               // T = true(insert) and F = false(not insert)
         int numRead = 20;
         int readLen = 100;
         int readCoverage = 30;
@@ -74,7 +75,7 @@ public class RunEvaluateFullProcessVariantDetection {
              */
             InputSequence input = new InputSequence();
     //        tempInSS = SimulatorUtil_WholeGene.simulateComplexWholeGeneRandomSingleType(ref, numRead, readLen, readCoverage, diffL, indelSize,filename,variantType);
-            input = SimulatorUtil_WholeGene.simulateComplexWholeGeneRandomSingleTypeFixRange(ref, numRead, readLen, readCoverage, minIndelSize, maxIndelSize, diffL, indelSize,sampleFilename,variantType);
+            input = SimulatorUtil_WholeGene.simulateComplexWholeGeneRandomSingleTypeFixRange(ref, numRead, readLen, readCoverage, minIndelSize, maxIndelSize, diffL, indelSize,sampleFilename,variantType,insertSNPFlag);
             System.out.println("done");
             /*********************/
         }

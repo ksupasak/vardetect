@@ -38,7 +38,7 @@ public class NGSCMDforERRCheck {
         
         InputSequence tempInSS = new InputSequence();
         int numMer = 18;
-        String s = "TATATCTATCTATCTATCTATCTATATTTGTTATATATATAACAAATGTATATATATTTGTTATATATATTAGTTATATATATAACAAATATATATATTT";
+        String s = "AAAAGCCAAGCAGCACAAGATTTCGTTATTTCCTCCTTTGTCAGGCAGTGTTTATTTCACTTTAAAATTCTTCAAGCTATGGATCATATATCTCATCTTT";
         
         for(int i=0;i<(s.length()-numMer)+1;i++){                                  // (Windowing with one stepping) for loop over String sequence which has limit round at (string length - mer length) + one [maximum possible mer sequence]
                 int index = i;

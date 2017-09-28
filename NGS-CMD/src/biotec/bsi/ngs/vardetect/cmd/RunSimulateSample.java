@@ -25,8 +25,8 @@ public class RunSimulateSample {
         int readCoverage = 30;
         int diffL = 10000;
         int indelSize = 10;
-        String filename = "_sim_L";
-        char variantType = 'L';                 // 4 variant type F=fusion L=large indel I=insert D=delete
+        char variantType = 'F';                 // 4 variant type F=fusion L=large indel I=insert D=delete
+        char insertSNPFlag = 'F';               // T = true(insert) and F = false(not insert)
 //        int minIndelSize = 10;
 //        int maxIndelSize = 100;
         ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath,numMer); //runFile reference
@@ -46,15 +46,19 @@ public class RunSimulateSample {
             int maxIndelSize = (int)Math.pow(indelSizeBase, indelSizeMultiplier+1);                     // maxIndelSize is indelSizeBase power by indelSizeMultiplier+1
             
             
-            String sampleFilename = "_sim_"+variantType+indelSizeMultiplier; 
+            String sampleFilename = "_sim_"+variantType+"_SNP_"+insertSNPFlag+"_"+indelSizeMultiplier; 
 //            ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath,numMer); //runFile reference
             /**
              * Simulate data
              */
             InputSequence input = new InputSequence();
     //        tempInSS = SimulatorUtil_WholeGene.simulateComplexWholeGeneRandomSingleType(ref, numRead, readLen, readCoverage, diffL, indelSize,filename,variantType);
-            input = SimulatorUtil_WholeGene.simulateComplexWholeGeneRandomSingleTypeFixRange(ref, numRead, readLen, readCoverage, minIndelSize, maxIndelSize, diffL, indelSize,sampleFilename,variantType);
+            input = SimulatorUtil_WholeGene.simulateComplexWholeGeneRandomSingleTypeFixRange(ref, numRead, readLen, readCoverage, minIndelSize, maxIndelSize, diffL, indelSize,sampleFilename,variantType,insertSNPFlag);
             System.out.println("done");
+            
+            if(variantType == 'F'){
+                break;
+            }
             /*********************/
         }
 
