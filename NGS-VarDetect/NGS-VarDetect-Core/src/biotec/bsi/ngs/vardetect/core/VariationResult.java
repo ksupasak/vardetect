@@ -69,11 +69,15 @@ public class VariationResult {
     private ArrayList<Variation> listSNP;
     private ArrayList<Variation> listIndel;
     private ArrayList<Variation> listOthers;
+    private ArrayList<Variation> listOneTail;                                                // store variation object of one tail event 
     private Map<Long,Map<Long,ArrayList<Variation>>> coverageMapFusion;
-    private Map<Long,Map<Long,ArrayList<Integer>>> sumNumMatchCoverageMapFusion;          // store ArrayList of Integer [sumNumMatchFront,sumNumMatchBack]
+    private Map<Long,Map<Long,ArrayList<Integer>>> sumNumMatchCoverageMapFusion;          // store ArrayList of Integer [sumNumMatchFront,sumNumMatchBack]. Use in annotation process to calculate average back and front breakpoint position use as search value for annotated gene
     private Map<Long,Map<Long,ArrayList<Variation>>> coverageMapIndel;
     private Map<Long,ArrayList<Variation>> coverageMapSNP;
     private Map<Long,Map<Long,ArrayList<Variation>>> coverageMapOther;
+    private Map<Long,ArrayList<Integer>> oneTailFrontLinkIdx;                                      // map that store key = original frontbreakpoint of one tail   and value is index of variaiton object store in listOnetail
+    private Map<Long,ArrayList<Integer>> oneTailBackLinkIdx;                                       // map that store key = original backbreakpoint of one tail   and value is index of variaiton object store in listOnetail
+    private ArrayList<Integer> listIndexOfUsedOneTail;                                      // store index of one tail that has been add to some indel coverage (we will used this index to remove those onetail from listOneTail when we want to export only one tail that doesn't match to any index type) not effect coverage discover part. this variable is stand for unmatch one-tail export part
     
     private long mask28bit = 268435455;
     
@@ -83,11 +87,15 @@ public class VariationResult {
         this.listSNP = new ArrayList();
         this.listIndel = new ArrayList();
         this.listOthers = new ArrayList();
+        this.listOneTail = new ArrayList();                                     
         this.coverageMapFusion = new TreeMap();
         this.coverageMapIndel = new TreeMap();
         this.coverageMapOther = new TreeMap();
         this.coverageMapSNP = new TreeMap();
         this.sumNumMatchCoverageMapFusion = new TreeMap();
+        this.oneTailFrontLinkIdx = new TreeMap();
+        this.oneTailBackLinkIdx = new TreeMap();
+        this.listIndexOfUsedOneTail = new ArrayList();
     }
     
     public void addMerLength(int merLen){
@@ -100,17 +108,26 @@ public class VariationResult {
     
     public void addVariationMap(Map<Integer,ArrayList<String[]>> variation){
 //       this.variationResult.putAll(variation);
-       
+       /**
+        * This function stand for store all variationMap that come from different set of read 
+        * come in different time. So the secondMap act as dummy for the data center that store all variaitonMap.
+        */
         Map<Integer,ArrayList<String[]>> firstMap = variation;
-        Map<Integer,ArrayList<String[]>> secondMap = this.variationResult;
+        Map<Integer,ArrayList<String[]>> secondMap = this.variationResult;          // make secondMap as this.variationResult
         
         Set<Map.Entry<Integer,ArrayList<String[]>>> entries = firstMap.entrySet();
         for ( Map.Entry<Integer,ArrayList<String[]>> entry : entries ) {
-          ArrayList<String[]> secondMapValue = secondMap.get( entry.getKey() );
+          ArrayList<String[]> secondMapValue = secondMap.get( entry.getKey() );     // pull ArrayList<String[]> of specific indel type out for add new set of variaition
           if ( secondMapValue == null ) {
-            secondMap.put( entry.getKey(), entry.getValue() );
+              /**
+               * In case that the indel type is first time exist
+               */
+            secondMap.put( entry.getKey(), entry.getValue() );                      
           }
           else {
+              /**
+               * In case that the indel type is already exist. Just add data.
+               */
             secondMapValue.addAll( entry.getValue() );
           }
         }
@@ -120,6 +137,7 @@ public class VariationResult {
     }
     
     public void createVariantReport(){
+        int countIndexOneTail = 0;
         this.variationResult.keySet();
         for(Map.Entry<Integer, ArrayList<String[]>> entry : this.variationResult.entrySet()) {
             /**
@@ -201,6 +219,47 @@ public class VariationResult {
                     newVar.addFrontPeak(numChrF, iniPosF, lastPosF, greenF, yellowF, orangeF, redF, strandF, iniIndexF, readNameF, snpFlagF, iniBackFlagF, readLengthF);
                     newVar.addBackPeak(numChrB, iniPosB, lastPosB, greenB, yellowB, orangeB, redB, strandB, iniIndexB, readNameB, snpFlagB, iniBackFlagB, readLengthB);
                     this.listOthers.add(newVar);
+                }else if(key == 4){
+                    /**
+                     * Variation type : 1 tail event (Not sure it is front or back part but data will come in with front variable)
+                     * Because we cannot exactly decide that this one tail event is front or back. So, we will add the same data in to both front and back peak
+                     * Which will calculate both back breakpoint and front breakpoint
+                     */
+                    Variation newVar = new Variation(this.merLength);
+                    newVar.addType('T');
+                    newVar.addFrontPeak(numChrF, iniPosF, lastPosF, greenF, yellowF, orangeF, redF, strandF, iniIndexF, readNameF, snpFlagF, iniBackFlagF, readLengthF);
+                    newVar.addBackPeak(numChrF, iniPosF, lastPosF, greenF, yellowF, orangeF, redF, strandF, iniIndexF, readNameF, snpFlagF, iniBackFlagF, readLengthF);                    
+                    this.listOneTail.add(newVar);
+                    
+                    /**
+                     * create Map to store index of each variation object that link with breakpoint front and back code (chromosome number plus with breakpoint)
+                     * key = break point code
+                     * value = arrayList of index on this.listOneTail
+                     */
+                    long bpFCode = ((long)newVar.numChrF<<28)+newVar.getOriBreakPointF();
+                    long bpBCode = ((long)newVar.numChrB<<28)+newVar.getOriBreakPointB();
+
+                    if(this.oneTailFrontLinkIdx.containsKey(bpFCode)){
+                        ArrayList<Integer> listIndex = this.oneTailFrontLinkIdx.get(bpFCode);
+                        listIndex.add(countIndexOneTail);
+                        this.oneTailFrontLinkIdx.put(bpFCode, listIndex);
+                    }else{
+                        ArrayList<Integer> listIndex = new ArrayList();
+                        listIndex.add(countIndexOneTail);
+                        this.oneTailFrontLinkIdx.put(bpFCode, listIndex);
+                    }
+                    
+                    if(this.oneTailBackLinkIdx.containsKey(bpBCode)){
+                        ArrayList<Integer> listIndex = this.oneTailBackLinkIdx.get(bpBCode);
+                        listIndex.add(countIndexOneTail);
+                        this.oneTailBackLinkIdx.put(bpBCode, listIndex);
+                    }else{
+                        ArrayList<Integer> listIndex = new ArrayList();
+                        listIndex.add(countIndexOneTail);
+                        this.oneTailBackLinkIdx.put(bpBCode, listIndex);
+                    }
+
+                    countIndexOneTail++;
                 }
    
             }
@@ -355,8 +414,7 @@ public class VariationResult {
                 Map<Long,ArrayList<Variation>> coverageMapFusionII = new TreeMap();
                 ArrayList<Variation> coverageList = new ArrayList();
                 coverageList.add(dummyVar);
-                coverageMapFusionII.put(bpBCode, coverageList);
-                this.coverageMapFusion.put(bpFCode, coverageMapFusionII);
+                
                 
                 Map<Long,ArrayList<Integer>> sumNumMatchCoverageMapFusionII = new TreeMap();
                 ArrayList<Integer> sumNumMatchList = new ArrayList();           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
@@ -364,7 +422,135 @@ public class VariationResult {
                 sumNumMatchList.add(1, dummyVar.numMatchB);
                 sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
                 this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapFusionII);
+                
+                /**
+                 * One-tail Coverage Discover
+                 * Check for one tail that has possibility to have the same either front or back break point to the breakpoint of this indel group
+                 * and put that into the coverage of this indel group (common 2-tail variation)
+                 * 
+                 * For first approach, we will not store numMatch information of one tail in sumNumMatch.
+                 */
+                
+                if(this.oneTailFrontLinkIdx.containsKey(bpFCode)){
+                    /**
+                     * In case that oneTail event is on front side
+                     */
+                    ArrayList<Integer> listIndex = this.oneTailFrontLinkIdx.get(bpFCode);
+                    
+                    for(Integer oneTailIndex : listIndex){
+                        Variation oneTail = this.listOneTail.get(oneTailIndex);
+                        coverageList.add(oneTail);
+                        
+                        if(!this.listIndexOfUsedOneTail.contains(oneTailIndex)){        // if it not exist add new one
+                            // add onetail index into arraylist of used index
+                            this.listIndexOfUsedOneTail.add(oneTailIndex);
+                        }
+                    }
+                }else if(this.oneTailBackLinkIdx.containsKey(bpBCode)){
+                    /**
+                     * In case that oneTail event is on back side
+                     */
+                    ArrayList<Integer> listIndex = this.oneTailBackLinkIdx.get(bpBCode);
+                    
+                    for(Integer oneTailIndex : listIndex){
+                        Variation oneTail = this.listOneTail.get(oneTailIndex);
+                        coverageList.add(oneTail);
+                        
+                        if(!this.listIndexOfUsedOneTail.contains(oneTailIndex)){        // if it not exist add new one
+                            // add onetail index into arraylist of used index
+                            this.listIndexOfUsedOneTail.add(oneTailIndex);
+                        }
+                    }                 
+                }
+                /******************************************************************************************/
+                
+                /**
+                 * Add data
+                 */
+                coverageMapFusionII.put(bpBCode, coverageList);
+                this.coverageMapFusion.put(bpFCode, coverageMapFusionII);
             } 
+        }
+        
+        /**
+         * Discover one-tail coverage
+         * Loop existing coverageMapindel that already group 2-tail events 
+         * use bpFCode and bpBCode as signature variable for grouping
+         */
+        Set set = this.coverageMapIndel.keySet();
+        Iterator iterKey = set.iterator();
+        while(iterKey.hasNext()){
+            long bpFCode = (long)iterKey.next();
+            long bpF = bpFCode&this.mask28bit;
+            int chrF = (int)(bpFCode>>28);
+
+            Map<Long,ArrayList<Variation>> coverageMapII = this.coverageMapIndel.get(bpFCode);
+            Set setII = coverageMapII.keySet();
+            Iterator iterKeyII = setII.iterator();
+            while(iterKeyII.hasNext()){
+                long bpBCode = (long)iterKeyII.next();
+                long bpB = bpBCode&this.mask28bit;
+                int chrB = (int)(bpBCode>>28);
+                ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
+                
+                /**
+                 * One-tail Coverage Discover
+                 * Check for one tail that has possibility to have the same either front or back break point to the breakpoint of this indel group
+                 * and put that into the coverage list of this indel group (common 2-tail variation)
+                 * 
+                 * For first approach, we will not store numMatch information of one tail in sumNumMatch.
+                 */
+                
+//                if(dummyVar.readNameF.equals("Read01SS01")){
+//                    System.out.println();
+//                }
+                
+                if(this.oneTailFrontLinkIdx.containsKey(bpFCode)){
+                    /**
+                     * In case that oneTail event is on front side
+                     */
+                    ArrayList<Integer> listIndex = this.oneTailFrontLinkIdx.get(bpFCode);
+                    
+                    for(Integer oneTailIndex : listIndex){
+                        Variation oneTail = this.listOneTail.get(oneTailIndex);
+                        
+                        if(containsVariation(coverageList,oneTail) == false){
+                            // check oneTail variation object are already contain in coverage list or not. if not we will add it to coverageList
+                            coverageList.add(oneTail);
+                        }
+                        
+                        
+                        if(!this.listIndexOfUsedOneTail.contains(oneTailIndex)){        // if it not exist add new one
+                            // add onetail index into arraylist of used index
+                            this.listIndexOfUsedOneTail.add(oneTailIndex);
+                        }
+                    }
+                }
+                
+                if(this.oneTailBackLinkIdx.containsKey(bpBCode)){
+                    /**
+                     * In case that oneTail event is on back side
+                     */
+                    ArrayList<Integer> listIndex = this.oneTailBackLinkIdx.get(bpBCode);
+                    
+                    for(Integer oneTailIndex : listIndex){
+                        Variation oneTail = this.listOneTail.get(oneTailIndex);
+                        if(containsVariation(coverageList,oneTail) == false){
+                            // check oneTail variation object are already contain in coverage list or not. if not we will add it to coverageList
+                            coverageList.add(oneTail);
+                        }
+                        
+                        if(!this.listIndexOfUsedOneTail.contains(oneTailIndex)){        // if it not exist add new one
+                            // add onetail index into arraylist of used index
+                            this.listIndexOfUsedOneTail.add(oneTailIndex);
+                        }
+                    }                 
+                }
+                /******************************************************************************************/
+                coverageMapII.put(bpBCode, coverageList);
+            }
+
+            this.coverageMapIndel.put(bpFCode, coverageMapII);           
         }
     }
     
@@ -414,8 +600,10 @@ public class VariationResult {
                 }
             }
             /******************************/
-            long bpF = dummyVar.getBreakPointFront();
-            long bpB = dummyVar.getBreakPointBack();
+//            long bpF = dummyVar.getBreakPointFront();
+//            long bpB = dummyVar.getBreakPointBack();
+            long bpF = dummyVar.getOriBreakPointF();
+            long bpB = dummyVar.getOriBreakPointB();
             
             long bpFCode = ((long)dummyVar.numChrF<<28)+bpF;
             long bpBCode = ((long)dummyVar.numChrB<<28)+bpB;
@@ -456,8 +644,6 @@ public class VariationResult {
                 Map<Long,ArrayList<Variation>> coverageMapII = new TreeMap();
                 ArrayList<Variation> coverageList = new ArrayList();
                 coverageList.add(dummyVar);
-                coverageMapII.put(bpBCode, coverageList);
-                this.coverageMapIndel.put(bpFCode, coverageMapII);
                 
                 Map<Long,ArrayList<Integer>> sumNumMatchCoverageMapFusionII = new TreeMap();
                 ArrayList<Integer> sumNumMatchList = new ArrayList();           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
@@ -465,7 +651,144 @@ public class VariationResult {
                 sumNumMatchList.add(1, dummyVar.numMatchB);
                 sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
                 this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapFusionII);
+                
+//                /**
+//                 * One-tail Coverage Discover
+//                 * Check for one tail that has possibility to have the same either front or back break point to the breakpoint of this indel group
+//                 * and put that into the coverage of this indel group (common 2-tail variation)
+//                 * 
+//                 * For first approach, we will not store numMatch information of one tail in sumNumMatch.
+//                 */
+//                
+////                if(dummyVar.readNameF.equals("Read01SS01")){
+////                    System.out.println();
+////                }
+//                
+//                if(this.oneTailFrontLinkIdx.containsKey(bpFCode)){
+//                    /**
+//                     * In case that oneTail event is on front side
+//                     */
+//                    ArrayList<Integer> listIndex = this.oneTailFrontLinkIdx.get(bpFCode);
+//                    
+//                    for(Integer oneTailIndex : listIndex){
+//                        Variation oneTail = this.listOneTail.get(oneTailIndex);
+//                        coverageList.add(oneTail);
+//                        
+//                        if(!this.listIndexOfUsedOneTail.contains(oneTailIndex)){        // if it not exist add new one
+//                            // add onetail index into arraylist of used index
+//                            this.listIndexOfUsedOneTail.add(oneTailIndex);
+//                        }
+//                    }
+//                }
+//                
+//                if(this.oneTailBackLinkIdx.containsKey(bpBCode)){
+//                    /**
+//                     * In case that oneTail event is on back side
+//                     */
+//                    ArrayList<Integer> listIndex = this.oneTailBackLinkIdx.get(bpBCode);
+//                    
+//                    for(Integer oneTailIndex : listIndex){
+//                        Variation oneTail = this.listOneTail.get(oneTailIndex);
+//                        coverageList.add(oneTail);
+//                        
+//                        if(!this.listIndexOfUsedOneTail.contains(oneTailIndex)){        // if it not exist add new one
+//                            // add onetail index into arraylist of used index
+//                            this.listIndexOfUsedOneTail.add(oneTailIndex);
+//                        }
+//                    }                 
+//                }
+//                /******************************************************************************************/
+//                
+//                /**
+//                 * Add data
+//                 */
+                coverageMapII.put(bpBCode, coverageList);
+                this.coverageMapIndel.put(bpFCode, coverageMapII);
+                
             } 
+        }
+        
+        /**
+         * Discover one-tail coverage
+         * Loop existing coverageMapindel that already group 2-tail events 
+         * use bpFCode and bpBCode as signature variable for grouping
+         */
+        Set set = this.coverageMapIndel.keySet();
+        Iterator iterKey = set.iterator();
+        while(iterKey.hasNext()){
+            long bpFCode = (long)iterKey.next();
+            long bpF = bpFCode&this.mask28bit;
+            int chrF = (int)(bpFCode>>28);
+
+            Map<Long,ArrayList<Variation>> coverageMapII = this.coverageMapIndel.get(bpFCode);
+            Set setII = coverageMapII.keySet();
+            Iterator iterKeyII = setII.iterator();
+            while(iterKeyII.hasNext()){
+                long bpBCode = (long)iterKeyII.next();
+                long bpB = bpBCode&this.mask28bit;
+                int chrB = (int)(bpBCode>>28);
+                ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
+                
+                /**
+                 * One-tail Coverage Discover
+                 * Check for one tail that has possibility to have the same either front or back break point to the breakpoint of this indel group
+                 * and put that into the coverage list of this indel group (common 2-tail variation)
+                 * 
+                 * For first approach, we will not store numMatch information of one tail in sumNumMatch.
+                 */
+                
+//                if(dummyVar.readNameF.equals("Read01SS01")){
+//                    System.out.println();
+//                }
+                
+                if(this.oneTailFrontLinkIdx.containsKey(bpFCode)){
+                    /**
+                     * In case that oneTail event is on front side
+                     */
+                    ArrayList<Integer> listIndex = this.oneTailFrontLinkIdx.get(bpFCode);
+                    
+                    for(Integer oneTailIndex : listIndex){
+                        Variation oneTail = this.listOneTail.get(oneTailIndex);
+                        
+                        if(containsVariation(coverageList,oneTail) == false){
+                            // check oneTail variation object are already contain in coverage list or not. if not we will add it to coverageList
+                            oneTail.setIndelType("front_oneTail");
+                            coverageList.add(oneTail);
+                        }
+                        
+                        
+                        if(!this.listIndexOfUsedOneTail.contains(oneTailIndex)){        // if it not exist add new one
+                            // add onetail index into arraylist of used index
+                            this.listIndexOfUsedOneTail.add(oneTailIndex);
+                        }
+                    }
+                }
+                
+                if(this.oneTailBackLinkIdx.containsKey(bpBCode)){
+                    /**
+                     * In case that oneTail event is on back side
+                     */
+                    ArrayList<Integer> listIndex = this.oneTailBackLinkIdx.get(bpBCode);
+                    
+                    for(Integer oneTailIndex : listIndex){
+                        Variation oneTail = this.listOneTail.get(oneTailIndex);
+                        if(containsVariation(coverageList,oneTail) == false){
+                            // check oneTail variation object are already contain in coverage list or not. if not we will add it to coverageList
+                            oneTail.setIndelType("back_oneTail");
+                            coverageList.add(oneTail);
+                        }
+                        
+                        if(!this.listIndexOfUsedOneTail.contains(oneTailIndex)){        // if it not exist add new one
+                            // add onetail index into arraylist of used index
+                            this.listIndexOfUsedOneTail.add(oneTailIndex);
+                        }
+                    }                 
+                }
+                /******************************************************************************************/
+                coverageMapII.put(bpBCode, coverageList);
+            }
+
+            this.coverageMapIndel.put(bpFCode, coverageMapII);           
         }
     }
     
@@ -509,10 +832,13 @@ public class VariationResult {
         /**
         * Suitable for version 3 data structure (data structure that has iniIdx in its)
         * write result to file format for variant report
+        * 
+        * Add option on forth argument : Boolean variable to turn on or off generate read name report of match 2-tail and 1-tail both un-match and match 
         */
         
         String[] dummy = nameFile.split("\\.");
         String filename = "";
+        
         switch (varType) {
             case 'F':
                 filename = dummy[0]+"_match"+this.percentMatch+"_CoverageReport_Fusion"+".txt";
@@ -528,7 +854,7 @@ public class VariationResult {
         }
 
         PrintStream ps;
-        FileWriter writer;        
+        FileWriter writer;
         /**
          * Check File existing
          */
@@ -541,6 +867,7 @@ public class VariationResult {
 //            ps = new PrintStream(filename);
             writer = new FileWriter(filename);
         }
+        
         
         
         if(varType == 'F'){
@@ -567,18 +894,44 @@ public class VariationResult {
                     ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
                     if(coverageList.size()>coverageThreshold){
                         writer.write("Group "+count);
-                        writer.write("\tFront Break point : " + chrF +","+bpF);
-                        writer.write("\tBack Break point : " + chrB +","+bpB); 
+                        writer.write("\tFront Break point : " + chrF +":"+bpF);
+                        writer.write("\tBack Break point : " + chrB +":"+bpB); 
     //                    ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
                         writer.write("\tCoverage : " + coverageList.size());
                         writer.write("\n");
                         for(int i=0;i<coverageList.size();i++){
                             Variation var = coverageList.get(i);
-
-                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
-                            writer.write(" || ");
-                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
-                            writer.write("\n");
+                            
+                            if(var.variationType == 'T'){
+                                /**
+                                * Check one tail type
+                                * to classify it side Front or Back
+                                * and write report
+                                */
+                                if(var.getOriBreakPointF()==bpF){
+                                    /**
+                                     * This one tail is sit on the front
+                                     */
+                                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
+                                    writer.write(" || ");
+                                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", 0,0,0,0,0,0,0,null,0,null,0,0,0));
+                                    writer.write("\n");
+                                }else if(var.getOriBreakPointB()==bpB){
+                                    /**
+                                     * This one tail is sit on the back
+                                     */
+                                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", 0,0,0,0,0,0,0,null,0,null,0,0,0));
+                                    writer.write(" || ");
+                                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
+                                    writer.write("\n");
+                                }
+                            }else{
+                                writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
+                                writer.write(" || ");
+                                writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
+                                writer.write("\n");
+                                
+                            }
                         }
                         count++;
                     }
@@ -619,17 +972,46 @@ public class VariationResult {
                         writer.write("Group "+count);
                         writer.write("\tIndel Type : " + indelType);
                         writer.write("\tIndel Base : " + indelBase);
-                        writer.write("\tFront Break point : " + chrF +","+bpF);
-                        writer.write("\tBack Break point : " + chrB +","+bpB);
+                        writer.write("\tFront Break point : " + chrF +":"+bpF);
+                        writer.write("\tBack Break point : " + chrB +":"+bpB);
                         writer.write("\tCoverage : " + coverageList.size());
                         writer.write("\n");
                         for(int i=0;i<coverageList.size();i++){
+                            
                             Variation var = coverageList.get(i);
-
-                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
-                            writer.write(" || ");
-                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
-                            writer.write("\n");
+                            if(var.readNameF.equals("Read01SS01")){
+                                System.out.println();
+                            }
+                            if(var.variationType == 'T'){
+                                /**
+                                * Check one tail type
+                                * to classify it side Front or Back
+                                * and write report
+                                */
+                                if(var.getOriBreakPointF()==bpF){
+                                    /**
+                                     * This one tail is sit on the front
+                                     */
+                                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
+                                    writer.write(" || ");
+                                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", 0,0,0,0,0,0,0,null,0,null,0,0,0));
+                                    writer.write("\n");
+                                }else if(var.getOriBreakPointB()==bpB){
+                                    /**
+                                     * This one tail is sit on the back
+                                     */
+                                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", 0,0,0,0,0,0,0,null,0,null,0,0,0));
+                                    writer.write(" || ");
+                                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
+                                    writer.write("\n");
+                                }
+                                
+                            }else{
+                                writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
+                                writer.write(" || ");
+                                writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
+                                writer.write("\n");
+                            }
                         }
                         count++;
                     }
@@ -657,7 +1039,7 @@ public class VariationResult {
                     * Write Report Part
                     */
                     writer.write("Group "+count);
-                    writer.write("\tBack Break point : " + chrB +","+bpB);  
+                    writer.write("\tBack Break point : " + chrB +":"+bpB);  
                     writer.write("\tCoverage : " + coverageList.size());
                     writer.write("\n");
 
@@ -683,6 +1065,298 @@ public class VariationResult {
 
         writer.flush();
         writer.close();
+    }
+    
+    public void writeVariantCoverageReportToFile(String nameFile , int coverageThreshold , char varType, boolean ronReportFlag) throws IOException{
+        /**
+        * Suitable for version 3 data structure (data structure that has iniIdx in its)
+        * write result to file format for variant report
+        * 
+        * Add option on forth argument : Boolean variable to turn on or off generate read name report of match 2-tail and 1-tail both un-match and match (rno : read name only report [report that contain only read name that has indel event])
+        */
+        ArrayList<String> usedReadName = new ArrayList();
+        String[] dummy = nameFile.split("\\.");
+        String filename = "";
+        String rnoFileName = "";                            // read name only report file name
+        
+        switch (varType) {
+            case 'F':
+                filename = dummy[0]+"_match"+this.percentMatch+"_CoverageReport_Fusion"+".txt";
+                rnoFileName = dummy[0]+"_match"+this.percentMatch+"_readNameReport_Fusion"+".txt";
+                break;
+            case 'I':
+                filename = dummy[0]+"_match"+this.percentMatch+"_CoverageReport_Indel"+".txt";
+                rnoFileName = dummy[0]+"_match"+this.percentMatch+"_readNameReport_Indel"+".txt";
+                break;
+            case 'S':
+                filename = dummy[0]+"_match"+this.percentMatch+"_CoverageReport_SNP"+".txt";
+                rnoFileName = dummy[0]+"_match"+this.percentMatch+"_readNameReport_SNP"+".txt";
+                break;
+            default:
+                break;
+        }
+
+        PrintStream ps;
+        FileWriter writer;
+        FileWriter rnoWriter;
+        /**
+         * Check File existing
+         */
+        
+        File f = new File(filename); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(filename,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(filename);
+        }
+        
+        File rnoFile = new File(rnoFileName); //File object        
+        if(rnoFile.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            rnoWriter = new FileWriter(rnoFileName,true);
+        }else{
+//            ps = new PrintStream(filename);
+            rnoWriter = new FileWriter(rnoFileName);
+        }
+        
+        
+        
+        if(varType == 'F'){
+            int count = 1;
+            writer.write("Variation type : Fusion\n");
+            Set set = this.coverageMapFusion.keySet();
+            Iterator iterKey = set.iterator();
+            while(iterKey.hasNext()){
+                long bpFCode = (long)iterKey.next();
+                long bpF = bpFCode&this.mask28bit;
+                int chrF = (int)(bpFCode>>28);
+                
+                Map<Long,ArrayList<Variation>> coverageMapII = this.coverageMapFusion.get(bpFCode);
+                Set setII = coverageMapII.keySet();
+                Iterator iterKeyII = setII.iterator();
+                while(iterKeyII.hasNext()){
+                    long bpBCode = (long)iterKeyII.next();
+                    long bpB = bpBCode&this.mask28bit;
+                    int chrB = (int)(bpBCode>>28);
+                    
+                    /**
+                     * Write Report Part
+                     */
+                    ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
+                    if(coverageList.size()>coverageThreshold){
+                        writer.write("Group "+count);
+                        writer.write("\tFront Break point : " + chrF +":"+bpF);
+                        writer.write("\tBack Break point : " + chrB +":"+bpB); 
+    //                    ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
+                        writer.write("\tCoverage : " + coverageList.size());
+                        writer.write("\n");
+                        for(int i=0;i<coverageList.size();i++){
+                            Variation var = coverageList.get(i);
+                            
+                            if(var.variationType == 'T'){
+                                /**
+                                * Check one tail type
+                                * to classify it side Front or Back
+                                * and write report
+                                */
+                                if(var.getOriBreakPointF()==bpF){
+                                    /**
+                                     * This one tail is sit on the front
+                                     */
+                                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
+                                    writer.write(" || ");
+                                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", 0,0,0,0,0,0,0,null,0,null,0,0,0));
+                                    writer.write("\n");
+                                    
+                                    if(!usedReadName.contains(var.readNameF)){
+                                        rnoWriter.write(var.readNameF);
+                                        rnoWriter.write("\n");
+                                        usedReadName.add(var.readNameF);
+                                    }
+                                    
+                                }else if(var.getOriBreakPointB()==bpB){
+                                    /**
+                                     * This one tail is sit on the back
+                                     */
+                                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", 0,0,0,0,0,0,0,null,0,null,0,0,0));
+                                    writer.write(" || ");
+                                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
+                                    writer.write("\n");
+                                    
+                                    if(!usedReadName.contains(var.readNameF)){
+                                        rnoWriter.write(var.readNameF);
+                                        rnoWriter.write("\n");
+                                        usedReadName.add(var.readNameF);
+                                    }
+                                }
+                            }else{
+                                writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
+                                writer.write(" || ");
+                                writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
+                                writer.write("\n");
+                                
+                                if(!usedReadName.contains(var.readNameF)){
+                                    rnoWriter.write(var.readNameF);
+                                    rnoWriter.write("\n");
+                                    usedReadName.add(var.readNameF);
+                                } 
+                            }
+                        }
+                        count++;
+                    }
+                }  
+            }
+        }
+        if(varType == 'I'){
+            int count = 1;
+            writer.write("Variation type : Indel\n");
+            Set set = this.coverageMapIndel.keySet();
+            Iterator iterKey = set.iterator();
+            while(iterKey.hasNext()){
+                long bpFCode = (long)iterKey.next();
+                long bpF = bpFCode&this.mask28bit;
+                int chrF = (int)(bpFCode>>28);
+                
+                Map<Long,ArrayList<Variation>> coverageMapII = this.coverageMapIndel.get(bpFCode);
+                Set setII = coverageMapII.keySet();
+                Iterator iterKeyII = setII.iterator();
+                while(iterKeyII.hasNext()){
+                    long bpBCode = (long)iterKeyII.next();
+                    long bpB = bpBCode&this.mask28bit;
+                    int chrB = (int)(bpBCode>>28);
+                    
+                    /**
+                     * Write Report Part
+                     */
+                    ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
+                    if(coverageList.size()>coverageThreshold){
+                        /**
+                         * pick one variation to get indel information 
+                         */
+                        Variation tempVar = coverageList.get(0);
+                        String indelType = tempVar.getIndelType();
+                        long indelBase = tempVar.getIndelBase();
+                        /***/
+                        
+                        writer.write("Group "+count);
+                        writer.write("\tIndel Type : " + indelType);
+                        writer.write("\tIndel Base : " + indelBase);
+                        writer.write("\tFront Break point : " + chrF +":"+bpF);
+                        writer.write("\tBack Break point : " + chrB +":"+bpB);
+                        writer.write("\tCoverage : " + coverageList.size());
+                        writer.write("\n");
+                        for(int i=0;i<coverageList.size();i++){
+                            
+                            Variation var = coverageList.get(i);
+//                            if(var.readNameF.equals("Read01SS01")){
+//                                System.out.println();
+//                            }
+                            if(var.variationType == 'T'){
+                                /**
+                                * Check one tail type
+                                * to classify it side Front or Back
+                                * and write report
+                                */
+                                if(var.getOriBreakPointF()==bpF){
+                                    /**
+                                     * This one tail is sit on the front
+                                     */
+                                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
+                                    writer.write(" || ");
+                                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", 0,0,0,0,0,0,0,null,0,null,0,0,0));
+                                    writer.write("\n");
+                                    
+                                    if(!usedReadName.contains(var.readNameF)){
+                                        rnoWriter.write(var.readNameF);
+                                        rnoWriter.write("\n");
+                                        usedReadName.add(var.readNameF);
+                                    }
+                                }else if(var.getOriBreakPointB()==bpB){
+                                    /**
+                                     * This one tail is sit on the back
+                                     */
+                                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", 0,0,0,0,0,0,0,null,0,null,0,0,0));
+                                    writer.write(" || ");
+                                    writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
+                                    writer.write("\n");
+                                    
+                                    if(!usedReadName.contains(var.readNameF)){
+                                        rnoWriter.write(var.readNameF);
+                                        rnoWriter.write("\n");
+                                        usedReadName.add(var.readNameF);
+                                    }
+                                }
+                                
+                            }else{
+                                writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
+                                writer.write(" || ");
+                                writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
+                                writer.write("\n");
+                                
+                                if(!usedReadName.contains(var.readNameF)){
+                                    rnoWriter.write(var.readNameF);
+                                    rnoWriter.write("\n");
+                                    usedReadName.add(var.readNameF);
+                                }
+                            }
+                        }
+                        count++;
+                    }
+                }
+                
+            }
+            
+        }
+        if(varType == 'S'){
+            int count = 1;
+            writer.write("Variation type : SNP and other miss match\n");
+            Set set = this.coverageMapSNP.keySet();
+            Iterator iterKey = set.iterator();
+            while(iterKey.hasNext()){
+//                long bpFCode = (long)iterKey.next();
+//                long bpF = bpFCode&this.mask28bit;
+//                int chrF = (int)bpFCode>>28;
+                long bpBCode = (long)iterKey.next();
+                long bpB = bpBCode&this.mask28bit;
+                int chrB = (int)(bpBCode>>28);
+                
+                ArrayList<Variation> coverageList = this.coverageMapSNP.get(bpBCode);
+                if(coverageList.size()>coverageThreshold){
+                    /**
+                    * Write Report Part
+                    */
+                    writer.write("Group "+count);
+                    writer.write("\tBack Break point : " + chrB +":"+bpB);  
+                    writer.write("\tCoverage : " + coverageList.size());
+                    writer.write("\n");
+
+                    for(int i=0;i<coverageList.size();i++){
+                        /**
+                         * Write Report Part
+                         */
+                        Variation var = coverageList.get(i);
+
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF));
+                        writer.write(" || ");
+                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB));
+                        writer.write("\n");
+                    }
+                    count++;
+                }
+            }
+            
+        }
+        if(varType == 'O'){
+            
+        }
+
+        writer.flush();
+        writer.close();
+        
+        rnoWriter.flush();
+        rnoWriter.close();
     }
     
     public void writeVariantCoverageVirtualizeReportToFile(String nameFile , int coverageThreshold , char varType) throws IOException{
@@ -808,8 +1482,29 @@ public class VariationResult {
                         for(int i=0;i<coverageList.size();i++){
                             Variation var = coverageList.get(i);
                             
-                            writer.write(var.virtualSequence());
-                            writer.write("\n");
+                            if(var.variationType == 'T'){
+                                /**
+                                * Check one tail type
+                                * to classify it side Front or Back
+                                * and write report
+                                */
+                                if(var.getOriBreakPointF()==bpF){
+                                    /**
+                                     * This one tail is sit on the front
+                                     */
+                                    writer.write(var.oneTailVirtualSequenceFront());
+                                    writer.write("\n");
+                                }else if(var.getOriBreakPointB()==bpB){
+                                    /**
+                                     * This one tail is sit on the back
+                                     */
+//                                    writer.write(var.oneTailVirtualSequenceBack());
+                                    writer.write("\n");
+                                }
+                            }else{
+                                writer.write(var.virtualSequence());
+                                writer.write("\n");
+                            }
 //                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
 //                            writer.write(" || ");
 //                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
@@ -945,8 +1640,11 @@ public class VariationResult {
                         int avgNumMatchF = sumNumMatchList.get(0)/coverageList.size();
                         int avgNumMatchB = sumNumMatchList.get(1)/coverageList.size();
                         
-                        long avgIniPosF = bpF-avgNumMatchF;
-                        long avgLastPosB = bpB+avgNumMatchB;
+//                        long avgIniPosF = bpF-avgNumMatchF;
+//                        long avgLastPosB = bpB+avgNumMatchB;
+                        
+                        long avgIniPosF = bpF;
+                        long avgLastPosB = bpB;
                         
                         long chrPosStartF = (((long)chrF<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
                         long chrPosStopF = (((long)chrF<<28)+bpF)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
@@ -1034,8 +1732,11 @@ public class VariationResult {
                         int avgNumMatchF = sumNumMatchList.get(0)/coverageList.size();
                         int avgNumMatchB = sumNumMatchList.get(1)/coverageList.size();
                         
-                        long avgIniPosF = bpF-avgNumMatchF;
-                        long avgLastPosB = bpB+avgNumMatchB;
+//                        long avgIniPosF = bpF-avgNumMatchF;
+//                        long avgLastPosB = bpB+avgNumMatchB;
+                        
+                        long avgIniPosF = bpF;
+                        long avgLastPosB = bpB;
                         
                         long chrPosStartF = (((long)chrF<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
                         long chrPosStopF = (((long)chrF<<28)+bpF)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
@@ -1131,4 +1832,16 @@ public class VariationResult {
         writer.close();
     }
     
+    public static boolean containsVariation(ArrayList<Variation> list, Variation inVar) {
+        /**
+         * Utility function for checking the inVar is contain in ArrayList of variation or not
+         * Check by read name
+         */
+        for (Variation object : list) {
+            if (object.readNameF.equals(inVar.readNameF)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

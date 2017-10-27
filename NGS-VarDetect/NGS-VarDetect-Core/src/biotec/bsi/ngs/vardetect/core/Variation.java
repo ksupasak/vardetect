@@ -45,8 +45,10 @@ public class Variation {
     int merLength;
 //    int readLength;
     
-    long breakPointF;
-    long breakPointB;
+    long breakPointF;                           // breakpoint value (may be the same as original if it has no change og breakpoint value by other function like recorrectBreakPoint)
+    long oriBreakPointF;                        // original breakpoint (this value will not change no effect from any recorectBreakpoint function like recorrectBreakPoint)
+    long breakPointB;                           // breakpoint value (may be the same as original if it has no change og breakpoint value by other function like recorrectBreakPoint)
+    long oriBreakPointB;                        // original breakpoint (this value will not change no effect from any recorectBreakpoint function like recorrectBreakPoint)
     
     long indelBase;
     String indelType = "";
@@ -88,9 +90,11 @@ public class Variation {
 //        if(snpFlag == 0){
             if(this.strandF.equals("-")){
                 int reverseIniIdx = this.readLengthF-(this.iniIndexF+(this.merLength+this.numMatchF-1));
-                this.breakPointF = this.iniPosF+reverseIniIdx;   
+                this.breakPointF = this.iniPosF+reverseIniIdx;
+                this.oriBreakPointF = this.iniPosF+reverseIniIdx;
             }else if(this.strandF.equals("+")){
                 this.breakPointF = this.lastPosF+this.iniIndexF;
+                this.oriBreakPointF = this.lastPosF+this.iniIndexF;
             }
 //        }else{
 //            if(this.strandF.equals("-")){
@@ -100,6 +104,14 @@ public class Variation {
 //                this.breakPointF = this.iniPosF+this.iniBackFlagF;
 //            }
 //        }
+    }
+
+    public long getOriBreakPointF() {
+        return oriBreakPointF;
+    }
+
+    public long getOriBreakPointB() {
+        return oriBreakPointB;
     }
     
     public void addBackPeak(int numChr,long iniPos,long lastPos,int numG,int numY,int numO,int numR,String strand,int iniIdx,String readName,int snpFlag,int iniBackFlag, int inReadLen){
@@ -121,9 +133,11 @@ public class Variation {
         if(this.strandB != null){
             if(this.strandB.equals("-")){
                 int reverseIniIdx = this.readLengthB-(this.iniIndexB+(this.merLength+this.numMatchB-1));
-                this.breakPointB = this.lastPosB+reverseIniIdx;   
+                this.breakPointB = this.lastPosB+reverseIniIdx;
+                this.oriBreakPointB = this.lastPosB+reverseIniIdx;
             }else if(this.strandB.equals("+")){
                 this.breakPointB = this.iniPosB+this.iniIndexB;
+                this.oriBreakPointB = this.iniPosB+this.iniIndexB;
             }
         }
         
@@ -141,6 +155,7 @@ public class Variation {
          * I = indel
          * S = SNP and other un-match between
          * O = others (wasted)
+         * T = one Tail
          */
         this.variationType = type;
     }
@@ -410,13 +425,17 @@ public class Variation {
     public String getIndelType() {
         return indelType;
     }
+
+    public void setIndelType(String indelType) {
+        this.indelType = indelType;
+    }
     
     public void reCorrectMatchCount(int overlapBase){
         /**
          * Use for recorrect matchCount relate to indelBase that has been calculate from alnPos (position minus index)
          */
         
-        // Actually we can recorrect matchCount on wither front or back part
+        // Actually we can recorrect matchCount on whether front or back part
         // the check case has been use to comfirm that front part has enough number of match count to be re-correct
         // of not it will change to back part instead
         if(overlapBase < this.numMatchF){ 
@@ -539,6 +558,279 @@ public class Variation {
     public String virtualSequence(){
         /**
          * Create virtual sequence as string
+         */
+//        if(this.readNameB.equals("HWI-ST840:377:D2GY3ACXX:1:2113:11955:24852/1")&&this.iniPosB == 25556969){
+//            System.out.println();
+//        }
+        int virtualLen = (2*this.readLengthF)+1;    // virtual length has size 2 time of read length plus 1 (plus one is reserve for junction which does not involve with base in virtual length) Ex len = 10 ; virtual = (2*10)+1 = 21 this allow both size have 10 emty slot for base and the middle is junction slot
+        int junctionIndex = this.readLengthF;       // index of junction (put sign "|" on this index)
+        
+        int numBaseMatchF = (this.numMatchF + this.merLength)-1;        // number of base matched (front)
+        int numBaseMatchB = (this.numMatchB + this.merLength)-1;        // number of base matched (back)
+        int lastIdxF = (this.iniIndexF + numBaseMatchF)-1;
+        int idealIniIdxB = lastIdxF + 1;
+        int overlapBase = idealIniIdxB - this.iniIndexB;                // if it minus value it mean insertion. Positive is mean overlap and Zero is mean no overlap
+        int unMatchBtwJunction = 0;                                     // this variable store the number of un match base that staye in the middle between front and back break point
+        
+        if(overlapBase < 0){
+            // overlap base < 0 is mean insertion or large indel with unmatch . So, no need to change. we set overlapbase to 0.
+            unMatchBtwJunction = Math.abs(overlapBase);
+            overlapBase = 0;
+        }
+        numBaseMatchB = numBaseMatchB - overlapBase;                    // calculate new numBaseMatchB if it has overlap (if it not the overlap base is 0. So, no effect at all)
+        int newIniIndexB = this.iniIndexB+overlapBase;                  // re calculate iniIndexB if it has overlap (if it not the overlap base is 0. So, no effect at all)
+        
+//        int virtualIniIndexB = this.iniIndexB*2;                        // the virtual sequence has been create 2 time biger. So for the rigth iniIndexB on the virtual sequence should be multiple by 2 as well
+//        int overlapBase = 0;
+//        if(virtualIniIndexB < junctionIndex){
+//            /**
+//             * if back part has overlap with front part. We have to recalculate numBaseMatchB by minus the overlap base out from old numBaseMathB
+//             */
+//            int lastIdxF = (this.iniIndexF + numBaseMatchF)-1;
+//            overlapBase = Math.abs(this.iniIndexB - lastIdxF);
+//            numBaseMatchB = numBaseMatchB - overlapBase;
+//        }        
+        
+        int emptySlotPlusUnMatchF = junctionIndex - numBaseMatchF;             // number of empty slot and unMatch slot before match base (front part)
+        int numBaseF = numBaseMatchF + this.iniIndexF;
+        int emptySlotF = junctionIndex - numBaseF;             // number of empty slot before sequence slot(front part) which include un match base slot and match slot
+        
+        int remainBaseB = this.readLengthB - (numBaseMatchB + newIniIndexB);      // number of base remain un match on back part;
+        int numBaseB = numBaseMatchB + remainBaseB;
+        int lastIdxBaseMatchB = junctionIndex + numBaseMatchB;      // last index of match before empty slot (back part)
+        int lastIdxBaseB = junctionIndex + numBaseB;
+        
+        int lastIdxInsertBase = 0;
+        int junctionIndexTwo = 0;
+        int lastIdxUnMatchBtwJunction = 0;
+        if(this.indelType.equals("insert")){
+            /**
+            * Insertion case => define new variable and adjust old variable for virtualize the insert portion Ex >>>|++++|>>>>  this mean 4 insertion between front and back
+            */
+           lastIdxInsertBase = junctionIndex + (int)this.indelBase;
+           junctionIndexTwo = lastIdxInsertBase + 1;
+           lastIdxBaseMatchB = lastIdxBaseMatchB + (int)this.indelBase+1;       // plus 1 to compensate for junction index
+           lastIdxBaseB = lastIdxBaseB + (int)this.indelBase+1;                 // plus 1 to compensate for junction index
+        }else if(this.indelType.equals("front_oneTail")){
+            
+        }else if(unMatchBtwJunction!=0){
+            /**
+             * other case that has un match between junction
+             */
+            lastIdxUnMatchBtwJunction = junctionIndex + unMatchBtwJunction;
+            junctionIndexTwo = lastIdxUnMatchBtwJunction + 1;
+            lastIdxBaseMatchB = lastIdxBaseMatchB + unMatchBtwJunction+1;       // plus 1 to compensate for junction index
+            lastIdxBaseB = lastIdxBaseB + unMatchBtwJunction+1;                 // plus 1 to compensate for junction index
+        }
+        
+        StringBuilder builder = new StringBuilder();
+        
+        for(int i=0;i<virtualLen;i++){
+            
+            if(this.indelType.equals("insert")){
+                /**
+                 * insert case
+                 */
+                if(i<emptySlotF){
+                    builder.append(" ");
+                }else if(i>=emptySlotF && i<emptySlotPlusUnMatchF){
+                    builder.append("=");    
+                }else if(i>=emptySlotPlusUnMatchF && i<junctionIndex){
+                    if(this.strandF.equals("+")){
+                        builder.append(">");
+                    }else if(this.strandF.equals("-")){
+                        builder.append("<");
+                    }
+                }else if(i == junctionIndex){
+                    builder.append("|");
+                }else if(i> junctionIndex && i<=lastIdxInsertBase){
+                    builder.append("+");
+                }else if(i == junctionIndexTwo){
+                    builder.append("|");
+                }else if(i>junctionIndexTwo && i<=lastIdxBaseMatchB){
+                    if(this.strandB.equals("+")){
+                        builder.append(">");
+                    }else if(this.strandB.equals("-")){
+                        builder.append("<");
+                    }
+                }else if(i>lastIdxBaseMatchB && i<=lastIdxBaseB){
+                    builder.append("=");
+                }else{
+                    builder.append(" ");
+                }
+            }else if(unMatchBtwJunction != 0){
+                /**
+                 * un match between break point case can happen in large indel or fusion
+                 * check with unMatchBtwJunction variable 
+                 */
+                if(i<emptySlotF){
+                    builder.append(" ");
+                }else if(i>=emptySlotF && i<emptySlotPlusUnMatchF){
+                    builder.append("=");    
+                }else if(i>=emptySlotPlusUnMatchF && i<junctionIndex){
+                    if(this.strandF.equals("+")){
+                        builder.append(">");
+                    }else if(this.strandF.equals("-")){
+                        builder.append("<");
+                    }
+                }else if(i == junctionIndex){
+                    builder.append("|");
+                }else if(i> junctionIndex && i<=lastIdxUnMatchBtwJunction){
+                    builder.append("=");
+                }else if(i == junctionIndexTwo){
+                    builder.append("|");
+                }else if(i>junctionIndexTwo && i<=lastIdxBaseMatchB){
+                    if(this.strandB.equals("+")){
+                        builder.append(">");
+                    }else if(this.strandB.equals("-")){
+                        builder.append("<");
+                    }
+                }else if(i>lastIdxBaseMatchB && i<=lastIdxBaseB){
+                    builder.append("=");
+                }else{
+                    builder.append(" ");
+                }
+            }else if(this.indelType.equals("front_oneTail")){
+                /**
+                 * Case front one Tail 
+                 */
+                int remainBase = this.readLengthF - numBaseF;
+                int lastIndex = junctionIndex+remainBase;
+                if(i<emptySlotF){
+                    builder.append(" ");
+                }else if(i>=emptySlotF && i<emptySlotPlusUnMatchF){
+                    builder.append("=");    
+                }else if(i>=emptySlotPlusUnMatchF && i<junctionIndex){
+                    if(this.strandF.equals("+")){
+                        builder.append(">");
+                    }else if(this.strandF.equals("-")){
+                        builder.append("<");
+                    }
+                }else if(i == junctionIndex){
+                    builder.append("|");
+                }else if(i>junctionIndex && i<=lastIndex){
+                    builder.append("=");
+                }else{
+                    builder.append(" ");
+                }
+                
+            }else if(this.indelType.equals("back_oneTail")){
+                /**
+                 * Case back one Tail 
+                 */
+                numBaseMatchB = (this.numMatchB + this.merLength)-1;
+                lastIdxBaseMatchB = junctionIndex + numBaseMatchB;
+                int remainBaseFront = this.iniIndexB;
+                int remainBaseBack = this.readLengthB - (numBaseMatchB+remainBaseFront);
+                int firstIndex = junctionIndex-remainBaseFront;
+                numBaseB = numBaseMatchB + remainBaseBack;
+                lastIdxBaseB = junctionIndex + numBaseB;
+                if(i<firstIndex){
+                    builder.append(" ");
+                }else if(i>=firstIndex && i<junctionIndex){
+                    builder.append("=");    
+                }else if(i == junctionIndex){
+                    builder.append("|");
+                }else if(i>junctionIndex && i<=lastIdxBaseMatchB){
+                    if(this.strandB.equals("+")){
+                        builder.append(">");
+                    }else if(this.strandB.equals("-")){
+                        builder.append("<");
+                    }
+                }else if(i>lastIdxBaseMatchB && i<=lastIdxBaseB){
+                    builder.append("=");
+                }else{
+                    builder.append(" ");
+                }
+                
+            }else{
+                /**
+                 * Normal case + deletion case
+                 */
+                if(i<emptySlotF){
+                    builder.append(" ");
+                }else if(i>=emptySlotF && i<emptySlotPlusUnMatchF){
+                    builder.append("=");    
+                }else if(i>=emptySlotPlusUnMatchF && i<junctionIndex){
+                    if(this.strandF.equals("+")){
+                        builder.append(">");
+                    }else if(this.strandF.equals("-")){
+                        builder.append("<");
+                    }
+                }else if(i == junctionIndex){
+                    builder.append("|");
+                }else if(i>junctionIndex && i<=lastIdxBaseMatchB){
+                    if(this.strandB.equals("+")){
+                        builder.append(">");
+                    }else if(this.strandB.equals("-")){
+                        builder.append("<");
+                    }
+                }else if(i>lastIdxBaseMatchB && i<=lastIdxBaseB){
+                    builder.append("=");
+                }else{
+                    builder.append(" ");
+                }
+            }
+//            if(this.indelType.endsWith("insert")){
+//                if(i<emptySlotF){
+//                    builder.append(" ");
+//                }else if(i>=emptySlotF && i<emptySlotPlusUnMatchF){
+//                    builder.append("-");    
+//                }else if(i>=emptySlotPlusUnMatchF && i<junctionIndex){
+//                    builder.append("=");
+//                }else if(i == junctionIndex){
+//                    builder.append("|");
+//                }else if(i>junctionIndex && i<=lastIdxBaseMatchB){
+//                    builder.append("=");
+//                }else if(i>lastIdxBaseMatchB && i<=lastIdxBaseB){
+//                    builder.append("-");
+//                }else if(i>lastIdxBaseB){
+//                    builder.append(" ");
+//                }else{
+//                    builder.append("-");
+//                }
+//                
+//            }else{
+//                if(i<emptySlotF){
+//                    builder.append(" ");
+//                }else if(i>=emptySlotF && i<emptySlotPlusUnMatchF){
+//                    builder.append("-");    
+//                }else if(i>=emptySlotF && i<junctionIndex){
+//                    builder.append("=");
+//                }else if(i == junctionIndex){
+//                    builder.append("|");
+//                }else if(i>junctionIndex && i<=lastIdxBaseMatchB){
+//                    builder.append("=");
+//                }else{
+//                    builder.append(" ");
+//                }
+
+//                if(i<emptySlotF){
+//                    builder.append(" ");
+//                }else if(i>=emptySlotF && i<emptySlotPlusUnMatchF){
+//                    builder.append("-");    
+//                }else if(i>=emptySlotPlusUnMatchF && i<junctionIndex){
+//                    builder.append("=");
+//                }else if(i == junctionIndex){
+//                    builder.append("|");
+//                }else if(i>junctionIndex && i<=lastIdxBaseMatchB){
+//                    builder.append("=");
+//                }else if(i>lastIdxBaseMatchB && i<=lastIdxBaseB){
+//                    builder.append("-");
+//                }else{
+//                    builder.append(" ");
+//                }
+//            }
+            
+        }
+        
+        return builder.toString();
+    }
+    
+    public String oneTailVirtualSequenceFront(){
+        /**
+         * Create virtual sequence as string 
+         * For one tail front event
          */
         if(this.readNameB.equals("HWI-ST840:377:D2GY3ACXX:1:2113:11955:24852/1")&&this.iniPosB == 25556969){
             System.out.println();

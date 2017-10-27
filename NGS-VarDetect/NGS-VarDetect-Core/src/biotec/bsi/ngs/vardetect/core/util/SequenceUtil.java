@@ -3695,7 +3695,11 @@ public class SequenceUtil {
                 if(!line.isEmpty()){
                     String[] aon = line.split("\t");
                     if(line.charAt(0)=='>'){
+                        // case check for count read in fasta file
                         count++;   
+                    }else if(line.charAt(0)=='@'){
+                        // case check for count read in fastq file
+                        count++;
                     }
                 }
             }
@@ -5064,7 +5068,7 @@ public class SequenceUtil {
             int numO = Integer.parseInt(data[5]);
             int numR = Integer.parseInt(data[6]);
             String strand = data[7];
-            int iniIdx = Byte.parseByte(data[8]);
+            int iniIdx = Integer.parseInt(data[8]);
             String readName = data[9];
             byte snpFlag = Byte.parseByte(data[10]);
             int readLen = Integer.parseInt(data[12]);
@@ -5146,7 +5150,7 @@ public class SequenceUtil {
         
         if(selectData.size()!=0){
             /**
-             * this case is the same as avoid first time but the actual roll of it is to add the data and find variant of the last set of read
+             * this case is the same as avoid first time but the actual role of it is to add the data and find variant of the last set of read
              * because last set of read will not pass read name check in for loop it come out from the loop without finding variant
              * So, this case will add data and find variant of last set of read into variation Map
              */
@@ -5868,17 +5872,22 @@ public class SequenceUtil {
          *      '1' = fusion
          *      '2' = large or small indel
          *      '3' = others (wasted)
+         *      '4' = 1 tail events (have only one pattern either front or back)
          * => ArrayList<String[]> is represent the result of variation
+         * 
+         * Update capability to investigate 1 tail event ()
          */
         
         Map<Integer,ArrayList<String[]>> variation = new LinkedHashMap();
         ArrayList<Integer> indexCheckList = new ArrayList();
+        boolean junctionFlag = false;                                           // indicate the pattern can form junction or not
         
         /**
          * Begin variable detection 
          * Loop each String data (peak information)
          */
         for(int i=0;i<selectData.size();i++){
+            junctionFlag = false;
             String dataGet = selectData.get(i);
             
             /***    Extract data    ****/
@@ -5886,10 +5895,10 @@ public class SequenceUtil {
             byte numChr = Byte.parseByte(data[0]);
             long iniPos = Long.parseLong(data[1]);
             long lastPos = Long.parseLong(data[2]);
-            byte numG = Byte.parseByte(data[3]);
-            byte numY = Byte.parseByte(data[4]);
-            byte numO = Byte.parseByte(data[5]);
-            byte numR = Byte.parseByte(data[6]);
+            int numG = Integer.parseInt(data[3]);
+            int numY = Integer.parseInt(data[4]);
+            int numO = Integer.parseInt(data[5]);
+            int numR = Integer.parseInt(data[6]);
             String strand = data[7];
             byte iniIdx = Byte.parseByte(data[8]);
             String readName = data[9];
@@ -5907,7 +5916,9 @@ public class SequenceUtil {
 //                stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
 //            }
             
-            
+            if(readName.equals("Read01SS04")){
+                System.out.println();
+            }
 
             int expectNextIndex = stopIndex+1;
             int limitExpectNextIndex = expectNextIndex-allowOverlapBase;
@@ -5927,10 +5938,10 @@ public class SequenceUtil {
                 byte numChr_B = Byte.parseByte(data_B[0]);
                 long iniPos_B = Long.parseLong(data_B[1]);
                 long lastPos_B = Long.parseLong(data_B[2]);
-                byte numG_B = Byte.parseByte(data_B[3]);
-                byte numY_B = Byte.parseByte(data_B[4]);
-                byte numO_B = Byte.parseByte(data_B[5]);
-                byte numR_B = Byte.parseByte(data_B[6]);
+                int numG_B = Integer.parseInt(data_B[3]);
+                int numY_B = Integer.parseInt(data_B[4]);
+                int numO_B = Integer.parseInt(data_B[5]);
+                int numR_B = Integer.parseInt(data_B[6]);
                 String strand_B = data_B[7];
                 byte iniIdx_B = Byte.parseByte(data_B[8]);
                 String readName_B = data_B[9];
@@ -5955,6 +5966,7 @@ public class SequenceUtil {
                         /**
                          * small or large Indel
                          */
+                        junctionFlag = true;
                         if(greenChar_B == true || greenChar == true){                // case check to ensure that at least one side is green characteristic 
                             String[] pairedPeak = new String[2];  
                             pairedPeak[0]=dataGet;
@@ -5993,11 +6005,12 @@ public class SequenceUtil {
                                 }  
                                 variation.put(3, listPP);
                             } 
-                        }
+                        } 
                     }else if(numChr != numChr_B){
                         /**
                          * Fusion
                          */
+                        junctionFlag = true;
                         if(greenChar_B == true || greenChar == true){
                             String[] pairedPeak = new String[2];  
                             pairedPeak[0]=dataGet;
@@ -6038,6 +6051,51 @@ public class SequenceUtil {
                             } 
                         }
                     }
+                }
+            }
+            
+            if(junctionFlag == false){
+                /**
+                * Case 1 tail events
+                */
+                if(greenChar == true){
+                        String[] pairedPeak = new String[2];  
+                        pairedPeak[0]=dataGet;
+ //                            pairedPeak[1]=dataGet_B;
+
+                        if(variation.containsKey(4)){
+                            ArrayList<String[]> listPP = variation.get(4);
+                            listPP.add(pairedPeak);
+                            variation.put(4, listPP);
+                        }else{
+                            ArrayList<String[]> listPP = new ArrayList();
+                            listPP.add(pairedPeak);
+                            variation.put(4, listPP);
+                        }
+                }else{
+                    /**
+                     * Has no green at all (wasted) type 3
+                     */
+                    String[] pairedPeak = new String[2];
+                    String pairedCheck = dataGet;
+                    pairedPeak[0]=dataGet;
+ //                        pairedPeak[1]=dataGet_B;
+
+                    if(variation.containsKey(3)){
+                        ArrayList<String[]> listPP = variation.get(3);
+                        if(wastedCheckList.contains(pairedCheck)!=true){
+                            listPP.add(pairedPeak);
+                            wastedCheckList.add(pairedCheck);
+                        }                                 
+                        variation.put(3, listPP);
+                    }else{
+                        ArrayList<String[]> listPP = new ArrayList();
+                        if(wastedCheckList.contains(pairedCheck)!=true){
+                            listPP.add(pairedPeak);
+                            wastedCheckList.add(pairedCheck);
+                        }                                 
+                        variation.put(3, listPP);
+                    } 
                 }
             }
         }

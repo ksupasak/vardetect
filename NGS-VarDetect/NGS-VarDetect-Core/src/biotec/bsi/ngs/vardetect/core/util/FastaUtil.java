@@ -490,7 +490,7 @@ public class FastaUtil {
         /**
          * This function will create Sample from Coverage report.
          * Separately save to file per group
-         * Save to fast format (.fa)
+         * Save to fasta format (.fa)
          */
         String cutSampleFilename = null;
        
@@ -593,6 +593,155 @@ public class FastaUtil {
             writer.flush();
             writer.close();
         }
+        /*******************************/
+   
+    }
+    
+    public static void createSampleFromVariantCoverageReport(String coverageResultFile, String sampleFile) throws IOException{
+        /**
+         * This function will create Sample from Coverage report.
+         * Separately save to file per group
+         * Support fasta and fastq sample file
+         * Save to fasta format (.fa)
+         */
+        String cutSampleFilename = null;
+       
+        Charset charset = Charset.forName("US-ASCII");
+        Path pathResult = Paths.get(coverageResultFile);
+        Path pathSample = Paths.get(sampleFile);
+        String name = null;
+        StringBuilder seq = new StringBuilder();
+        
+        String[] strdummy = sampleFile.split("\\.");
+        String sampleFileType = strdummy[strdummy.length-1];
+        
+        /**
+         * Read coverage report
+         * set to groupMap
+         */
+        int groupNumber = 0;
+        Map<Integer,ArrayList<String>> groupMap = new LinkedHashMap(); // Map contain key  is group number and value is list of read name in that group.
+        
+        try (BufferedReader reader = Files.newBufferedReader(pathResult, charset)) {
+            String line = null;                   
+            while ((line = reader.readLine()) != null) {
+                String[] splitData = line.split("\\s+");
+                if(splitData[0].equals("Group")){
+                    groupNumber = Integer.parseInt(splitData[1]);
+                }else if(!splitData[0].equals("Variation")){
+                    splitData = line.split(",");
+                    String readName = splitData[9];
+                    if(readName.equals("null")){
+                        // in one tail at back part. cause front part has null read name
+                        readName = splitData[21];   // index 21 is index of backpart read name
+                    }
+                    
+                    if(groupMap.containsKey(groupNumber)){
+                        ArrayList<String> readNameList = groupMap.get(groupNumber);
+                        readNameList.add(readName);
+                        groupMap.put(groupNumber, readNameList);
+                    }else{
+                        ArrayList<String> readNameList = new ArrayList();
+                        readNameList.add(readName);
+                        groupMap.put(groupNumber, readNameList);
+                    }
+                }                 
+            }
+        }
+        /***************************************************/
+        
+        /**
+         * Read sample file
+         * set to Map
+         */
+        Map<String,String> sampleList = new LinkedHashMap();  // key is name and value is sequence
+        if(sampleFileType.endsWith("fa")||sampleFileType.endsWith("fasta")){            
+            try (BufferedReader reader = Files.newBufferedReader(pathSample, charset)) {
+                String line = null;                   
+                while ((line = reader.readLine()) != null) {                
+                    if(line.charAt(0)=='>'){
+                        if(seq.length()>0){
+                            sampleList.put(name, seq.toString());
+                            seq = new StringBuilder();
+                        }
+                        name = line.substring(1);
+                    }else{                                           
+                        seq.append(line.toString()); 
+                    }                
+                }
+            }
+        }else if(sampleFileType.endsWith("fastq")){            
+            try (BufferedReader reader = Files.newBufferedReader(pathSample, charset)) {
+                String line = null;
+                byte counter = 0;
+                while ((line = reader.readLine()) != null) {
+                    ++counter;
+                    if(line.isEmpty()){
+                        name = null;
+                    }else{
+                        if(counter==1){
+                            if(seq.length()>0){                                
+                                sampleList.put(name, seq.toString());
+                                seq = new StringBuilder();
+                            }
+                            name = line.substring(1);
+                            if(name.equals("ERR846998.3062537 HS25_15277:3:1301:12738:55130#59/2")){
+                                System.out.println();
+                            }
+                        }else if(counter==2){                                               
+                            seq.append(line.toString()); 
+                        }
+                    }
+                    if(counter == 4){
+                        counter=0;
+                    }
+                }
+            }
+        }
+        
+        /***************************************************/
+        
+        /**
+         * extract and write to file
+         */
+        ArrayList<String> usedReadName = new ArrayList();
+        cutSampleFilename = pathSample.getParent()+File.separator+pathResult.getFileName().toString().split("\\.")[0]+"_Sample.fa";
+        PrintStream ps;
+        FileWriter writer;  
+
+        /**
+         * Check File existing
+         */
+
+        File f = new File(cutSampleFilename); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(cutSampleFilename,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(cutSampleFilename);
+        }
+        
+        for (Map.Entry<Integer, ArrayList<String>> entry : groupMap.entrySet()){
+            groupNumber = entry.getKey();
+            ArrayList<String> readNameList = entry.getValue();
+            
+            
+            
+            
+            for(int i=0;i<readNameList.size();i++){
+                String readName = readNameList.get(i);
+                
+                if(!usedReadName.contains(readName)){
+                    String sequence = sampleList.get(readName);
+                
+                    writer.write(">"+readName+"\n");
+                    writer.write(sequence+"\n");
+                } 
+            } 
+        }
+        writer.flush();
+        writer.close();
         /*******************************/
    
     }

@@ -1129,6 +1129,7 @@ public class ShortgunSequence {
                 String strand = null;
                 
                 int missingBase = 0;
+                int sumMissingBase = 0;
                 int dummyMissingBase = 0;
                 int repeatBase = 0;
                 int iniBack = 0;
@@ -1200,8 +1201,9 @@ public class ShortgunSequence {
                             compensateBase = 0;                                 // In case that two peak occur cause from repeat (the number of repeat should be less than mer length). No need to add compensate base to mer match count                           
                         }else{
                             // เคส SNP หรือ missing เบสที่ไม่ทำให้ลำดับของการ align เปลี่ยนไป หรือ กรณีที่ repeat mer มีจำนวนมากกว่าหรือเท่ากับขนาด mer จะใช้วิธีการกู้คืนแบบ SNP
-                            // คือ 1. บวกเพิ่มด้วย compensateBase 2.เพิ่ม ,issingBase เข้าไปที่ red color
-                            missingBase = dummyMissingBase+missingBase;
+                            // คือ 1. บวกเพิ่มด้วย compensateBase 2.เพิ่ม missingBase เข้าไปที่ red color
+                            sumMissingBase = dummyMissingBase+sumMissingBase;
+                            missingBase = dummyMissingBase;
                             compensateBase = this.merLength -1;
                         }
                         
@@ -1213,13 +1215,13 @@ public class ShortgunSequence {
 //                        }
                         
                         
-                        lastIdxFront = (iniBack+numBase)-1;         // it has to be update every time in cast that there is more than one peak.
-                        lastIdxFront_noMer = (iniBack+this.listNumMatch.get(idx))-1;  // it has to be update every time in cast that there is more than one peak.
+                        lastIdxFront = (iniBack+numBase)-1;         // it has to be update every time in case that there is more than one peak. (already plus mer length in numBase)
+                        lastIdxFront_noMer = (iniBack+this.listNumMatch.get(idx))-1;  // it has to be update every time in case that there is more than one peak. (npt plus mer length)
                     }
                     
                     /**
                      * Both missing and repeat Base will have more significantly when it occur between two peak that can join peak
-                     * So, we will add both repeatBase and missingBase Bake to mer count as red color
+                     * So, we will add both repeatBase and missingBase Base to mer count as red color
                      */
                     
                     numG = this.listGreen.get(idx)+numG + compensateBase;
@@ -1233,6 +1235,7 @@ public class ShortgunSequence {
                     
                     flagFirstTime = false;
                     repeatBase=0;
+                    missingBase=0;
                 }
 
                 /**
@@ -1249,7 +1252,7 @@ public class ShortgunSequence {
                 this.listStrand.add(strand);
                 this.listIniIdx.add(iniIdx); 
                 
-                this.snpFlag.add(missingBase);
+                this.snpFlag.add(sumMissingBase);
                 this.iniBackFlag.add(iniBack);
             }
             

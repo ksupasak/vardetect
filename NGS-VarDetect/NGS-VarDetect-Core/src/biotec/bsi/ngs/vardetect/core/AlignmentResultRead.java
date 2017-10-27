@@ -1370,7 +1370,7 @@ public class AlignmentResultRead {
             }
         }
         writer.flush();
-        writer.close();
+        writer.close();      
     }
     
     public void writeAlignSequenceReadFasta(String path, String nameFile, String sampleFile, int propotion, String option1, int option2) throws FileNotFoundException, IOException{
