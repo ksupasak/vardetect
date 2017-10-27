@@ -25,7 +25,7 @@ public class TestDetectVariation {
        public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/SimulateData/hg38_sim_F_SNP_T_1/hg38_sim_F_SNP_T_1_alignResult_Sort.txt";
+        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/SimulateData/hg38_sim_L_SNP_F_5/hg38_sim_L_SNP_F_5_alignResult_Sort.txt";
         String gffFile = "/Volumes/PromisePegasus/worawich/Referense/hg38/gff3/Homo_sapiens.GRCh38.87.chr.gff3";
 //        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/SimulateData/hg38_sim_3/";
 //        String saveFilename = "hg38_FullNewMethod_Sim_alignmentResult_VariantReport";
@@ -56,10 +56,10 @@ public class TestDetectVariation {
         
         varRes.analyzeCoverageFusion();
         varRes.writeVariantCoverageVirtualizeWithAnnotationReportToFile(filename, gffFile, coverageThreshold, 'F');
-        varRes.writeVariantCoverageReportToFile(filename, coverageThreshold, 'F');
+        varRes.writeVariantCoverageReportToFile(filename, coverageThreshold, 'F',true);             // last argunement set true tell us it generate read name only report and normal indel coverage report
         varRes.analyzeCoverageIndel();
         varRes.writeVariantCoverageVirtualizeWithAnnotationReportToFile(filename, gffFile, coverageThreshold, 'I');
-        varRes.writeVariantCoverageReportToFile(filename, coverageThreshold, 'I');
+        varRes.writeVariantCoverageReportToFile(filename, coverageThreshold, 'I',true);         
 
         System.gc();
       

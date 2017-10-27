@@ -25,7 +25,7 @@ public class RunSimulateSample {
         int readCoverage = 30;
         int diffL = 10000;
         int indelSize = 10;
-        char variantType = 'F';                 // 4 variant type F=fusion L=large indel I=insert D=delete
+        char variantType = 'L';                 // 4 variant type F=fusion L=large indel I=insert D=delete
         char insertSNPFlag = 'F';               // T = true(insert) and F = false(not insert)
 //        int minIndelSize = 10;
 //        int maxIndelSize = 100;
