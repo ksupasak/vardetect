@@ -59,6 +59,7 @@ public class AlignmentResultRead {
     private Map<Long,ArrayList<Integer>> checkDupMap;                  // store Key = chr|position and Value = iniPosition on read. This map has been used for check duplication read has same ini position on read that match same chr same position 
     private ArrayList<AlignmentResult> AlignmentResultList;
     private ArrayList<AlignmentResult> listAlignmentResult;
+    int numFullMatch;
     
     public AlignmentResultRead(){
         
@@ -73,7 +74,8 @@ public class AlignmentResultRead {
        this.mask_chrIdxStrandAln = 4398046511103L;      //  Do & operation to get aligncode compose of chr|Idx|strand|alignposition from value contain in alignmentResultMap
        this.unMapList = new ArrayList();
        this.mapList = new ArrayList();
-       this.AlignmentResultList = new ArrayList(); 
+       this.AlignmentResultList = new ArrayList();
+       this.numFullMatch = 0;
     }
     
     public void addResult(ShortgunSequence inRead){
@@ -690,6 +692,42 @@ public class AlignmentResultRead {
             writer.flush();
             writer.close();
         }
+        
+    }
+    
+    public void writeAlignmentSummaryReport(String fullPathFilename) throws FileNotFoundException, IOException{
+    
+        /**
+         * Write summary Report 
+         * 1. how many percentage align
+         */
+
+        String filename = fullPathFilename+"summary.txt";
+        PrintStream ps;
+        FileWriter writer;        
+        /**
+         * Check File existing
+         */
+        
+        File f = new File(filename); //File object        
+//        if(f.exists()){
+//            // append if exist
+////            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(filename,true);
+//        }else{
+//            // create new
+////            ps = new PrintStream(filename);
+//            writer = new FileWriter(filename);
+//        }
+        writer = new FileWriter(filename);
+        int numSample = this.shrtRead.size();
+        int percentFullMatch = (this.numFullMatch*100)/numSample;
+        
+        writer.write("Overall Percent Match on Reference : "+percentFullMatch);
+       
+        writer.flush();
+        writer.close();
+        
         
     }
     
@@ -1336,9 +1374,9 @@ public class AlignmentResultRead {
 //                        matchCount = matchCount+missingMer;
 //                    }
                     
-                    if(dummySS.getReadName().equals("Read12SS07")){
-                        System.out.println();
-                    }
+//                    if(dummySS.getReadName().equals("Read12SS07")){
+//                        System.out.println();
+//                    }
                     if(strand.equals("-")){
                         iniIndex = dummySS.getReadLength() - (iniIndex+(dummySS.getMerLength()+matchCount-1));
     //                    stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
@@ -1367,6 +1405,8 @@ public class AlignmentResultRead {
                     }
 
                 }
+            }else{
+                numFullMatch++;
             }
         }
         writer.flush();
@@ -1398,6 +1438,7 @@ public class AlignmentResultRead {
         
         File f = new File(filename); //File object        
         if(f.exists()){
+            //append to existing file
 //            ps = new PrintStream(new FileOutputStream(filename,true));
             writer = new FileWriter(filename,true);
         }else{
@@ -1735,7 +1776,6 @@ public class AlignmentResultRead {
                 }
             }
         }
-
     }
     
     public void sortFilterResult(String option1, int option2){
@@ -1839,5 +1879,155 @@ public class AlignmentResultRead {
         Collections.sort(this.AlignmentResultList, AlignmentResult.AlnResNameIniIdxComparator);
 
     }
+    
+//    public void writeFilterTargetResult(String path, String nameFile, String fileFormat, String option1, int option2) throws FileNotFoundException, IOException{
+//        //NotFinish
+//        /**
+//         * Suitable for version 3 data structure (data structure that has iniIdx in its)
+//         * write result to file format for linux sort purpose
+//         * 
+//         * String option1 filter option code "gy" mean we filter out the read match result that has orange and red count
+//         *                                   "g"  mean we filter out the read match result contain yellow orange and red count
+//         *                                   "gyo" mean we filter out the read match result contain only red count
+//         *                                  "all" mean no filter
+//         * int option2 filter option threshold indicate the percentage of maximum mer count. If read match result have mer count equal or more than this threshold the result has been filter out. (100 will prevent full match read)
+//         * 
+//         * We adjust iniIndex into a view of strand + [the last index of strand - will be iniIndex of strand +]
+//         */
+//        
+//        String filename = path+File.separator+nameFile+"."+fileFormat;
+//        PrintStream ps;
+//        FileWriter writer;        
+//        /**
+//         * Check File existing
+//         */
+//        
+//        File f = new File(filename); //File object        
+//        if(f.exists()){
+////            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(filename,true);
+//        }else{
+////            ps = new PrintStream(filename);
+//            writer = new FileWriter(filename);
+//        }
+//        
+//        /**
+//         * Begin extract data to write
+//         */
+//        for(int i=0;i<this.shrtRead.size();i++){
+//            boolean ignoreFlag = false;
+//            ShortgunSequence dummySS = this.shrtRead.get(i);
+//            String readName = dummySS.getReadName();
+//            int readLength = dummySS.getReadLength();
+//            ArrayList<Integer> listChr = dummySS.getListChrMatch();
+//            ArrayList<Long> listIniPos = dummySS.getListPosMatch();
+//            ArrayList<Long> listLastPos = dummySS.getListLastPosMatch();
+//            ArrayList<Integer> listIniIndex = dummySS.getListIniIdx();
+//            ArrayList<String> listStrand = dummySS.getListStrand();
+//            ArrayList<Integer> listGreen = dummySS.getListGreen();
+//            ArrayList<Integer> listYellow = dummySS.getListYellow();
+//            ArrayList<Integer> listOrange = dummySS.getListOrange();
+//            ArrayList<Integer> listRed = dummySS.getListRed();
+//            ArrayList<Integer> listSNPFlag = dummySS.getSNPFlag();
+//            ArrayList<Integer> listIniBackFlag = dummySS.getIniBackFlag();
+//            int numMaxMatch = ((option2 * dummySS.readLength)/100)-dummySS.merLength+1;
+//            
+//            /**
+//             * Find writing order (order by iniIndex)
+//             */
+//                    // Code here
+//            /**
+//             * 
+//             */
+//            
+//            for(int numP=0;numP<listChr.size();numP++){
+//                int numChr = listChr.get(numP);
+//                long iniPos = listIniPos.get(numP);
+//                long lastPos = listLastPos.get(numP);
+//                int iniIndex = listIniIndex.get(numP);
+//                int green = listGreen.get(numP);
+//                int yellow = listYellow.get(numP);
+//                int orange = listOrange.get(numP);
+//                int red = listRed.get(numP);
+//                
+//                String strand = listStrand.get(numP);
+//                int merMatch = green+yellow+orange+red;
+////                if(merMatch == numMaxMatch){
+////                    ignoreFlag = true;
+////                }
+//                
+//                
+//            if(ignoreFlag==false){
+//                for(int numP=0;numP<listChr.size();numP++){
+//                    int numChr = listChr.get(numP);
+//                    long iniPos = listIniPos.get(numP);
+//                    long lastPos = listLastPos.get(numP);
+//                    int iniIndex = listIniIndex.get(numP);
+//                    int green = listGreen.get(numP);
+//                    int yellow = listYellow.get(numP);
+//                    int orange = listOrange.get(numP);
+//                    int red = listRed.get(numP);
+//                    int snpFlag = listSNPFlag.get(numP);
+//                    int iniBackFlag = listIniBackFlag.get(numP);
+////                    int flag = 0;
+//
+////                    if(snpFlag == true){
+////                        flag = 1;
+////                    }
+//
+//                    String strand = listStrand.get(numP);
+//                    int matchCount = green+yellow+orange+red;
+//                    int missingMer = 0;
+//                    
+////                    if(snpFlag!=0){         
+////                        missingMer = (snpFlag+dummySS.getMerLength())-1;
+////                        matchCount = matchCount+missingMer;
+////                    }
+//                    /**
+//                     * Cut this pat out because we already do it in joinPeakV2
+//                     * we add missing mer into red color count
+//                     */
+////                    if(snpFlag!=0){         
+////                        missingMer = snpFlag;
+////                        matchCount = matchCount+missingMer;
+////                    }
+//                    
+////                    if(dummySS.getReadName().equals("Read12SS07")){
+////                        System.out.println();
+////                    }
+//                    if(strand.equals("-")){
+//                        iniIndex = dummySS.getReadLength() - (iniIndex+(dummySS.getMerLength()+matchCount-1));
+//    //                    stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
+//                    }
+////                    int merMatch = green+yellow+orange+red;
+//    //                ps.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName);
+//    //                ps.format("\n");
+//                    if(option1.equals("gy")){
+//                        if(orange==0&&red==0){
+//                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag,readLength));
+//                            writer.write("\n");
+//                        }
+//                    }else if(option1.equals("g")){
+//                        if(orange==0&&red==0&&yellow==0){
+//                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag,readLength));
+//                            writer.write("\n");
+//                        }
+//                    }else if(option1.equals("gyo")){
+//                        if(red==0){
+//                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag,readLength));
+//                            writer.write("\n");
+//                        }
+//                    }else if(option1.equals("all")){
+//                        writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", numChr,iniPos,lastPos,green,yellow,orange,red,strand,iniIndex,readName,snpFlag,iniBackFlag,readLength));
+//                        writer.write("\n");
+//                    }
+//
+//                }
+//            }
+//        }
+//        writer.flush();
+//        writer.close();      
+//        }
+//    }
     
 }

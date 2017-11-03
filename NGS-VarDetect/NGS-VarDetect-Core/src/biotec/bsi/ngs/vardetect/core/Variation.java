@@ -438,6 +438,8 @@ public class Variation {
         // Actually we can recorrect matchCount on whether front or back part
         // the check case has been use to comfirm that front part has enough number of match count to be re-correct
         // of not it will change to back part instead
+        
+        
         if(overlapBase < this.numMatchF){ 
             // Re-correct on Front part
             if(this.orangeF > overlapBase){
@@ -501,7 +503,7 @@ public class Variation {
             }else if(this.yellowB > overlapBase){
                 this.yellowB = this.yellowB - overlapBase;
             }else if(this.greenB > overlapBase){
-                this.greenB = this.greenF - overlapBase;
+                this.greenB = this.greenB - overlapBase;
             }else if(this.redB > overlapBase){
                 this.redB = this.redB - overlapBase;
             }else{
@@ -518,7 +520,7 @@ public class Variation {
                 
                 int newYellowB = this.yellowB - overlapBase;
                 if(newYellowB < 0){
-                    this.yellowF = 0;
+                    this.yellowB = 0;
                     overlapBase = Math.abs(newYellowB);
                 }else{
                     overlapBase = 0;
@@ -534,7 +536,7 @@ public class Variation {
                 
                 int newRedB = this.redB - overlapBase;
                 if(newRedB < 0){
-                    this.redF = 0;
+                    this.redB = 0;
                     overlapBase = Math.abs(newRedB);
                     throw new NumberFormatException();
                 }else{
@@ -832,9 +834,9 @@ public class Variation {
          * Create virtual sequence as string 
          * For one tail front event
          */
-        if(this.readNameB.equals("HWI-ST840:377:D2GY3ACXX:1:2113:11955:24852/1")&&this.iniPosB == 25556969){
-            System.out.println();
-        }
+//        if(this.readNameB.equals("HWI-ST840:377:D2GY3ACXX:1:2113:11955:24852/1")&&this.iniPosB == 25556969){
+//            System.out.println();
+//        }
         int virtualLen = (2*this.readLengthF)+1;    // virtual length has size 2 time of read length plus 1 (plus one is reserve for junction which does not involve with base in virtual length) Ex len = 10 ; virtual = (2*10)+1 = 21 this allow both size have 10 emty slot for base and the middle is junction slot
         int junctionIndex = this.readLengthF;       // index of junction (put sign "|" on this index)
         

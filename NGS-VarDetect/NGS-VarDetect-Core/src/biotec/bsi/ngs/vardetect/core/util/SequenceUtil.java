@@ -4244,6 +4244,95 @@ public class SequenceUtil {
         }
     }
     
+    public static AlignmentResultRead readAlignmentReportFilterToTarget(AlignmentResultRead alnResult, String filename, int mer,long targetPosFront, long targetPosBack,int targetBoundary) throws IOException {
+        /**
+         *  Suitable for version 3 data structure (data structure that has iniIdx in its)
+         */
+        
+        ArrayList<Integer> listChr = new ArrayList();
+        ArrayList<Long> listPos = new ArrayList();
+        ArrayList<Long> listLastPos = new ArrayList();
+        ArrayList<String> listStrand = new ArrayList();
+        ArrayList<Integer> listNumCount = new ArrayList();
+        ArrayList<Integer> listIniIdx = new ArrayList();
+        ArrayList listResultCode = new ArrayList();
+        ShortgunSequence inSS = new ShortgunSequence(null);
+//        AlignmentResultRead alnResult = new AlignmentResultRead();
+        int count = 0;
+        int count2 = 0;
+        int readLen = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(filename);
+        String name = null;
+        boolean targetFlag = false;
+        long lowerBoundTargetFront = targetPosFront - targetBoundary;
+        long upperBoundTargetBack = targetPosBack + targetBoundary;
+
+//        int actStart = readStart*2;     //this is actual start of line in file (compatible only specific file 3661 and 3662 .fasta file)
+//        int actStop = readLimit*2;
+    //    String seq = "";
+        
+        StringBuffer seq = new StringBuffer();
+
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;
+            String[] data = null;      
+            while ((line = reader.readLine()) != null) {
+                
+                if(line.charAt(0)=='>'){
+                    inSS = new ShortgunSequence(null);
+                    name = line.substring(1);
+//                    System.out.println("Read name got : " + name);
+                    listChr = new ArrayList();
+                    listPos = new ArrayList();
+                    listLastPos = new ArrayList();
+                    listStrand = new ArrayList();
+                    listNumCount = new ArrayList();
+                    listIniIdx = new ArrayList();
+                    listResultCode = new ArrayList();
+                }else{
+                    data = line.split(";");
+                
+                    targetFlag = false;
+                    for(int i=0;i<data.length;i++){
+                        String[] dummyData = data[i].split(",");
+//                        System.out.println("data check : "+dummyData[0] + " "+ dummyData[1] +" "+dummyData[2]);                      
+                        long position = Long.parseLong(dummyData[1]) + Integer.parseInt(dummyData[4]) ;
+                        
+                        if((position>=lowerBoundTargetFront && position<=targetPosFront) || (position>=targetPosBack && position<=upperBoundTargetBack)){
+                            listChr.add(Integer.parseInt(dummyData[0]));
+                            listPos.add(Long.parseLong(dummyData[1]));
+                            listStrand.add(dummyData[2]);
+                            listNumCount.add(Integer.parseInt(dummyData[3]));
+                            listIniIdx.add(Integer.parseInt(dummyData[4]));
+                            readLen = Integer.parseInt(dummyData[5]);
+                            int numBase = (mer+Integer.parseInt(dummyData[3]))-1;
+                            long lastPos = (Long.parseLong(dummyData[1]) + numBase)-1;
+                        
+                            listLastPos.add(lastPos);
+                            targetFlag = true;
+                        }
+                        
+                    } 
+                    if(targetFlag == true){
+                        inSS.addReadName(name);
+                        inSS.addReadLength(readLen);
+                        inSS.addListChr(listChr);
+                        inSS.addListPos(listPos);
+                        inSS.addListLastPos(listLastPos);
+                        inSS.addListStrand(listStrand);
+                        inSS.addListNumMatch(listNumCount);
+                        inSS.addListIniIdx(listIniIdx);
+                        inSS.addMerLength(mer);
+                        alnResult.addResult(inSS);
+                    }
+                } 
+            }
+            
+            return alnResult;
+        }
+    }
+    
     public static Map<Long,String> readIndexFile(String filename) throws IOException {
         /**
          *  Read index file to create Map which has been use for reference the number of chromosome in alignment program to real chromosome that found in natural or portion of scaffold.
@@ -6058,45 +6147,45 @@ public class SequenceUtil {
                 /**
                 * Case 1 tail events
                 */
-                if(greenChar == true){
-                        String[] pairedPeak = new String[2];  
-                        pairedPeak[0]=dataGet;
- //                            pairedPeak[1]=dataGet_B;
+//                if(greenChar == true){
+                String[] pairedPeak = new String[2];  
+                pairedPeak[0]=dataGet;
+//                            pairedPeak[1]=dataGet_B;
 
-                        if(variation.containsKey(4)){
-                            ArrayList<String[]> listPP = variation.get(4);
-                            listPP.add(pairedPeak);
-                            variation.put(4, listPP);
-                        }else{
-                            ArrayList<String[]> listPP = new ArrayList();
-                            listPP.add(pairedPeak);
-                            variation.put(4, listPP);
-                        }
+                if(variation.containsKey(4)){
+                    ArrayList<String[]> listPP = variation.get(4);
+                    listPP.add(pairedPeak);
+                    variation.put(4, listPP);
                 }else{
-                    /**
-                     * Has no green at all (wasted) type 3
-                     */
-                    String[] pairedPeak = new String[2];
-                    String pairedCheck = dataGet;
-                    pairedPeak[0]=dataGet;
- //                        pairedPeak[1]=dataGet_B;
-
-                    if(variation.containsKey(3)){
-                        ArrayList<String[]> listPP = variation.get(3);
-                        if(wastedCheckList.contains(pairedCheck)!=true){
-                            listPP.add(pairedPeak);
-                            wastedCheckList.add(pairedCheck);
-                        }                                 
-                        variation.put(3, listPP);
-                    }else{
-                        ArrayList<String[]> listPP = new ArrayList();
-                        if(wastedCheckList.contains(pairedCheck)!=true){
-                            listPP.add(pairedPeak);
-                            wastedCheckList.add(pairedCheck);
-                        }                                 
-                        variation.put(3, listPP);
-                    } 
+                    ArrayList<String[]> listPP = new ArrayList();
+                    listPP.add(pairedPeak);
+                    variation.put(4, listPP);
                 }
+//                }else{
+//                    /**
+//                     * Has no green at all (wasted) type 3
+//                     */
+//                    String[] pairedPeak = new String[2];
+//                    String pairedCheck = dataGet;
+//                    pairedPeak[0]=dataGet;
+// //                        pairedPeak[1]=dataGet_B;
+//
+//                    if(variation.containsKey(3)){
+//                        ArrayList<String[]> listPP = variation.get(3);
+//                        if(wastedCheckList.contains(pairedCheck)!=true){
+//                            listPP.add(pairedPeak);
+//                            wastedCheckList.add(pairedCheck);
+//                        }                                 
+//                        variation.put(3, listPP);
+//                    }else{
+//                        ArrayList<String[]> listPP = new ArrayList();
+//                        if(wastedCheckList.contains(pairedCheck)!=true){
+//                            listPP.add(pairedPeak);
+//                            wastedCheckList.add(pairedCheck);
+//                        }                                 
+//                        variation.put(3, listPP);
+//                    } 
+//                }
             }
         }
         

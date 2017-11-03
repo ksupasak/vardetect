@@ -196,6 +196,7 @@ public class VariationResult {
                     /**
                      * Variation type : Fusion
                      */
+                    
                     Variation newVar = new Variation(this.merLength);
                     newVar.addType('F');
                     newVar.addFrontPeak(numChrF, iniPosF, lastPosF, greenF, yellowF, orangeF, redF, strandF, iniIndexF, readNameF, snpFlagF, iniBackFlagF, readLengthF);
@@ -423,45 +424,45 @@ public class VariationResult {
                 sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
                 this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapFusionII);
                 
-                /**
-                 * One-tail Coverage Discover
-                 * Check for one tail that has possibility to have the same either front or back break point to the breakpoint of this indel group
-                 * and put that into the coverage of this indel group (common 2-tail variation)
-                 * 
-                 * For first approach, we will not store numMatch information of one tail in sumNumMatch.
-                 */
-                
-                if(this.oneTailFrontLinkIdx.containsKey(bpFCode)){
-                    /**
-                     * In case that oneTail event is on front side
-                     */
-                    ArrayList<Integer> listIndex = this.oneTailFrontLinkIdx.get(bpFCode);
-                    
-                    for(Integer oneTailIndex : listIndex){
-                        Variation oneTail = this.listOneTail.get(oneTailIndex);
-                        coverageList.add(oneTail);
-                        
-                        if(!this.listIndexOfUsedOneTail.contains(oneTailIndex)){        // if it not exist add new one
-                            // add onetail index into arraylist of used index
-                            this.listIndexOfUsedOneTail.add(oneTailIndex);
-                        }
-                    }
-                }else if(this.oneTailBackLinkIdx.containsKey(bpBCode)){
-                    /**
-                     * In case that oneTail event is on back side
-                     */
-                    ArrayList<Integer> listIndex = this.oneTailBackLinkIdx.get(bpBCode);
-                    
-                    for(Integer oneTailIndex : listIndex){
-                        Variation oneTail = this.listOneTail.get(oneTailIndex);
-                        coverageList.add(oneTail);
-                        
-                        if(!this.listIndexOfUsedOneTail.contains(oneTailIndex)){        // if it not exist add new one
-                            // add onetail index into arraylist of used index
-                            this.listIndexOfUsedOneTail.add(oneTailIndex);
-                        }
-                    }                 
-                }
+//                /**
+//                 * One-tail Coverage Discover
+//                 * Check for one tail that has possibility to have the same either front or back break point to the breakpoint of this indel group
+//                 * and put that into the coverage of this indel group (common 2-tail variation)
+//                 * 
+//                 * For first approach, we will not store numMatch information of one tail in sumNumMatch.
+//                 */
+//                
+//                if(this.oneTailFrontLinkIdx.containsKey(bpFCode)){
+//                    /**
+//                     * In case that oneTail event is on front side
+//                     */
+//                    ArrayList<Integer> listIndex = this.oneTailFrontLinkIdx.get(bpFCode);
+//                    
+//                    for(Integer oneTailIndex : listIndex){
+//                        Variation oneTail = this.listOneTail.get(oneTailIndex);
+//                        coverageList.add(oneTail);
+//                        
+//                        if(!this.listIndexOfUsedOneTail.contains(oneTailIndex)){        // if it not exist add new one
+//                            // add onetail index into arraylist of used index
+//                            this.listIndexOfUsedOneTail.add(oneTailIndex);
+//                        }
+//                    }
+//                }else if(this.oneTailBackLinkIdx.containsKey(bpBCode)){
+//                    /**
+//                     * In case that oneTail event is on back side
+//                     */
+//                    ArrayList<Integer> listIndex = this.oneTailBackLinkIdx.get(bpBCode);
+//                    
+//                    for(Integer oneTailIndex : listIndex){
+//                        Variation oneTail = this.listOneTail.get(oneTailIndex);
+//                        coverageList.add(oneTail);
+//                        
+//                        if(!this.listIndexOfUsedOneTail.contains(oneTailIndex)){        // if it not exist add new one
+//                            // add onetail index into arraylist of used index
+//                            this.listIndexOfUsedOneTail.add(oneTailIndex);
+//                        }
+//                    }                 
+//                }
                 /******************************************************************************************/
                 
                 /**
@@ -477,14 +478,14 @@ public class VariationResult {
          * Loop existing coverageMapindel that already group 2-tail events 
          * use bpFCode and bpBCode as signature variable for grouping
          */
-        Set set = this.coverageMapIndel.keySet();
+        Set set = this.coverageMapFusion.keySet();
         Iterator iterKey = set.iterator();
         while(iterKey.hasNext()){
             long bpFCode = (long)iterKey.next();
             long bpF = bpFCode&this.mask28bit;
             int chrF = (int)(bpFCode>>28);
 
-            Map<Long,ArrayList<Variation>> coverageMapII = this.coverageMapIndel.get(bpFCode);
+            Map<Long,ArrayList<Variation>> coverageMapII = this.coverageMapFusion.get(bpFCode);
             Set setII = coverageMapII.keySet();
             Iterator iterKeyII = setII.iterator();
             while(iterKeyII.hasNext()){
@@ -550,7 +551,7 @@ public class VariationResult {
                 coverageMapII.put(bpBCode, coverageList);
             }
 
-            this.coverageMapIndel.put(bpFCode, coverageMapII);           
+            this.coverageMapFusion.put(bpFCode, coverageMapII);           
         }
     }
     
@@ -1431,10 +1432,6 @@ public class VariationResult {
                             
                             writer.write(var.virtualSequence());
                             writer.write("\n");
-//                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
-//                            writer.write(" || ");
-//                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));
-//                            writer.write("\n");
                         }
                         count++;
                     }
@@ -1482,29 +1479,33 @@ public class VariationResult {
                         for(int i=0;i<coverageList.size();i++){
                             Variation var = coverageList.get(i);
                             
-                            if(var.variationType == 'T'){
-                                /**
-                                * Check one tail type
-                                * to classify it side Front or Back
-                                * and write report
-                                */
-                                if(var.getOriBreakPointF()==bpF){
-                                    /**
-                                     * This one tail is sit on the front
-                                     */
-                                    writer.write(var.oneTailVirtualSequenceFront());
-                                    writer.write("\n");
-                                }else if(var.getOriBreakPointB()==bpB){
-                                    /**
-                                     * This one tail is sit on the back
-                                     */
-//                                    writer.write(var.oneTailVirtualSequenceBack());
-                                    writer.write("\n");
-                                }
-                            }else{
-                                writer.write(var.virtualSequence());
-                                writer.write("\n");
-                            }
+                            writer.write(var.virtualSequence());
+                            writer.write("\n");
+//                            Variation var = coverageList.get(i);
+//                            
+//                            if(var.variationType == 'T'){
+//                                /**
+//                                * Check one tail type
+//                                * to classify it side Front or Back
+//                                * and write report
+//                                */
+//                                if(var.getOriBreakPointF()==bpF){
+//                                    /**
+//                                     * This one tail is sit on the front
+//                                     */
+//                                    writer.write(var.oneTailVirtualSequenceFront());
+//                                    writer.write("\n");
+//                                }else if(var.getOriBreakPointB()==bpB){
+//                                    /**
+//                                     * This one tail is sit on the back
+//                                     */
+////                                    writer.write(var.oneTailVirtualSequenceBack());
+//                                    writer.write("\n");
+//                                }
+//                            }else{
+//                                writer.write(var.virtualSequence());
+//                                writer.write("\n");
+//                            }
 //                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrF,var.iniPosF,var.lastPosF,var.greenF,var.yellowF,var.orangeF,var.redF,var.strandF,var.iniIndexF,var.readNameF,var.snpFlagF,var.iniBackFlagF,var.readLengthF));
 //                            writer.write(" || ");
 //                            writer.write(String.format("%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%d,%d,%d", var.numChrB,var.iniPosB,var.lastPosB,var.greenB,var.yellowB,var.orangeB,var.redB,var.strandB,var.iniIndexB,var.readNameB,var.snpFlagB,var.iniBackFlagB,var.readLengthB));

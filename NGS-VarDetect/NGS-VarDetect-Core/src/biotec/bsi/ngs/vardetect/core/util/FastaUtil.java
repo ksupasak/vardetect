@@ -332,8 +332,10 @@ public class FastaUtil {
         
         File f = new File(filename); //File object        
         if(f.exists()){
+            // file is already exist no need to do it again
 //            ps = new PrintStream(new FileOutputStream(filename,true));
-            writer = new FileWriter(filename,true);
+//            writer = new FileWriter(filename,true);
+            return;
         }else{
 //            ps = new PrintStream(filename);
             writer = new FileWriter(filename);
@@ -820,6 +822,69 @@ public class FastaUtil {
         }
         writer.flush();
         writer.close();
+    }
+    
+    public static void createTargetEventFromRead(String inputPath) throws IOException{
+        
+        ///**** Not finish (ยังไม่ได้ทำอะไรแค่ก๊อปโครงมาจะเอาส่วนอ่านไฟล์มาใช้เฉยๆ)
+        
+        /**
+         * This function will reIndex of chromosome name which has non numeric representation to numeric number
+         * Save new file with name _reIndex
+         * And also save the index file for mapping back to original chr representation
+         */
+        
+        int count = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(inputPath);
+        String name = null;
+        boolean forceBreakFlag =  false;
+    
+        StringBuilder seq = new StringBuilder();
+        
+        String filename = path.getParent()+File.separator+path.getFileName().toString().split("\\.")[0]+"_reIndex.fa";
+        String filenameIndex = path.getParent()+File.separator+path.getFileName().toString().split("\\.")[0]+"_reIndex.index";
+        PrintStream ps;
+        FileWriter writer;  
+        FileWriter writerIndex;
+        /**
+         * Check File existing
+         */
+        
+        File f = new File(filename); //File object        
+        if(f.exists()){
+            // file is already exist no need to do it again
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(filename,true);
+            return;
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(filename);
+        }
+        writerIndex = new FileWriter(filenameIndex);
+
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;                   
+            while ((line = reader.readLine()) != null) {
+                if(line.isEmpty()){
+                    
+                }else{
+                    if(line.charAt(0)=='>'){
+                        count++;
+                        writer.write(">chr"+count+"\n");
+                        writerIndex.write(path.getFileName()+","+line.substring(1)+",chr"+count+"\n");
+                    }else{                                           
+                        writer.write(line+"\n"); 
+                    }
+                }    
+            }
+        }
+        
+        writer.flush();
+        writer.close();
+        writerIndex.flush();
+        writerIndex.close();
+        
     }
 
 }
