@@ -16,7 +16,7 @@ public class RunGroupNonVariantResultWithGffFile {
     public static void main(String[] args) throws IOException {
         // TODO code application logic here
         /**
-         * This MD will run grouping the alignment result 
+         * This CMD will run grouping the alignment result 
          * it require result that passing post process and already sorted
          * It group the result with gff3 file or group it by annotation
          */

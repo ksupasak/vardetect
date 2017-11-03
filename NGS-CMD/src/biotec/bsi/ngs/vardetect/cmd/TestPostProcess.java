@@ -28,13 +28,14 @@ public class TestPostProcess {
     public static void main(String[] args) throws IOException {
         // TODO code application logic here
         
-        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/SimulateData/hg38_sim_L_SNP_F_5/hg38_sim_L_SNP_F_5_alignResult_part";
-        String indexFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/drosophila/d.melanogaster/dm6_filter.index";            // use for traceback to natural chromosome name
+//        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/SimulateData/hg38_sim_L_SNP_F_5/hg38_sim_L_SNP_F_5_alignResult_part";
+        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/Error/ERR718196_2_alnRes_part";
+        String indexFile = "/Volumes/PromisePegasus/worawich/Referense/TB_reference_12Mer/H37Rv_NC_000962_reIndex.index";            // use for traceback to natural chromosome name
         String sampleFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/O3_S3_L001_R2_001.fa";
         String saveFileType = "txt";
-        int numPart = 1;
+        int numPart = 4;
 //        int readLength = 24;
-        int merLength = 18;
+        int merLength = 12;
         int maxFullMatch = 100; // it's percentage value
         int propotion = 1000000;
 //        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/SimulateData/simLongRead/";
@@ -60,7 +61,7 @@ public class TestPostProcess {
              */
 //            readAlign.countAlignMatch();
 //            readAlign.writeMatchCountReport(filename+i);              // write bed graph file format for overall vistualize
-//            readAlign.writeMatchCountReport(filename+i,indexFile);              // write bed graph file format for overall vistualize + index file
+//            readAlign.writeMatchCountReport(filename+i,indexFile);              // write bed graph file format for overall vistualize + index file (indexfile should be filename.index not filename.fa.index)
             /***************************************/
             
             System.out.println("Begin create color array");
@@ -87,6 +88,9 @@ public class TestPostProcess {
         try{
             String[] cmd = {"/bin/sh","-c","sort -t, -k10,10 -k9,9n "+fullPathSaveUnSortFile+" >> "+fullPathSaveSortFile};
             linuxControlProcess = Runtime.getRuntime().exec(cmd);
+            linuxControlProcess.waitFor();
+            String[] cmd2 = {"/bin/sh","-c","rm "+fullPathSaveUnSortFile};
+            linuxControlProcess = Runtime.getRuntime().exec(cmd2);
             linuxControlProcess.waitFor();
         } catch (Exception e){
             e.printStackTrace();

@@ -12,6 +12,7 @@ import biotec.bsi.ngs.vardetect.core.InputSequence;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.VariationResult;
 import biotec.bsi.ngs.vardetect.core.util.Clustering;
+import biotec.bsi.ngs.vardetect.core.util.FastaUtil;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import java.io.File;
 import java.io.IOException;
@@ -22,12 +23,7 @@ import java.nio.file.Paths;
  *
  * @author worawich
  */
-public class RunVariantDetectionFullProcess {
-    /**
-     * It run cut repeat version of alignment (Clone from version 5 alignment function) But use alignment function that support long read alignment 
-     * It use cut repeat protocol alignment function
-     */
-    
+public class runAlignmentVariantDetection {
     public static void main(String[] args) throws IOException, InterruptedException {
         // TODO code application logic here
         /**
@@ -45,9 +41,18 @@ public class RunVariantDetectionFullProcess {
                                                                         // If repeatThreshold has set to zero the protocol will change to not cut repeat protocol (consider all repeat)
         String filetype = args[8];
 //        boolean annotationFlag = Boolean.valueOf(args[9]);              // Anotation flag true = do annotate ; false = not do
+        int overlap = Integer.valueOf(args[9]);
+        byte percentMatch = Byte.valueOf(args[10]);
+        int coverageThreshold = Integer.valueOf(args[11]);   
+        
+        String fastaFile = refPath;
+        FastaUtil.reIndexChrNameFastaFile(fastaFile);        
+        
+        String[] dummyReferenceFilePath = refPath.split("\\.");
+        String referenceFilePath = dummyReferenceFilePath[0]+"_reIndex.fa";
         
         System.out.println("Get reference sequence");
-        ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath,numMer); //runFile hg19.fa
+        ReferenceSequence ref = SequenceUtil.getReferenceSequence(referenceFilePath,numMer); //runFile hg19.fa
         
         Path inPath = Paths.get(inputPath);
         Path folder = inPath.getParent();
@@ -160,9 +165,7 @@ public class RunVariantDetectionFullProcess {
 //        String saveFilename = "hg38_FullNewMethod_Sim_alignmentResult_VariantReport";
         
 //        int readLength = 24;
-        int overlap = Integer.valueOf(args[9]);
-        byte percentMatch = Byte.valueOf(args[10]);
-        int coverageThreshold = Integer.valueOf(args[11]);       
+            
 //        String saveFilenameCov = filename + "_VariantCoverageReport_match" + percentMatch;
         
         VariationResult varRes = SequenceUtil.analysisResultFromFileV3(fullPathSaveSortFile,merLength,overlap,percentMatch);
@@ -181,6 +184,4 @@ public class RunVariantDetectionFullProcess {
         System.gc();
         /***********************************************************************/
     }
-
-    
 }

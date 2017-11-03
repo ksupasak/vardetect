@@ -12,6 +12,7 @@ import biotec.bsi.ngs.vardetect.core.InputSequence;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.VariationResult;
 import biotec.bsi.ngs.vardetect.core.util.Clustering;
+import biotec.bsi.ngs.vardetect.core.util.FastaUtil;
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import java.io.File;
 import java.io.IOException;
@@ -22,12 +23,7 @@ import java.nio.file.Paths;
  *
  * @author worawich
  */
-public class RunVariantDetectionFullProcess {
-    /**
-     * It run cut repeat version of alignment (Clone from version 5 alignment function) But use alignment function that support long read alignment 
-     * It use cut repeat protocol alignment function
-     */
-    
+public class runAlignmentGroupNonVariant {
     public static void main(String[] args) throws IOException, InterruptedException {
         // TODO code application logic here
         /**
@@ -46,8 +42,18 @@ public class RunVariantDetectionFullProcess {
         String filetype = args[8];
 //        boolean annotationFlag = Boolean.valueOf(args[9]);              // Anotation flag true = do annotate ; false = not do
         
+//        int overlap = Integer.valueOf(args[9]);
+//        byte percentMatch = Byte.valueOf(args[10]);
+        int coverageThreshold = Integer.valueOf(args[9]);    
+                
+        String fastaFile = refPath;
+        FastaUtil.reIndexChrNameFastaFile(fastaFile);        
+        
+        String[] dummyReferenceFilePath = refPath.split("\\.");
+        String referenceFilePath = dummyReferenceFilePath[0]+"_reIndex.fa";
+
         System.out.println("Get reference sequence");
-        ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath,numMer); //runFile hg19.fa
+        ReferenceSequence ref = SequenceUtil.getReferenceSequence(referenceFilePath,numMer); //runFile hg19.fa
         
         Path inPath = Paths.get(inputPath);
         Path folder = inPath.getParent();
@@ -78,7 +84,7 @@ public class RunVariantDetectionFullProcess {
             System.out.println(String.format("Time use : %.4f min",totalTime));
             System.out.println();
         }
-        
+
         /***********************************************************************/
         /**
          * Post  process (Phase 2)
@@ -152,35 +158,20 @@ public class RunVariantDetectionFullProcess {
         
         /***********************************************************************/
         
+        
         /**
-         * Detect Variation (Phase 3)
+         * Find nonVaraintCoverage
+         * This Part will analyze the coverage of each pattern exist in each read
+         * No variant detection. Just count and group the same align pattern of each read
+         * The input file would be in format alignResult_Sort.txt
          */
-        String gffFile = "/Volumes/PromisePegasus/worawich/Referense/hg38/gff3/Homo_sapiens.GRCh38.87.chr.gff3";
-//        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/SimulateData/hg38_sim_3/";
-//        String saveFilename = "hg38_FullNewMethod_Sim_alignmentResult_VariantReport";
         
-//        int readLength = 24;
-        int overlap = Integer.valueOf(args[9]);
-        byte percentMatch = Byte.valueOf(args[10]);
-        int coverageThreshold = Integer.valueOf(args[11]);       
-//        String saveFilenameCov = filename + "_VariantCoverageReport_match" + percentMatch;
+//        String nonVariantFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/OP3_S3_dm6_miRNA_mer12_alignResult_forLinuxSort.txt";
         
-        VariationResult varRes = SequenceUtil.analysisResultFromFileV3(fullPathSaveSortFile,merLength,overlap,percentMatch);
-        varRes.createVariantReport();
- 
-        varRes.analyzeCoverageFusion();
-//        varRes.writeVariantCoverageVirtualizeWithAnnotationReportToFile(filename2, gffFile, coverageThreshold, 'F');
-        varRes.writeVariantCoverageVirtualizeReportToFile(filename2, coverageThreshold, 'F');
-        varRes.writeVariantCoverageReportToFile(filename2, coverageThreshold, 'F',true);
+        SequenceUtil.analysisNonVariantResultFromFile(fullPathSaveSortFile, numMer, coverageThreshold);
         
-        varRes.analyzeCoverageIndel();
-//        varRes.writeVariantCoverageVirtualizeWithAnnotationReportToFile(filename2, gffFile, coverageThreshold, 'I');
-        varRes.writeVariantCoverageVirtualizeReportToFile(filename2, coverageThreshold, 'I');
-        varRes.writeVariantCoverageReportToFile(filename2, coverageThreshold, 'I',true);
-
-        System.gc();
+        
         /***********************************************************************/
-    }
 
-    
+    }
 }
