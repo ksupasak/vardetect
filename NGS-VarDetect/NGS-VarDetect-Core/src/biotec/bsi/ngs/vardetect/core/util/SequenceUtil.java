@@ -3681,28 +3681,43 @@ public class SequenceUtil {
         /* for specific input file 3661 3662 */
         
         int count = 0;
-        int count2 = 0;
+        byte fastqCounter = 0;
         Charset charset = Charset.forName("US-ASCII");
         Path path = Paths.get(filename);
         
+        String[] strdummy = filename.split("\\.");
+        String inputFileType = strdummy[strdummy.length-1];
 
         StringBuffer seq = new StringBuffer();
 
         try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
             String line = null;
-                   
-            while ((line = reader.readLine()) != null) {
-                if(!line.isEmpty()){
-                    String[] aon = line.split("\t");
-                    if(line.charAt(0)=='>'){
-                        // case check for count read in fasta file
-                        count++;   
-                    }else if(line.charAt(0)=='@'){
-                        // case check for count read in fastq file
-                        count++;
+            
+            if(inputFileType.endsWith("fa")||inputFileType.endsWith("fasta")){
+                while ((line = reader.readLine()) != null) {
+                    if(!line.isEmpty()){
+                        if(line.charAt(0)=='>'){
+                            // case check for count read in fasta file
+                            count++;   
+                        }
+                    }
+                }
+            }else if(inputFileType.endsWith("fq")||inputFileType.endsWith("fastq")){
+                while ((line = reader.readLine()) != null) {
+                    fastqCounter++;
+                    if(!line.isEmpty()){   
+                        if(line.charAt(0)=='@'&&fastqCounter==1){
+                            // case check for count read in fastq file
+                            count++;
+                        }
+                    }
+
+                    if(fastqCounter==4){
+                        fastqCounter=0;
                     }
                 }
             }
+            
         }
         return count;
     }
@@ -3874,12 +3889,12 @@ public class SequenceUtil {
 
                 return tempInSS;
             }
-        }else if(inputFileType.endsWith("fastq")){
+        }else if(inputFileType.endsWith("fastq")||inputFileType.endsWith("fq")){
             Path path = Paths.get(filename);
             String name = null;            
         //    String seq = "";
             boolean forceBreakFlag =  false;
-
+            
             StringBuilder seq = new StringBuilder();
 
             try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
@@ -3890,8 +3905,7 @@ public class SequenceUtil {
                     if(line.isEmpty()){
                         name = null;
                     }else{
-                        if(line.charAt(0)=='@'){
-                            counter++;
+                        if(line.charAt(0)=='@'&&counter==1){
                             count++;
                             if(seq.length()>0){
                                 inSS = new ShortgunSequence(seq.toString());
@@ -3905,13 +3919,18 @@ public class SequenceUtil {
                         }else if(counter==2){                    
                             if(count >= readStart){
                                 seq.append(line.toString());
-                                counter=1;
                             }     
                         }
                     }
                     if(count>readLimit){
                         forceBreakFlag=true;
                         break;
+                    }
+                    
+                    if(counter==4){
+                        counter=1;
+                    }else{
+                        counter++;
                     }
                 }                      
                 /**

@@ -95,7 +95,7 @@ public class ThreadBinaryAlignerLongReadRepeatCut implements Runnable {
             
             ShortgunSequence seq = (ShortgunSequence)seqs.next();
             Map<Long,ArrayList<Integer>> alnMerMap = new LinkedHashMap();                                         // initialize this hashmap every time when start new loop of Shortgun Read
-            
+   
 //                    System.out.println(""+chr.getName()+" "+encoded.getMers().length);
 
             String s = seq.getSequence();                                           // get String sequence of selected ShortgunSequence
