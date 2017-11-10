@@ -44,6 +44,10 @@ public class RunVariantDetectionFullProcess {
         int repeatThreshold = Integer.valueOf(args[7]);                 // Seventh argument; indicate number of repeat that we can accept. If the number of repeat is more than this threshold it will be cut out
                                                                         // If repeatThreshold has set to zero the protocol will change to not cut repeat protocol (consider all repeat)
         String filetype = args[8];
+        
+        int overlap = Integer.valueOf(args[9]);
+        byte percentMatch = Byte.valueOf(args[10]);
+        int coverageThreshold = Integer.valueOf(args[11]); 
 //        boolean annotationFlag = Boolean.valueOf(args[9]);              // Anotation flag true = do annotate ; false = not do
         
         System.out.println("Get reference sequence");
@@ -160,9 +164,9 @@ public class RunVariantDetectionFullProcess {
 //        String saveFilename = "hg38_FullNewMethod_Sim_alignmentResult_VariantReport";
         
 //        int readLength = 24;
-        int overlap = Integer.valueOf(args[9]);
-        byte percentMatch = Byte.valueOf(args[10]);
-        int coverageThreshold = Integer.valueOf(args[11]);       
+//        int overlap = Integer.valueOf(args[9]);
+//        byte percentMatch = Byte.valueOf(args[10]);
+//        int coverageThreshold = Integer.valueOf(args[11]);       
 //        String saveFilenameCov = filename + "_VariantCoverageReport_match" + percentMatch;
         
         VariationResult varRes = SequenceUtil.analysisResultFromFileV3(fullPathSaveSortFile,merLength,overlap,percentMatch);
