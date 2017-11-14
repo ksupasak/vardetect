@@ -172,12 +172,12 @@ public class RunVariantDetectionFullProcess {
         VariationResult varRes = SequenceUtil.analysisResultFromFileV3(fullPathSaveSortFile,merLength,overlap,percentMatch);
         varRes.createVariantReport();
  
-        varRes.analyzeCoverageFusion();
+        varRes.analyzeCoverageFusionV2();
 //        varRes.writeVariantCoverageVirtualizeWithAnnotationReportToFile(filename2, gffFile, coverageThreshold, 'F');
         varRes.writeVariantCoverageVirtualizeReportToFile(filename2, coverageThreshold, 'F');
         varRes.writeVariantCoverageReportToFile(filename2, coverageThreshold, 'F',true);
         
-        varRes.analyzeCoverageIndel();
+        varRes.analyzeCoverageIndelV2();
 //        varRes.writeVariantCoverageVirtualizeWithAnnotationReportToFile(filename2, gffFile, coverageThreshold, 'I');
         varRes.writeVariantCoverageVirtualizeReportToFile(filename2, coverageThreshold, 'I');
         varRes.writeVariantCoverageReportToFile(filename2, coverageThreshold, 'I',true);
