@@ -17,6 +17,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
+import static java.util.Comparator.comparingInt;
+import static java.util.stream.Collectors.toMap;
 
 /**
  *
@@ -370,7 +372,14 @@ public class VariationResult {
     }
     
     public void analyzeCoverageFusion(){
- 
+        /**
+         * analyze coverage of Fusion event 
+         * 1. group same front and back break point 
+         * 2. consider one tail pattern
+         * 
+         * "Caution : this function must be called after createVariantReport function" 
+         */
+        
         for(int i =0;i<this.listFusion.size();i++){                         // loop over list of variation (Fusion type)
             Variation dummyVar = this.listFusion.get(i);
             long bpF = dummyVar.getBreakPointFront();
@@ -555,6 +564,95 @@ public class VariationResult {
         }
     }
     
+    public void analyzeCoverageFusionV2(){
+        /**
+         * analyze coverage of Fusion event 
+         * 1. group same front and back break point 
+         * 2. sum group that has switch front and back break point together (EX groupA has fb 100 and bb 200  has coverage 10 and groupB has fb 200 and bb 100 has coverage 8 ==> sum civerage of this two group = 18 read)
+         * 3. not consider one tail pattern
+         * 
+         * "Caution : this function must be called after createVariantReport function" 
+         */
+        
+        for(int i =0;i<this.listFusion.size();i++){                         // loop over list of variation (Fusion type)
+            Variation dummyVar = this.listFusion.get(i);
+            long bpF = dummyVar.getBreakPointFront();
+            long bpB = dummyVar.getBreakPointBack();
+            
+            /**
+             * Consider Signature true breakpoint front and back
+             * The true signature should have front breakpoint value lower than back breakpoint value
+             * In other word we consider the event in a view of normal strand like a view of reference 
+             */
+            if(bpB-bpF < 0){
+                /**
+                 * bpB has lower value than bpF
+                 * So,reassign breakpoint value in to the right way that it should be
+                 * (Just switch bpF to bpB and bpB to bpF)
+                 */
+                long dummybpF = bpF;
+                long dummybpB = bpB;
+                bpF = dummybpB;
+                bpB = dummybpF;
+            }
+            
+            long bpFCode = ((long)dummyVar.numChrF<<28)+bpF;
+            long bpBCode = ((long)dummyVar.numChrB<<28)+bpB;
+            
+            if(this.coverageMapFusion.containsKey(bpFCode)){                      // check similarity of front breakpoint
+                Map<Long,ArrayList<Variation>> coverageMapFusionII = this.coverageMapFusion.get(bpFCode);
+                Map<Long,ArrayList<Integer>> sumNumMatchCoverageMapFusionII = this.sumNumMatchCoverageMapFusion.get(bpFCode);
+                if(coverageMapFusionII.containsKey(bpBCode)){                       // check similarity of back breakpoit
+                    /**
+                     * put variation data to existing ArrayList<Variation>
+                     * and put back to coverageMapFusionII
+                     */
+                    ArrayList<Variation> coverageList = coverageMapFusionII.get(bpBCode);
+                    coverageList.add(dummyVar);
+                    coverageMapFusionII.put(bpBCode, coverageList);
+                    
+                    ArrayList<Integer> sumNumMatchList = sumNumMatchCoverageMapFusionII.get(bpBCode);           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+                    int sumNumMatchOldF = sumNumMatchList.get(0);
+                    int sumNumMatchOldB = sumNumMatchList.get(1);
+                    int sumNumMatchNewF = sumNumMatchOldF+dummyVar.numMatchF;
+                    int sumNumMatchNewB = sumNumMatchOldB+dummyVar.numMatchB;
+                    sumNumMatchList.add(0, sumNumMatchNewF);
+                    sumNumMatchList.add(1, sumNumMatchNewB);
+                    sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
+                }else{
+                    ArrayList<Variation> coverageList = new ArrayList();
+                    coverageList.add(dummyVar);
+                    coverageMapFusionII.put(bpBCode, coverageList);
+                    
+                    ArrayList<Integer> sumNumMatchList = new ArrayList();           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+                    sumNumMatchList.add(0, dummyVar.numMatchF);
+                    sumNumMatchList.add(1, dummyVar.numMatchB);
+                    sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
+                }
+                this.coverageMapFusion.put(bpFCode, coverageMapFusionII);
+                this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapFusionII);
+            }else{
+                Map<Long,ArrayList<Variation>> coverageMapFusionII = new TreeMap();
+                ArrayList<Variation> coverageList = new ArrayList();
+                coverageList.add(dummyVar);
+                
+                
+                Map<Long,ArrayList<Integer>> sumNumMatchCoverageMapFusionII = new TreeMap();
+                ArrayList<Integer> sumNumMatchList = new ArrayList();           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+                sumNumMatchList.add(0, dummyVar.numMatchF);
+                sumNumMatchList.add(1, dummyVar.numMatchB);
+                sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
+                this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapFusionII);                
+                
+                /**
+                 * Add data
+                 */
+                coverageMapFusionII.put(bpBCode, coverageList);
+                this.coverageMapFusion.put(bpFCode, coverageMapFusionII);
+            } 
+        }
+    }
+    
     public void analyzeCoverageSNP(){
  
         for(int i =0;i<this.listSNP.size();i++){                         // loop over list of variation (SNP type)
@@ -587,7 +685,14 @@ public class VariationResult {
     }
     
     public void analyzeCoverageIndel(){
- 
+        /**
+         * analyze coverage of Fusion event 
+         * 1. group same front and back break point 
+         * 2. consider one tail pattern
+         * 
+         * "Caution : this function must be called after createVariantReport function" 
+         */
+        
         for(int i =0;i<this.listIndel.size();i++){                         // loop over list of variation (Indel type)
             
             Variation dummyVar = this.listIndel.get(i);
@@ -793,6 +898,110 @@ public class VariationResult {
         }
     }
     
+    public void analyzeCoverageIndelV2(){
+        
+        /**
+         * analyze coverage of Indel event 
+         * 1. group same front and back break point 
+         * 2. sum group that has switch front and back break point together (EX groupA has fb 100 and bb 200  has coverage 10 and groupB has fb 200 and bb 100 has coverage 8 ==> sum civerage of this two group = 18 read)
+         * 3. not consider one tail pattern
+         * 
+         * "Caution : this function must be called after createVariantReport function"
+         */
+        
+        for(int i =0;i<this.listIndel.size();i++){                         // loop over list of variation (Indel type)
+            
+            Variation dummyVar = this.listIndel.get(i);
+            /**
+             * Case check for insertion => if number of insertion base has more than number of match base on back part
+             * we will skip it
+             */
+            if(dummyVar.getIndelType().equals("insert")){
+                if(dummyVar.indelBase >= dummyVar.numMatchB){
+                    continue;
+                }
+            }
+            /******************************/
+//            long bpF = dummyVar.getBreakPointFront();
+//            long bpB = dummyVar.getBreakPointBack();
+            long bpF = dummyVar.getOriBreakPointF();
+            long bpB = dummyVar.getOriBreakPointB();
+            
+            /**
+             * Consider Signature true breakpoint front and back
+             * The true signature should have front breakpoint value lower than back breakpoint value
+             * In other word we consider the event in a view of normal strand like a view of reference 
+             */
+            if(bpB-bpF < 0){
+                /**
+                 * bpB has lower value than bpF
+                 * So,reassign breakpoint value in to the right way that it should be
+                 * (Just switch bpF to bpB and bpB to bpF)
+                 */
+                long dummybpF = bpF;
+                long dummybpB = bpB;
+                bpF = dummybpB;
+                bpB = dummybpF;
+            }
+            
+            
+            long bpFCode = ((long)dummyVar.numChrF<<28)+bpF;
+            long bpBCode = ((long)dummyVar.numChrB<<28)+bpB;
+            
+            if(this.coverageMapIndel.containsKey(bpFCode)){                      // check similarity of front breakpoint
+                Map<Long,ArrayList<Variation>> coverageMapII = this.coverageMapIndel.get(bpFCode);
+                Map<Long,ArrayList<Integer>> sumNumMatchCoverageMapFusionII = this.sumNumMatchCoverageMapFusion.get(bpFCode);
+                if(coverageMapII.containsKey(bpBCode)){                       // check similarity of back breakpoit
+                    /**
+                     * put variation data to existing ArrayList<Variation>
+                     * and put back to coverageMapFusionII
+                     */
+                    ArrayList<Variation> coverageList = coverageMapII.get(bpBCode);
+                    coverageList.add(dummyVar);
+                    coverageMapII.put(bpBCode, coverageList);
+                    
+                    ArrayList<Integer> sumNumMatchList = sumNumMatchCoverageMapFusionII.get(bpBCode);           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+                    int sumNumMatchOldF = sumNumMatchList.get(0);
+                    int sumNumMatchOldB = sumNumMatchList.get(1);
+                    int sumNumMatchNewF = sumNumMatchOldF+dummyVar.numMatchF;
+                    int sumNumMatchNewB = sumNumMatchOldB+dummyVar.numMatchB;
+                    sumNumMatchList.add(0, sumNumMatchNewF);
+                    sumNumMatchList.add(1, sumNumMatchNewB);
+                    sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
+                }else{
+                    ArrayList<Variation> coverageList = new ArrayList();
+                    coverageList.add(dummyVar);
+                    coverageMapII.put(bpBCode, coverageList);
+                    
+                    ArrayList<Integer> sumNumMatchList = new ArrayList();           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+                    sumNumMatchList.add(0, dummyVar.numMatchF);
+                    sumNumMatchList.add(1, dummyVar.numMatchB);
+                    sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
+                }
+                this.coverageMapIndel.put(bpFCode, coverageMapII);
+                this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapFusionII);
+            }else{
+                Map<Long,ArrayList<Variation>> coverageMapII = new TreeMap();
+                ArrayList<Variation> coverageList = new ArrayList();
+                coverageList.add(dummyVar);
+                
+                Map<Long,ArrayList<Integer>> sumNumMatchCoverageMapFusionII = new TreeMap();
+                ArrayList<Integer> sumNumMatchList = new ArrayList();           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+                sumNumMatchList.add(0, dummyVar.numMatchF);
+                sumNumMatchList.add(1, dummyVar.numMatchB);
+                sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
+                this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapFusionII);
+                
+//                /**
+//                 * Add data
+//                 */
+                coverageMapII.put(bpBCode, coverageList);
+                this.coverageMapIndel.put(bpFCode, coverageMapII);
+                
+            } 
+        }
+    }
+    
     public void analyzeCoverageOthers(){
  
         for(int i =0;i<this.listOthers.size();i++){                         // loop over list of variation (Others type)
@@ -834,7 +1043,9 @@ public class VariationResult {
         * Suitable for version 3 data structure (data structure that has iniIdx in its)
         * write result to file format for variant report
         * 
-        * Add option on forth argument : Boolean variable to turn on or off generate read name report of match 2-tail and 1-tail both un-match and match 
+        * Add option on forth argument : Boolean variable to turn on or off generate read name report of match 2-tail and 1-tail both un-match and match
+        * 
+        * "Caution : this function must be called after analyzeCoverage[Indel or Fusion] function"
         */
         
         String[] dummy = nameFile.split("\\.");
@@ -1068,12 +1279,14 @@ public class VariationResult {
         writer.close();
     }
     
-    public void writeVariantCoverageReportToFile(String nameFile , int coverageThreshold , char varType, boolean ronReportFlag) throws IOException{
+    public void writeVariantCoverageReportToFile(String nameFile , int coverageThreshold , char varType, boolean rnoReportFlag) throws IOException{
         /**
         * Suitable for version 3 data structure (data structure that has iniIdx in its)
         * write result to file format for variant report
         * 
         * Add option on forth argument : Boolean variable to turn on or off generate read name report of match 2-tail and 1-tail both un-match and match (rno : read name only report [report that contain only read name that has indel event])
+        * 
+        * "Caution : this function must be called after analyzeCoverage[Indel or Fusion] function"
         */
         ArrayList<String> usedReadName = new ArrayList();
         String[] dummy = nameFile.split("\\.");
@@ -1844,5 +2057,12 @@ public class VariationResult {
             }
         }
         return false;
+    }
+    
+    public static void extractNewIndelEvent(){
+        
+            
+        //Map<String, ArrayList<String>> sorted = this.coverageMapIndel.entrySet().stream().entrySet().stream().sorted(comparingInt(e->e.getValue().size())).collect(toMap(Map.Entry::getKey,Map.Entry::getValue,(a,b) -> {throw new AssertionError();},LinkedHashMap::new)); 
+        
     }
 }
