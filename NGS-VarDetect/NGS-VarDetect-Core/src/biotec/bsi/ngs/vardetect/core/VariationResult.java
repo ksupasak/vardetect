@@ -2801,7 +2801,7 @@ public class VariationResult {
                 return (int)(sigArr2-sigArr1); // sort by descending (from high to low)   if yo want to sort by ascending just switch btw 1 and 2
             }
         });
-        /**********************************************************************/        
+        /**********************************************************************/   
     }
     
     public void sortCoverageFusion(){
@@ -2860,32 +2860,63 @@ public class VariationResult {
         return fusionCoverageList;
     }
     
-    public void exportNewVariant(String varType, int maxNumPick){
+    public void exportNewIndelEvent(String inIndelType, int minPickCoverage){
         /**
-         * This function will pick top10/20 or user define of specific varType
+         * This function will pick top10/20 or user define of specific indelType (SI = small Insertion, SD = small deletion, LI = large Indel)
          * Calculate range of new reference from breakpoint with user define length EX bpF=100 and bpB=200 want to create reference 200 bp length 
          * We use bed12 format to represent the position that we want to extract from reference. Bed12 format of this example should be
          *  chr1 0 300 readname 0 + 0 300 0 2 100,100 0,200
          * 
          * 
          * And export to File in format bed for create new reference with bedtools
+         * 
+         * ##Not finish
          */
         
-        for(int i=0;i<this.sortedCoverageArrayIndel.size();i++){
-                if(this.sortedCoverageArrayIndel.size() == 0){
-                    break;
-                }
-                ArrayList<Long> dummyCoverageList = this.sortedCoverageArrayIndel.get(i);
-                long bpFCode = dummyCoverageList.get(1);
-                long bpF = bpFCode&this.mask28bit;
-                int chrF = (int)(bpFCode>>28);
-                long bpBCode = dummyCoverageList.get(2);
-                long bpB = bpBCode&this.mask28bit;
-                int chrB = (int)(bpBCode>>28);
-                
-                ArrayList<Variation> coverageList = getIndelCoverageList(bpFCode,bpBCode);
-                
+        int selectChr = 0;
+        long leftMostPos = 0;
+        long rightMostPos = 0;
+        String readName = "";
+        int extendSize = 300;
+        int leftWingStart = 0;
+        int rightWingStart = 0;
+        
+        String indelType = "";
+        if(inIndelType.equals("SI")){
+            indelType = "insert";
+        }else if(inIndelType.equals("SD")){
+            indelType = "delete";
+        }else if(inIndelType.equals("LI")){
+            indelType = "large indel";
         }
+        
+        for(int i=0;i<this.sortedCoverageArrayIndel.size();i++){
+            if(this.sortedCoverageArrayIndel.size() == 0){
+                break;
+            }
+
+            ArrayList<Long> dummyCoverageList = this.sortedCoverageArrayIndel.get(i);
+            long bpFCode = dummyCoverageList.get(1);
+            long bpF = bpFCode&this.mask28bit;
+            int chrF = (int)(bpFCode>>28);
+            long bpBCode = dummyCoverageList.get(2);
+            long bpB = bpBCode&this.mask28bit;
+            int chrB = (int)(bpBCode>>28);
+
+            ArrayList<Variation> coverageList = getIndelCoverageList(bpFCode,bpBCode);
+            
+            if(coverageList.size() >= minPickCoverage){
+                for(int num=0;num<coverageList.size();num++){
+
+                    Variation dummyVariation = coverageList.get(num);
+//                    int numFourtyBase = (40*dummyVariation.readLengthF)/100;     // number of base at 40 percent
+                    if(dummyVariation.getIndelType().equals(indelType)){
+                        
+                    }
+                }
+            }
+        }
+        
         
         
     } 
