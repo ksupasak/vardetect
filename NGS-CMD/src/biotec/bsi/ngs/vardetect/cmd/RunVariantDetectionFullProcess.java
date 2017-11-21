@@ -64,7 +64,7 @@ public class RunVariantDetectionFullProcess {
             long startTime = System.currentTimeMillis();
             count++;
             String savefilename = filename+count;
-            InputSequence input = SequenceUtil.readSampleFileV3(inputPath,i,Math.min(numSample, i+propotion));
+            InputSequence input = SequenceUtil.readSampleFileV4(inputPath,i,Math.min(numSample, i+propotion));
             
             Aligner aligner = AlignerFactory.getAligner();          // Will link to BinaryAligner
 
