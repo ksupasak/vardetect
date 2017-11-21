@@ -3950,6 +3950,154 @@ public class SequenceUtil {
         return null;
     }
     
+    public static InputSequence readSampleFileV4(String filename, int readStart, int readLimit) throws IOException {
+        /**
+         * For specific input file Fasta and fastq format only
+         * 
+         * EX fasta
+         * >readName
+         * ATCGD....
+         * AATTG....
+         * >readName
+         * AATTG....
+         * CCGTA....
+         * ......
+         * >readName
+         * ...
+         * 
+         * EX fastq
+         * @readName
+         * ATCGD....
+         * +
+         * quality code
+         * @readName
+         * AATTG....
+         * +
+         * quality code
+         * @readName
+         * ...
+         * 
+         */
+        
+        ShortgunSequence inSS = new ShortgunSequence(null);
+        InputSequence tempInSS = new InputSequence();
+        int count = 0;
+        int count2 = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        String[] strdummy = filename.split("\\.");
+        String inputFileType = strdummy[strdummy.length-1];
+        if(inputFileType.endsWith("fa")||inputFileType.endsWith("fasta")){
+            Path path = Paths.get(filename);
+            String name = null;
+            int actStart = readStart*2;     //this is actual start of line in file (compatible only specific file 3661 and 3662 .fasta file or in Fasta format
+            int actStop = readLimit*2;
+        //    String seq = "";
+            boolean forceBreakFlag =  false;
+
+            StringBuilder seq = new StringBuilder();
+
+            try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+                String line = null;                   
+                while ((line = reader.readLine()) != null) {
+                    if(line.isEmpty()){
+                        name = null;
+                    }else{
+                        if(line.charAt(0)=='>'){
+                            count++;
+                            if(seq.length()>0){
+                                inSS = new ShortgunSequence(seq.toString());
+                                inSS.addReadName(name);
+                                tempInSS.addRead(inSS);
+
+                                seq = new StringBuilder();
+                            }
+                            name = line.substring(1);
+
+                        }else{                    
+                            if(count >= readStart){
+                                seq.append(line.toString()); 
+                            }     
+                        }
+                    }
+                    if(count>readLimit){
+                        forceBreakFlag=true;
+                        break;
+                    }
+                }                      
+                /**
+                 * Add data for last seq of a file
+                 * in order to check it is last seq of file or last seq from force break
+                 * Can check from forceBreakFlag;
+                 */
+                if(forceBreakFlag == false){
+                    inSS = new ShortgunSequence(seq.toString());
+                    inSS.addReadName(name);
+                    tempInSS.addRead(inSS);
+                }
+
+                return tempInSS;
+            }
+        }else if(inputFileType.endsWith("fastq")||inputFileType.endsWith("fq")){
+            Path path = Paths.get(filename);
+            String name = null;            
+        //    String seq = "";
+            boolean forceBreakFlag =  false;
+            
+            StringBuilder seq = new StringBuilder();
+
+            try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+                String line = null;
+                byte counter = 1;
+                while ((line = reader.readLine()) != null) {
+                    
+                    if(line.isEmpty()){
+                        name = null;
+                    }else{
+                        if(line.charAt(0)=='@'&&counter==1){
+                            count++;
+                            if(seq.length()>0){
+                                inSS = new ShortgunSequence(seq.toString());
+                                inSS.addReadName(name);
+                                tempInSS.addRead(inSS);
+
+                                seq = new StringBuilder();
+                            }
+                            name = line.substring(1);
+
+                        }else if(counter==2){                    
+                            if(count >= readStart){
+                                seq.append(line.toString());
+                            }     
+                        }
+                    }
+                    if(count>readLimit){
+                        forceBreakFlag=true;
+                        break;
+                    }
+                    
+                    if(counter==4){
+                        counter=1;
+                    }else{
+                        counter++;
+                    }
+                }                      
+                /**
+                 * Add data for last seq of a file
+                 * in order to check it is last seq of file or last seq from force break
+                 * Can check from forceBreakFlag;
+                 */
+                if(forceBreakFlag == false){
+                    inSS = new ShortgunSequence(seq.toString());
+                    inSS.addReadName(name);
+                    tempInSS.addRead(inSS);
+                }
+
+                return tempInSS;
+            }
+        }
+        return null;
+    }
+    
     public static Map<String,String> readSampleFiletoMap(String filename, int readStart, int readLimit) throws IOException {
         /**
          * for specific input file Fasta format only
