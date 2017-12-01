@@ -53,7 +53,7 @@ public class runAlignmentGroupNonVariant {
         String referenceFilePath = dummyReferenceFilePath[0]+"_reIndex.fa";
 
         System.out.println("Get reference sequence");
-        ReferenceSequence ref = SequenceUtil.getReferenceSequence(referenceFilePath,numMer); //runFile hg19.fa
+        ReferenceSequence ref = SequenceUtil.getReferenceSequence(referenceFilePath,numMer); 
         
         Path inPath = Paths.get(inputPath);
         Path folder = inPath.getParent();

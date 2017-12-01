@@ -26,7 +26,7 @@ public class TestDetectVariation {
         // TODO code application logic here
         
 //        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/TB_Error/TB_Error_RD239_Sort.txt";
-        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/Error/TB_Error_ERR718196_Sort.txt";
+        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/Test_ERR718259_genRef/ERR718259_unMap_Sort.txt";
 //        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/Error/error_cancer.txt";
         String gffFile = "/Volumes/PromisePegasus/worawich/Referense/hg38/gff3/Homo_sapiens.GRCh38.87.chr.gff3";
 //        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/SimulateData/hg38_sim_3/";
@@ -66,7 +66,14 @@ public class TestDetectVariation {
 //        varRes.writeVariantCoverageVirtualizeWithAnnotationReportToFile(filename, gffFile, coverageThreshold, 'I');
         varRes.writeVariantSortedCoverageVirtualizeReportToFile(filename, coverageThreshold, 'I');
         varRes.writeVariantSortedCoverageReportToFile(filename, coverageThreshold, 'I',true);         
-
+        
+        String refFaIndex = "/Volumes/PromisePegasus/worawich/Referense/TB_reference/H37Rv_NC_000962_reIndex.fa.fai";
+        String refFile = "/Volumes/PromisePegasus/worawich/Referense/TB_reference/H37Rv_NC_000962_reIndex.fa";
+        String sampleFaIndex = "/Volumes/PromisePegasus/worawich/Download_dataset/TB_ERR718259/ERR718259_unmaped.fa.fai";
+        String sampleFile = "/Volumes/PromisePegasus/worawich/Download_dataset/TB_ERR718259/ERR718259_unmaped.fa";
+        varRes.createReferenceFromNovelIndelResult(filename, refFile, refFaIndex, sampleFile, sampleFaIndex, "LI", 10, 100);
+        // Export new indel type into bed 12 format for create reference (SI = small insertion, SD = small deletion, LI=large insertion)
+//        varRes.exportNewIndelEventToBed12(filename, "LI", 10);
         System.gc();
       
     }
