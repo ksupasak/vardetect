@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -388,8 +389,8 @@ public class VariationResult {
         
         for(int i =0;i<this.listFusion.size();i++){                         // loop over list of variation (Fusion type)
             Variation dummyVar = this.listFusion.get(i);
-            long bpF = dummyVar.getBreakPointFront();
-            long bpB = dummyVar.getBreakPointBack();
+            long bpF = dummyVar.getOriBreakPointF();
+            long bpB = dummyVar.getOriBreakPointB();
             
             long bpFCode = ((long)dummyVar.numChrF<<28)+bpF;
             long bpBCode = ((long)dummyVar.numChrB<<28)+bpB;
@@ -909,8 +910,9 @@ public class VariationResult {
         /**
          * analyze coverage of Indel event 
          * 1. group same front and back break point 
-         * 2. sum group that has switch front and back break point together (EX groupA has fb 100 and bb 200  has coverage 10 and groupB has fb 200 and bb 100 has coverage 8 ==> sum civerage of this two group = 18 read)
+         * 2. sum group that has switch front and back break point together (EX groupA has fb 100 and bb 200  has coverage 10 and groupB has fb 200 and bb 100 has coverage 8 ==> sum coverage of this two group = 18 read)
          * 3. not consider one tail pattern
+         * 4. create parallel coverageMap that store the information of different strand pattern that present in the group of coverage 
          * 
          * "Caution : this function must be called after createVariantReport function"
          */
@@ -930,24 +932,28 @@ public class VariationResult {
             /******************************/
 //            long bpF = dummyVar.getBreakPointFront();
 //            long bpB = dummyVar.getBreakPointBack();
-            long bpF = dummyVar.getOriBreakPointF();
-            long bpB = dummyVar.getOriBreakPointB();
+            long bpF = dummyVar.getBreakPointFront();
+            long bpB = dummyVar.getBreakPointBack();
+            String strandPattern = dummyVar.strandF + dummyVar.strandB;
             
-            /**
-             * Consider Signature true breakpoint front and back
-             * The true signature should have front breakpoint value lower than back breakpoint value
-             * In other word we consider the event in a view of normal strand like a view of reference 
-             */
-            if(bpB-bpF < 0){
+            if(strandPattern.equals("++") || strandPattern.equals("--")){
                 /**
-                 * bpB has lower value than bpF
-                 * So,reassign breakpoint value in to the right way that it should be
-                 * (Just switch bpF to bpB and bpB to bpF)
+                 * Consider only pattern that has strand ++ and -- (for +- and -+ it is different pattern use the original one [no switch])
+                 * Consider Signature true breakpoint front and back
+                 * The true signature should have front breakpoint value lower than back breakpoint value
+                 * In other word we consider the event in a view of normal strand like a view of reference 
                  */
-                long dummybpF = bpF;
-                long dummybpB = bpB;
-                bpF = dummybpB;
-                bpB = dummybpF;
+                if(bpB-bpF < 0){
+                    /**
+                     * bpB has lower value than bpF
+                     * So,re-assign breakpoint value in to the right way that it should be (order from low to high)
+                     * (Just switch bpF to bpB and bpB to bpF)
+                     */
+                    long dummybpF = bpF;
+                    long dummybpB = bpB;
+                    bpF = dummybpB;
+                    bpB = dummybpF;
+                }
             }
             
             
@@ -1893,6 +1899,9 @@ public class VariationResult {
                         countID++;
                     }else{
                         // large indel
+//                        if(countLD==5){
+//                            System.out.println();
+//                        }
                         writerLD.write("Group "+countLD);
                         writerLD.write("\tIndel Type : " + indelType);
                         writerLD.write("\tIndel Base : " + indelBase);
@@ -2860,36 +2869,38 @@ public class VariationResult {
         return fusionCoverageList;
     }
     
-    public void exportNewIndelEvent(String inIndelType, int minPickCoverage){
+    public void exportNewIndelEventToBed12(String nameFile, String inIndelType, int minPickCoverage) throws IOException{
         /**
          * This function will pick top10/20 or user define of specific indelType (SI = small Insertion, SD = small deletion, LI = large Indel)
          * Calculate range of new reference from breakpoint with user define length EX bpF=100 and bpB=200 want to create reference 200 bp length 
          * We use bed12 format to represent the position that we want to extract from reference. Bed12 format of this example should be
          *  chr1 0 300 readname 0 + 0 300 0 2 100,100 0,200
          * 
+         * The position will be extend from breakpoint front for 300 base on the left and breakpoint back for 300 base on the right
          * 
          * And export to File in format bed for create new reference with bedtools
          * 
          * ##Not finish
          */
-        
-        int selectChr = 0;
-        long leftMostPos = 0;
-        long rightMostPos = 0;
-        String readName = "";
+        String[] dummy = nameFile.split("\\.");
+        String filename = "";
+        FileWriter writer;        
         int extendSize = 300;
-        int leftWingStart = 0;
-        int rightWingStart = 0;
         
         String indelType = "";
         if(inIndelType.equals("SI")){
             indelType = "insert";
+            filename = dummy[0]+"newSmallInsert"+".bed";
         }else if(inIndelType.equals("SD")){
             indelType = "delete";
+            filename = dummy[0]+"_newSmallDelete"+".bed";
         }else if(inIndelType.equals("LI")){
             indelType = "large indel";
+            filename = dummy[0]+"_newLargeDelete"+".bed";
         }
         
+        writer = new FileWriter(filename);  
+              
         for(int i=0;i<this.sortedCoverageArrayIndel.size();i++){
             if(this.sortedCoverageArrayIndel.size() == 0){
                 break;
@@ -2906,18 +2917,230 @@ public class VariationResult {
             ArrayList<Variation> coverageList = getIndelCoverageList(bpFCode,bpBCode);
             
             if(coverageList.size() >= minPickCoverage){
-                for(int num=0;num<coverageList.size();num++){
-
-                    Variation dummyVariation = coverageList.get(num);
-//                    int numFourtyBase = (40*dummyVariation.readLengthF)/100;     // number of base at 40 percent
-                    if(dummyVariation.getIndelType().equals(indelType)){
-                        
-                    }
-                }
-            }
+                Variation dummyVariation = coverageList.get(0);
+                if(dummyVariation.getIndelType().equals(indelType)){                       
+                    String bed12Format = dummyVariation.exportBed12Ref(extendSize);
+                    writer.write(bed12Format);
+                    writer.write("\n");
+                } 
+            }else{
+                break;
+            }   
         }
         
+        writer.flush();
+        writer.close();
+    }
+    
+    public void createReferenceFromNovelIndelResult(String nameFile, String refFile, String refIdxFile, String readFile, String readIdxFile, String inIndelType, int minPickCoverage, int inExtendSize) throws IOException{
+        /**
+         * This function will pick group that past user define coverage of specific indelType (SI = small Insertion, SD = small deletion, LI = large Indel)
+         * It will pick first variation pattern of each group to create new reference 
+         * Extending left and right of the picked read sequence by cut the left wing and right wing sequence from reference
+         * Concatenate left read seq and right wing together
+         * Export into new reference fasta file
+         * 
+         * EX read has 100 base long and extendSize is 200 
+         * at the end you will got new ref with 200 + 100 + 200 = 500 base long
+         * 
+         * ##Not finish
+         */
+        RandomAccessFile rbRef = new RandomAccessFile(refFile,"r");
+        RandomAccessFile rbSample = new RandomAccessFile(readFile,"r");
         
+        RefFaIndex refFaIdx = new RefFaIndex(refIdxFile);
+        SampleFaIndex sampleFaIdx = new SampleFaIndex(readIdxFile);
+//        /**
+//         * read reference fa index file
+//         * byte will count in zero based position (first index start is zero)
+//         */
+//        RandomAccessFile rbRefIdx = new RandomAccessFile(refIdxFile,"r");
+//        String line;
+//        String name = "";
+//        long totalLen = 0;
+//        long offset = 0;        // offset or in another mean is pointer that point to the number of byte of first base of sequence
+//        long lineBase = 0;      // number of base on each line (some sequence may cover many of line ex 200 base long may cover 10 line if it wirte 20 base per line)
+//        long lineWidth = 0;     // number of byte in each line (include the new line) EX 1 byte per base 20 base per line so lineWidth = 21 byte (20 base + newline)
+//        Map<String,ArrayList<Long>> refFaIdx = new LinkedHashMap();     // map that store chromosome name as key and ArrayList of index info as value
+//        
+//        while ((line = rbRefIdx.readLine()) != null) {
+//            String[] linePortion = line.split("\t");
+//            name = linePortion[0];
+//            totalLen = Long.parseLong(linePortion[1]);
+//            offset = Long.parseLong(linePortion[2]);
+//            lineBase = Long.parseLong(linePortion[3]);
+//            lineWidth = Long.parseLong(linePortion[4]);
+//            ArrayList<Long> listIdxInfo = new ArrayList();
+//            listIdxInfo.add(totalLen);
+//            listIdxInfo.add(offset);
+//            listIdxInfo.add(lineBase);
+//            listIdxInfo.add(lineWidth);
+//            
+//            refFaIdx.put(name, listIdxInfo);
+//        }
+//  
+//        /******************************/
+//        
+//        /**
+//         * read read sample fa index file
+//         * 
+//         */
+//        RandomAccessFile rbSampleIdx = new RandomAccessFile(refIdxFile,"r");
+//        Map<String,ArrayList<Long>> sampleFaIdx = new LinkedHashMap();     // map that store chromosome name as key and ArrayList of index info as value
+//        
+//        while ((line = rbSampleIdx.readLine()) != null) {
+//            String[] linePortion = line.split("\t");
+//            name = linePortion[0];
+//            totalLen = Long.parseLong(linePortion[1]);
+//            offset = Long.parseLong(linePortion[2]);
+//            lineBase = Long.parseLong(linePortion[3]);
+//            lineWidth = Long.parseLong(linePortion[4]);
+//            ArrayList<Long> listIdxInfo = new ArrayList();
+//            listIdxInfo.add(totalLen);
+//            listIdxInfo.add(offset);
+//            listIdxInfo.add(lineBase);
+//            listIdxInfo.add(lineWidth);
+//            
+//            sampleFaIdx.put(name, listIdxInfo);
+//        }
+//        
+//        /*******************************/
         
-    } 
+        String[] dummy = nameFile.split("\\.");
+        String filename = "";
+        FileWriter writer;        
+        int extendSize = inExtendSize;
+        int groupCount = 0;
+        
+        String indelType = "";
+        if(inIndelType.equals("SI")){
+            indelType = "insert";
+            filename = dummy[0]+"_newReferenceSmallInsert"+".fa";
+        }else if(inIndelType.equals("SD")){
+            indelType = "delete";
+            filename = dummy[0]+"_newReferenceSmallDelete"+".fa";
+        }else if(inIndelType.equals("LI")){
+            indelType = "large indel";
+            filename = dummy[0]+"_newReferenceLargeDelete"+".fa";
+        }
+        
+        writer = new FileWriter(filename);  
+        
+        /**
+         * Start loop in array of sort coverage list
+         */
+        for(int i=0;i<this.sortedCoverageArrayIndel.size();i++){
+            if(this.sortedCoverageArrayIndel.size() == 0){
+                break;
+            }
+
+            ArrayList<Long> dummyCoverageList = this.sortedCoverageArrayIndel.get(i);
+            long bpFCode = dummyCoverageList.get(1);
+            long bpF = bpFCode&this.mask28bit;
+            int chrF = (int)(bpFCode>>28);
+            long bpBCode = dummyCoverageList.get(2);
+            long bpB = bpBCode&this.mask28bit;
+            int chrB = (int)(bpBCode>>28);
+
+            ArrayList<Variation> coverageList = getIndelCoverageList(bpFCode,bpBCode);      // get coverage list form signature variabl (bpFCode and bpBCode)
+            
+            if(coverageList.size() >= minPickCoverage){
+                /**
+                 * pick first variation object to check for indel type and get 
+                 */
+                Variation dummyVariation = coverageList.get(0);
+                if(dummyVariation.getIndelType().equals(indelType)){
+                    groupCount++;
+                    if(groupCount==4){
+                        System.out.println();
+                    }
+                    String leftWingSeq = "";
+                    String rightWingSeq = "";
+                    String readSeq = "";
+                    String newRefSeq = "";
+                    String strand = dummyVariation.strandF + dummyVariation.strandB;
+                    
+                    long[] signatureValue =  dummyVariation.getSignatureForCreateRef(extendSize);
+                    long startLeftWing = signatureValue[0];
+                    long startRightWing = signatureValue[1];
+                    int iniIndexMatch = (int)signatureValue[2];
+                    int lastIndexMatch = (int)signatureValue[3];
+                    int unmatchFront = (int)signatureValue[4];
+                    int unmatchBack = (int)signatureValue[5];
+                    int numChrF = dummyVariation.numChrF;
+                    int numChrB = dummyVariation.numChrB;
+                    
+                    String chrNameF = "chr"+numChrF;
+                    String chrNameB = "chr"+numChrB;
+                    
+                    long compensateLeftLineByte = startLeftWing/refFaIdx.getLineBase(chrNameF);    // number of compensate byte that has to be adding back to the pointer (cause from newline byte in file)
+                    long compensateRightLineByte = startRightWing/refFaIdx.getLineBase(chrNameB);  // number of compensate byte that has to be adding back to the pointer (cause from newline byte in file)
+                    
+                    long iniLeftWingPointer = ((startLeftWing + refFaIdx.getOffSet(chrNameF)))+compensateLeftLineByte;
+                    long iniRightWingPointer = ((startRightWing + refFaIdx.getOffSet(chrNameB)))+compensateRightLineByte;
+                    
+                    long numLineRead = (extendSize/refFaIdx.getLineBase(chrNameF))+2;
+                    
+                    long readPointer = sampleFaIdx.getOffSet(dummyVariation.readNameF);
+                    
+                    rbRef.seek(iniLeftWingPointer);
+                    String dummyLeftWingSeq = "";
+                    for(int num = 0;num<numLineRead;num++){
+                        dummyLeftWingSeq = dummyLeftWingSeq + rbRef.readLine();
+                    }
+                    leftWingSeq = dummyLeftWingSeq.substring(0, (extendSize+unmatchFront));
+                    
+                    rbRef.seek(iniRightWingPointer);
+                    String dummyRightWingSeq = "";
+                    for(int num = 0;num<numLineRead;num++){
+                        dummyRightWingSeq = dummyRightWingSeq + rbRef.readLine();
+                    }
+                    rightWingSeq = dummyRightWingSeq.substring(0,(extendSize+unmatchBack));
+                    
+                    rbSample.seek(readPointer);
+                    readSeq = rbSample.readLine().substring(iniIndexMatch, lastIndexMatch+1);
+                    
+                    if(strand.equals("++")){
+                        newRefSeq = leftWingSeq + readSeq + rightWingSeq;
+                    }else if(strand.equals("--")){
+                        String leftWingInvSeq = SequenceUtil.inverseSequence(leftWingSeq);                                // Do invert sequence (ATCG => GCTA)
+                        String leftWingCompSeq = SequenceUtil.createComplimentV2(leftWingInvSeq);                       // Do compliment on invert sequence (GCTA => CGAT)
+                        
+                        String rightWingInvSeq = SequenceUtil.inverseSequence(rightWingSeq);                                // Do invert sequence (ATCG => GCTA)
+                        String rightWingCompSeq = SequenceUtil.createComplimentV2(rightWingInvSeq);                       // Do compliment on invert sequence (GCTA => CGAT)
+                        
+                        newRefSeq = leftWingCompSeq + readSeq + rightWingCompSeq;
+                        
+                    }else if(strand.equals("+-")){
+                        String rightWingInvSeq = SequenceUtil.inverseSequence(rightWingSeq);                                // Do invert sequence (ATCG => GCTA)
+                        String rightWingCompSeq = SequenceUtil.createComplimentV2(rightWingInvSeq);                       // Do compliment on invert sequence (GCTA => CGAT)
+                        
+                        newRefSeq = leftWingSeq + readSeq + rightWingCompSeq;
+                    }else if(strand.equals("-+")){
+                        String leftWingInvSeq = SequenceUtil.inverseSequence(leftWingSeq);                                // Do invert sequence (ATCG => GCTA)
+                        String leftWingCompSeq = SequenceUtil.createComplimentV2(leftWingInvSeq);                       // Do compliment on invert sequence (GCTA => CGAT)
+                        
+                        newRefSeq = leftWingCompSeq + readSeq + rightWingSeq;
+                    }
+                    
+                    String nameRef = "group"+groupCount+"_"+dummyVariation.readNameF;
+                    
+                    writer.write(">"+nameRef);
+                    writer.write("\n");
+                    writer.write(newRefSeq);
+                    writer.write("\n");
+                } 
+            }else{
+                break;
+            }   
+        }
+        
+        writer.flush();
+        writer.close();
+        
+    }
+    
+    public void createReferenceFromNovelIndelResult(int minPickCoverage){
+        
+    }
 }

@@ -487,7 +487,7 @@ public class Variation {
                     overlapBase = 0;
                 }    
             }
-            
+
             this.numMatchF = this.greenF+this.yellowF+this.orangeF+this.redF;
             this.lastPosF = (this.iniPosF + (this.numMatchF+this.merLength-1))-1;
             if(this.strandF.equals("-")){
@@ -495,6 +495,7 @@ public class Variation {
                 this.breakPointF = this.iniPosF+reverseIniIdx;   
             }else if(this.strandF.equals("+")){
                 this.breakPointF = this.lastPosF+this.iniIndexF;
+                System.out.println();
             }   
         }else if(overlapBase < this.numMatchB){
             // Re-correct on Back part
@@ -1045,5 +1046,117 @@ public class Variation {
         }
         
         return builder.toString();
+    }
+    
+    public String exportBed12Ref(int extendSize){
+        /**
+         * this function will calculate the extend right and left position from breakpoint front and back 
+         * and export in to bed12 format 
+         * 
+         * this b3d12 format will be use to cut the DNA sequence from reference to create new refarence that use this variation as a template
+         * 
+         * EX bed12 format 
+         * chr1 0 300 readname 0 + 0 300 0 2 100,100 0,200
+         * 
+         * chromosome|left most position|right most position|referenceName|score|strand|thickStart|thickStop|itemRGB|num portion that we want to cut(defualt is 2)|size of each portion (extend size)|start pos of each portion
+         * Bed format will consider zero based starting position
+         * if start = 9 and stop = 20 it will include base at position 10 to 20 (not include 9)
+         * 
+         * Not finish have to consider stand of variation and bed12 format force us to arrange position in order form low to high
+         */
+        int leftWingBasePos = 0;
+        int rightWingBasePos = 0;
+        long leftMostPos = 0;
+        long rightMostPos = 0;
+        long startLeftWing = 0;
+        long startRightWing = 0;
+//        if(this.breakPointF > this.breakPointB){
+//            leftWingBasePos = this.breakPointB
+//        }else{
+//            
+//        }
+        if(this.strandF.equals("+")&&this.strandB.equals("+")){
+            leftMostPos = this.breakPointF - extendSize;
+            rightMostPos = (this.breakPointB + extendSize)-1;
+            startLeftWing = leftMostPos;
+            startRightWing = this.breakPointB-1;
+        }else if(this.strandF.equals("-")&&this.strandB.equals("-")){
+            
+        }else if(this.strandF.equals("+")&&this.strandB.equals("-")){
+            
+        }else if(this.strandF.equals("-")&&this.strandB.equals("+")){
+            
+        }
+        
+
+
+//        long leftMostPos = this.breakPointF - extendSize;
+//        long rightMostPos = (this.breakPointB + extendSize)-1;
+//        long startLeftWing = leftMostPos;
+//        long startRightWing = this.breakPointB-1;
+        String refName = "ref_bf"+this.breakPointF+"_bb"+this.breakPointB;
+        int numportion = 2;
+        
+        String bed12Format = "chr"+this.numChrF+"\t"+leftMostPos+"\t"+rightMostPos+"\t"+refName+"\t0\t+\t"+leftMostPos+"\t"+rightMostPos+"\t0\t"+numportion+"\t"+extendSize+","+extendSize+"\t"+startLeftWing+","+startRightWing;
+        return bed12Format;
+    }
+    
+    public long[] getSignatureForCreateRef(int extendSize){
+        /**
+         * This function will create key signature value for create reference
+         * create initial pointer of left and right wing
+         * return in long[] first element is left wing pointer  second element is right wing pointer  third is iniIndexMatch(first index that match on read) and fourth is lastIndexMatch(last index that match on read)
+         * fifth is unmatchFront and sixth is unmatchBack
+         */
+        long[] pointer = new long[6];           // array of long to store iniLeftWing iniRightWing iniIndexMatch(first index that match on read) and lastIndexMatch(last index that match on read)
+        long iniLeftWing = 0;
+        long iniRightWing = 0;
+//        if(this.breakPointF > this.breakPointB){
+//            leftWingBasePos = this.breakPointB
+//        }else{
+//            
+//        }
+        int iniIndexMatch = this.iniIndexF;                                                 // the correct ini index is index 0
+        int lastIndexMatch = (this.iniIndexB + this.numMatchB + this.merLength)-2;          // the correct last index is read length-1  EX it is index 99 if read length is 100
+        int unmatchFront = 0;
+        int unmatchBack = 0;
+        
+        /**
+         * calculate unmatch front and back
+         */
+        if(iniIndexMatch>0){
+            unmatchFront = iniIndexMatch;
+        }
+        if(lastIndexMatch<(this.readLengthB-1)){
+            unmatchBack = (this.readLengthB-1) - lastIndexMatch;
+        }
+        /***********************************/
+        
+        if(this.strandF.equals("+")&&this.strandB.equals("+")){
+            iniLeftWing = ((this.iniPosF + this.iniIndexF) - extendSize) - unmatchFront;
+            iniRightWing = (this.lastPosB + this.iniIndexB) + 1;
+        }else if(this.strandF.equals("-")&&this.strandB.equals("-")){
+            int reverseIniIdxF = this.readLengthF-(this.iniIndexF+(this.merLength+this.numMatchF-1));
+            int reverseIniIdxB = this.readLengthB-(this.iniIndexB+(this.merLength+this.numMatchB-1));
+            iniLeftWing = (this.lastPosF+reverseIniIdxF) + 1;
+            iniRightWing = ((this.iniPosB+reverseIniIdxB) - extendSize) - unmatchBack;
+        }else if(this.strandF.equals("+")&&this.strandB.equals("-")){
+            int reverseIniIdxB = this.readLengthB-(this.iniIndexB+(this.merLength+this.numMatchB-1));
+            iniLeftWing = ((this.iniPosF+this.iniIndexF) - extendSize) - unmatchFront;
+            iniRightWing = ((this.iniPosB+reverseIniIdxB) - extendSize) - unmatchBack;
+        }else if(this.strandF.equals("-")&&this.strandB.equals("+")){
+            int reverseIniIdxF = this.readLengthF-(this.iniIndexF+(this.merLength+this.numMatchF-1));
+            iniLeftWing = (this.lastPosF+reverseIniIdxF) + 1;
+            iniRightWing = (this.lastPosB+this.iniIndexB) + 1;
+        }
+        
+        pointer[0] = iniLeftWing;
+        pointer[1] = iniRightWing;
+        pointer[2] = iniIndexMatch;
+        pointer[3] = lastIndexMatch;
+        pointer[4] = unmatchFront;
+        pointer[5] = unmatchBack;
+        
+        return pointer;   
     }
 }

@@ -16,7 +16,9 @@ import biotec.bsi.ngs.vardetect.core.Annotation;
 import biotec.bsi.ngs.vardetect.core.InputSequence;
 import biotec.bsi.ngs.vardetect.core.MapResult;
 import biotec.bsi.ngs.vardetect.core.ReferenceAnnotation;
+import biotec.bsi.ngs.vardetect.core.ReferenceIndex;
 import biotec.bsi.ngs.vardetect.core.SNPsample;
+import biotec.bsi.ngs.vardetect.core.SequenceIndex;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import biotec.bsi.ngs.vardetect.core.Smallindelsample;
 import biotec.bsi.ngs.vardetect.core.VariationResult;
@@ -7584,4 +7586,15 @@ public class SequenceUtil {
             return false;
         }
     }
+    
+//    public static void createReferenceFromNewVariant(String refPath, String reffaidxPath, String sequencePath, String sequencefaidxPath) throws IOException{
+//        
+//        ReferenceIndex refIdx = new ReferenceIndex();
+//        SequenceIndex seqIdx = new SequenceIndex();
+//        
+//        refIdx.readfaidx(refPath);
+//        seqIdx.readfaidx(sequencePath);
+//        
+//        
+//    }
 }

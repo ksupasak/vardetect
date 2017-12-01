@@ -886,5 +886,31 @@ public class FastaUtil {
         writerIndex.close();
         
     }
+    
+    public static void createIntesectFastaFile(String fa1, String fa2) throws IOException{
+        /**
+         * 
+         */
+        Charset charset = Charset.forName("US-ASCII");
+        Path fa1Path = Paths.get(fa1);
+        
+        try (BufferedReader reader = Files.newBufferedReader(fa1Path, charset)) {
+            String line = null;                   
+            while ((line = reader.readLine()) != null) {
+                if(line.isEmpty()){
+                    
+                }else{
+//                    if(line.charAt(0)=='>'){
+//                        count++;
+//                        writer.write(">chr"+count+"\n");
+//                        writerIndex.write(path.getFileName()+","+line.substring(1)+",chr"+count+"\n");
+//                    }else{                                           
+//                        writer.write(line+"\n"); 
+//                    }
+                }    
+            }
+        }
+        
+    }
 
 }
