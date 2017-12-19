@@ -366,6 +366,68 @@ public class FastaUtil {
         
     }
     
+    public static void reIndexChrNameFastaFileV2(String inputPath) throws IOException{
+        /**
+         * This function will reIndex of chromosome name which has non numeric representation to numeric number
+         * Save new file with name _reIndex
+         * And also save the index file for mapping back to original chr representation
+         * 
+         * The version 2 function will consider the number (not finish)
+         */
+        
+        int count = 0;
+        Charset charset = Charset.forName("US-ASCII");
+        Path path = Paths.get(inputPath);
+        String name = null;
+        boolean forceBreakFlag =  false;
+    
+        StringBuilder seq = new StringBuilder();
+        
+        String filename = path.getParent()+File.separator+path.getFileName().toString().split("\\.")[0]+"_reIndex.fa";
+        String filenameIndex = path.getParent()+File.separator+path.getFileName().toString().split("\\.")[0]+"_reIndex.index";
+        PrintStream ps;
+        FileWriter writer;  
+        FileWriter writerIndex;
+        /**
+         * Check File existing
+         */
+        
+        File f = new File(filename); //File object        
+        if(f.exists()){
+            // file is already exist no need to do it again
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(filename,true);
+            return;
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(filename);
+        }
+        writerIndex = new FileWriter(filenameIndex);
+
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;                   
+            while ((line = reader.readLine()) != null) {
+                if(line.isEmpty()){
+                    
+                }else{
+                    if(line.charAt(0)=='>'){
+                        count++;
+                        writer.write(">chr"+count+"\n");
+                        writerIndex.write(path.getFileName()+","+line.substring(1)+",chr"+count+"\n");
+                    }else{                                           
+                        writer.write(line+"\n"); 
+                    }
+                }    
+            }
+        }
+        
+        writer.flush();
+        writer.close();
+        writerIndex.flush();
+        writerIndex.close();
+        
+    }
+    
     public static void createSampleFromAlignResult(String alignResultFile, String sampleFile, char option) throws IOException{
         /**
          * This function will create Sample from alignment Result.
@@ -889,28 +951,200 @@ public class FastaUtil {
     
     public static void createIntesectFastaFile(String fa1, String fa2) throws IOException{
         /**
-         * 
+         * This function will find the intersect read sequence between two fasta file
+         * The smallest file will be pick as main file store sequence in Map
+         * walk through another file and chack intersect
+         * export intersect read sequence in fasta
          */
-        Charset charset = Charset.forName("US-ASCII");
-        Path fa1Path = Paths.get(fa1);
         
-        try (BufferedReader reader = Files.newBufferedReader(fa1Path, charset)) {
+        File fasta1 = new File(fa1);
+        File fasta2 = new File(fa2);
+        String exportFile = "";
+        String mainFile = "";
+        String minorFile = "";
+        
+        Map<String,String> mainSeqMap = new LinkedHashMap();
+        Map<String,String> intersectSeqMap = new LinkedHashMap();
+        
+        if(fasta1.length() > fasta2.length()){
+            mainFile = fa2;
+            minorFile = fa1;
+            
+            exportFile = fasta2.getParent()+ File.separator + fasta2.getName().split("\\.")[0] + "_Intersect_" + fasta1.getName();
+        }else{
+            mainFile = fa1;
+            minorFile = fa2;
+            
+            exportFile = fasta1.getParent() + File.separator + fasta1.getName().split("\\.")[0] + "_Intersect_" + fasta2.getName();
+        }
+        
+        Charset charset = Charset.forName("US-ASCII");
+        Path mainPath = Paths.get(mainFile);
+        Path minorPath = Paths.get(minorFile);
+        
+        /**
+         * Read main fasta File and store in Map<String,String>
+         */
+        try (BufferedReader reader = Files.newBufferedReader(mainPath, charset)) {
             String line = null;                   
+            String name = null;
             while ((line = reader.readLine()) != null) {
                 if(line.isEmpty()){
                     
                 }else{
-//                    if(line.charAt(0)=='>'){
-//                        count++;
-//                        writer.write(">chr"+count+"\n");
-//                        writerIndex.write(path.getFileName()+","+line.substring(1)+",chr"+count+"\n");
-//                    }else{                                           
-//                        writer.write(line+"\n"); 
-//                    }
+                    if(line.charAt(0)=='>'){                        
+                        name = line.substring(1);
+                    }else{                                           
+                        mainSeqMap.put(name,line);
+                    }
                 }    
             }
         }
+        /********************************************************/
         
+        /**
+         * Read minor fasta File check intersect with mainSeqMap
+         * 
+         * Store intersect Result
+         */
+        try (BufferedReader reader = Files.newBufferedReader(minorPath, charset)) {
+            String line = null;                   
+            String name = null;
+            boolean intersectFlag = false;
+            while ((line = reader.readLine()) != null) {
+                if(line.isEmpty()){
+                    
+                }else{
+                    if(line.charAt(0)=='>'){                        
+                        name = line.substring(1);
+                        if(mainSeqMap.containsKey(name)){
+                            intersectFlag = true;
+                        }else{
+                            intersectFlag = false;
+                        }
+                    }else{
+                        if(intersectFlag == true){
+                            intersectSeqMap.put(name, line);
+                        }
+                    }
+                }    
+            }
+        }        
+        /************************************************************/
+        
+        /**
+         * Export intersect read in fasta file format
+         */
+        
+        FileWriter writer;
+        writer = new FileWriter(exportFile);
+
+        for(Map.Entry<String,String> entry: intersectSeqMap.entrySet()){ 
+            writer.write(">"+entry.getKey());
+            writer.write("\n");
+            writer.write(entry.getValue());
+            writer.write("\n");
+        }
+        /**************************************************************/
+    }
+    
+    public static void createUnIntesectFastaFile(String fa1, String fa2) throws IOException{
+        /**
+         * This function will find the intersect read sequence between two fasta file
+         * The smallest file will be pick as main file store sequence in Map
+         * walk through another file and chack intersect
+         * export intersect read sequence in fasta
+         */
+        
+        File fasta1 = new File(fa1);
+        File fasta2 = new File(fa2);
+        String exportFile = "";
+        String mainFile = "";
+        String minorFile = "";
+        
+        Map<String,String> mainSeqMap = new LinkedHashMap();
+        Map<String,String> unIntersectSeqMap = new LinkedHashMap();
+        
+        if(fasta1.length() > fasta2.length()){
+            mainFile = fa2;
+            minorFile = fa1;
+            
+            exportFile = fasta2.getParent()+ File.separator + fasta2.getName().split("\\.")[0] + "_unIntersect_" + fasta1.getName();
+        }else{
+            mainFile = fa1;
+            minorFile = fa2;
+            
+            exportFile = fasta1.getParent() + File.separator + fasta1.getName().split("\\.")[0] + "_unIntersect_" + fasta2.getName();
+        }
+        
+        Charset charset = Charset.forName("US-ASCII");
+        Path mainPath = Paths.get(mainFile);
+        Path minorPath = Paths.get(minorFile);
+        
+        /**
+         * Read main fasta File and store in Map<String,String>
+         */
+        try (BufferedReader reader = Files.newBufferedReader(mainPath, charset)) {
+            String line = null;                   
+            String name = null;
+            while ((line = reader.readLine()) != null) {
+                if(line.isEmpty()){
+                    
+                }else{
+                    if(line.charAt(0)=='>'){                        
+                        name = line.substring(1);
+                    }else{                                           
+                        mainSeqMap.put(name,line);
+                    }
+                }    
+            }
+        }
+        /********************************************************/
+        
+        /**
+         * Read minor fasta File check intersect with mainSeqMap
+         * 
+         * Store intersect Result
+         */
+        try (BufferedReader reader = Files.newBufferedReader(minorPath, charset)) {
+            String line = null;                   
+            String name = null;
+            boolean unIntersectFlag = false;
+            while ((line = reader.readLine()) != null) {
+                if(line.isEmpty()){
+                    
+                }else{
+                    if(line.charAt(0)=='>'){                        
+                        name = line.substring(1);
+                        if(mainSeqMap.containsKey(name)){
+                            unIntersectFlag = false;
+                        }else{
+                            unIntersectFlag = true;
+                        }
+                    }else{
+                        if(unIntersectFlag == true){
+                            unIntersectSeqMap.put(name, line);
+                        }
+                    }
+                }    
+            }
+        }        
+        /************************************************************/
+        
+        /**
+         * Export intersect read in fasta file format
+         */
+        
+        FileWriter writer;
+        writer = new FileWriter(exportFile);
+
+        for(Map.Entry<String,String> entry: unIntersectSeqMap.entrySet()){ 
+            writer.write(">"+entry.getKey());
+            writer.write("\n");
+            writer.write(entry.getValue());
+            writer.write("\n");
+        }
+        /**************************************************************/
     }
 
 }

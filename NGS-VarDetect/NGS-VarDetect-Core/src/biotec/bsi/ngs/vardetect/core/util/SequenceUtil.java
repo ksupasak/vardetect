@@ -6158,9 +6158,9 @@ public class SequenceUtil {
             int numO = Integer.parseInt(data[5]);
             int numR = Integer.parseInt(data[6]);
             String strand = data[7];
-            byte iniIdx = Byte.parseByte(data[8]);
+            int iniIdx = Integer.parseInt(data[8]);
             String readName = data[9];
-            byte snpFlag = Byte.parseByte(data[10]);
+            int snpFlag = Integer.parseInt(data[10]);
             int readLength = Integer.parseInt(data[12]);
             /******************************/
             
@@ -6173,10 +6173,6 @@ public class SequenceUtil {
 //                startIndex = readLength - (iniIdx+(merLength+matchCount-1));
 //                stopIndex = ((startIndex+matchCount)-1)+(merLength-1);
 //            }
-            
-            if(readName.equals("Read01SS04")){
-                System.out.println();
-            }
 
             int expectNextIndex = stopIndex+1;
             int limitExpectNextIndex = expectNextIndex-allowOverlapBase;
@@ -6201,9 +6197,9 @@ public class SequenceUtil {
                 int numO_B = Integer.parseInt(data_B[5]);
                 int numR_B = Integer.parseInt(data_B[6]);
                 String strand_B = data_B[7];
-                byte iniIdx_B = Byte.parseByte(data_B[8]);
+                int iniIdx_B = Integer.parseInt(data_B[8]);
                 String readName_B = data_B[9];
-                byte snpFlag_B = Byte.parseByte(data_B[10]);
+                int snpFlag_B = Integer.parseInt(data_B[10]);
                 /******************************/
                 
                 int matchCount_B = numG_B+numY_B+numO_B+numR_B;  

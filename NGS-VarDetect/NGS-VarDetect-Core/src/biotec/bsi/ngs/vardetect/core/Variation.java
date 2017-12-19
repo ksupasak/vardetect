@@ -192,9 +192,6 @@ public class Variation {
          *      we can check by if strand type is -- check the breakPoint => if breakPointF > breakPointB it mean strand -- with correct order
          *      if breakPointF < breakPointB it mean strand -- with incorrect order use special method to find indel base 
          */
-        if(this.readNameF.equals("Read12SS00")){
-            System.out.println();
-        }
         
         this.indelBase = Math.abs(this.iniPosF - this.iniPosB);      // indel base (base on position minus index calculation)
         long breakpointDiff = Math.abs(this.breakPointB - this.breakPointF)-1;
@@ -495,7 +492,6 @@ public class Variation {
                 this.breakPointF = this.iniPosF+reverseIniIdx;   
             }else if(this.strandF.equals("+")){
                 this.breakPointF = this.lastPosF+this.iniIndexF;
-                System.out.println();
             }   
         }else if(overlapBase < this.numMatchB){
             // Re-correct on Back part
@@ -562,9 +558,7 @@ public class Variation {
         /**
          * Create virtual sequence as string
          */
-//        if(this.readNameB.equals("HWI-ST840:377:D2GY3ACXX:1:2113:11955:24852/1")&&this.iniPosB == 25556969){
-//            System.out.println();
-//        }
+
         int virtualLen = (2*this.readLengthF)+1;    // virtual length has size 2 time of read length plus 1 (plus one is reserve for junction which does not involve with base in virtual length) Ex len = 10 ; virtual = (2*10)+1 = 21 this allow both size have 10 emty slot for base and the middle is junction slot
         int junctionIndex = this.readLengthF;       // index of junction (put sign "|" on this index)
         
@@ -835,9 +829,7 @@ public class Variation {
          * Create virtual sequence as string 
          * For one tail front event
          */
-//        if(this.readNameB.equals("HWI-ST840:377:D2GY3ACXX:1:2113:11955:24852/1")&&this.iniPosB == 25556969){
-//            System.out.println();
-//        }
+
         int virtualLen = (2*this.readLengthF)+1;    // virtual length has size 2 time of read length plus 1 (plus one is reserve for junction which does not involve with base in virtual length) Ex len = 10 ; virtual = (2*10)+1 = 21 this allow both size have 10 emty slot for base and the middle is junction slot
         int junctionIndex = this.readLengthF;       // index of junction (put sign "|" on this index)
         

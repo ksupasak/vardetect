@@ -1202,10 +1202,7 @@ public class VariationResult {
                         writer.write("\n");
                         for(int i=0;i<coverageList.size();i++){
                             
-                            Variation var = coverageList.get(i);
-                            if(var.readNameF.equals("Read01SS01")){
-                                System.out.println();
-                            }
+                            Variation var = coverageList.get(i);                            
                             if(var.variationType == 'T'){
                                 /**
                                 * Check one tail type
@@ -1476,9 +1473,7 @@ public class VariationResult {
                         for(int i=0;i<coverageList.size();i++){
                             
                             Variation var = coverageList.get(i);
-//                            if(var.readNameF.equals("Read01SS01")){
-//                                System.out.println();
-//                            }
+
                             if(var.variationType == 'T'){
                                 /**
                                 * Check one tail type
@@ -1732,6 +1727,7 @@ public class VariationResult {
                         }
                     }
                 }
+                count++;
             }
             writer.flush();
             writer.close();
@@ -1780,9 +1776,7 @@ public class VariationResult {
                         for(int j=0;j<coverageList.size();j++){
 
                             Variation var = coverageList.get(j);
-    //                            if(var.readNameF.equals("Read01SS01")){
-    //                                System.out.println();
-    //                            }
+   
                             if(var.variationType == 'T'){
                                 /**
                                 * Check one tail type
@@ -1844,9 +1838,7 @@ public class VariationResult {
                         for(int j=0;j<coverageList.size();j++){
 
                             Variation var = coverageList.get(j);
-    //                            if(var.readNameF.equals("Read01SS01")){
-    //                                System.out.println();
-    //                            }
+    
                             if(var.variationType == 'T'){
                                 /**
                                 * Check one tail type
@@ -1899,9 +1891,7 @@ public class VariationResult {
                         countID++;
                     }else{
                         // large indel
-//                        if(countLD==5){
-//                            System.out.println();
-//                        }
+
                         writerLD.write("Group "+countLD);
                         writerLD.write("\tIndel Type : " + indelType);
                         writerLD.write("\tIndel Base : " + indelBase);
@@ -1912,9 +1902,7 @@ public class VariationResult {
                         for(int j=0;j<coverageList.size();j++){
 
                             Variation var = coverageList.get(j);
-    //                            if(var.readNameF.equals("Read01SS01")){
-    //                                System.out.println();
-    //                            }
+    
                             if(var.variationType == 'T'){
                                 /**
                                 * Check one tail type
@@ -2589,6 +2577,7 @@ public class VariationResult {
                         writer.write(var.virtualSequence());
                         writer.write("\n");
                     }
+                    count++;
                 }
             }
             writer.flush();
@@ -3051,9 +3040,7 @@ public class VariationResult {
                 Variation dummyVariation = coverageList.get(0);
                 if(dummyVariation.getIndelType().equals(indelType)){
                     groupCount++;
-                    if(groupCount==4){
-                        System.out.println();
-                    }
+
                     String leftWingSeq = "";
                     String rightWingSeq = "";
                     String readSeq = "";
