@@ -22,6 +22,7 @@ import static biotec.bsi.ngs.vardetect.core.util.SequenceUtil.encodeSerialChromo
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil;
 import biotec.bsi.ngs.vardetect.core.util.SimulatorUtil_WholeGene;
 import biotec.bsi.ngs.vardetect.core.util.VisualizeResult;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Enumeration;
@@ -50,11 +51,22 @@ public class TestBedCMD {
 //          FastaUtil.filterSampleFile(fastaFile);
 //          SequenceUtil.miRNASeparator(fastaFile);
 //            FastaUtil.reIndexChrNameFastaFile(fastaFile);
-        FastaUtil.createSampleFromAlignResult(resultFile, sampleFile, 'c');
+//        FastaUtil.createSampleFromAlignResult(resultFile, sampleFile, 'c');
 //        SequenceUtil.analysisNonVariantResultFromFile(nonVariantFile, 18, 2);
 //        FastaUtil.createSampleFromNonVariantCoverageReport(coverageFile, sampleFile);
         
 //        FastaUtil.separateContigToFile(sampleFile);
+
+        File aFile = new File("/Volumes/PromisePegasus/worawich/Download_dataset/Test_ERR718259_genRef/testline.txt");
+        System.out.println(aFile.getAbsoluteFile());
+        System.out.println(aFile.getAbsolutePath());
+        
+        System.out.println(aFile.getName());
+        System.out.println(aFile.getPath());
+        System.out.println(aFile.getParent());
+        
+        
+
     }
 
 }

@@ -29,13 +29,13 @@ public class TestPostProcess {
         // TODO code application logic here
         
 //        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/SimulateData/hg38_sim_L_SNP_F_5/hg38_sim_L_SNP_F_5_alignResult_part";
-        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/Error/ERR718196_2_alnRes_part";
+        String filename = "/Volumes/PromisePegasus/worawich/Download_dataset/SLE/SLE-9/SLE-9_hg38_part";
         String indexFile = "/Volumes/PromisePegasus/worawich/Referense/TB_reference_12Mer/H37Rv_NC_000962_reIndex.index";            // use for traceback to natural chromosome name
         String sampleFile = "/Volumes/PromisePegasus/worawich/Download_dataset/Micro_RNA/NGS_result_050417/O3_S3_L001_R2_001.fa";
         String saveFileType = "txt";
         int numPart = 4;
 //        int readLength = 24;
-        int merLength = 12;
+        int merLength = 18;
         int maxFullMatch = 100; // it's percentage value
         int propotion = 1000000;
 //        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/SimulateData/simLongRead/";
@@ -113,12 +113,17 @@ public class TestPostProcess {
         VariationResult varRes = SequenceUtil.analysisResultFromFileV3(fullPathSaveSortFile,merLength,overlap,percentMatch);
         varRes.createVariantReport();
  
-        varRes.analyzeCoverageFusion();
-        varRes.writeVariantCoverageVirtualizeWithAnnotationReportToFile(filename, gffFile, coverageThreshold, 'F');
-        varRes.writeVariantCoverageReportToFile(filename, coverageThreshold, 'F');
-        varRes.analyzeCoverageIndel();
-        varRes.writeVariantCoverageVirtualizeWithAnnotationReportToFile(filename, gffFile, coverageThreshold, 'I');
-        varRes.writeVariantCoverageReportToFile(filename, coverageThreshold, 'I');
+        varRes.analyzeCoverageFusionV2();
+        varRes.sortCoverageFusion();
+//        varRes.writeVariantCoverageVirtualizeWithAnnotationReportToFile(filename2, gffFile, coverageThreshold, 'F');
+        varRes.writeVariantSortedCoverageVirtualizeReportToFile(filename, coverageThreshold, 'F');
+        varRes.writeVariantSortedCoverageReportToFile(filename, coverageThreshold, 'F',true);
+        
+        varRes.analyzeCoverageIndelV2();
+        varRes.sortCoverageIndel();
+//        varRes.writeVariantCoverageVirtualizeWithAnnotationReportToFile(filename2, gffFile, coverageThreshold, 'I');
+        varRes.writeVariantSortedCoverageVirtualizeReportToFile(filename, coverageThreshold, 'I');
+        varRes.writeVariantSortedCoverageReportToFile(filename, coverageThreshold, 'I',true);
 
         System.gc();
         /*****************************************************************************************/
