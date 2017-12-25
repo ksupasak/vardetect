@@ -24,10 +24,81 @@ import java.util.Vector;
  */
 public class NGSCMD {
 
+    
+        
+       /**
+     * @param args the command line arguments
+     */
+    public static void main(String[] args) throws IOException, FileNotFoundException, InterruptedException {
+        
+         String refPath = args[0];
+         CombineReferenceSequence ref = SequenceUtil.getCombineReferenceSequence(refPath,16); //runFile hg19.fa
+         
+         ref.setMinimumPeakPattern(10, 5);
+
+// for large batch with multi thread         
+//         ref.setNumberOfThread(8);
+//         ref.setTotalRead(86000000);
+//         ref.setSkipRead(0);
+//         ref.setMaximumDuplicatePattern(3);
+
+// for large batch with multi thread         
+//         ref.setNumberOfThread(4);
+//         ref.setTotalRead(100000);
+//         ref.setSkipRead(0);
+//         ref.setMaximumDuplicatePattern(3);
+         
+// for small batch with multi thread         
+         ref.setNumberOfThread(4);
+         ref.setTotalRead(10000);
+         ref.setSkipRead(0);
+         ref.setMaximumDuplicatePattern(1);
+         ref.setRandomAccess(true);
+         
+
+// for debug         
+         ref.setNumberOfThread(1);
+         ref.setTotalRead(1);
+         ref.setSkipRead(3997);
+         ref.setMaximumDuplicatePattern(1);
+         ref.setMinimumPeakPattern(10, 2);
+         ref.setRandomAccess(true);
+         
+         
+//         ref.searchMer(0);
+//         ref.setOutputFile("/Users/soup/human/RB_cancer/277T_sorted_unmap.all.out");
+//         ref.runProfileSV("/Users/soup/human/RB_cancer/277T_sorted_unmap.bam");
+         
+//         
+//         
+//         int found = 0;
+//         for(int i=0;i<1000000;i++){
+//         int v = (int)(Math.random()*Integer.MAX_VALUE);
+//         int pos[] = ref.searchMer(v);
+//         if(pos!=null){
+//             found ++;
+//            System.out.println(""+(i+1)+". Search for : "+Integer.toBinaryString(v)+" Pos "+ pos.length);
+//         }else{
+////            System.out.println(""+(i+1)+". Search for : "+Integer.toBinaryString(v)+" Not found");  
+//         }
+//         
+//         }
+//         System.out.println("Found for : "+found); 
+         
+//         int a= -100;
+//         long b= ((long)a<<32)+3;//(a<<32);
+//        
+//         System.out.println("A = "+Integer.toBinaryString(a));
+//         System.out.println("B = "+Long.toBinaryString(b));
+         
+         
+         
+         
+    }
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws IOException {
+    public static void main2(String[] args) throws IOException {
     
         String refPath = args[0];
         ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath,18); //runFile hg19.fa
