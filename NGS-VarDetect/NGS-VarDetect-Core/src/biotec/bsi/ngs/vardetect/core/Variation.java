@@ -400,6 +400,40 @@ public class Variation {
         }
     }
 
+    public void analyzeCNV(){
+        /**
+         * Find possible duplication or CNV
+         * วิธีที่ใช้ในการแยก CNV จะคล้ายกับการหา insertion คือดูว่า minus index align position ส่วนหลังน้อยกว่าส่วนหน้าในเคส ++ และ หน้าน้อยกว่าหลังในเคส -- แตาจะพิจารณาเพิ่มเติมมากกว่านั้นคือจะนำเอา indelBase ที่คำนวนจากการหาส่วนต่างระหว่างค่า
+         * minus index align position หน้าและหลังมาบวกกลับเข้าไป เช่น เคส++ จะเอาค่า indelBase บวกกลับเข้าไปที่ minus index align position ส่วนหลัง ซึ่งค่าที่ได้จะต้องได้ค่าที่ไม่เท่ากับส่วนหน้า จึงจะพิจารณาว่าเป็น CNV (ถ้าได้เท่ากันแสดงว่าเป็น insertion)
+         * และทำกลับกันในเคส --
+         * 
+         * อีกทั้งยังมีส่วนเพิ่มเติม ในกรณีที่เป็น +- และ -+ สำหรับสองเคสนี้เราจะพบว่า minus index align position หน้าหลังจะเท่ากันจึงจะพิจรณาว่าเป็น CNV
+         * 
+         */
+        
+        this.indelBase = Math.abs(this.iniPosF - this.iniPosB);      // indel base (base on position minus index calculation)
+        
+        int overallBaseMatch = ((this.numMatchF+this.merLength)-1)+((this.numMatchB+this.merLength)-1);
+//            int numBaseF = (this.numMatchF+this.iniIndexF-1);
+//            int lastIndexF = numBaseF-1;
+//            this.indelBase = this.iniIndexB - lastIndexF;
+        
+        if(this.strandF.equals("+") && this.strandB.equals("+")){
+            if(this.iniPosB < this.iniPosF && (this.iniPosF!=this.iniPosB+this.indelBase)){
+                this.indelType = "CNV";
+            }
+        }else if(this.strandF.equals("-") && this.strandB.equals("-")){
+            if(this.iniPosB > this.iniPosF && (this.iniPosB!=this.iniPosF+this.indelBase)){
+                this.indelType = "CNV";
+            }
+        }else{
+            if(this.iniPosB == this.iniPosF){
+                this.indelType = "CNV";
+            }
+        }
+        
+    }
+    
     public void analyzeFusion(){
         /**
          * Find out the the breakpoint is overlap or not
