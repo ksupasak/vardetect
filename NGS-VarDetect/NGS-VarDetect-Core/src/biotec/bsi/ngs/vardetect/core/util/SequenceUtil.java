@@ -13,6 +13,7 @@ import biotec.bsi.ngs.vardetect.core.ConcatenateCut;
 import biotec.bsi.ngs.vardetect.core.EncodedSequence;
 import biotec.bsi.ngs.vardetect.core.ReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.Annotation;
+import biotec.bsi.ngs.vardetect.core.CombineReferenceSequence;
 import biotec.bsi.ngs.vardetect.core.InputSequence;
 import biotec.bsi.ngs.vardetect.core.MapResult;
 import biotec.bsi.ngs.vardetect.core.ReferenceAnnotation;
@@ -70,6 +71,108 @@ import java.util.logging.Logger;
 public class SequenceUtil {
     
 //    lazy load chromosome
+    
+     public static CombineReferenceSequence getCombineReferenceSequence(String filename,int mer) throws IOException, FileNotFoundException, InterruptedException{
+        CombineReferenceSequence ref = new CombineReferenceSequence();
+        ref.setFilename(filename);
+        
+        
+        File index_file = new File(filename+".fai");
+        File encode_file = new File(filename+".u.bin16.final");
+        
+
+        boolean create_index = false;
+        boolean extract_chr = false;
+        
+        
+
+        
+        
+        if(encode_file.exists()){
+            
+            if(index_file.exists()){
+            String chr= null;
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(index_file)));
+            while((chr=br.readLine())!=null){
+                System.out.println(chr);
+                String[] sl = chr.split("\t");
+                chr = sl[0];
+                ChromosomeSequence c = new ChromosomeSequence(ref,chr,null);
+                ref.addChromosomeSequence(c);
+            }
+            
+            System.out.println("Check reference index file ... OK");
+        
+        }
+            
+        }else
+        {
+         /**
+             * Extract chromosome and create index file
+             */
+            
+            Charset charset = Charset.forName("US-ASCII");
+            Path path = Paths.get(filename);
+            String chr = null;
+
+            StringBuffer seq = new StringBuffer();
+
+            try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+                String line = null;
+
+                while ((line = reader.readLine()) != null) {
+
+                    if(line.charAt(0)=='>'){
+
+                        if(chr!=null){
+
+                            System.out.println("CHR : "+chr+" Size : "+seq.length());
+                              
+                            ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+                            ref.addChromosomeSequence(c);
+                            
+                            
+                        }
+                        seq = new StringBuffer();
+                        chr = line.substring(1,line.length());
+                      
+                     
+                    }
+                     else{
+                        seq.append(line.trim());
+                    }
+                }
+                
+                 if(seq.length()>0){
+
+                    System.out.println("CHR : "+chr+" Size : "+seq.length());
+                    ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+
+                    seq = null;
+
+                    ref.addChromosomeSequence(c);
+                }
+
+                
+            }catch (IOException x) {
+                System.err.format("IOException: %s%n", x);
+            }  
+            
+            
+            ref.indexing();
+            
+        }
+        
+//            ref.testReadBam();
+
+        
+       
+     
+//            ref.final_indexing_duplicate();
+        
+        return ref;
+    }
     
     public static ReferenceSequence getReferenceSequence(String filename,int mer) throws IOException {
 
