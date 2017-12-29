@@ -2996,6 +2996,7 @@ public class VariationResult {
 //        /*******************************/
         
         String[] dummy = nameFile.split("\\.");
+        String[] dummy2 = dummy[0].split("_");
         String filename = "";
         FileWriter writer;        
         int extendSize = inExtendSize;
@@ -3004,13 +3005,13 @@ public class VariationResult {
         String indelType = "";
         if(inIndelType.equals("SI")){
             indelType = "insert";
-            filename = dummy[0]+"_newReferenceSmallInsert"+".fa";
+            filename = dummy2[0]+"_newReferenceSmallInsert"+".fa";
         }else if(inIndelType.equals("SD")){
             indelType = "delete";
-            filename = dummy[0]+"_newReferenceSmallDelete"+".fa";
+            filename = dummy2[0]+"_newReferenceSmallDelete"+".fa";
         }else if(inIndelType.equals("LI")){
             indelType = "large indel";
-            filename = dummy[0]+"_newReferenceLargeDelete"+".fa";
+            filename = dummy2[0]+"_newReferenceLargeDelete"+".fa";
         }
         
         writer = new FileWriter(filename);  

@@ -176,7 +176,7 @@ public class FastqUtil {
         writer.close();
     }
     
-    public static void createUnIntesectFastqFile(String fq1, String fq2) throws IOException{
+    public static void createUnIntesectFastqFile(String fq1, String fq2, String saveFilename) throws IOException{
         /**
          * This function will find the intersect read sequence between two fastq file
          * fq1 is main file
@@ -203,7 +203,8 @@ public class FastqUtil {
         mainFile = fq1;
         minorFile = fq2;
 
-        exportFile = fastq1.getParent() + File.separator + fastq1.getName().split("\\.")[0] + "_unIntersect_" + fastq2.getName();
+//        exportFile = fastq1.getParent() + File.separator + fastq1.getName().split("\\.")[0] + "_unIntersect_" + fastq2.getName();
+        exportFile = fastq1.getParent() + File.separator + saveFilename;
 //        }
         
         Charset charset = Charset.forName("US-ASCII");
@@ -254,7 +255,7 @@ public class FastqUtil {
         /**
          * Read minor fastq File check intersect with mainSeqMap
          * 
-         * Store intersect Result
+         * Store unintersect Result
          */
         try (BufferedReader reader = Files.newBufferedReader(minorPath, charset)) {
             String line = null;                   
