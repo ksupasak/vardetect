@@ -18,10 +18,14 @@ public class TestUnIntersectRead {
     
     public static void main(String args[]) throws IOException{
         
-        String fq1 = "/Volumes/PromisePegasus/worawich/Download_dataset/TB_ERR718259/test_Extract_ABC/Test_extend_300/potentialB/ERR718259_unMapped_newRef_unIntersect_ERR718259_full_CIGARCUT_newRef_Mapped.fq";
-        String fq2 = "/Volumes/PromisePegasus/worawich/Download_dataset/TB_ERR718259/test_Extract_ABC/Test_extend_300/ERR718259_full_OriRef_Mapped.fq";
+//        String fq1 = "/Volumes/PromisePegasus/worawich/Download_dataset/TB_ERR718259/test_Extract_ABC/Test_extend_300/potentialB/ERR718259_unMapped_newRef_unIntersect_ERR718259_full_CIGARCUT_newRef_Mapped.fq";
+//        String fq2 = "/Volumes/PromisePegasus/worawich/Download_dataset/TB_ERR718259/test_Extract_ABC/Test_extend_300/ERR718259_full_OriRef_Mapped.fq";
         
-        FastqUtil.createUnIntesectFastqFile(fq1, fq2);
+        String fq1 = args[0];
+        String fq2 = args[1];
+        String saveFileName = args[2];
+        
+        FastqUtil.createUnIntesectFastqFile(fq1, fq2, saveFileName);
     }
     
 }
