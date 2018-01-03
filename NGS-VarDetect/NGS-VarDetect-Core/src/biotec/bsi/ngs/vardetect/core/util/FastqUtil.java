@@ -200,11 +200,12 @@ public class FastqUtil {
 //            
 //            exportFile = fastq2.getParent()+ File.separator + fastq2.getName().split("\\.")[0] + "_unIntersect_" + fastq1.getName();
 //        }else{
-        mainFile = fq1;
-        minorFile = fq2;
+        mainFile = fq1;     // Be a template for other file to map with (should be the file that did not contain thing that we want)
+        minorFile = fq2;    // Map to to template (should contain the thing that we want to extract by un-intersect) the thing in this file that did not apear in template will print out (save as output)
 
 //        exportFile = fastq1.getParent() + File.separator + fastq1.getName().split("\\.")[0] + "_unIntersect_" + fastq2.getName();
-        exportFile = fastq1.getParent() + File.separator + saveFilename;
+//        exportFile = fastq1.getParent() + File.separator + saveFilename;
+        exportFile = saveFilename;
 //        }
         
         Charset charset = Charset.forName("US-ASCII");

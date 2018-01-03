@@ -11,6 +11,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.io.RandomAccessFile;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -2995,8 +2997,11 @@ public class VariationResult {
 //        
 //        /*******************************/
         
-        String[] dummy = nameFile.split("\\.");
-        String[] dummy2 = dummy[0].split("_");
+        String[] dummy = readFile.split("\\.");
+        Path path = Paths.get(readFile);
+        String fileName = path.getFileName().toString();
+        String[] dummy2 = fileName.split("_");
+        String sampleName = dummy2[0];
         String filename = "";
         FileWriter writer;        
         int extendSize = inExtendSize;
@@ -3005,13 +3010,13 @@ public class VariationResult {
         String indelType = "";
         if(inIndelType.equals("SI")){
             indelType = "insert";
-            filename = dummy2[0]+"_newReferenceSmallInsert"+".fa";
+            filename = path.getParent().toString()+File.separator+sampleName+"_newReferenceSmallInsert"+".fa";
         }else if(inIndelType.equals("SD")){
             indelType = "delete";
-            filename = dummy2[0]+"_newReferenceSmallDelete"+".fa";
+            filename = path.getParent().toString()+File.separator+sampleName+"_newReferenceSmallDelete"+".fa";
         }else if(inIndelType.equals("LI")){
             indelType = "large indel";
-            filename = dummy2[0]+"_newReferenceLargeDelete"+".fa";
+            filename = path.getParent().toString()+File.separator+sampleName+"_newReferenceLargeDelete"+".fa";
         }
         
         writer = new FileWriter(filename);  
