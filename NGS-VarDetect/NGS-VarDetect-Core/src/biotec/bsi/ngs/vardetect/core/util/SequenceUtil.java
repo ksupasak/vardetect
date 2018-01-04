@@ -90,7 +90,7 @@ public class SequenceUtil {
         
         if(encode_file.exists()){
             
-            if(index_file.exists()){
+            if(false&&index_file.exists()){
             String chr= null;
 
             BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(index_file)));
@@ -104,7 +104,60 @@ public class SequenceUtil {
             
             System.out.println("Check reference index file ... OK");
         
-        }
+            }else{
+                   /**
+             * Extract chromosome and create index file
+             */
+            
+            Charset charset = Charset.forName("US-ASCII");
+            Path path = Paths.get(filename);
+            String chr = null;
+
+            StringBuffer seq = new StringBuffer();
+
+            try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+                String line = null;
+
+                while ((line = reader.readLine()) != null) {
+
+                    if(line.charAt(0)=='>'){
+
+                        if(chr!=null){
+
+                            System.out.println("CHR : "+chr+" Size : "+seq.length());
+                              
+                            ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+                            ref.addChromosomeSequence(c);
+                            
+                            
+                        }
+                        seq = new StringBuffer();
+                        chr = line.substring(1,line.length());
+                      
+                     
+                    }
+                     else{
+                        seq.append(line.trim());
+                    }
+                }
+                
+                 if(seq.length()>0){
+
+                    System.out.println("CHR : "+chr+" Size : "+seq.length());
+                    ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
+
+                    seq = null;
+
+                    ref.addChromosomeSequence(c);
+                }
+
+                
+            }catch (IOException x) {
+                System.err.format("IOException: %s%n", x);
+            }  
+            
+            }
+            
             
         }else
         {

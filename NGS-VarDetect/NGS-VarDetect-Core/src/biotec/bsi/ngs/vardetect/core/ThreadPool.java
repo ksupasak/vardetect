@@ -9,19 +9,22 @@ package biotec.bsi.ngs.vardetect.core;
  *
  * @author soup
  */
+import java.util.HashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class ThreadPool {
     private final int nThreads;
     private final PoolWorker[] threads;
     private final LinkedBlockingQueue queue;
-    
+    private ThreadPoolCallBack callback;
+    private HashMap map;
 
-    public ThreadPool(int nThreads) {
+    public ThreadPool(int nThreads, ThreadPoolCallBack cb) {
         this.nThreads = nThreads;
+        this.callback = cb;
         queue = new LinkedBlockingQueue();
         threads = new PoolWorker[nThreads];
-
+        map = new HashMap();
         for (int i = 0; i < nThreads; i++) {
             threads[i] = new PoolWorker();
             threads[i].start();
@@ -30,8 +33,9 @@ public class ThreadPool {
     
     
 
-    public void execute(Runnable task) {
+    public void execute(Runnable task, int id) {
         synchronized (queue) {
+            map.put(task.hashCode(), id);
             queue.add(task);
             queue.notify();
         }
@@ -66,9 +70,13 @@ public class ThreadPool {
                 // the pool could leak threads
                 try {
                     task.run();
-                } catch (RuntimeException e) {
-                    System.out.println("Thread pool is interrupted due to an issue: " + e.getMessage());
+                } catch (Exception e) {
+                    System.err.println("Thread pool is interrupted due to an issue: " + e.getMessage());
+                    System.err.println(e.getStackTrace().toString());
+                    int id = (int)map.get(task.hashCode());
+                    if(callback!=null)callback.finishBatch(id);
                 }
+                
             }
         }
     }

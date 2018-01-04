@@ -30,6 +30,8 @@ import java.util.Vector;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.RandomAccessFile;
 import java.util.logging.Level;
@@ -39,7 +41,7 @@ import java.util.logging.Logger;
  *
  * @author soup
  */
-public class CombineReferenceSequence extends ReferenceSequence{
+public class CombineReferenceSequence extends ReferenceSequence  implements ThreadPoolCallBack {
     
     
     String output = null;
@@ -100,13 +102,13 @@ public class CombineReferenceSequence extends ReferenceSequence{
         
         boolean finished=false;
         
-        pool = new ThreadPool(number_of_thread);
+        pool = new ThreadPool(number_of_thread,this);
         long time = this.total_read/number_of_thread;
         
         for (int i = 0; i < number_of_thread ; i++) {
             SVProfiler task = new SVProfiler(this,seq_file ,time,time*i+skip_read, i);
             queue.put(i, task);
-            pool.execute(task);
+            pool.execute(task, i);
         }
         
         
@@ -161,15 +163,18 @@ public class CombineReferenceSequence extends ReferenceSequence{
         int last_percent = 0 ;
         for(long z=0;z<countr+skip-1;z++){
             
+            if(z-skip>0){
             int percent = (int)((z-skip)*100/countr);
             
             if(percent>0&&percent!=last_percent){        
                 System.out.println("Process "+thread_id+ " "+percent+"%");
                 last_percent = percent;
-            }
+            }}
             
             SAMRecord r = rr.next();
             if(z<skip-1)continue;
+            try{
+                
             
             String sb = r.getReadString();
             
@@ -189,7 +194,12 @@ public class CombineReferenceSequence extends ReferenceSequence{
             long max = 0 ;
             long max2 = 0 ;
             
-            boolean debug=true;
+            boolean debug=false;
+            
+            
+            ArrayList res = new ArrayList(r.getReadLength());
+            
+            
             
             
             for(int i =0;i<kmer;i++)mask=mask*4+3;
@@ -255,7 +265,7 @@ public class CombineReferenceSequence extends ReferenceSequence{
 //                        list[i] = x;
                         int[] result = this.searchMer((int)cmer,thread_id);
                         
-                        
+                        res.add(result);
                         
                         if(result!=null){
 //                            System.out.print(""+i+ " "+result.length);
@@ -331,19 +341,81 @@ public class CombineReferenceSequence extends ReferenceSequence{
                     }
 //                    it.remove(); // avoids a ConcurrentModificationException
             }
-            
+           
             if(rx.get(max)!=null&&(int)rx.get(max)>minimum_peak_pattern1&&(int)rx.get(max2)>minimum_peak_pattern2){
+                
+              if(max2<max){
+                  long tmp = max2;
+                  max2 = max;
+                  max = tmp;
+              }  
                 
                 
              if(debug) System.out.println(rx);
              
-             pout.println(""+(z+1)+"\t"+rx.get(max)+"\t"+rx.get(max2)+"\t"+max+"\t"+max2+"\t"+r.getReadString());
-                
-                   
+             
+             CombinedPos cp = this.getChromosomePos(max);
+             CombinedPos cp2 = this.getChromosomePos(max2);
+             
+             String chrA = cp.getChr();
+             String chrB = cp2.getChr();
+             int posA = cp.getPos();
+             int posB = cp2.getPos();
+             
+
+             String refseq, refseq2;
+             
+             if(!this.random_access){
+                refseq = this.getReferenceSequence(cp.getChr(), cp.getPos(), 150);
+                refseq2 = this.getReferenceSequence(cp2.getChr(), cp2.getPos(), 150);
+
+             }else{
+                refseq = this.getReferenceSequenceFromIndex(cp.getChr(), cp.getPos(), 150);
+                refseq2 = this.getReferenceSequenceFromIndex(cp2.getChr(), cp2.getPos(), 150);
+             }
+             
+             
+             StringBuffer sread = new StringBuffer();
+             
+             for(int x=0;x<res.size();x++){
+                 
+                 int[] a = (int[])res.get(x);
+                 if(a!=null){
+                     
+                     if(a.length==1){
+                         if(a[0]-x==max)sread.append("A");
+                         else
+                         if(a[0]-x==max2)sread.append("B");
+                         else
+                             sread.append(".");
+                     }
+                         
+                     
+                 }else{
+                     sread.append("_");
+                 }
+                 
+                 
+             }
+             
+             EvaluateResult resc = evaluateConfirmation(r.getReadString(),refseq,refseq2);
+             
+             if(resc.passed()){
+             
+             pout.println(""+(z+1)+"\t"+resc.getCoverage()+"\t"+resc.getSwitchCount()+"\t"+resc.getDupCount()+"\t"+rx.get(max)+"\t"+rx.get(max2)+"\t"+max+"\t"+max2+"\t"+(chrA+":"+posA)+"\t"+(chrB+":"+posB)+"\t"+r.getReadString()+"\t"+refseq+"\t"+refseq2+"\t"+sread+"\t"+resc.getResolveTag());
+             
+             
+             
+             }
 
             }
              
-            
+         }catch(Exception e){
+                StackTraceElement[] elements = e.getStackTrace();
+                for(int i=0; i<elements.length; i++) {
+                System.err.println(elements[i]);
+                }
+            }   
      //            System.out.println();
             
             
@@ -354,6 +426,205 @@ public class CombineReferenceSequence extends ReferenceSequence{
         
         
     }
+    
+    long[] encodeContig(String sb){
+            
+           
+        
+            int kmer = 16;
+            int sliding = 1;
+            
+            int n = (sb.length()-kmer)/sliding;       
+            long cmer = -1;
+            long mask = 0; 
+            int count =0;
+            int start =0;
+            
+            long [] res = new long[n];
+
+            for(int i =0;i<kmer;i++)mask=mask*4+3;
+
+
+            for(int i =0;i<n;i++){
+
+                long pos = i;
+                
+                
+                char chx = sb.charAt(i*sliding+kmer-1);
+                if(chx!='N'){
+                    if(cmer==-1){
+                        String s = sb.substring(i*sliding,i*sliding+kmer);
+                        cmer = encodeMer(s,kmer);
+                    }else{
+
+                        int t =-1;
+                        switch(chx){
+                            case 'A':
+                            case 'a':
+                                t=0; // 00
+                                break;
+                            case 'T':
+                            case 't': 
+                                t=3; // 11
+                                break;
+                            case 'U':
+                            case 'u': 
+                                t=3; // 11 (in case of RNA T has change to U)
+                                break;
+                            case 'C':
+                            case 'c':
+                                t=1; // 01 
+                                break;
+                            case 'G':
+                            case 'g':
+                                t=2; // 10 
+                                break;
+                            default : 
+                                t=-1;
+                            break;
+
+                        }
+                        if(t>=0){
+
+                            cmer *= 4;
+                            cmer &= mask;
+                            cmer += t;
+
+                        }else{
+                            cmer = -1;
+                            i+=kmer;
+                        }  
+                    }  
+                    
+                    
+//                    if(i%10000000==0)System.out.println("Encode - "+name+" "+(i*sliding));
+
+//                    if(cmer>=0){ 
+//                        
+//                        
+//                        
+//                        
+//                    }
+                    res[i] = cmer;
+
+                }
+                
+            }
+                 
+            return res;
+                    
+    }
+    
+    class EvaluateResult{
+        
+        int switch_count;
+        int dup_count;
+        String resolve_tag;
+        int coverage;
+        
+        public boolean passed(){
+            return true;
+        }
+        
+        public int getCoverage() {
+            return coverage;
+        }
+        
+        public int getSwitchCount(){
+            return switch_count;
+        }
+        
+        public int getDupCount(){
+            return dup_count;
+        }
+        
+        public String getResolveTag(){
+            return this.resolve_tag; 
+        }
+        
+        private void setSwitchCount(int switch_count) {
+            this.switch_count = switch_count;
+        }
+
+        private void setDupCount(int dup_count) {
+            this.dup_count = dup_count;
+        }   
+
+        private void setResolveTag(String tag) {
+            this.resolve_tag = tag;
+        }
+
+        private void setCoverage(int coverage) {
+            this.coverage = coverage;
+        }
+
+      
+        
+    }
+    
+    public EvaluateResult evaluateConfirmation(String read, String ref1, String ref2){
+        int mer = 16;
+        EvaluateResult r = new EvaluateResult();
+        
+        long[] encode_read = encodeContig(read);
+        long[] encode_ref1 = encodeContig(ref1);
+        long[] encode_ref2 = encodeContig(ref2);
+        
+        int n = read.length()-mer;
+        StringBuffer sb=new StringBuffer();
+        int dup_count = 0 ;
+        int switch_count = 0;
+        char last = ' ';
+        char next = ' ';
+        int coverage = 0;
+        for(int i=0;i<n;i++){
+            
+               if(encode_ref1[i]==encode_ref2[i]){
+//               System.out.print("D "+encode_ref1[i]);
+               sb.append("D");
+               coverage++;
+               dup_count++;
+               
+               }else{
+               if(encode_read[i]==encode_ref1[i]){
+                   sb.append("A");
+                    next = 'a';
+                    coverage++;
+               }
+               if(encode_read[i]==encode_ref2[i]){
+                   sb.append("B");
+                   next = 'b';
+                    coverage++;
+               }
+              
+               if(encode_read[i]!=encode_ref2[i]&&encode_read[i]!=encode_ref1[i]){
+                  sb.append("_");
+               }
+               
+               }
+               
+               if(next!=' '){
+                   
+                   if(last != next){
+                       switch_count++;
+                       last = next;
+                   }
+                   
+                   
+               }
+        
+            
+        }
+//        System.out.println();
+        r.setResolveTag(sb.toString());
+        r.setSwitchCount(switch_count);
+        r.setDupCount(dup_count);
+        r.setCoverage(coverage);
+        return r;
+    }
+    
+    
+    
     CombineReferenceIndex index=null;
     int useMer = 1;
     boolean random_access;
@@ -1491,6 +1762,115 @@ public class CombineReferenceSequence extends ReferenceSequence{
             
             
     }
+   ArrayList ref_indeies_name = null;
+   ArrayList ref_indeies_seq = null;
+   HashMap ref_indeies = null;
+   
+   public String getReferenceSequence(String chrx, int start, int length) throws FileNotFoundException, IOException{
+   
+        ChromosomeSequence chr = this.getChromosomeSequenceByName(chrx);
+        
+        return chr.seq.substring(start, start+length);
+        
+   }
+
+   
+   
+   
+   public CombinedPos getChromosomePos(long pos) throws IOException{
+       
+       loadRefIndex();
+       long ship = 0;
+       for(int i=0;i<ref_indeies_seq.size();i++){
+           long[] t = (long[])ref_indeies_seq.get(i);
+           if(pos<t[0]){
+               return new CombinedPos((String)ref_indeies_name.get(i),(int)pos);
+           }else{
+               pos-=t[0];
+           }
+       }
+       return null;
+   }
+   
+   public void loadRefIndex() throws FileNotFoundException, IOException{
+       
+         if(ref_indeies==null){
+           
+            ref_indeies = new HashMap<String,long[]>();
+            ref_indeies_seq = new ArrayList<long[]>();
+            ref_indeies_name = new ArrayList<String>();
+            
+            File index_file = new File(filename+".fai");
+            String chr;
+            if(index_file.exists()){
+                BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(index_file)));
+                while((chr=br.readLine())!=null){
+               
+                String[] sl = chr.split("\t");
+                chr = sl[0];
+//               System.out.println(chr+" "+chr.length());
+                long block[] = new long[4];
+                block[0] =  Long.parseLong(sl[1]);
+                block[1] = Long.parseLong(sl[2]);
+                block[2] =  Long.parseLong(sl[3]);
+                block[3] =  Long.parseLong(sl[4]);
+               
+                ref_indeies.put(chr, block);
+                ref_indeies_seq.add(block);
+                ref_indeies_name.add(chr);
+                
+                
+                }
+                
+            }else
+                System.out.println("Require index file");
+       }
+       
+       
+   }
+   
+   public String getReferenceSequenceFromIndex(String chrx, int start, int length) throws FileNotFoundException, IOException{
+       
+       loadRefIndex();
+       
+       if(ref_indeies!=null){
+           long block[] = (long[])ref_indeies.get(chrx);
+           if(block!=null){
+           StringBuffer sb = new StringBuffer();
+           int row = (int)block[2];
+           int rowi = (int)block[3];
+           
+           RandomAccessFile ref = new RandomAccessFile(this.filename,"r");
+           int rowx = (int)(start/row);
+           long s = block[1]+rowx*rowi+start%row;
+           ref.seek(s);
+           
+           rowx = length/row+2;
+           for(int i=0;i<rowx;i++){
+               sb.append(ref.readLine());
+           }
+           
+           
+           
+//           
+//           for(int i=0;i<length;){
+//               String c = Character.toString((char)ref.readByte());
+//               if(s+i%rowi==0);
+//               else{
+//                sb.append(c);
+//                i++;
+//               }
+//           }
+           
+           return sb.substring(0, length);
+           }
+       }
+       
+       return null;
+   }
+   
+    
+   
 
     
 }
