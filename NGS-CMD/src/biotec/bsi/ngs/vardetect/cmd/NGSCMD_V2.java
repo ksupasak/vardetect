@@ -28,22 +28,75 @@ public class NGSCMD_V2 {
 
         // create the Options
         Options options = new Options();
-        options.addOption( "a", "all", false, "do not hide entries starting with ." );
-        options.addOption( "A", "almost-all", false, "do not list implied . and .." );
-        options.addOption( "b", "escape", false, "print octal escapes for nongraphic "
-                                                 + "characters" );
-        options.addOption( Option.builder("S").longOpt("block-size")
-                                        .desc("use SIZE-byte blocks" )
+//        options.addOption( "a", "all", false, "do not hide entries starting with ." );
+//        options.addOption( "A", "almost-all", false, "do not list implied . and .." );
+//        options.addOption( "b", "escape", false, "print octal escapes for nongraphic "
+//                                                 + "characters" );
+        options.addOption( Option.builder("r").longOpt("ref-file")
+                                        .desc("Reference file path")
+                                        .required()
                                         .hasArg()
-                                        .argName("SIZE")
+                                        .argName("refPath")
                                         .build());
-        options.addOption( "B", "ignore-backups", false, "do not list implied entried "
-                                                         + "ending with ~");
-        options.addOption( "c", false, "with -lt: sort by, and show, ctime (time of last " 
-                                       + "modification of file status information) with "
-                                       + "-l:show ctime and sort by name otherwise: sort "
-                                       + "by ctime" );
-        options.addOption( "C", false, "list entries by columns" );
+        options.addOption( Option.builder("t").longOpt("thread-num")
+                                        .desc("number of Thread" )
+                                        .hasArg()
+                                        .argName("thread")
+                                        .build());
+        options.addOption( Option.builder("n").longOpt("read-num")
+                                        .desc("total number of read" )
+                                        .hasArg()
+                                        .argName("numRead")
+                                        .build());
+        options.addOption( Option.builder("S").longOpt("skip-read")
+                                        .desc("number of read to skip (use when debug)" )
+                                        .hasArg()
+                                        .argName("skRead")
+                                        .build());
+        options.addOption( Option.builder("d").longOpt("max-dup")
+                                        .desc("maximum duplicate pattern" )
+                                        .hasArg()
+                                        .argName("mxDup")
+                                        .build());
+        options.addOption( Option.builder("p").longOpt("max-pattern")
+                                        .desc("maximum peak pattern" )
+                                        .hasArgs()
+                                        .argName("mxPPF")
+                                        .argName("mxPPB")
+                                        .build());
+        options.addOption( Option.builder("m").longOpt("mer-size")
+                                        .desc("size of mer" )
+                                        .hasArg()
+                                        .argName("numMer")
+                                        .build());
+        options.addOption( Option.builder("c").longOpt("mer-coverage")
+                                        .desc("Filter value : number of mer coverage" )
+                                        .hasArg()
+                                        .argName("numCov")
+                                        .build());
+        options.addOption( Option.builder("f").longOpt("filter-mode")
+                                        .desc("filter mode has 1,2,3  number of mode" )
+                                        .hasArg()
+                                        .argName("mode")
+                                        .build());
+        options.addOption( Option.builder("R").longOpt("ref-repeat")
+                                        .desc("Filter value : number of base repeat" )
+                                        .hasArg()
+                                        .argName("numRep")
+                                        .build());
+        options.addOption( Option.builder("D").longOpt("filter-dup")
+                                        .desc("Filter duplication count" )
+                                        .hasArg()
+                                        .argName("fDup")
+                                        .build());
+        
+//        options.addOption( "B", "ignore-backups", false, "do not list implied entried "
+//                                                         + "ending with ~");
+//        options.addOption( "c", false, "with -lt: sort by, and show, ctime (time of last " 
+//                                       + "modification of file status information) with "
+//                                       + "-l:show ctime and sort by name otherwise: sort "
+//                                       + "by ctime" );
+//        options.addOption( "C", false, "list entries by columns" );
 
 //        args = new String[]{ "--block-size=10" };
 //        args = new String[]{ "-A","-S 10" };
@@ -69,10 +122,10 @@ public class NGSCMD_V2 {
         
         
         
-//    *     String refPath = args[0];
-//     *    CombineReferenceSequence ref = SequenceUtil.getCombineReferenceSequence(refPath,16); //runFile hg19.fa
-//         
-//     *    ref.setMinimumPeakPattern(10, 5);
+         String refPath = args[0];
+         CombineReferenceSequence ref = SequenceUtil.getCombineReferenceSequence(refPath,16); //runFile hg19.fa
+         
+         ref.setMinimumPeakPattern(10, 5);
 
 // for large batch with multi thread         
 //         ref.setNumberOfThread(8);
@@ -87,20 +140,20 @@ public class NGSCMD_V2 {
 //         ref.setMaximumDuplicatePattern(3);
          
 // for small batch with multi thread         
-//   *      ref.setNumberOfThread(4);
-//         ref.setTotalRead(10000);
-//         ref.setSkipRead(0);
-//         ref.setMaximumDuplicatePattern(1);
-//         ref.setRandomAccess(true);
+         ref.setNumberOfThread(4);
+         ref.setTotalRead(10000);
+         ref.setSkipRead(0);
+         ref.setMaximumDuplicatePattern(1);
+         ref.setRandomAccess(true);
          
 
 // for debug         
-//     *    ref.setNumberOfThread(1);
-//         ref.setTotalRead(1);
-//         ref.setSkipRead(3997);
-//         ref.setMaximumDuplicatePattern(1);
-//         ref.setMinimumPeakPattern(10, 2);
-//         ref.setRandomAccess(true);
+         ref.setNumberOfThread(1);
+         ref.setTotalRead(1);
+         ref.setSkipRead(3997);
+         ref.setMaximumDuplicatePattern(1);
+         ref.setMinimumPeakPattern(10, 2);
+         ref.setRandomAccess(true);
          
          
 //         ref.searchMer(0);
