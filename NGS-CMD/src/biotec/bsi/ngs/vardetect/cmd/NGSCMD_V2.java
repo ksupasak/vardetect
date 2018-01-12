@@ -12,6 +12,7 @@ import java.io.IOException;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -21,7 +22,25 @@ import org.apache.commons.cli.ParseException;
  * @author worawich
  */
 public class NGSCMD_V2 {
+
+    private static int minPeakF=10;
+    private static int minPeakB=5;
+    private static int merCov=50;
+    private static int maxDup=1;
+    private static int countDup=1;
+    private static int numThread=1;
+    private static long numSkip=0;
+    private static int numRepeat=50;
+    private static String refPath="";
+    private static int numRead=10000;
+    private static int numMer=16;
+    private static int filterMode=3;
+    
     public static void main(String[] args) throws IOException, FileNotFoundException, InterruptedException, ParseException {
+        
+        
+        
+
         
         // create the command line parser
         CommandLineParser parser = new DefaultParser();
@@ -36,58 +55,61 @@ public class NGSCMD_V2 {
                                         .desc("Reference file path")
                                         .required()
                                         .hasArg()
-                                        .argName("refPath")
+                                        .argName("file")
                                         .build());
         options.addOption( Option.builder("t").longOpt("thread-num")
                                         .desc("number of Thread" )
                                         .hasArg()
-                                        .argName("thread")
+                                        .argName("int")
                                         .build());
         options.addOption( Option.builder("n").longOpt("read-num")
                                         .desc("total number of read" )
+                                        .required()
                                         .hasArg()
-                                        .argName("numRead")
+                                        .argName("int")
                                         .build());
-        options.addOption( Option.builder("S").longOpt("skip-read")
+        options.addOption( Option.builder("s").longOpt("skip-read")
                                         .desc("number of read to skip (use when debug)" )
                                         .hasArg()
-                                        .argName("skRead")
+                                        .argName("long")
                                         .build());
         options.addOption( Option.builder("d").longOpt("max-dup")
                                         .desc("maximum duplicate pattern" )
                                         .hasArg()
-                                        .argName("mxDup")
+                                        .argName("int")
                                         .build());
-        options.addOption( Option.builder("p").longOpt("max-pattern")
-                                        .desc("maximum peak pattern" )
-                                        .hasArgs()
-                                        .argName("mxPPF")
-                                        .argName("mxPPB")
+        options.addOption( Option.builder("p").longOpt("mix-pattern")
+                                        .desc("minimum peak pattern" )
+                                        .hasArgs().numberOfArgs(2)
+                                        .argName("int int")
                                         .build());
         options.addOption( Option.builder("m").longOpt("mer-size")
                                         .desc("size of mer" )
                                         .hasArg()
-                                        .argName("numMer")
+                                        .argName("int")
                                         .build());
-        options.addOption( Option.builder("c").longOpt("mer-coverage")
+        options.addOption( Option.builder("C").longOpt("mer-coverage")
                                         .desc("Filter value : number of mer coverage" )
                                         .hasArg()
-                                        .argName("numCov")
+                                        .argName("int")
                                         .build());
-        options.addOption( Option.builder("f").longOpt("filter-mode")
-                                        .desc("filter mode has 1,2,3  number of mode" )
+        options.addOption( Option.builder("F").longOpt("filter-mode")
+                                        .desc("Filter mode has 1,2,3  number of mode" )
                                         .hasArg()
-                                        .argName("mode")
+                                        .argName("int")
                                         .build());
         options.addOption( Option.builder("R").longOpt("ref-repeat")
                                         .desc("Filter value : number of base repeat" )
                                         .hasArg()
-                                        .argName("numRep")
+                                        .argName("int")
                                         .build());
         options.addOption( Option.builder("D").longOpt("filter-dup")
                                         .desc("Filter duplication count" )
                                         .hasArg()
-                                        .argName("fDup")
+                                        .argName("int")
+                                        .build());
+        options.addOption( Option.builder("h").longOpt("help")
+                                        .desc("algorithm usage help" )
                                         .build());
         
 //        options.addOption( "B", "ignore-backups", false, "do not list implied entried "
@@ -105,14 +127,28 @@ public class NGSCMD_V2 {
             // parse the command line arguments
             CommandLine line = parser.parse( options, args );
 
-            // validate that block-size has been set
-            if( line.hasOption( "block-size" ) ) {
-                // print the value of block-size
-                System.out.println( line.getOptionValue( "block-size" ) );
+            
+            if( line.hasOption( "p" ) ) {                
+                System.out.println( line.getOptionValues("p")[0]);
+                System.out.println( line.getOptionValues("p")[1]);
+                minPeakF = Integer.parseInt(line.getOptionValues("p")[0]);
+                minPeakB = Integer.parseInt(line.getOptionValues("p")[1]);
             }
             
-            if(line.hasOption("A")){
-                System.out.println("you trick option -A");
+            if(line.hasOption("C")) merCov = Integer.parseInt(line.getOptionValue("C"));
+            if(line.hasOption("d")) maxDup = Integer.parseInt(line.getOptionValue("d"));
+            if(line.hasOption("D")) countDup = Integer.parseInt(line.getOptionValue("D"));
+            if(line.hasOption("F")) filterMode = Integer.parseInt(line.getOptionValue("F"));
+            if(line.hasOption("m")) numMer = Integer.parseInt(line.getOptionValue("m"));
+            if(line.hasOption("n")) numRead = Integer.parseInt(line.getOptionValue("n"));
+            if(line.hasOption("r")) refPath = line.getOptionValue("r");
+            if(line.hasOption("R")) numRepeat = Integer.parseInt(line.getOptionValue("R"));
+            if(line.hasOption("s")) numSkip = Long.parseLong(line.getOptionValue("s"));
+            if(line.hasOption("t")) numThread = Integer.parseInt(line.getOptionValue("t"));
+
+            if(line.hasOption("h")){
+                HelpFormatter formatter = new HelpFormatter();
+                formatter.printHelp( "SVP parameter setting help", options );
             }
         }
         catch( ParseException exp ) {
@@ -122,10 +158,12 @@ public class NGSCMD_V2 {
         
         
         
-         String refPath = args[0];
-         CombineReferenceSequence ref = SequenceUtil.getCombineReferenceSequence(refPath,16); //runFile hg19.fa
-         
-         ref.setMinimumPeakPattern(10, 5);
+        
+        
+//         *String refPath = args[0];
+//         *CombineReferenceSequence ref = SequenceUtil.getCombineReferenceSequence(refPath,16); //runFile hg19.fa
+//         
+//         *ref.setMinimumPeakPattern(10, 5);
 
 // for large batch with multi thread         
 //         ref.setNumberOfThread(8);
@@ -140,20 +178,20 @@ public class NGSCMD_V2 {
 //         ref.setMaximumDuplicatePattern(3);
          
 // for small batch with multi thread         
-         ref.setNumberOfThread(4);
-         ref.setTotalRead(10000);
-         ref.setSkipRead(0);
-         ref.setMaximumDuplicatePattern(1);
-         ref.setRandomAccess(true);
+//         *ref.setNumberOfThread(4);
+//         ref.setTotalRead(10000);
+//         ref.setSkipRead(0);
+//         ref.setMaximumDuplicatePattern(1);
+//         ref.setRandomAccess(true);
          
 
 // for debug         
-         ref.setNumberOfThread(1);
-         ref.setTotalRead(1);
-         ref.setSkipRead(3997);
-         ref.setMaximumDuplicatePattern(1);
-         ref.setMinimumPeakPattern(10, 2);
-         ref.setRandomAccess(true);
+//         *ref.setNumberOfThread(1);
+//         ref.setTotalRead(1);
+//         ref.setSkipRead(3997);
+//         ref.setMaximumDuplicatePattern(1);
+//         ref.setMinimumPeakPattern(10, 2);
+//         ref.setRandomAccess(true);
          
          
 //         ref.searchMer(0);
