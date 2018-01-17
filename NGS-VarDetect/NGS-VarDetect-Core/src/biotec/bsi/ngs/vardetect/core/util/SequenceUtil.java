@@ -5426,6 +5426,7 @@ public class SequenceUtil {
         * It also calculate start and stop index then create MapF and MapB which has been use for detect variation
         * then passing the information to detect variation function and store result to VariationResult object
         * The input data must be sorted by order of Read (same read will group together) and iniIndex (numeric order)
+        * Find possible junction and classify type of variant with number code by detectVariationV2 function
         * 
         * Has implement transmit readlength protocol which allow user don't have to set readlength. It's will extract from input 
         */
