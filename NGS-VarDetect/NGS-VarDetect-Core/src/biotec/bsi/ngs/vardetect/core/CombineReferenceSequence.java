@@ -35,6 +35,10 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.RandomAccessFile;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -52,9 +56,11 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
     PrintStream fout =null;
     
     long skip_read = 0;
-    long total_read = Integer.MAX_VALUE;
+    long total_read = 0;
     
     int number_of_thread = 1;
+    
+    int chunk_read = 0;
     
     int minimum_peak_pattern1 = 10;
     int minimum_peak_pattern2 = 5;
@@ -79,6 +85,10 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
     
     public void setFilterDupCount(int f){
         this.filter_dup_count = f;
+    }
+    
+    public void setChunkRead(int c){
+        this.chunk_read = c;
     }
     
     public void setNumberOfThread(int t){
@@ -126,6 +136,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
             pout = new PrintStream(new FileOutputStream(output));
             
         }
+        fout = System.out;
         
         if(foutput!=null){
             fout = new PrintStream(new FileOutputStream(foutput));
@@ -133,6 +144,8 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
         
         boolean finished=false;
         
+        if(this.total_read>0){
+            
         pool = new ThreadPool(number_of_thread,this);
         long time = this.total_read/number_of_thread;
         
@@ -140,11 +153,106 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
             SVProfiler task = new SVProfiler(this,seq_file ,time,time*i+skip_read, i);
             queue.put(i, task);
             pool.execute(task, i);
+        }}
+        else{
+            pool = new ThreadPool(number_of_thread,this);
+
+           SAMRecordIterator it = samReader.iterator();
+           
+           int count = 0 ;
+           int i = 0 ;
+           long time = this.chunk_read;
+           while(it.hasNext()){
+              it.next();
+              if(count!=0&&count%this.chunk_read==0){
+                  System.out.println("Chunk "+i+" "+time*i);
+                  SVProfiler task = new SVProfiler(this,seq_file ,time,time*i+skip_read, i);
+                  queue.put(i, task);
+                  pool.execute(task, i);
+
+                  i++;
+              }
+              count++; 
+           }
+            SVProfiler task = new SVProfiler(this,seq_file ,count%this.chunk_read-1,time*i+skip_read, i);
+            queue.put(i, task);
+            pool.execute(task, i);
+               
         }
         
         
         
         
+        
+    }
+
+    public void prepare() throws IOException {
+        if(this.random_access==false){
+            
+            loadAllSequence();
+            
+            
+        }
+        
+        searchMer(0);
+
+    }
+
+    public void loadAllSequence() {
+
+       /**
+             * Extract chromosome and create index file
+             */
+            this.chrs.clear();
+            
+            Charset charset = Charset.forName("US-ASCII");
+            Path path = Paths.get(filename);
+            String chr = null;
+
+            StringBuffer seq = new StringBuffer();
+
+            try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+                String line = null;
+
+                while ((line = reader.readLine()) != null) {
+
+                    if(line.charAt(0)=='>'){
+
+                        if(chr!=null){
+
+                            System.out.println("CHR : "+chr+" Size : "+seq.length());
+                              
+                            ChromosomeSequence c = new ChromosomeSequence(this,chr,seq);
+                            this.addChromosomeSequence(c);
+                            
+                            
+                        }
+                        seq = new StringBuffer();
+                        chr = line.substring(1,line.length());
+                      
+                     
+                    }
+                     else{
+                        seq.append(line.trim());
+                    }
+                }
+                
+                 if(seq.length()>0){
+
+                    System.out.println("CHR : "+chr+" Size : "+seq.length());
+                    ChromosomeSequence c = new ChromosomeSequence(this,chr,seq);
+
+                    seq = null;
+
+                    this.addChromosomeSequence(c);
+                }
+
+                
+            }catch (IOException x) {
+                System.err.format("IOException: %s%n", x);
+            } 
+
+
     }
     
     
@@ -546,6 +654,42 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                     
 //                    EvaluateResult resc2 = evaluateConfirmation(read,refseq2,null);
                     EvaluateResult resf = evaluateConfirmation(read,refseq,refseq2);
+                    
+                    int maxAc = (int)rx.get(max);
+                    int maxBc = (int)rx2.get(max2);
+                    String chrposA = ""+(chrA+":"+posA);
+                    String chrposB = ""+(chrB+":"+posB);
+                    String maxposA = max;
+                    String maxposB = max2;
+                    
+                            
+                            
+                    if(resf.isReversePeak()){
+//                        System.out.println("Reverse");
+                        resf = evaluateConfirmation(read,refseq2,refseq);
+                        
+                        String trefseq = refseq;
+                        refseq = refseq2;
+                        refseq2 = trefseq;
+                        
+                        int tmaxc = maxAc;
+                        maxAc = maxBc;
+                        maxBc = tmaxc;
+                        
+                        String tchrpos = chrposA;
+                        chrposA  = chrposB;
+                        chrposB = tchrpos;
+                        
+                        String tmaxpos = maxposA;
+                        maxposA = maxposB;
+                        maxposB = tmaxpos;
+                        
+                        
+                        
+                    }
+                    
+                    
+                    
                     resf.resolve();
                     if(debug){
                         
@@ -574,24 +718,44 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                     }
                     String sread = resf.getEvaluateTag();
                        
-                    pout.println(""+(z+1)+"\t"+resf.getCoverage()+"\t"+resf.getSwitchCount()+"\t"+resf.getDupCount()+"\t"+rx.get(max)+"\t"+rx2.get(max2)+"\t"+max+"\t"+max2+"\t"+(chrA+":"+posA)+"\t"+(chrB+":"+posB)+"\t"+r.getReadString()+"\t"+refseq+"\t"+refseq2+"\t"+sread);
+                    pout.println(""+(z+1)+"\t"+resf.getCoverage()+"\t"+resf.getSwitchCount()+"\t"+resf.getDupCount()+"\t"+maxAc+"\t"+maxBc+"\t"+maxposA+"\t"+maxposB+"\t"+chrposA+"\t"+chrposB+"\t"+r.getReadString()+"\t"+refseq+"\t"+refseq2+"\t"+sread);
                     
-                    if(fout!=null){
+//                    if(fout!=null){
                         
                      
                         if(resf.getCoverage()>=this.filter_mer_coverage&&Math.abs(pmax-pmax2)>30&&resf.getSwitchCount()==2&&resf.getDupCount()<=this.filter_dup_count&&resf.getRefRepeatCount()<this.filter_ref_repeat){
                             int bp[] = resf.findBreakPoint();
                             String junction = read.substring(bp[0],bp[1]);
                             if(junction.length()==0)
-                            junction = "-";
-                            fout.println(""+(z+1)+"\t"+resf.getCoverage()+"\t"+resf.getSwitchCount()+"\t"+resf.getDupCount()+"\t"+rx.get(max)+"\t"+rx2.get(max2)+"\t"+max+"\t"+max2+"\t"+(chrA+":"+posA)+"\t"+(chrB+":"+posB)+"\t"+r.getReadString()+"\t"+refseq+"\t"+refseq2+"\t"+sread+"\t"+resf.getResolveTag()+"\t"+bp[0]+"\t"+bp[1]+"\t"+junction);
+                                junction = "-";
+                            
+                            String[] tA = chrposA.split(":");
+                            String[] tB = chrposB.split(":");
+                            int bp0 = bp[0];
+                            int bp1 = bp[1];
+                            String[] tpA = maxposA.split(":");
+                            String[] tpB = maxposB.split(":");
+                            
+                            if(tpA[1].compareTo("1")==0){
+                                 bp0 = 150-bp0;
+                            }
+                            if(tpB[1].compareTo("1")==0){
+                                 bp1 = 150-bp1;
+                            }
+                            
+                            
+                            String junctionA = ""+tA[0]+":"+(Integer.parseInt(tA[1])+bp0);
+                            String junctionB = ""+tB[0]+":"+(Integer.parseInt(tB[1])+bp1);
+                            
+                            
+                            fout.println(""+(z+1)+"\t"+resf.getCoverage()+"\t"+resf.getSwitchCount()+"\t"+resf.getDupCount()+"\t"+maxAc+"\t"+maxBc+"\t"+maxposA+"\t"+maxposB+"\t"+chrposA+"\t"+chrposB+"\t"+r.getReadString()+"\t"+refseq+"\t"+refseq2+"\t"+sread+"\t"+resf.getResolveTag()+"\t"+bp[0]+"\t"+bp[1]+"\t"+junctionA+"\t"+junctionB+"\t"+junction);
 
                             
                         }
                         
                         
                         
-                    }
+//                    }
                     
                
                     
@@ -801,6 +965,14 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
         String ref1;
         String ref2;
         
+        boolean reverse = false;
+        
+        public boolean isReversePeak(){
+            return reverse;
+        }
+        public void setReversePeak(boolean reverse){
+            this.reverse = reverse;
+        }
         public boolean passed(){
             return true;
         }
@@ -1000,52 +1172,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
 
                 
             }
-//            System.out.println("" + bp[0] +" "+bp[1]);
-            
-            
-//   count = 0 
-//   start = ''
-//   last = 0
-//   bp = []
-//   i.chars.each_with_index do |c,ci|
-//
-//     # if c!="_" and i[ci+1]!='s' and c.to_s.upcase!=i[ci+1].upcase
-//     #     bp = [ci,ci]
-//     #     break
-//     #   else  
-//
-//     if start == '' and (c=='a' or c =='b' or c =='A' or c =='B')
-//       start = c.to_s.downcase
-//       count+=1
-//     elsif c.downcase == start 
-//       count+=1
-//     else
-//       if (start=='a' and c=='A' ) or (start=='b' and c=='B' )
-//         count+=1
-//       else
-//
-//       last = ci-1 if count >=4 
-//       count = 0
-//       if start=='a' and c=='B'
-//         # puts "Break point at #{last} - #{ci-1}"
-//         bp = [last,ci-1]
-//         break
-//       end
-//       if start=='b' and c=='A'
-//         # puts "Break point at #{last} - #{ci-1}"
-//         bp = [last,ci-1]
-//         break
-//       end
-//     end
-//
-//     # end
-//     end
-//
-//
-//     # puts "#{c} #{ci} #{start} #{count} #{last}"
-//
-//
-//   end    
+ 
             
             return bp;
             
@@ -1074,6 +1201,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
         int dup_count = 0 ;
         int switch_count = 0;
         char last = ' ';
+        char lastc =  ' ';
         char next = ' ';
         int coverage = 0;
         for(int i=0;i<n;i++){
@@ -1107,6 +1235,8 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                    if(last != next){
                        switch_count++;
                        last = next;
+                       if(last!='_')
+                           lastc=last;
                    }
                    
                    
@@ -1114,6 +1244,11 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
         
             
         }
+//        System.out.println("Last C "+lastc);
+        if(Character.toUpperCase(lastc)=='A'){
+           r.setReversePeak(true);
+        }
+        
 //        System.out.println();
         r.setRead(read);
         r.setRef1(ref1);
