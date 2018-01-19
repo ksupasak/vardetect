@@ -20,6 +20,14 @@
                 <clean-target>clean</clean-target>
                 <id>module</id>
             </reference>
+            <reference>
+                <foreign-project>picard</foreign-project>
+                <artifact-type>jar</artifact-type>
+                <script>build.xml</script>
+                <target>netbeans</target>
+                <clean-target>clean</clean-target>
+                <id>module</id>
+            </reference>
         </references>
     </configuration>
 </project>

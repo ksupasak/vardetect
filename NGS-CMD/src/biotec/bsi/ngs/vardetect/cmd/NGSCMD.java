@@ -32,42 +32,51 @@ public class NGSCMD {
     public static void main(String[] args) throws IOException, FileNotFoundException, InterruptedException {
         
          String refPath = args[0];
+         
          CombineReferenceSequence ref = SequenceUtil.getCombineReferenceSequence(refPath,16); //runFile hg19.fa
          
          ref.setMinimumPeakPattern(10, 5);
 
 // for large batch with multi thread         
-//         ref.setNumberOfThread(8);
+         ref.setNumberOfThread(8);
 //         ref.setTotalRead(86000000);
-//         ref.setSkipRead(0);
-//         ref.setMaximumDuplicatePattern(3);
+//         ref.setTotalRead(8000);
+         
+         ref.setChunkRead(1000000);
+         ref.setSkipRead(0);
+         ref.setMaximumDuplicatePattern(1);
 
 // for large batch with multi thread         
 //         ref.setNumberOfThread(4);
 //         ref.setTotalRead(100000);
 //         ref.setSkipRead(0);
-//         ref.setMaximumDuplicatePattern(3);
+//         ref.setMaximumDuplicatePattern(1);
          
 // for small batch with multi thread         
-         ref.setNumberOfThread(4);
-         ref.setTotalRead(10000);
-         ref.setSkipRead(0);
-         ref.setMaximumDuplicatePattern(1);
-         ref.setRandomAccess(true);
+//         ref.setNumberOfThread(4);
+//         ref.setTotalRead(10000);
+//         ref.setSkipRead(0);
+//         ref.setMaximumDuplicatePattern(1);
+//         ref.setRandomAccess(true);
          
 
 // for debug         
-         ref.setNumberOfThread(1);
-         ref.setTotalRead(1);
-         ref.setSkipRead(3997);
-         ref.setMaximumDuplicatePattern(1);
-         ref.setMinimumPeakPattern(10, 2);
-         ref.setRandomAccess(true);
+//         ref.setNumberOfThread(1);
+//         ref.setTotalRead(100);
+//         ref.setSkipRead(10242);
+//         ref.setSkipRead(51207);
+////         ref.setSkipRead(86893);
+//         ref.setSkipRead(32382);
+//////         ref.setSkipRead(21555455);
+//         ref.setMaximumDuplicatePattern(3);
+//         ref.setMinimumPeakPattern(10, 2);
+//         ref.setRandomAccess(true);
          
          
-//         ref.searchMer(0);
-//         ref.setOutputFile("/Users/soup/human/RB_cancer/277T_sorted_unmap.all.out");
-//         ref.runProfileSV("/Users/soup/human/RB_cancer/277T_sorted_unmap.bam");
+         ref.prepare();
+         ref.setOutputFile("/Users/worawich/Download_dataset/Ratina_cancer/277T_sorted_unmap.all.out");
+         ref.setOutputSVFile("/Users/worawich/Download_dataset/Ratina_cancer/277T_sorted_unmap.filter.out");
+         ref.runProfileSV("/Users/worawich/Download_dataset/Ratina_cancer/277T_sorted_unmap.bam");
          
 //         
 //         
