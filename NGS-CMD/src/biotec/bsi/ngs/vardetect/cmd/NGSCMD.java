@@ -38,7 +38,7 @@ public class NGSCMD {
          ref.setMinimumPeakPattern(10, 5);
 
 // for large batch with multi thread         
-         ref.setNumberOfThread(8);
+         ref.setNumberOfThread(4);
 //         ref.setTotalRead(86000000);
 //         ref.setTotalRead(8000);
          
@@ -74,9 +74,9 @@ public class NGSCMD {
          
          
          ref.prepare();
-         ref.setOutputFile("/Users/worawich/Download_dataset/Ratina_cancer/277T_sorted_unmap.all.out");
-         ref.setOutputSVFile("/Users/worawich/Download_dataset/Ratina_cancer/277T_sorted_unmap.filter.out");
-         ref.runProfileSV("/Users/worawich/Download_dataset/Ratina_cancer/277T_sorted_unmap.bam");
+         ref.setOutputFile("/Users/worawich/Download_dataset/MRSA/Result_HO5096_0412/MRSATU170001_S130_HO5096_0412.aln.sorted.mrkDup.unmap.all.out");
+         ref.setOutputSVFile("/Users/worawich/Download_dataset/MRSA/Result_HO5096_0412/MRSATU170001_S130_HO5096_0412.aln.sorted.mrkDup.unmap.filter.out");
+         ref.runProfileSV("/Users/worawich/Download_dataset/MRSA/Result_HO5096_0412/MRSATU170001_S130_HO5096_0412.aln.sorted.mrkDup.unmap.bam");
          
 //         
 //         
