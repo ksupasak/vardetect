@@ -23,6 +23,7 @@ import biotec.bsi.ngs.vardetect.core.SequenceIndex;
 import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import biotec.bsi.ngs.vardetect.core.Smallindelsample;
 import biotec.bsi.ngs.vardetect.core.VariationResult;
+import biotec.bsi.ngs.vardetect.core.VariationV2;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
@@ -90,7 +91,7 @@ public class SequenceUtil {
         
         if(encode_file.exists()){
             
-            if(false&&index_file.exists()){
+            if(index_file.exists()){
             String chr= null;
 
             BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(index_file)));
@@ -124,7 +125,7 @@ public class SequenceUtil {
 
                         if(chr!=null){
 
-                            System.out.println("CHR : "+chr+" Size : "+seq.length());
+                            System.out.println("CHRxxx : "+chr+" Size : "+seq.length());
                               
                             ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
                             ref.addChromosomeSequence(c);
@@ -133,7 +134,7 @@ public class SequenceUtil {
                         }
                         seq = new StringBuffer();
                         chr = line.substring(1,line.length());
-                      
+                        chr = chr.split(" ")[0];
                      
                     }
                      else{
@@ -179,9 +180,8 @@ public class SequenceUtil {
                     if(line.charAt(0)=='>'){
 
                         if(chr!=null){
-
-                            System.out.println("CHR : "+chr+" Size : "+seq.length());
-                              
+                            System.out.println("CHRss : "+chr+" Size : "+seq.length());
+                            
                             ChromosomeSequence c = new ChromosomeSequence(ref,chr,seq);
                             ref.addChromosomeSequence(c);
                             
@@ -189,6 +189,8 @@ public class SequenceUtil {
                         }
                         seq = new StringBuffer();
                         chr = line.substring(1,line.length());
+                        chr = chr.split(" ")[0];
+
                       
                      
                     }
@@ -7750,4 +7752,68 @@ public class SequenceUtil {
 //        
 //        
 //    }
+    
+    public static VariationResult readVersion2AlignmentResult(String outputFile) throws IOException{
+        Charset charset = Charset.forName("US-ASCII");
+        //String[] ddSS = filename.split(".");
+        
+        Path path = Paths.get(outputFile);
+
+        StringBuffer seq = new StringBuffer();
+        ArrayList<String> inData = new ArrayList();
+        ArrayList<VariationV2> varList = new ArrayList();
+        try (BufferedReader reader = Files.newBufferedReader(path, charset)) {
+            String line = null;    
+            int count = 0;
+
+            System.out.println("reading output File");
+            while ((line = reader.readLine()) != null) {
+
+                inData.add(line);
+                VariationV2 var = new VariationV2();
+                String[] data = line.split("\t");
+                //Set data
+                var.setReadID(Integer.parseInt(data[0]));
+                var.setMerCoverage(Integer.parseInt(data[1]));
+                var.setOrientationCode(Byte.parseByte(data[2]));
+                var.setNumOverlapMer(Integer.parseInt(data[3]));
+                var.setNumMerF(Integer.parseInt(data[4]));
+                var.setNumMerB(Integer.parseInt(data[5]));
+                String[] dummyRawDataF = data[6].split(":");
+                String[] dummyRawDataB = data[7].split(":");
+                var.setStrandF(Byte.parseByte(dummyRawDataF[1]));
+                var.setStrandB(Byte.parseByte(dummyRawDataB[1]));
+                var.setPosCodeF(Long.parseUnsignedLong(dummyRawDataF[0]));
+                var.setPosCodeB(Long.parseUnsignedLong(dummyRawDataB[0]));
+                String[] dummyRealDataF = data[8].split(":");
+                String[] dummyRealDataB = data[9].split(":");
+                var.setChrF(dummyRealDataF[0]);
+                var.setChrB(dummyRealDataB[0]);
+                var.setAlignPosF(Integer.parseInt(dummyRealDataF[1]));
+                var.setAlignPosB(Integer.parseInt(dummyRealDataB[1]));
+                var.setReadSeq(data[10]);
+                var.setRefF(data[11]);
+                var.setRefB(data[12]);
+                var.setMerProfile(data[13]);
+                var.setMerCollection(data[14]);
+                var.setBreakpointIndexF(Integer.parseInt(data[15]));
+                var.setBreakpointIndexB(Integer.parseInt(data[16]));
+                var.setBreakpointF(Integer.parseInt(data[17].split(":")[1]));
+                var.setBreakpointB(Integer.parseInt(data[18].split(":")[1]));
+                
+                varList.add(var);
+                count++;
+                if(count%1000000==0){
+                    System.out.println(count + " line past");
+                    //System.out.println("Recent chromosome: " + numChr);
+                }       
+
+            }                   
+
+        }
+        
+        VariationResult varRes = new VariationResult();
+        varRes.setVarList(varList);
+        return varRes;
+    }
 }

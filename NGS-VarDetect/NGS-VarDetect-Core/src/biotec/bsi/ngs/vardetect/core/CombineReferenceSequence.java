@@ -220,7 +220,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
 
                         if(chr!=null){
 
-                            System.out.println("CHR : "+chr+" Size : "+seq.length());
+                            System.out.println("CfHR : "+chr+" Size : "+seq.length());
                               
                             ChromosomeSequence c = new ChromosomeSequence(this,chr,seq);
                             this.addChromosomeSequence(c);
@@ -229,7 +229,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                         }
                         seq = new StringBuffer();
                         chr = line.substring(1,line.length());
-                      
+                       chr = chr.split(" ")[0];
                      
                     }
                      else{

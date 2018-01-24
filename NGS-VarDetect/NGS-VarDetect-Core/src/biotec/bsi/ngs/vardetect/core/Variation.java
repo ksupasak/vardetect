@@ -204,7 +204,7 @@ public class Variation {
             
             if(this.strandF.equals("+") && this.strandB.equals("+")){
                 /**
-                 * for strand ++ 
+                 * for strand ++  
                  */
                 if(this.iniPosB>this.iniPosF){
                     /**

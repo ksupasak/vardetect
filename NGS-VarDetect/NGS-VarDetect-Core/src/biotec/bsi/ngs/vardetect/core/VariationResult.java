@@ -30,6 +30,7 @@ import static java.util.stream.Collectors.toMap;
  * @author worawich
  */
 public class VariationResult {
+    private ArrayList<VariationV2> varList;
     private Map<Integer,ArrayList<String[]>> variationResult;
     int numChrF; 
     long iniPosF; 
@@ -79,7 +80,9 @@ public class VariationResult {
     private ArrayList<Variation> listOneTail;                                                // store variation object of one tail event 
     private Map<Long,Map<Long,ArrayList<Variation>>> coverageMapFusion;
     private Map<Long,Map<Long,ArrayList<Integer>>> sumNumMatchCoverageMapFusion;          // store ArrayList of Integer [sumNumMatchFront,sumNumMatchBack]. Use in annotation process to calculate average back and front breakpoint position use as search value for annotated gene
+     private Map<String,Map<String,ArrayList<Integer>>> sumNumMatchCoverageMap;          // store ArrayList of Integer [sumNumMatchFront,sumNumMatchBack]. Use in annotation process to calculate average back and front breakpoint position use as search value for annotated gene
     private Map<Long,Map<Long,ArrayList<Variation>>> coverageMapIndel;
+    private Map<String,Map<String,ArrayList<VariationV2>>> coverageMap;                   // coverageMap for new version of algorithm (speed up Version) did not pass SV type classification it sum all possible SV
     private Map<Long,ArrayList<Variation>> coverageMapSNP;
     private Map<Long,Map<Long,ArrayList<Variation>>> coverageMapOther;
     private Map<Long,ArrayList<Integer>> oneTailFrontLinkIdx;                                      // map that store key = original frontbreakpoint of one tail   and value is index of variaiton object store in listOnetail
@@ -99,6 +102,7 @@ public class VariationResult {
         this.listOneTail = new ArrayList();                                     
         this.coverageMapFusion = new LinkedHashMap();
         this.coverageMapIndel = new LinkedHashMap();
+        this.coverageMap = new LinkedHashMap();
         this.coverageMapOther = new TreeMap();
         this.coverageMapSNP = new TreeMap();
         this.sumNumMatchCoverageMapFusion = new TreeMap();
@@ -115,6 +119,10 @@ public class VariationResult {
     
     public void addReadLength(int readLen){
         this.readLength = readLen;
+    }
+
+    public void setVarList(ArrayList<VariationV2> varList) {
+        this.varList = varList;
     }
     
     public void addVariationMap(Map<Integer,ArrayList<String[]>> variation){
@@ -3133,7 +3141,89 @@ public class VariationResult {
         
     }
     
-    public void createReferenceFromNovelIndelResult(int minPickCoverage){
+    public void analyzeCoverage(){
+        /**
+         * This fuction use to group same SV event togather
+         * Use with new algorithm (speed align Version by P'soup)
+         */
         
+        for(int i=0;i<this.varList.size();i++){
+            
+            VariationV2 dummyVar = varList.get(i);
+            int bpF = dummyVar.getBreakpointF();
+            int bpB = dummyVar.getBreakpointB();
+            byte strandF = dummyVar.getStrandF();
+            byte strandB = dummyVar.getStrandB();
+            String chrF = dummyVar.getChrF();
+            String chrB = dummyVar.getChrB();
+       
+            if(strandF==1 && strandB==1){
+                /**
+                 * For strand -- we will reverse the front and back part into normal arrange like reference 
+                 * Front become back and back become front 
+                 * Switch just for clustering task (Does not switch when classify SV type)
+                 */
+                bpF = dummyVar.getBreakpointB();
+                bpB = dummyVar.getBreakpointF();
+                chrF = dummyVar.getChrB();
+                chrB = dummyVar.getChrF();
+            }
+            
+            String bpFCode = chrF+":"+bpF;
+            String bpBCode = chrB+":"+bpB;         
+            
+            if(this.coverageMap.containsKey(bpFCode)){                      // check similarity of front breakpoint
+                Map<String,ArrayList<VariationV2>> coverageMapII = this.coverageMap.get(bpFCode);
+//                Map<String,ArrayList<Integer>> sumNumMatchCoverageMapII = this.sumNumMatchCoverageMap.get(bpFCode);
+                if(coverageMapII.containsKey(bpBCode)){                       // check similarity of back breakpoit
+                    /**
+                     * put variation data to existing ArrayList<Variation>
+                     * and put back to coverageMapFusionII
+                     */
+                    ArrayList<VariationV2> coverageList = coverageMapII.get(bpBCode);
+                    coverageList.add(dummyVar);
+                    coverageMapII.put(bpBCode, coverageList);
+                    
+//                    ArrayList<Integer> sumNumMatchList = sumNumMatchCoverageMapII.get(bpBCode);           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+//                    int sumNumMatchOldF = sumNumMatchList.get(0);
+//                    int sumNumMatchOldB = sumNumMatchList.get(1);
+//                    int sumNumMatchNewF = sumNumMatchOldF+dummyVar.numMatchF;
+//                    int sumNumMatchNewB = sumNumMatchOldB+dummyVar.numMatchB;
+//                    sumNumMatchList.add(0, sumNumMatchNewF);
+//                    sumNumMatchList.add(1, sumNumMatchNewB);
+//                    sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
+                }else{
+                    ArrayList<VariationV2> coverageList = new ArrayList();
+                    coverageList.add(dummyVar);
+                    coverageMapII.put(bpBCode, coverageList);
+                    
+//                    ArrayList<Integer> sumNumMatchList = new ArrayList();           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+//                    sumNumMatchList.add(0, dummyVar.numMatchF);
+//                    sumNumMatchList.add(1, dummyVar.numMatchB);
+//                    sumNumMatchCoverageMap.put(bpBCode, sumNumMatchList);
+                }
+                this.coverageMap.put(bpFCode, coverageMapII);
+//                this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapII);
+            }else{
+                Map<String,ArrayList<VariationV2>> coverageMapII = new TreeMap();
+                ArrayList<VariationV2> coverageList = new ArrayList();
+                coverageList.add(dummyVar);
+                
+//                Map<String,ArrayList<Integer>> sumNumMatchCoverageMapII = new TreeMap();
+//                ArrayList<Integer> sumNumMatchList = new ArrayList();           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+//                sumNumMatchList.add(0, dummyVar.numMatchF);
+//                sumNumMatchList.add(1, dummyVar.numMatchB);
+//                sumNumMatchCoverageMapII.put(bpBCode, sumNumMatchList);
+//                this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapII);
+                
+//                /**
+//                 * Add data
+//                 */
+                coverageMapII.put(bpBCode, coverageList);
+                this.coverageMap.put(bpFCode, coverageMapII);                
+            }            
+        }
+        System.out.println("");
     }
+    
 }
