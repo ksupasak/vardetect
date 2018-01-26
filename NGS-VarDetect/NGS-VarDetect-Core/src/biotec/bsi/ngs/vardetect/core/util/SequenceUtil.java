@@ -7800,6 +7800,7 @@ public class SequenceUtil {
                 var.setBreakpointIndexB(Integer.parseInt(data[16]));
                 var.setBreakpointF(Integer.parseInt(data[17].split(":")[1]));
                 var.setBreakpointB(Integer.parseInt(data[18].split(":")[1]));
+                var.setMiddleBase(data[19]);
                 
                 varList.add(var);
                 count++;

@@ -45,7 +45,6 @@ public class VariationResult {
     int readLengthF;
     String readNameF;
     String strandF;
-
     int numChrB; 
     long iniPosB; 
     long lastPosB;
@@ -65,14 +64,6 @@ public class VariationResult {
     
     byte percentMatch;
 
-    public byte getPercentMatch() {
-        return percentMatch;
-    }
-
-    public void setPercentMatch(byte percentMatch) {
-        this.percentMatch = percentMatch;
-    }
-    
     private ArrayList<Variation> listFusion;
     private ArrayList<Variation> listSNP;
     private ArrayList<Variation> listIndel;
@@ -80,9 +71,9 @@ public class VariationResult {
     private ArrayList<Variation> listOneTail;                                                // store variation object of one tail event 
     private Map<Long,Map<Long,ArrayList<Variation>>> coverageMapFusion;
     private Map<Long,Map<Long,ArrayList<Integer>>> sumNumMatchCoverageMapFusion;          // store ArrayList of Integer [sumNumMatchFront,sumNumMatchBack]. Use in annotation process to calculate average back and front breakpoint position use as search value for annotated gene
-     private Map<String,Map<String,ArrayList<Integer>>> sumNumMatchCoverageMap;          // store ArrayList of Integer [sumNumMatchFront,sumNumMatchBack]. Use in annotation process to calculate average back and front breakpoint position use as search value for annotated gene
+    private Map<String,Map<String,ArrayList<Integer>>> sumNumMatchCoverageMap;          // store ArrayList of Integer [sumNumMatchFront,sumNumMatchBack]. Use in annotation process to calculate average back and front breakpoint position use as search value for annotated gene
     private Map<Long,Map<Long,ArrayList<Variation>>> coverageMapIndel;
-    private Map<String,Map<String,ArrayList<VariationV2>>> coverageMap;                   // coverageMap for new version of algorithm (speed up Version) did not pass SV type classification it sum all possible SV
+    private Map<String,Map<String,SVGroup>> coverageMap;                   // coverageMap for new version of algorithm (speed up Version) did not pass SV type classification it sum all possible SV
     private Map<Long,ArrayList<Variation>> coverageMapSNP;
     private Map<Long,Map<Long,ArrayList<Variation>>> coverageMapOther;
     private Map<Long,ArrayList<Integer>> oneTailFrontLinkIdx;                                      // map that store key = original frontbreakpoint of one tail   and value is index of variaiton object store in listOnetail
@@ -90,8 +81,20 @@ public class VariationResult {
     private ArrayList<Integer> listIndexOfUsedOneTail;                                      // store index of one tail that has been add to some indel coverage (we will used this index to remove those onetail from listOneTail when we want to export only one tail that doesn't match to any index type) not effect coverage discover part. this variable is stand for unmatch one-tail export part
     private ArrayList<ArrayList<Long>> sortedCoverageArrayFusion;
     private ArrayList<ArrayList<Long>> sortedCoverageArrayIndel;
+    private ArrayList<SVGroup> tandemList;
+    private ArrayList<SVGroup> indelList;
+    private ArrayList<SVGroup> intraTransList;
+    private ArrayList<SVGroup> interTransList;
     
     private long mask28bit = 268435455;
+    
+    public byte getPercentMatch() {
+        return percentMatch;
+    }
+
+    public void setPercentMatch(byte percentMatch) {
+        this.percentMatch = percentMatch;
+    }
     
     public VariationResult(){
         this.variationResult = new TreeMap();
@@ -111,6 +114,10 @@ public class VariationResult {
         this.listIndexOfUsedOneTail = new ArrayList();
         this.sortedCoverageArrayFusion = new ArrayList();
         this.sortedCoverageArrayIndel = new ArrayList();
+        this.tandemList = new ArrayList();
+        this.indelList = new ArrayList();
+        this.intraTransList = new ArrayList();
+        this.interTransList = new ArrayList();
     }
     
     public void addMerLength(int merLen){
@@ -386,6 +393,92 @@ public class VariationResult {
  
         writer.flush();
         writer.close();
+    }
+    
+    public void analyzeCoverage(){
+        /**
+         * This fuction use to group same SV event togather
+         * Use with new algorithm (speed align Version by P'soup)
+         * Add remove duplication in coverage group (code has been implement in SVGroup object)
+         */
+        
+        for(int i=0;i<this.varList.size();i++){
+            
+            VariationV2 dummyVar = varList.get(i);
+            int bpF = dummyVar.getBreakpointF();
+            int bpB = dummyVar.getBreakpointB();
+            byte strandF = dummyVar.getStrandF();
+            byte strandB = dummyVar.getStrandB();
+            String chrF = dummyVar.getChrF();
+            String chrB = dummyVar.getChrB();
+       
+            if(strandF==1 && strandB==1){
+                /**
+                 * For strand -- we will reverse the front and back part into normal arrange like reference 
+                 * Front become back and back become front 
+                 * Switch just for clustering task (Does not switch when classify SV type)
+                 */
+                bpF = dummyVar.getBreakpointB();
+                bpB = dummyVar.getBreakpointF();
+                chrF = dummyVar.getChrB();
+                chrB = dummyVar.getChrF();
+            }
+            
+            String bpFCode = chrF+":"+bpF;
+            String bpBCode = chrB+":"+bpB;         
+            
+            if(this.coverageMap.containsKey(bpFCode)){                      // check similarity of front breakpoint
+                Map<String,SVGroup> coverageMapII = this.coverageMap.get(bpFCode);
+//                Map<String,ArrayList<Integer>> sumNumMatchCoverageMapII = this.sumNumMatchCoverageMap.get(bpFCode);
+                if(coverageMapII.containsKey(bpBCode)){                       // check similarity of back breakpoit
+                    /**
+                     * put variation data to existing ArrayList<Variation>
+                     * and put back to coverageMapFusionII
+                     */
+                    SVGroup svGroup = coverageMapII.get(bpBCode);
+                    svGroup.addVariationV2(dummyVar);
+                    coverageMapII.put(bpBCode, svGroup);
+                    
+//                    ArrayList<Integer> sumNumMatchList = sumNumMatchCoverageMapII.get(bpBCode);           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+//                    int sumNumMatchOldF = sumNumMatchList.get(0);
+//                    int sumNumMatchOldB = sumNumMatchList.get(1);
+//                    int sumNumMatchNewF = sumNumMatchOldF+dummyVar.numMatchF;
+//                    int sumNumMatchNewB = sumNumMatchOldB+dummyVar.numMatchB;
+//                    sumNumMatchList.add(0, sumNumMatchNewF);
+//                    sumNumMatchList.add(1, sumNumMatchNewB);
+//                    sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
+                }else{
+                    SVGroup svGroup = new SVGroup();
+                    svGroup.addVariationV2(dummyVar);
+                    coverageMapII.put(bpBCode, svGroup);
+                    
+//                    ArrayList<Integer> sumNumMatchList = new ArrayList();           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+//                    sumNumMatchList.add(0, dummyVar.numMatchF);
+//                    sumNumMatchList.add(1, dummyVar.numMatchB);
+//                    sumNumMatchCoverageMap.put(bpBCode, sumNumMatchList);
+                }
+                this.coverageMap.put(bpFCode, coverageMapII);
+//                this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapII);
+            }else{
+                Map<String,SVGroup> coverageMapII = new TreeMap();
+                SVGroup svGroup = new SVGroup();
+                svGroup.addVariationV2(dummyVar);
+                
+//                Map<String,ArrayList<Integer>> sumNumMatchCoverageMapII = new TreeMap();
+//                ArrayList<Integer> sumNumMatchList = new ArrayList();           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
+//                sumNumMatchList.add(0, dummyVar.numMatchF);
+//                sumNumMatchList.add(1, dummyVar.numMatchB);
+//                sumNumMatchCoverageMapII.put(bpBCode, sumNumMatchList);
+//                this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapII);
+                
+//                /**
+//                 * Add data
+//                 */
+                coverageMapII.put(bpBCode, svGroup);
+                this.coverageMap.put(bpFCode, coverageMapII);                
+            }            
+        }
+        System.out.println("");
     }
     
     public void analyzeCoverageFusion(){
@@ -3141,89 +3234,305 @@ public class VariationResult {
         
     }
     
-    public void analyzeCoverage(){
+    public void classifyRoughSVType(){
         /**
-         * This fuction use to group same SV event togather
-         * Use with new algorithm (speed align Version by P'soup)
+         * classify sv type of each sv candidate group
+         * We hasve 4 rough type of SV
+         *  1. tandem
+         *  2. indel
+         *  3. intraTrans
+         *  4. interTrans
+         * 
+         * (extra** In order to get true type of SV, all 4 type hasve to be pass through relation analysis algorithm (other function))
          */
-        
-        for(int i=0;i<this.varList.size();i++){
+//        int count=0;
+        for(Map.Entry<String, Map<String,SVGroup>> entry1 : this.coverageMap.entrySet()){
+            Map<String,SVGroup> coverageMapII = entry1.getValue();
             
-            VariationV2 dummyVar = varList.get(i);
-            int bpF = dummyVar.getBreakpointF();
-            int bpB = dummyVar.getBreakpointB();
-            byte strandF = dummyVar.getStrandF();
-            byte strandB = dummyVar.getStrandB();
-            String chrF = dummyVar.getChrF();
-            String chrB = dummyVar.getChrB();
-       
-            if(strandF==1 && strandB==1){
-                /**
-                 * For strand -- we will reverse the front and back part into normal arrange like reference 
-                 * Front become back and back become front 
-                 * Switch just for clustering task (Does not switch when classify SV type)
-                 */
-                bpF = dummyVar.getBreakpointB();
-                bpB = dummyVar.getBreakpointF();
-                chrF = dummyVar.getChrB();
-                chrB = dummyVar.getChrF();
-            }
-            
-            String bpFCode = chrF+":"+bpF;
-            String bpBCode = chrB+":"+bpB;         
-            
-            if(this.coverageMap.containsKey(bpFCode)){                      // check similarity of front breakpoint
-                Map<String,ArrayList<VariationV2>> coverageMapII = this.coverageMap.get(bpFCode);
-//                Map<String,ArrayList<Integer>> sumNumMatchCoverageMapII = this.sumNumMatchCoverageMap.get(bpFCode);
-                if(coverageMapII.containsKey(bpBCode)){                       // check similarity of back breakpoit
-                    /**
-                     * put variation data to existing ArrayList<Variation>
-                     * and put back to coverageMapFusionII
-                     */
-                    ArrayList<VariationV2> coverageList = coverageMapII.get(bpBCode);
-                    coverageList.add(dummyVar);
-                    coverageMapII.put(bpBCode, coverageList);
-                    
-//                    ArrayList<Integer> sumNumMatchList = sumNumMatchCoverageMapII.get(bpBCode);           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
-//                    int sumNumMatchOldF = sumNumMatchList.get(0);
-//                    int sumNumMatchOldB = sumNumMatchList.get(1);
-//                    int sumNumMatchNewF = sumNumMatchOldF+dummyVar.numMatchF;
-//                    int sumNumMatchNewB = sumNumMatchOldB+dummyVar.numMatchB;
-//                    sumNumMatchList.add(0, sumNumMatchNewF);
-//                    sumNumMatchList.add(1, sumNumMatchNewB);
-//                    sumNumMatchCoverageMapFusionII.put(bpBCode, sumNumMatchList);
-                }else{
-                    ArrayList<VariationV2> coverageList = new ArrayList();
-                    coverageList.add(dummyVar);
-                    coverageMapII.put(bpBCode, coverageList);
-                    
-//                    ArrayList<Integer> sumNumMatchList = new ArrayList();           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
-//                    sumNumMatchList.add(0, dummyVar.numMatchF);
-//                    sumNumMatchList.add(1, dummyVar.numMatchB);
-//                    sumNumMatchCoverageMap.put(bpBCode, sumNumMatchList);
+            for(Map.Entry<String,SVGroup> entry2 : coverageMapII.entrySet()){
+                SVGroup svGroup = entry2.getValue();
+//                System.out.println(count++);
+//                if(count==26){
+//                    System.out.println();
+//                }
+                if(svGroup.getSVType().equals("tandem")){
+                    this.tandemList.add(svGroup);
+                }else if(svGroup.getSVType().equals("indel")){
+                    this.indelList.add(svGroup);
+                }else if(svGroup.getSVType().equals("intraTrans")){
+                    this.intraTransList.add(svGroup);
+                }else if(svGroup.getSVType().equals("interTrans")){
+                    this.interTransList.add(svGroup);
                 }
-                this.coverageMap.put(bpFCode, coverageMapII);
-//                this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapII);
-            }else{
-                Map<String,ArrayList<VariationV2>> coverageMapII = new TreeMap();
-                ArrayList<VariationV2> coverageList = new ArrayList();
-                coverageList.add(dummyVar);
-                
-//                Map<String,ArrayList<Integer>> sumNumMatchCoverageMapII = new TreeMap();
-//                ArrayList<Integer> sumNumMatchList = new ArrayList();           // ArrayList of integer is store 2 value sumNumMatchF (index 0)  and  sumNuMatchB (index 1)
-//                sumNumMatchList.add(0, dummyVar.numMatchF);
-//                sumNumMatchList.add(1, dummyVar.numMatchB);
-//                sumNumMatchCoverageMapII.put(bpBCode, sumNumMatchList);
-//                this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapII);
-                
-//                /**
-//                 * Add data
-//                 */
-                coverageMapII.put(bpBCode, coverageList);
-                this.coverageMap.put(bpFCode, coverageMapII);                
-            }            
+            }
         }
-        System.out.println("");
+        
+        // sort list of SVGroup by number of coverage fron high to low (descending) comparable has benn inplement in SVGroup object
+        Collections.sort(this.tandemList);
+        Collections.sort(this.indelList);
+        Collections.sort(this.intraTransList);
+        Collections.sort(this.interTransList);        
     }
     
+    public void writeStructureVariantV2SortedCoverageReportToFile(String nameFile , int coverageThreshold) throws IOException{
+        /**
+        * Suitable for SVGroup object that contain VariaitonV2 object
+        * write result to file format for variant report in sorted order (high to low)
+        * 
+        * "Caution : this function must be called after classifyRoughVariantReport function"
+        */
+        String tandemFile = nameFile+".tandem_cov.out";
+        String indelFile = nameFile+".indel_cov.out";
+        String intraTransFile = nameFile+".intraTrans_cov.out";
+        String interTransFile = nameFile+".interTrans_cov.out";
+        String groupCoverageReport = nameFile+".mrkDup.cov.out";
+        /**
+         * Write tandem cov report
+         */
+        FileWriter writer;
+        File f = new File(groupCoverageReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(groupCoverageReport,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(groupCoverageReport);
+        }
+        int count = 1;
+        for(int i=0;i<this.tandemList.size();i++){
+            SVGroup svGroup = this.tandemList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(">"+count+"\t"+svGroup.toString());
+            writer.write("\n");
+            for(int j=0;j<varList.size();j++){
+                VariationV2 dummyVar = varList.get(j);
+                writer.write(dummyVar.toString());
+                writer.write("\n");
+            }
+            count++;
+        }
+        
+//        writer.flush();
+//        writer.close();
+        /***************************************************/
+        /**
+         * Write indel cov report
+         */
+//        f = new File(indelFile); //File object        
+//        if(f.exists()){
+////            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(indelFile,true);
+//        }else{
+////            ps = new PrintStream(filename);
+//            writer = new FileWriter(indelFile);
+//        }
+//        count = 1;
+        for(int i=0;i<this.indelList.size();i++){
+            SVGroup svGroup = this.indelList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(">"+count+"\t"+svGroup.toString());
+            writer.write("\n");
+            for(int j=0;j<varList.size();j++){
+                VariationV2 dummyVar = varList.get(j);
+                writer.write(dummyVar.toString());
+                writer.write("\n");
+            }
+            count++;
+        }
+        
+//        writer.flush();
+//        writer.close();
+        /***************************************************/
+        /**
+         * Write intraTrans cov report
+         */
+//        f = new File(intraTransFile); //File object        
+//        if(f.exists()){
+////            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(intraTransFile,true);
+//        }else{
+////            ps = new PrintStream(filename);
+//            writer = new FileWriter(intraTransFile);
+//        }
+//        count = 1;
+        for(int i=0;i<this.intraTransList.size();i++){
+            SVGroup svGroup = this.intraTransList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(">"+count+"\t"+svGroup.toString());
+            writer.write("\n");
+            for(int j=0;j<varList.size();j++){
+                VariationV2 dummyVar = varList.get(j);
+                writer.write(dummyVar.toString());
+                writer.write("\n");
+            }
+            count++;
+        }
+        
+//        writer.flush();
+//        writer.close();
+        /***************************************************/
+        /**
+         * Write interTrans cov report
+         */
+//        f = new File(interTransFile); //File object        
+//        if(f.exists()){
+////            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(interTransFile,true);
+//        }else{
+////            ps = new PrintStream(filename);
+//            writer = new FileWriter(interTransFile);
+//        }
+//        count = 1;
+        for(int i=0;i<this.interTransList.size();i++){
+            SVGroup svGroup = this.interTransList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(">"+count+"\t"+svGroup.toString());
+            writer.write("\n");
+            for(int j=0;j<varList.size();j++){
+                VariationV2 dummyVar = varList.get(j);
+                writer.write(dummyVar.toString());
+                writer.write("\n");
+            }
+            count++;
+        }
+        
+        writer.flush();
+        writer.close();
+        /***************************************************/
+    }
+    
+    public void writeStructureVariantV2SortedCoverageGroupInfoReportToFile(String nameFile , int coverageThreshold) throws IOException{
+        /**
+        * Suitable for SVGroup object that contain VariaitonV2 object
+        * write result to file format for variant report in sorted order (high to low)
+        * 
+        * "Caution : this function must be called after classifyRoughVariantReport function"
+        */
+        String groupCoverageReport = nameFile+".mrkDup.cov.ginfo.out";
+        /**
+         * Write tandem cov report
+         */
+        FileWriter writer;
+        File f = new File(groupCoverageReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(groupCoverageReport,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(groupCoverageReport);
+        }
+        int count = 1;
+        for(int i=0;i<this.tandemList.size();i++){
+            SVGroup svGroup = this.tandemList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(count+"\t"+svGroup.toString());
+            writer.write("\n");
+            count++;
+        }
+        
+//        writer.flush();
+//        writer.close();
+        /***************************************************/
+        /**
+         * Write indel cov report
+         */
+//        f = new File(indelFile); //File object        
+//        if(f.exists()){
+////            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(indelFile,true);
+//        }else{
+////            ps = new PrintStream(filename);
+//            writer = new FileWriter(indelFile);
+//        }
+//        count = 1;
+        for(int i=0;i<this.indelList.size();i++){
+            SVGroup svGroup = this.indelList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(count+"\t"+svGroup.toString());
+            writer.write("\n");
+            count++;
+        }
+        
+//        writer.flush();
+//        writer.close();
+        /***************************************************/
+        /**
+         * Write intraTrans cov report
+         */
+//        f = new File(intraTransFile); //File object        
+//        if(f.exists()){
+////            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(intraTransFile,true);
+//        }else{
+////            ps = new PrintStream(filename);
+//            writer = new FileWriter(intraTransFile);
+//        }
+//        count = 1;
+        for(int i=0;i<this.intraTransList.size();i++){
+            SVGroup svGroup = this.intraTransList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(count+"\t"+svGroup.toString());
+            writer.write("\n");
+            count++;
+        }
+        
+//        writer.flush();
+//        writer.close();
+        /***************************************************/
+        /**
+         * Write interTrans cov report
+         */
+//        f = new File(interTransFile); //File object        
+//        if(f.exists()){
+////            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(interTransFile,true);
+//        }else{
+////            ps = new PrintStream(filename);
+//            writer = new FileWriter(interTransFile);
+//        }
+//        count = 1;
+        for(int i=0;i<this.interTransList.size();i++){
+            SVGroup svGroup = this.interTransList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(count+"\t"+svGroup.toString());
+            writer.write("\n");
+            count++;
+        }
+        
+        writer.flush();
+        writer.close();
+        /***************************************************/
+    }
 }

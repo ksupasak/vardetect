@@ -34,6 +34,7 @@ public class VariationV2 {
     int breakpointIndexB;       // index on read of base before first base of back pattern (Must plus one to get index of first base of back pattern)  
     int breakpointF;
     int breakpointB;
+    String middleBase;
     int readLen;
     int numBaseMatchF;
     int numBaseMatchB;
@@ -170,6 +171,45 @@ public class VariationV2 {
     public String getChrB() {
         return chrB;
     }
+
+    public String getMiddleBase() {
+        return middleBase;
+    }
+
+    public void setMiddleBase(String middleBase) {
+        this.middleBase = middleBase;
+    }
+
+    public long getPosCodeF() {
+        return posCodeF;
+    }
+
+    public long getPosCodeB() {
+        return posCodeB;
+    }
     
+    @Override
+    public boolean equals(Object obj){
+        boolean isEqual = false;
+        VariationV2 anotherObj = (VariationV2)obj;
+        if(obj != null && obj instanceof VariationV2){
+            
+            if(this.alignPosF == anotherObj.getAlignPosF() && this.alignPosB == anotherObj.getAlignPosB() && this.strandF == anotherObj.strandF && this.strandB == anotherObj.strandB) {
+                isEqual=true;
+            }  
+        }
+        return isEqual;
+    }
     
+    @Override
+    public int hashCode(){
+        return this.alignPosF;
+    }
+    
+    @Override
+    public String toString(){
+        return readID+"\t"+merCoverage+"\t"+orientationCode+"\t"+numOverlapMer+"\t"+numMerF+"\t"+numMerB+"\t"+posCodeF+":"+strandF+"\t"+posCodeB+":"+strandB+"\t"
+                +chrF+":"+alignPosF+"\t"+chrB+":"+alignPosB+"\t"+readSeq+"\t"+refF+"\t"+refB+"\t"+merProfile+"\t"+merCollection+"\t"+breakpointIndexF+"\t"+breakpointIndexB+"\t"
+                +chrF+":"+breakpointF+"\t"+chrB+":"+breakpointB+"\t"+middleBase;
+    }
 }
