@@ -31,7 +31,8 @@ public class NGSCMD {
      */
     public static void main(String[] args) throws IOException, FileNotFoundException, InterruptedException {
         
-         String refPath = args[0];
+//         String refPath = args[0];
+         String refPath = "/Users/worawich/Reference/hg19_SVP2/hg19_main.fa";
          
          CombineReferenceSequence ref = SequenceUtil.getCombineReferenceSequence(refPath,16); //runFile hg19.fa
          
@@ -74,9 +75,9 @@ public class NGSCMD {
          
          
          ref.prepare();
-         ref.setOutputFile("/Users/worawich/Download_dataset/MRSA/Result_HO5096_0412/MRSATU170001_S130_HO5096_0412.aln.sorted.mrkDup.unmap.all.out");
-         ref.setOutputSVFile("/Users/worawich/Download_dataset/MRSA/Result_HO5096_0412/MRSATU170001_S130_HO5096_0412.aln.sorted.mrkDup.unmap.filter.out");
-         ref.runProfileSV("/Users/worawich/Download_dataset/MRSA/Result_HO5096_0412/MRSATU170001_S130_HO5096_0412.aln.sorted.mrkDup.unmap.bam");
+         ref.setOutputFile("/Users/worawich/Download_dataset/SLE/SLE-17.recal.unmap.all.out");
+         ref.setOutputSVFile("/Users/worawich/Download_dataset/SLE/SLE-17.recal.unmap.filter.out");
+         ref.runProfileSV("/Users/worawich/Download_dataset/SLE/SLE-17.recal.unmap.bam");
          
 //         
 //         

@@ -17,7 +17,12 @@ public class TestPostProcessV2 {
     
     public static void main(String[] args) throws IOException{
         
-        VariationResult varRes = SequenceUtil.readVersion2AlignmentResult("/Users/worawich/Download_dataset/Ratina_cancer/277T_sorted_unmap.filter.out");
+        String inputFile = "/Users/worawich/Download_dataset/Ratina_cancer/277_sorted_unmap.filter.out";
+        String saveFile = "/Users/worawich/Download_dataset/Ratina_cancer/277_sorted_unmap.filter";
+        VariationResult varRes = SequenceUtil.readVersion2AlignmentResult(inputFile);
         varRes.analyzeCoverage();
+        varRes.classifyRoughSVType();
+        varRes.writeStructureVariantV2SortedCoverageReportToFile(saveFile, 5);
+        varRes.writeStructureVariantV2SortedCoverageGroupInfoReportToFile(saveFile, 5);
     }
 }
