@@ -28,18 +28,46 @@ public class SVGroup implements Comparable<SVGroup> {
     private byte strandF;
     private byte strandB;
     private int numCoverage;
-    private byte svTypeCode;    // 0 is tanden, 1 is indel, 2 is intraTrans, 3 is interTrans, 4 is unclassify
+    private byte svTypeCode;    // 0 is tanden, 1 is indel, 2 is intraTrans, 3 is interTrans, 4 is unclassify    
+    private boolean ppFlag;     // ++ strad flag
+    private boolean mmFlag;     // -- strand flag
+    private boolean pmFlag;     // +- strand flag
+    private boolean mpFlag;     // -+ strand flag
+    private byte numStrandPattern;      // 1 mean this group has one strand pattern , 2 mean has two Strand Pattern (Ex ++ --) ans so on
     
     public SVGroup(){
-        varList = new ArrayList();
+        varList = new ArrayList();        
+        this.ppFlag=false;
+        this.mmFlag=false;
+        this.pmFlag=false;
+        this.mpFlag=false;
+        this.numStrandPattern=0;
     }
     
     public void addVariationV2(VariationV2 inVar){
         if(!this.varList.contains(inVar)){
             this.varList.add(inVar);
+            
+            if(inVar.getStrandF()==0 && inVar.getStrandB()==0 && this.ppFlag == false){
+                this.ppFlag = true;
+                this.numStrandPattern++;
+            }else if(inVar.getStrandF()==1 && inVar.getStrandB()==1 && this.mmFlag==false){
+                this.mmFlag = true;
+                this.numStrandPattern++;
+            }else if(inVar.getStrandF()==0 && inVar.getStrandB()==1 && this.pmFlag==false){
+                this.pmFlag = true;
+                this.numStrandPattern++;
+            }else if(inVar.getStrandF()==1 && inVar.getStrandB()==0 && this.mpFlag==false){
+                this.mpFlag = true;
+                this.numStrandPattern++;
+            }
         } 
     }
-    
+
+    public byte getNumStrandPattern() {
+        return numStrandPattern;
+    }
+
     public String getSVType(){
         VariationV2 dummyVar = this.varList.get(0);
         this.RPF = dummyVar.getBreakpointF();
@@ -141,7 +169,7 @@ public class SVGroup implements Comparable<SVGroup> {
     
     @Override
     public String toString(){
-        return rawPosF+":"+strandF+"\t"+rawPosB+":"+strandB+"\t"+chrF+":"+RPF+"\t"+chrB+":"+RPB+"\t"+getNumCoverage()+"\t"+this.svTypeCode+":"+this.svType;
+        return rawPosF+":"+strandF+"\t"+rawPosB+":"+strandB+"\t"+chrF+":"+RPF+"\t"+chrB+":"+RPB+"\t"+getNumCoverage()+"\t"+this.svTypeCode+":"+this.svType+"\t"+this.numStrandPattern;
     }
   
 }

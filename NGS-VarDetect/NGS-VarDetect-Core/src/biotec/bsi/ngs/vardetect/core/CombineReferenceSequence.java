@@ -70,6 +70,11 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
     int filter_ref_repeat = 50;
     int filter_dup_count = 1;
     
+    int minimumIndelSize = 1;     // minimum size of indel Eg 1 mean allow indel has indel size more or equal to 2
+
+    public void setMinimumIndelSize(int minimumIndelSize) {
+        this.minimumIndelSize = minimumIndelSize;
+    }
     
     public void setFilterMerCoverage(int f){
         this.filter_mer_coverage = f;
@@ -530,13 +535,18 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
              String refseq,refseq2="";
              
              if(!this.random_access){
-                refseq = this.getReferenceSequence(cp.getChr(), cp.getPos(), 150);
+                refseq = this.getReferenceSequence(cp.getChr(), cp.getPos(), sb.length());
 //                refseq2 = this.getReferenceSequence(cp2.getChr(), cp2.getPos(), 150);
+                if(refseq == null){
+                    continue;
+                }
 
              }else{
-                refseq = this.getReferenceSequenceFromIndex(cp.getChr(), cp.getPos(), 150);
+                refseq = this.getReferenceSequenceFromIndex(cp.getChr(), cp.getPos(), sb.length());
 //                refseq2 = this.getReferenceSequenceFromIndex(cp2.getChr(), cp.getPos(), 150);
-
+                if(refseq == null){
+                    continue;
+                }
              }
              String x = refseq;
              if(dix==1)
@@ -640,10 +650,16 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                     
                     if(!this.random_access){
 //                        refseq = this.getReferenceSequence(cp.getChr(), cp.getPos(), 150);
-                        refseq2 = this.getReferenceSequence(chrB, posB, 150);
+                        refseq2 = this.getReferenceSequence(chrB, posB, sb.length());
+                        if(refseq2 == null){
+                            continue;
+                        }
                     }else{
 //                        refseq = this.getReferenceSequenceFromIndex(cp.getChr(), cp.getPos(), 150);
-                        refseq2 = this.getReferenceSequenceFromIndex(chrB, posB, 150);
+                        refseq2 = this.getReferenceSequenceFromIndex(chrB, posB, sb.length());
+                        if(refseq2 == null){
+                            continue;
+                        }
                     }
                     
                     if(dix2==1)
@@ -723,7 +739,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
 //                    if(fout!=null){
                         
                      
-                        if(resf.getCoverage()>=this.filter_mer_coverage&&Math.abs(pmax-pmax2)>30&&resf.getSwitchCount()==2&&resf.getDupCount()<=this.filter_dup_count&&resf.getRefRepeatCount()<this.filter_ref_repeat){
+                        if(resf.getCoverage()>=this.filter_mer_coverage&&Math.abs(pmax-pmax2)>this.minimumIndelSize&&resf.getSwitchCount()==2&&resf.getDupCount()<=this.filter_dup_count&&resf.getRefRepeatCount()<this.filter_ref_repeat){
                             int bp[] = resf.findBreakPoint();
                             String junction = read.substring(bp[0],bp[1]);
                             if(junction.length()==0)
@@ -737,10 +753,10 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                             String[] tpB = maxposB.split(":");
                             
                             if(tpA[1].compareTo("1")==0){
-                                 bp0 = 150-bp0;
+                                 bp0 = sb.length()-bp0;
                             }
                             if(tpB[1].compareTo("1")==0){
-                                 bp1 = 150-bp1;
+                                 bp1 = sb.length()-bp1;
                             }
                             
                             
@@ -2406,9 +2422,11 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
    public String getReferenceSequence(String chrx, int start, int length) throws FileNotFoundException, IOException{
    
         ChromosomeSequence chr = this.getChromosomeSequenceByName(chrx);
-        
-        return chr.seq.substring(start, start+length);
-        
+        if(start+length>chr.seq.length()){
+            return null;
+        }else{
+            return chr.seq.substring(start, start+length);
+        } 
    }
 
    

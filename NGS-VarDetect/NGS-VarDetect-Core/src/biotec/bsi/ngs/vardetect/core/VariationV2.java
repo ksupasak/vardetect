@@ -36,14 +36,28 @@ public class VariationV2 {
     int breakpointB;
     String middleBase;
     int readLen;
+    int iniIndexF;
     int numBaseMatchF;
+    int lastIndexF;
+    int iniPosF;          // first base real position on read of front pattern (if read is minus strand first base will have higher position than break point)
+    int lastPosF;           //last base real position   (if minus strand lastPosF > iniPosF)
+    int iniIndexB;
     int numBaseMatchB;
-    
-    
-            
+    int lastIndexB;
+    int iniPosB;          // first base real position
+    int lastPosB;           // last base real position (if minus strand lastposB < iniPosB)
+
     
     public VariationV2(){
         
+    }
+
+    public int getReadID() {
+        return readID;
+    }
+
+    public String getReadSeq() {
+        return readSeq;
     }
 
     public void setReadID(int readID) {
@@ -129,7 +143,7 @@ public class VariationV2 {
     }
 
     public void setBreakpointIndexB(int breakpointIndexB) {
-        this.breakpointIndexB = breakpointIndexB;
+        this.breakpointIndexB = breakpointIndexB;        
     }
 
     public void setBreakpointF(int breakpointF) {
@@ -137,7 +151,56 @@ public class VariationV2 {
     }
 
     public void setBreakpointB(int breakpointB) {
-        this.breakpointB = breakpointB;
+        this.breakpointB = breakpointB;        
+        
+        // After set last require information break point back it will generate 
+        // iniPos Front and lastPos back
+        // iniIndexF and iniIndexB
+        /**
+         * loop find firstA
+         */
+
+        
+        boolean flagA = false;
+        
+        for(int i=0;i<this.merCollection.length();i++){
+            if(this.merCollection.charAt(i) == 'A' ||this.merCollection.charAt(i) == 'a'){
+                
+                if(flagA == false){
+                    this.iniIndexF = i;
+                    flagA = true;
+                }
+                this.numBaseMatchF++;    
+            }else if(this.merCollection.charAt(i) == 'B' || this.merCollection.charAt(i) == 'b'){
+
+                this.lastIndexB = i;
+                this.numBaseMatchB++;
+            }
+        }
+        this.lastIndexF = this.breakpointIndexF;
+        this.iniIndexB = this.breakpointIndexB+1;
+        
+        if(this.strandF == 0 &&this.strandB == 0){
+            this.iniPosF = this.breakpointF-this.numBaseMatchF+1;
+            this.lastPosF = this.breakpointF;
+            this.iniPosB = this.breakpointB;
+            this.lastPosB = this.breakpointB+this.numBaseMatchB-1;
+        }else if(this.strandF == 1 &&this.strandB==1){
+            this.iniPosF = this.breakpointF+this.numBaseMatchF-1;
+            this.lastPosF = this.breakpointF;
+            this.iniPosB = this.breakpointB;
+            this.lastPosB = this.breakpointB-this.numBaseMatchB+1;
+        }else if(this.strandF==0&&this.strandB==1){
+            this.iniPosF = this.breakpointF-this.numBaseMatchF+1;
+            this.lastPosF = this.breakpointF;
+            this.iniPosB = this.breakpointB;
+            this.lastPosB = this.breakpointB-this.numBaseMatchB+1;
+        }else if(this.strandF==1&&this.strandB==0){
+            this.iniPosF = this.breakpointF+this.numBaseMatchF-1;
+            this.lastPosF = this.breakpointF;
+            this.iniPosB = this.breakpointB;
+            this.lastPosB = this.breakpointB+this.numBaseMatchB-1;
+        }
     }
 
     public int getBreakpointF() {
@@ -199,6 +262,61 @@ public class VariationV2 {
             }  
         }
         return isEqual;
+    }
+    
+    public long[] getSignatureForCreateRef(int extendSize){
+        /**
+         * This function will create key signature value for create reference
+         * create initial pointer of left and right wing
+         * return in long[] first element is left wing pointer  second element is right wing pointer  third is iniIndexMatch(first index that match on read) and fourth is lastIndexMatch(last index that match on read)
+         * fifth is unmatchFront and sixth is unmatchBack
+         */
+        long[] pointer = new long[6];           // array of long to store iniLeftWing iniRightWing iniIndexMatch(first index that match on read) and lastIndexMatch(last index that match on read)
+        long iniLeftWing = 0;
+        long iniRightWing = 0;
+//        if(this.breakPointF > this.breakPointB){
+//            leftWingBasePos = this.breakPointB
+//        }else{
+//            
+//        }
+        int iniIndexMatch = this.iniIndexF;                                                 // index start at 0 so if read has 150 long that last index will be 149
+        int lastIndexMatch = this.lastIndexB;           
+        int unmatchFront = 0;
+        int unmatchBack = 0;
+        
+        /**
+         * calculate unmatch front and back
+         */
+        if(this.iniIndexF > 0){
+            unmatchFront = iniIndexMatch;
+        }
+        if(lastIndexMatch<(this.readLen-1)){
+            unmatchBack = ((this.readLen-1) - lastIndexMatch)-1;
+        }
+        /***********************************/
+        
+        if(this.strandF == 0 &&this.strandB == 0){
+            iniLeftWing = (this.iniPosF - extendSize) - unmatchFront;
+            iniRightWing = this.lastPosB + 1;
+        }else if(this.strandF == 1 &&this.strandB==1){
+            iniLeftWing = this.iniPosF + 1;
+            iniRightWing = (this.lastPosB - extendSize) - unmatchBack;
+        }else if(this.strandF==0&&this.strandB==1){            
+            iniLeftWing = (this.iniPosF - extendSize) - unmatchFront;
+            iniRightWing = (this.lastPosB - extendSize) - unmatchBack;
+        }else if(this.strandF==1&&this.strandB==0){            
+            iniLeftWing = this.iniPosF + 1;
+            iniRightWing = this.lastPosB + 1;
+        }
+        
+        pointer[0] = iniLeftWing;
+        pointer[1] = iniRightWing;
+        pointer[2] = iniIndexMatch;
+        pointer[3] = lastIndexMatch;
+        pointer[4] = unmatchFront;
+        pointer[5] = unmatchBack;
+        
+        return pointer;   
     }
     
     @Override
