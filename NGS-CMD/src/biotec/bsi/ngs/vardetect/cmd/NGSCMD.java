@@ -31,22 +31,33 @@ public class NGSCMD {
      */
     public static void main(String[] args) throws IOException, FileNotFoundException, InterruptedException {
         
-//         String refPath = args[0];
-         String refPath = "/Users/worawich/Reference/hg19_SVP2/hg19_main.fa";
+         String refPath = args[0];
+//         String refPath = "/Users/worawich/Reference/hg19_SVP2/hg19_main.fa";
+         String inBam = args[1];
+         
+         String[] dummy = inBam.split("\\.");
+         String outputAllFile = dummy[0]+"_all.out";
+         String outputFilterFile = dummy[0]+"_filter.out";
          
          CombineReferenceSequence ref = SequenceUtil.getCombineReferenceSequence(refPath,16); //runFile hg19.fa
          
-         ref.setMinimumPeakPattern(10, 5);
+         ref.setMinimumPeakPattern(5, 5);       // minimum mer per pattern A and B
 
 // for large batch with multi thread         
-         ref.setNumberOfThread(4);
+         ref.setNumberOfThread(4);              // numthread
 //         ref.setTotalRead(86000000);
 //         ref.setTotalRead(8000);
          
-         ref.setChunkRead(1000000);
-         ref.setSkipRead(0);
-         ref.setMaximumDuplicatePattern(1);
-
+         ref.setChunkRead(1000000);             // number of read per thread
+         ref.setSkipRead(0);                    
+         ref.setMaximumDuplicatePattern(3);     // Consider repeat or not (1 is consider not repeat, 2 is consider repeat 2 location, 3 is consider repeat 3 location ... max is 9 location)
+         
+         ref.setFilterMerCoverage(50);          // defualt 50
+         ref.setFilterMode(1);                  // defualt 1
+         ref.setFilterRefRepeatCount(50);       // defualt 50
+         ref.setFilterDupCount(1);              // defualt 1;
+         
+         ref.setMinimumIndelSize(30);            // defualt is 1 
 // for large batch with multi thread         
 //         ref.setNumberOfThread(4);
 //         ref.setTotalRead(100000);
@@ -75,9 +86,9 @@ public class NGSCMD {
          
          
          ref.prepare();
-         ref.setOutputFile("/Users/worawich/Download_dataset/SLE/SLE-17.recal.unmap.all.out");
-         ref.setOutputSVFile("/Users/worawich/Download_dataset/SLE/SLE-17.recal.unmap.filter.out");
-         ref.runProfileSV("/Users/worawich/Download_dataset/SLE/SLE-17.recal.unmap.bam");
+         ref.setOutputFile(outputAllFile);
+         ref.setOutputSVFile(outputFilterFile);
+         ref.runProfileSV(inBam);
          
 //         
 //         

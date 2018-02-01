@@ -17,12 +17,18 @@ public class TestPostProcessV2 {
     
     public static void main(String[] args) throws IOException{
         
-        String inputFile = "/Users/worawich/Download_dataset/Ratina_cancer/277_sorted_unmap.filter.out";
-        String saveFile = "/Users/worawich/Download_dataset/Ratina_cancer/277_sorted_unmap.filter";
+        String inputFile = "/Users/worawich/Download_dataset/SLE/SLE-17_filter.out";
+        String saveFile = "/Users/worawich/Download_dataset/SLE/SLE-17_filter";
+        String refFile = "/Users/worawich/Reference/hg19_SVP2/hg19_main.fa";
+        String refFaIdx = "/Users/worawich/Reference/hg19_SVP2/hg19_main.fa.fai";
         VariationResult varRes = SequenceUtil.readVersion2AlignmentResult(inputFile);
         varRes.analyzeCoverage();
         varRes.classifyRoughSVType();
         varRes.writeStructureVariantV2SortedCoverageReportToFile(saveFile, 5);
         varRes.writeStructureVariantV2SortedCoverageGroupInfoReportToFile(saveFile, 5);
+        varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refFile, refFaIdx, "TD", 5, 400);
+        varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refFile, refFaIdx, "ID", 5, 400);
+        varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refFile, refFaIdx, "IC", 5, 400);
+        varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refFile, refFaIdx, "IT", 5, 400);
     }
 }
