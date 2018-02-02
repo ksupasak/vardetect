@@ -50,7 +50,7 @@ public class RunSVPFullProcessV2 {
 //        options.addOption( "a", "all", false, "do not hide entries starting with ." );
 //        options.addOption( "A", "almost-all", false, "do not list implied . and .." );
 //        options.addOption( "b", "escape", false, "print octal escapes for nongraphic "
-        options.addOption( Option.builder("b").longOpt("input-file")
+        options.addOption( Option.builder("b").longOpt("bam-file")
                                         .desc("input file in bam format (.bam)")
                                         .required()
                                         .hasArg()
@@ -161,7 +161,7 @@ public class RunSVPFullProcessV2 {
             if(line.hasOption("m")) numMer = Integer.parseInt(line.getOptionValue("m"));
             if(line.hasOption("n")) numRead = Integer.parseInt(line.getOptionValue("n"));
             if(line.hasOption("r")) refPath = line.getOptionValue("r");
-            if(line.hasOption("b")) inputPath = line.getOptionValue("i");
+            if(line.hasOption("b")) inputPath = line.getOptionValue("b");
             if(line.hasOption("R")) numRepeat = Integer.parseInt(line.getOptionValue("R"));
             if(line.hasOption("s")) numSkip = Long.parseLong(line.getOptionValue("s"));
             if(line.hasOption("t")) numThread = Integer.parseInt(line.getOptionValue("t"));
@@ -238,6 +238,7 @@ public class RunSVPFullProcessV2 {
         ref.setOutputSVFile(outputFilterFile);
         ref.runProfileSV(inputPath);
         
+        System.out.println("Post processing");
         String inputFile = outputFilterFile;
         String saveFile = outputFilterFile.split("\\.")[0];
         String refFaIdx = refPath+".fai";
@@ -250,5 +251,8 @@ public class RunSVPFullProcessV2 {
         varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refPath, refFaIdx, "ID", minReadPerGroup, maxExtend);
         varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refPath, refFaIdx, "IC", minReadPerGroup, maxExtend);
         varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refPath, refFaIdx, "IT", minReadPerGroup, maxExtend);
+        
+        System.out.println("Done");
+        System.exit(0);
     }
 }
