@@ -18,6 +18,7 @@ public class ThreadPool {
     private final LinkedBlockingQueue queue;
     private ThreadPoolCallBack callback;
     private HashMap map;
+    private volatile boolean allJobDone;
 
     public ThreadPool(int nThreads, ThreadPoolCallBack cb) {
         this.nThreads = nThreads;
@@ -29,6 +30,7 @@ public class ThreadPool {
             threads[i] = new PoolWorker();
             threads[i].start();
         }
+        allJobDone = false;
     }
     
     
@@ -43,13 +45,20 @@ public class ThreadPool {
 
     void shutdown() {
         System.out.println("Shutdown");
-         for (int i = 0; i < nThreads; i++) {
+        for (int i = 0; i < nThreads; i++) {
             threads[i] = new PoolWorker();
             threads[i].interrupt();
+            
         }
-        System.exit(0);
+        
+        allJobDone = true;
+//        System.exit(0);
     }
 
+    public boolean isAllJobDone() {
+        return allJobDone;
+    }
+    
     private class PoolWorker extends Thread {
         public void run() {
             Runnable task;

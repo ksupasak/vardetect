@@ -181,14 +181,17 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
            }
             SVProfiler task = new SVProfiler(this,seq_file ,count%this.chunk_read-1,time*i+skip_read, i);
             queue.put(i, task);
-            pool.execute(task, i);
+            pool.execute(task, i);            
                
         }
         
-        
-        
-        
-        
+        while(true){
+            if(pool.isAllJobDone()){
+                System.out.println("All job Done");
+                break;
+            }
+        }
+   
     }
 
     public void prepare() throws IOException {
