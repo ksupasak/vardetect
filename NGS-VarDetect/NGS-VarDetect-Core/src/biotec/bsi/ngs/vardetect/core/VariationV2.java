@@ -49,7 +49,8 @@ public class VariationV2 {
 
     
     public VariationV2(){
-        
+        this.numBaseMatchF = 0;
+        this.numBaseMatchB = 0;
     }
 
     public int getReadID() {
@@ -151,32 +152,64 @@ public class VariationV2 {
     }
 
     public void setBreakpointB(int breakpointB) {
-        this.breakpointB = breakpointB;        
+        this.breakpointB = breakpointB+1;   // add +1 for create new referene purpose which cut the rightwing part uncorrect the cause of this mistake still unknown        
         
         // After set last require information break point back it will generate 
         // iniPos Front and lastPos back
         // iniIndexF and iniIndexB
-        /**
-         * loop find firstA
-         */
+        
 
         
         boolean flagA = false;
         
-        for(int i=0;i<this.merCollection.length();i++){
+        /**
+         * loop find firstA
+         */
+        boolean fullFlagF = true;
+        for(int i=this.breakpointIndexF;i>=0;i--){
             if(this.merCollection.charAt(i) == 'A' ||this.merCollection.charAt(i) == 'a'){
-                
-                if(flagA == false){
-                    this.iniIndexF = i;
-                    flagA = true;
-                }
                 this.numBaseMatchF++;    
-            }else if(this.merCollection.charAt(i) == 'B' || this.merCollection.charAt(i) == 'b'){
-
-                this.lastIndexB = i;
-                this.numBaseMatchB++;
+            }else{
+                this.iniIndexF = i+1;
+                fullFlagF=false;
+                break;
             }
         }
+        if(fullFlagF==true){
+            this.iniIndexF = 0;
+        }
+        
+        /**
+         * loop find lastB
+         */
+        boolean fullFlagB = true;
+        for(int i=this.breakpointIndexB+1;i<this.merCollection.length();i++){
+            if(this.merCollection.charAt(i) == 'B' || this.merCollection.charAt(i) == 'b'){
+                this.numBaseMatchB++;
+            }else{
+                this.lastIndexB = i-1;
+                fullFlagB=false;
+                break;
+            }
+        }
+        if(fullFlagB==true){
+            this.lastIndexB = this.merCollection.length()-1;
+        }
+        
+//        for(int i=0;i<this.merCollection.length();i++){
+//            if(this.merCollection.charAt(i) == 'A' ||this.merCollection.charAt(i) == 'a'){
+//                
+//                if(flagA == false){
+//                    this.iniIndexF = i;
+//                    flagA = true;
+//                }
+//                this.numBaseMatchF++;    
+//            }else if(this.merCollection.charAt(i) == 'B' || this.merCollection.charAt(i) == 'b'){
+//
+//                this.lastIndexB = i;
+//                this.numBaseMatchB++;
+//            }
+//        }
         this.lastIndexF = this.breakpointIndexF;
         this.iniIndexB = this.breakpointIndexB+1;
         
