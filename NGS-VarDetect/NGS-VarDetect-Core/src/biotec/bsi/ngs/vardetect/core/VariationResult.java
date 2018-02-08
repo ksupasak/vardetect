@@ -3352,7 +3352,9 @@ public class VariationResult {
                 VariationV2 dummyVariationV2 = dummySVGroup.getVarList().get(0);        // pick first read of this group
                 
 //                Variation dummyVariation = coverageList.get(0);
-                
+//                if(dummyVariationV2.readID == 10666){
+//                    System.out.println();
+//                }
                 groupCount++;
 
                 String leftWingSeq = "";

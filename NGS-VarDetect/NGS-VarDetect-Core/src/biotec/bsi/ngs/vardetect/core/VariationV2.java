@@ -152,12 +152,38 @@ public class VariationV2 {
     }
 
     public void setBreakpointB(int breakpointB) {
-        this.breakpointB = breakpointB+1;   // add +1 for create new referene purpose which cut the rightwing part uncorrect the cause of this mistake still unknown        
+        this.breakpointB = breakpointB;   // add +1 for create new referene purpose which cut the rightwing part uncorrect the cause of this mistake still unknown        
         
         // After set last require information break point back it will generate 
         // iniPos Front and lastPos back
         // iniIndexF and iniIndexB
         
+//        if(this.readID==10666){
+//            System.out.println();
+//        }
+
+        /**
+         * Recorrect all breakpoint information
+         * (temporary fixed)
+         */
+        this.breakpointIndexB = this.breakpointIndexB+1;
+        int breakpointIndexFInv=0;
+        int breakpointIndexBInv=0;
+        if(this.strandF == 0 &&this.strandB == 0){
+            this.breakpointB = this.alignPosB+this.breakpointIndexB;
+        }else if(this.strandF == 1 &&this.strandB==1){
+            breakpointIndexFInv = (this.readLen - this.breakpointIndexF)-1;
+            breakpointIndexBInv = (this.readLen - this.breakpointIndexB)-1;
+            this.breakpointF = this.alignPosF + breakpointIndexFInv;
+            this.breakpointB = this.alignPosB + breakpointIndexBInv;
+        }else if(this.strandF==0&&this.strandB==1){
+            breakpointIndexBInv = (this.readLen - this.breakpointIndexB)-1;
+            this.breakpointB = this.alignPosB + breakpointIndexBInv;
+        }else if(this.strandF==1&&this.strandB==0){
+            breakpointIndexFInv = (this.readLen - this.breakpointIndexF)-1;
+            this.breakpointF = this.alignPosF + breakpointIndexFInv;
+        }
+        /*************************************/
 
         
         boolean flagA = false;
@@ -183,7 +209,7 @@ public class VariationV2 {
          * loop find lastB
          */
         boolean fullFlagB = true;
-        for(int i=this.breakpointIndexB+1;i<this.merCollection.length();i++){
+        for(int i=this.breakpointIndexB;i<this.merCollection.length();i++){
             if(this.merCollection.charAt(i) == 'B' || this.merCollection.charAt(i) == 'b'){
                 this.numBaseMatchB++;
             }else{
