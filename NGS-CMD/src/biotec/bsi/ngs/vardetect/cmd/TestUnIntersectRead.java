@@ -9,6 +9,7 @@ import biotec.bsi.ngs.vardetect.core.util.FastaUtil;
 import biotec.bsi.ngs.vardetect.core.util.FastqUtil;
 import biotec.bsi.ngs.vardetect.core.util.SamUtil;
 import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
 
 /**
  *
@@ -16,11 +17,13 @@ import java.io.IOException;
  */
 public class TestUnIntersectRead {
     
-    public static void main(String args[]) throws IOException{
+    public static void main(String args[]) throws IOException, NoSuchAlgorithmException{
+        // implement md5 check for sequence similarity (with sequence md5 check it can get rid of read that has the same sequence base but diferent in read name also)
+        // fq1 should be the smallest file that contain read that we want to filter out
         
-//        String fq1 = "/Volumes/PromisePegasus/worawich/Download_dataset/TB_ERR718259/test_Extract_ABC/Test_extend_300/potentialB/ERR718259_unMapped_newRef_unIntersect_ERR718259_full_CIGARCUT_newRef_Mapped.fq";
-//        String fq2 = "/Volumes/PromisePegasus/worawich/Download_dataset/TB_ERR718259/test_Extract_ABC/Test_extend_300/ERR718259_full_OriRef_Mapped.fq";
-        
+//        String fq1 = "/Users/worawich/Download_dataset/TB/SampleForTestScript/debug/ERR718193_C.fq";
+//        String fq2 = "/Users/worawich/Download_dataset/TB/SampleForTestScript/debug/ERR718193_unmap.fq";
+//        String saveFileName = "/Users/worawich/Download_dataset/TB/SampleForTestScript/debug/testmd5unintersect.fq";
         String fq1 = args[0];
         String fq2 = args[1];
         String saveFileName = args[2];
