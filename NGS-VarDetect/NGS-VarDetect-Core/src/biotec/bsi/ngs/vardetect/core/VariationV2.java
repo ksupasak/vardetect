@@ -310,7 +310,7 @@ public class VariationV2 {
         return posCodeB;
     }
     
-    @Override
+    @Override       // overide equals for check smilarity of two variationV2 object for implement remove duplication read
     public boolean equals(Object obj){
         boolean isEqual = false;
         VariationV2 anotherObj = (VariationV2)obj;
@@ -389,4 +389,13 @@ public class VariationV2 {
                 +chrF+":"+alignPosF+"\t"+chrB+":"+alignPosB+"\t"+readSeq+"\t"+refF+"\t"+refB+"\t"+merProfile+"\t"+merCollection+"\t"+breakpointIndexF+"\t"+breakpointIndexB+"\t"
                 +chrF+":"+breakpointF+"\t"+chrB+":"+breakpointB+"\t"+middleBase;
     }
+    
+//    @Override
+//    public int compareTo(VariationV2 inVar) {
+//        int compareCov = ((SVGroup)compareSVGroup).getNumCoverage();
+//        /* For Ascending order*/
+////        return this.studentage-compareage;
+//        /* For Descending order do like this */
+//        return compareCov-getNumCoverage();
+//    }
 }

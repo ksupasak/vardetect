@@ -397,7 +397,7 @@ public class VariationResult {
     
     public void analyzeCoverage(){
         /**
-         * This fuction use to group same SV event togather
+         * This fuction use to group same SV event together
          * Use with new algorithm (speed align Version by P'soup)
          * Add remove duplication in coverage group (code has been implement in SVGroup object)
          */
@@ -3351,10 +3351,6 @@ public class VariationResult {
                  */
                 VariationV2 dummyVariationV2 = dummySVGroup.getVarList().get(0);        // pick first read of this group
                 
-//                Variation dummyVariation = coverageList.get(0);
-//                if(dummyVariationV2.readID == 10666){
-//                    System.out.println();
-//                }
                 groupCount++;
 
                 String leftWingSeq = "";
