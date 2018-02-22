@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 package biotec.bsi.ngs.vardetect.cmd;
-import static biotec.bsi.ngs.vardetect.core.util.Utility.modifyFile;
+import static biotec.bsi.ngs.vardetect.core.util.SVPUtility.modifyFile;
 import java.io.IOException;
 
 /**

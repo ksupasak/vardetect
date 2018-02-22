@@ -22,7 +22,7 @@ public class TestUnIntersectRead {
         // fq1 should be the smallest file that contain read that we want to filter out
         
 //        String fq1 = "/Users/worawich/Download_dataset/TB/SampleForTestScript/debug/ERR718193_C.fq";
-//        String fq2 = "/Users/worawich/Download_dataset/TB/SampleForTestScript/debug/ERR718193_unmap.fq";
+//        String fq2 = "/Users/worawich/Download_dataset/TB/SampleForTestScript/debug/ERR718193_map_preA.fq.gz";
 //        String saveFileName = "/Users/worawich/Download_dataset/TB/SampleForTestScript/debug/testmd5unintersect.fq";
         String fq1 = args[0];
         String fq2 = args[1];
