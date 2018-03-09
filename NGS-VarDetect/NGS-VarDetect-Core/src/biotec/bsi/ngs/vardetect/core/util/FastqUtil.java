@@ -207,6 +207,8 @@ public class FastqUtil {
         Map<String,ArrayList<String>> unIntersectSeqMap = new LinkedHashMap();
         ArrayList<String> mainSeqNameList = new ArrayList();
         ArrayList<String> mainSeqMd5List = new ArrayList();
+        Map<String,Boolean> mainSeqNameMap = new LinkedHashMap();
+        Map<String,Boolean> mainSeqMd5Map = new LinkedHashMap();
         
 //        if(fastq1.length() > fastq2.length()){
 //            mainFile = fq2;
@@ -256,15 +258,17 @@ public class FastqUtil {
                         if(line.charAt(0)=='@'&&counter==1){
                             numMainSample++;
                             name = line.substring(1);
-                            mainSeqNameList.add(name);
+//                            mainSeqNameList.add(name);
+                            mainSeqNameMap.put(name,true);
                         }else if(counter==2){                    
                             seq = line;
                             MessageDigest md = MessageDigest.getInstance("MD5");
                             md.update(seq.getBytes());
                             seqMd5 = md.digest();
                             String m = DatatypeConverter.printHexBinary(seqMd5).toUpperCase();
-                            if(!mainSeqMd5List.contains(m)){
-                                mainSeqMd5List.add(m);
+                            if(!mainSeqMd5Map.containsKey(m)){
+//                                mainSeqMd5List.add(m);
+                                mainSeqMd5Map.put(m, true);
                             }
                         }else if(counter==3){
     //                        strand = line;
@@ -303,15 +307,17 @@ public class FastqUtil {
                         if(line.charAt(0)=='@'&&counter==1){
                             numMainSample++;
                             name = line.substring(1);
-                            mainSeqNameList.add(name);
+//                            mainSeqNameList.add(name);
+                            mainSeqNameMap.put(name,true);
                         }else if(counter==2){                    
                             seq = line;
                             MessageDigest md = MessageDigest.getInstance("MD5");
                             md.update(seq.getBytes());
                             seqMd5 = md.digest();
                             String m = DatatypeConverter.printHexBinary(seqMd5).toUpperCase();
-                            if(!mainSeqMd5List.contains(m)){
-                                mainSeqMd5List.add(m);
+                            if(!mainSeqMd5Map.containsKey(m)){
+//                                mainSeqMd5List.add(m);
+                                mainSeqMd5Map.put(m, true);
                             }
                         }else if(counter==3){
     //                        strand = line;
@@ -336,6 +342,18 @@ public class FastqUtil {
             }
         }
         /********************************************************/
+        
+        /**
+         * Initiate writer object
+         */
+        String[] splitExportFile = exportFile.split("\\.");
+        if(!splitExportFile[splitExportFile.length-1].equals("gz")){   
+            exportFile = exportFile+".gz";
+        }
+        
+        FileOutputStream out = new FileOutputStream(exportFile);
+        Writer writer = new OutputStreamWriter(new GZIPOutputStream(out),charset);
+       
         
         /**
          * Read minor fastq File check intersect with mainSeqMap
@@ -364,7 +382,7 @@ public class FastqUtil {
                             numConsiderSample++;
                             name = line.substring(1);
 
-                            if(!mainSeqNameList.contains(name)){
+                            if(!mainSeqNameMap.containsKey(name)){
                                 unIntersectFlag = true;
                             }else{
                                 unIntersectFlag = false;
@@ -378,7 +396,7 @@ public class FastqUtil {
                                 seqMd5 = md.digest();
                                 String Md5 = DatatypeConverter.printHexBinary(seqMd5).toUpperCase();
 
-                                if(!mainSeqMd5List.contains(Md5)){
+                                if(!mainSeqMd5Map.containsKey(Md5)){
                                     unIntersectFlag = true;
                                 }else{
                                     unIntersectFlag = false;
@@ -390,12 +408,19 @@ public class FastqUtil {
                         }else if(counter==4 && unIntersectFlag == true){
                             quality = line;
 
-                            ArrayList<String> fqInfo = new ArrayList();
-                            fqInfo.add(seq);
-                            fqInfo.add(strand);
-                            fqInfo.add(quality);
-
-                            unIntersectSeqMap.put(name, fqInfo);
+//                            ArrayList<String> fqInfo = new ArrayList();
+//                            fqInfo.add(seq);
+//                            fqInfo.add(strand);
+//                            fqInfo.add(quality);
+                            writer.write("@"+name);
+                            writer.write("\n");
+                            writer.write(seq);
+                            writer.write("\n");
+                            writer.write(strand);
+                            writer.write("\n");
+                            writer.write(quality);
+                            writer.write("\n");
+//                            unIntersectSeqMap.put(name, fqInfo);
                             numOutSample++;
                         }
                     }
@@ -426,7 +451,7 @@ public class FastqUtil {
                             numConsiderSample++;
                             name = line.substring(1);
 
-                            if(!mainSeqNameList.contains(name)){
+                            if(!mainSeqNameMap.containsKey(name)){
                                 unIntersectFlag = true;
                             }else{
                                 unIntersectFlag = false;
@@ -440,7 +465,7 @@ public class FastqUtil {
                                 seqMd5 = md.digest();
                                 String Md5 = DatatypeConverter.printHexBinary(seqMd5).toUpperCase();
 
-                                if(!mainSeqMd5List.contains(Md5)){
+                                if(!mainSeqMd5Map.containsKey(Md5)){
                                     unIntersectFlag = true;
                                 }else{
                                     unIntersectFlag = false;
@@ -452,12 +477,19 @@ public class FastqUtil {
                         }else if(counter==4 && unIntersectFlag == true){
                             quality = line;
 
-                            ArrayList<String> fqInfo = new ArrayList();
-                            fqInfo.add(seq);
-                            fqInfo.add(strand);
-                            fqInfo.add(quality);
-
-                            unIntersectSeqMap.put(name, fqInfo);
+//                            ArrayList<String> fqInfo = new ArrayList();
+//                            fqInfo.add(seq);
+//                            fqInfo.add(strand);
+//                            fqInfo.add(quality);
+                            writer.write("@"+name);
+                            writer.write("\n");
+                            writer.write(seq);
+                            writer.write("\n");
+                            writer.write(strand);
+                            writer.write("\n");
+                            writer.write(quality);
+                            writer.write("\n");
+//                            unIntersectSeqMap.put(name, fqInfo);
                             numOutSample++;
                         }
                     }
@@ -469,48 +501,51 @@ public class FastqUtil {
                     }    
                 }
             }
-        }        
+        }
+
+        writer.flush();
+        writer.close();
         /************************************************************/
         
         /**
          * Export intersect read in fasta file format
          */
-        String[] splitExportFile = exportFile.split("\\.");
-        
-        if(splitExportFile[splitExportFile.length-1].equals("gz")){
-            FileOutputStream out = new FileOutputStream(exportFile);
-            Writer writer = new OutputStreamWriter(new GZIPOutputStream(out),charset);
-            for(Map.Entry<String,ArrayList<String>> entry: unIntersectSeqMap.entrySet()){ 
-                ArrayList<String> fqInfo = entry.getValue();
-                writer.write("@"+entry.getKey());
-                writer.write("\n");
-                writer.write(fqInfo.get(0));
-                writer.write("\n");
-                writer.write(fqInfo.get(1));
-                writer.write("\n");
-                writer.write(fqInfo.get(2));
-                writer.write("\n");
-            }
-            writer.flush();
-            writer.close();
-        }else{
-            FileWriter writer;
-            writer = new FileWriter(exportFile);
-
-            for(Map.Entry<String,ArrayList<String>> entry: unIntersectSeqMap.entrySet()){ 
-                ArrayList<String> fqInfo = entry.getValue();
-                writer.write("@"+entry.getKey());
-                writer.write("\n");
-                writer.write(fqInfo.get(0));
-                writer.write("\n");
-                writer.write(fqInfo.get(1));
-                writer.write("\n");
-                writer.write(fqInfo.get(2));
-                writer.write("\n");
-            }            
-            writer.flush();
-            writer.close();
-        }
+//        String[] splitExportFile = exportFile.split("\\.");
+//        
+//        if(splitExportFile[splitExportFile.length-1].equals("gz")){
+//            FileOutputStream out = new FileOutputStream(exportFile);
+//            Writer writer = new OutputStreamWriter(new GZIPOutputStream(out),charset);
+//            for(Map.Entry<String,ArrayList<String>> entry: unIntersectSeqMap.entrySet()){ 
+//                ArrayList<String> fqInfo = entry.getValue();
+//                writer.write("@"+entry.getKey());
+//                writer.write("\n");
+//                writer.write(fqInfo.get(0));
+//                writer.write("\n");
+//                writer.write(fqInfo.get(1));
+//                writer.write("\n");
+//                writer.write(fqInfo.get(2));
+//                writer.write("\n");
+//            }
+//            writer.flush();
+//            writer.close();
+//        }else{
+//            FileWriter writer;
+//            writer = new FileWriter(exportFile);
+//
+//            for(Map.Entry<String,ArrayList<String>> entry: unIntersectSeqMap.entrySet()){ 
+//                ArrayList<String> fqInfo = entry.getValue();
+//                writer.write("@"+entry.getKey());
+//                writer.write("\n");
+//                writer.write(fqInfo.get(0));
+//                writer.write("\n");
+//                writer.write(fqInfo.get(1));
+//                writer.write("\n");
+//                writer.write(fqInfo.get(2));
+//                writer.write("\n");
+//            }            
+//            writer.flush();
+//            writer.close();
+//        }
         /**************************************************************/
         System.out.println("num main sample = "+numMainSample);
         System.out.println("num consider sample = "+numConsiderSample);
