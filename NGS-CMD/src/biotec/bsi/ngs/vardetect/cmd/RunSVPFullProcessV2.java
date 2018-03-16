@@ -33,6 +33,7 @@ public class RunSVPFullProcessV2 {
     private static long numSkip=0;
     private static int numRepeat=50;
     private static String refPath="";
+    private static String gffFile="";
     private static String inputPath = "";
     private static int numRead=1000000;
     private static int numMer=16;
@@ -59,6 +60,11 @@ public class RunSVPFullProcessV2 {
         options.addOption( Option.builder("r").longOpt("ref-file")
                                         .desc("Reference file path")
                                         .required()
+                                        .hasArg()
+                                        .argName("file")
+                                        .build());
+        options.addOption( Option.builder("a").longOpt("gff3-file")
+                                        .desc("annotation gff3 file path")
                                         .hasArg()
                                         .argName("file")
                                         .build());
@@ -161,6 +167,7 @@ public class RunSVPFullProcessV2 {
             if(line.hasOption("m")) numMer = Integer.parseInt(line.getOptionValue("m"));
             if(line.hasOption("n")) numRead = Integer.parseInt(line.getOptionValue("n"));
             if(line.hasOption("r")) refPath = line.getOptionValue("r");
+            if(line.hasOption("a")) gffFile = line.getOptionValue("r");
             if(line.hasOption("b")) inputPath = line.getOptionValue("b");
             if(line.hasOption("R")) numRepeat = Integer.parseInt(line.getOptionValue("R"));
             if(line.hasOption("s")) numSkip = Long.parseLong(line.getOptionValue("s"));
@@ -243,10 +250,16 @@ public class RunSVPFullProcessV2 {
         String saveFile = outputFilterFile.split("\\.")[0];
         String refFaIdx = refPath+".fai";
         VariationResult varRes = SequenceUtil.readVersion2AlignmentResult(inputFile);
+        varRes.createRefIndex(refFaIdx);
         varRes.analyzeCoverage();
         varRes.classifyRoughSVType();
-        varRes.writeStructureVariantV2SortedCoverageReportToFile(saveFile, minReadPerGroup);
-        varRes.writeStructureVariantV2SortedCoverageGroupInfoReportToFile(saveFile, minReadPerGroup);
+        if(gffFile.equals("")){
+            varRes.writeStructureVariantV2SortedCoverageReportToFile(saveFile, minReadPerGroup);
+            varRes.writeStructureVariantV2SortedCoverageGroupInfoReportToFile(saveFile, minReadPerGroup);
+        }else{
+            varRes.writeStructureVariantV2SortedCoverageReportWithAnnotationToFile(saveFile, gffFile, refFaIdx, minReadPerGroup, numMer);
+            varRes.writeStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationToFile(saveFile, gffFile, refFaIdx, minReadPerGroup, numMer);
+        }
         varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refPath, refFaIdx, "TD", minReadPerGroup, maxExtend);
         varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refPath, refFaIdx, "ID", minReadPerGroup, maxExtend);
         varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refPath, refFaIdx, "IC", minReadPerGroup, maxExtend);
