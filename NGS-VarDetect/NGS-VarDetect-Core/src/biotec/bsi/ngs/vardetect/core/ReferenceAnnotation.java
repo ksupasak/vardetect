@@ -68,6 +68,7 @@ public class ReferenceAnnotation {
     
     public void putAnnotationBinaryTree(ArrayList<Long> inAnnoBinaryTree){
         this.annoBinaryTree = inAnnoBinaryTree;
+        Collections.sort(this.annoBinaryTree);
     }
     
     public void putAnnotationIndex(Map<Integer,Annotation> inAnnoIndex){

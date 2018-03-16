@@ -7,6 +7,7 @@ package biotec.bsi.ngs.vardetect.core;
 
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -86,6 +87,8 @@ public class VariationResult {
     private ArrayList<SVGroup> intraTransList;
     private ArrayList<SVGroup> interTransList;
     
+    private Map<String,Long> refIndex;                              // store chrmosome name as key and assigned chr number in value (this map is very important in case of chr name is not a number we will asigned the number to it and store in this map for further reference)
+    
     private long mask28bit = 268435455;
     
     public byte getPercentMatch() {
@@ -118,6 +121,7 @@ public class VariationResult {
         this.indelList = new ArrayList();
         this.intraTransList = new ArrayList();
         this.interTransList = new ArrayList();
+        this.refIndex = new LinkedHashMap();
     }
     
     public void addMerLength(int merLen){
@@ -456,6 +460,7 @@ public class VariationResult {
 //                    sumNumMatchList.add(0, dummyVar.numMatchF);
 //                    sumNumMatchList.add(1, dummyVar.numMatchB);
 //                    sumNumMatchCoverageMap.put(bpBCode, sumNumMatchList);
+                    svGroup.addRefIndex(this.refIndex);
                 }
                 this.coverageMap.put(bpFCode, coverageMapII);
 //                this.sumNumMatchCoverageMapFusion.put(bpFCode, sumNumMatchCoverageMapII);
@@ -475,7 +480,8 @@ public class VariationResult {
 //                 * Add data
 //                 */
                 coverageMapII.put(bpBCode, svGroup);
-                this.coverageMap.put(bpFCode, coverageMapII);                
+                this.coverageMap.put(bpFCode, coverageMapII);
+                svGroup.addRefIndex(this.refIndex);
             }            
         }
         System.out.println("");
@@ -3765,10 +3771,352 @@ public class VariationResult {
         }
         
         // sort list of SVGroup by number of coverage fron high to low (descending) comparable has benn inplement in SVGroup object
-        Collections.sort(this.tandemList);
-        Collections.sort(this.indelList);
-        Collections.sort(this.intraTransList);
-        Collections.sort(this.interTransList);        
+        Collections.sort(this.tandemList,SVGroup.CoverageComparator);
+        Collections.sort(this.indelList,SVGroup.CoverageComparator);
+        Collections.sort(this.intraTransList,SVGroup.CoverageComparator);
+        Collections.sort(this.interTransList,SVGroup.CoverageComparator);        
+    }
+    
+    public void classifyPreciseSVType(){
+        /**
+         * classify sv type of each sv candidate group
+         * We hasve 4 rough type of SV (but this function will classify those SV type precisely)
+         *  1. tandem
+         *  2. indel
+         *  3. intraTrans
+         *  4. interTrans
+         * 
+         * Implement relation analysis algorithm for classify precise SV type
+         * 
+         */
+        ArrayList<SVGroup> sameChrSVGroup = new ArrayList();
+        ArrayList<SVGroup> diffChrSVGroup = new ArrayList();
+//        int count=0;
+        for(Map.Entry<String, Map<String,SVGroup>> entry1 : this.coverageMap.entrySet()){
+            Map<String,SVGroup> coverageMapII = entry1.getValue();
+            
+            for(Map.Entry<String,SVGroup> entry2 : coverageMapII.entrySet()){
+                SVGroup svGroup = entry2.getValue();
+//                System.out.println(count++);
+//                if(count==26){
+//                    System.out.println();
+//                }
+                if(svGroup.getSVType().equals("tandem")){
+                    this.tandemList.add(svGroup);
+                }else if(svGroup.getSVType().equals("indel")){
+                    this.indelList.add(svGroup);
+                }else if(svGroup.getSVType().equals("intraTrans")){
+                    this.intraTransList.add(svGroup);
+                }else if(svGroup.getSVType().equals("interTrans")){
+                    this.interTransList.add(svGroup);
+                }
+            }
+        }
+        
+        // sort list of SVGroup by number of coverage fron high to low (descending) comparable has benn inplement in SVGroup object
+        Collections.sort(this.tandemList,SVGroup.CoverageComparator);
+        Collections.sort(this.indelList,SVGroup.CoverageComparator);
+        Collections.sort(this.intraTransList,SVGroup.CoverageComparator);
+        Collections.sort(this.interTransList,SVGroup.CoverageComparator);        
+    }
+    
+    public void writeStructureVariantV2SortedCoverageReportWithAnnotationToFile(String nameFile , String gffFile, String refFaiFile, int coverageThreshold , int merSize) throws IOException{
+        /**
+        * Suitable for SVGroup object that contain VariaitonV2 object
+        * write result to file format for variant report in sorted order (high to low)
+        * 
+        * "Caution : this function must be called after classifyRoughVariantReport function"
+        */
+        String tandemFile = nameFile+".tandem_cov.out";
+        String indelFile = nameFile+".indel_cov.out";
+        String intraTransFile = nameFile+".intraTrans_cov.out";
+        String interTransFile = nameFile+".interTrans_cov.out";
+        String groupCoverageReport = nameFile+".mrkDup.cov.annotation.out";
+        
+        /**
+         * Read annotation file (GFF)
+         */
+        ReferenceAnnotation refAnno = SequenceUtil.readAnnotationFileV3(gffFile,refFaiFile, "gene" , merSize);
+        Map<Integer,Annotation> refAnnoIndex = refAnno.getAnnotationIndex();
+        /****************************/
+
+        /**
+         * Write tandem cov report
+         */
+        FileWriter writer;
+        File f = new File(groupCoverageReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(groupCoverageReport,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(groupCoverageReport);
+        }
+        int count = 1;
+        for(int i=0;i<this.tandemList.size();i++){
+            SVGroup svGroup = this.tandemList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            
+            /**
+             * annotation part
+             * Find annotation for this svGroup
+             */
+            
+            if(!svGroup.isIdentityFlag()){
+                svGroup.defineIdentity();
+            }
+            
+            long avgIniPosF = svGroup.getRPF();
+            long avgLastPosB = svGroup.getRPB();
+
+            long chrPosStartF = (((long)svGroup.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopF = (((long)svGroup.getNumChrF()<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            long chrPosStartB = (((long)svGroup.getNumChrB()<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopB = (((long)svGroup.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            if(annoGroupIndexF >= 0){
+                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                svGroup.setAnnoF(annoF);
+                strAnnoF = annoF.toString();
+            }
+            if(annoGroupIndexB >= 0){
+                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                svGroup.setAnnoB(annoB);
+                strAnnoB = annoB.toString();
+            }
+
+            /**********************/
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(">"+count+"\t"+svGroup.toString());
+            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
+            writer.write("\n");
+            for(int j=0;j<varList.size();j++){
+                VariationV2 dummyVar = varList.get(j);
+                writer.write(dummyVar.toString());
+                writer.write("\n");
+            }
+            count++;
+        }
+        
+//        writer.flush();
+//        writer.close();
+        /***************************************************/
+        /**
+         * Write indel cov report
+         */
+//        f = new File(indelFile); //File object        
+//        if(f.exists()){
+////            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(indelFile,true);
+//        }else{
+////            ps = new PrintStream(filename);
+//            writer = new FileWriter(indelFile);
+//        }
+//        count = 1;
+        for(int i=0;i<this.indelList.size();i++){
+            SVGroup svGroup = this.indelList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            
+            /**
+             * annotation part
+             * Find annotation for this svGroup
+             */
+            
+            if(!svGroup.isIdentityFlag()){
+                svGroup.defineIdentity();
+            }
+            
+            long avgIniPosF = svGroup.getRPF();
+            long avgLastPosB = svGroup.getRPB();
+
+            long chrPosStartF = (((long)svGroup.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopF = (((long)svGroup.getNumChrF()<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            long chrPosStartB = (((long)svGroup.getNumChrB()<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopB = (((long)svGroup.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            if(annoGroupIndexF >= 0){
+                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                svGroup.setAnnoF(annoF);
+                strAnnoF = annoF.toString();
+            }
+            if(annoGroupIndexB >= 0){
+                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                svGroup.setAnnoB(annoB);
+                strAnnoB = annoB.toString();
+            }
+
+            /**********************/
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(">"+count+"\t"+svGroup.toString());
+            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
+            writer.write("\n");
+            for(int j=0;j<varList.size();j++){
+                VariationV2 dummyVar = varList.get(j);
+                writer.write(dummyVar.toString());
+                writer.write("\n");
+            }
+            count++;
+        }
+        
+//        writer.flush();
+//        writer.close();
+        /***************************************************/
+        /**
+         * Write intraTrans cov report
+         */
+//        f = new File(intraTransFile); //File object        
+//        if(f.exists()){
+////            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(intraTransFile,true);
+//        }else{
+////            ps = new PrintStream(filename);
+//            writer = new FileWriter(intraTransFile);
+//        }
+//        count = 1;
+        for(int i=0;i<this.intraTransList.size();i++){
+            SVGroup svGroup = this.intraTransList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            
+            /**
+             * annotation part
+             * Find annotation for this svGroup
+             */
+            
+            if(!svGroup.isIdentityFlag()){
+                svGroup.defineIdentity();
+            }
+            
+            long avgIniPosF = svGroup.getRPF();
+            long avgLastPosB = svGroup.getRPB();
+
+            long chrPosStartF = (((long)svGroup.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopF = (((long)svGroup.getNumChrF()<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            long chrPosStartB = (((long)svGroup.getNumChrB()<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopB = (((long)svGroup.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            if(annoGroupIndexF >= 0){
+                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                svGroup.setAnnoF(annoF);
+                strAnnoF = annoF.toString();
+            }
+            if(annoGroupIndexB >= 0){
+                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                svGroup.setAnnoB(annoB);
+                strAnnoB = annoB.toString();
+            }
+
+            /**********************/
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(">"+count+"\t"+svGroup.toString());
+            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
+            writer.write("\n");
+            for(int j=0;j<varList.size();j++){
+                VariationV2 dummyVar = varList.get(j);
+                writer.write(dummyVar.toString());
+                writer.write("\n");
+            }
+            count++;
+        }
+        
+//        writer.flush();
+//        writer.close();
+        /***************************************************/
+        /**
+         * Write interTrans cov report
+         */
+//        f = new File(interTransFile); //File object        
+//        if(f.exists()){
+////            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(interTransFile,true);
+//        }else{
+////            ps = new PrintStream(filename);
+//            writer = new FileWriter(interTransFile);
+//        }
+//        count = 1;
+        for(int i=0;i<this.interTransList.size();i++){
+            SVGroup svGroup = this.interTransList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            
+            /**
+             * annotation part
+             * Find annotation for this svGroup
+             */
+            
+            if(!svGroup.isIdentityFlag()){
+                svGroup.defineIdentity();
+            }
+            
+            long avgIniPosF = svGroup.getRPF();
+            long avgLastPosB = svGroup.getRPB();
+
+            long chrPosStartF = (((long)svGroup.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopF = (((long)svGroup.getNumChrF()<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            long chrPosStartB = (((long)svGroup.getNumChrB()<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopB = (((long)svGroup.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            if(annoGroupIndexF >= 0){
+                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                svGroup.setAnnoF(annoF);
+                strAnnoF = annoF.toString();
+            }
+            if(annoGroupIndexB >= 0){
+                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                svGroup.setAnnoB(annoB);
+                strAnnoB = annoB.toString();
+            }
+
+            /**********************/
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(">"+count+"\t"+svGroup.toString());
+            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
+            writer.write("\n");
+            for(int j=0;j<varList.size();j++){
+                VariationV2 dummyVar = varList.get(j);
+                writer.write(dummyVar.toString());
+                writer.write("\n");
+            }
+            count++;
+        }
+        
+        writer.flush();
+        writer.close();
+        /***************************************************/
     }
     
     public void writeStructureVariantV2SortedCoverageReportToFile(String nameFile , int coverageThreshold) throws IOException{
@@ -4031,5 +4379,297 @@ public class VariationResult {
         writer.flush();
         writer.close();
         /***************************************************/
+    }
+    
+    public void writeStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationToFile(String nameFile , String gffFile, String refFaiFile, int coverageThreshold , int merSize) throws IOException{
+        /**
+        * Suitable for SVGroup object that contain VariaitonV2 object
+        * write result to file format for variant report in sorted order (high to low)
+        * 
+        * "Caution : this function must be called after classifyRoughVariantReport function"
+        */
+        String tandemFile = nameFile+".tandem_cov.out";
+        String indelFile = nameFile+".indel_cov.out";
+        String intraTransFile = nameFile+".intraTrans_cov.out";
+        String interTransFile = nameFile+".interTrans_cov.out";
+        String groupCoverageReport = nameFile+".mrkDup.cov.ginfo.annotation.out";
+        
+        /**
+         * Read annotation file (GFF)
+         */
+        ReferenceAnnotation refAnno = SequenceUtil.readAnnotationFileV3(gffFile,refFaiFile, "gene" , merSize);
+        Map<Integer,Annotation> refAnnoIndex = refAnno.getAnnotationIndex();
+        /****************************/
+
+        /**
+         * Write tandem cov report
+         */
+        FileWriter writer;
+        File f = new File(groupCoverageReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(groupCoverageReport,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(groupCoverageReport);
+        }
+        int count = 1;
+        for(int i=0;i<this.tandemList.size();i++){
+            SVGroup svGroup = this.tandemList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            
+            /**
+             * annotation part
+             * Find annotation for this svGroup
+             */
+            
+            if(!svGroup.isIdentityFlag()){
+                svGroup.defineIdentity();
+            }
+            
+            long avgIniPosF = svGroup.getRPF();
+            long avgLastPosB = svGroup.getRPB();
+
+            long chrPosStartF = (((long)svGroup.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopF = (((long)svGroup.getNumChrF()<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            long chrPosStartB = (((long)svGroup.getNumChrB()<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopB = (((long)svGroup.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            if(annoGroupIndexF >= 0){
+                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                svGroup.setAnnoF(annoF);
+                strAnnoF = annoF.toString();
+            }
+            if(annoGroupIndexB >= 0){
+                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                svGroup.setAnnoB(annoB);
+                strAnnoB = annoB.toString();
+            }
+
+            /**********************/
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(">"+count+"\t"+svGroup.toString());
+            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
+            writer.write("\n");
+            count++;
+        }
+        
+//        writer.flush();
+//        writer.close();
+        /***************************************************/
+        /**
+         * Write indel cov report
+         */
+//        f = new File(indelFile); //File object        
+//        if(f.exists()){
+////            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(indelFile,true);
+//        }else{
+////            ps = new PrintStream(filename);
+//            writer = new FileWriter(indelFile);
+//        }
+//        count = 1;
+        for(int i=0;i<this.indelList.size();i++){
+            SVGroup svGroup = this.indelList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            
+            /**
+             * annotation part
+             * Find annotation for this svGroup
+             */
+            
+            if(!svGroup.isIdentityFlag()){
+                svGroup.defineIdentity();
+            }
+            
+            long avgIniPosF = svGroup.getRPF();
+            long avgLastPosB = svGroup.getRPB();
+
+            long chrPosStartF = (((long)svGroup.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopF = (((long)svGroup.getNumChrF()<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            long chrPosStartB = (((long)svGroup.getNumChrB()<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopB = (((long)svGroup.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            if(annoGroupIndexF >= 0){
+                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                svGroup.setAnnoF(annoF);
+                strAnnoF = annoF.toString();
+            }
+            if(annoGroupIndexB >= 0){
+                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                svGroup.setAnnoB(annoB);
+                strAnnoB = annoB.toString();
+            }
+
+            /**********************/
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(">"+count+"\t"+svGroup.toString());
+            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
+            writer.write("\n");
+            count++;
+        }
+        
+//        writer.flush();
+//        writer.close();
+        /***************************************************/
+        /**
+         * Write intraTrans cov report
+         */
+//        f = new File(intraTransFile); //File object        
+//        if(f.exists()){
+////            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(intraTransFile,true);
+//        }else{
+////            ps = new PrintStream(filename);
+//            writer = new FileWriter(intraTransFile);
+//        }
+//        count = 1;
+        for(int i=0;i<this.intraTransList.size();i++){
+            SVGroup svGroup = this.intraTransList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            
+            /**
+             * annotation part
+             * Find annotation for this svGroup
+             */
+            
+            if(!svGroup.isIdentityFlag()){
+                svGroup.defineIdentity();
+            }
+            
+            long avgIniPosF = svGroup.getRPF();
+            long avgLastPosB = svGroup.getRPB();
+
+            long chrPosStartF = (((long)svGroup.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopF = (((long)svGroup.getNumChrF()<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            long chrPosStartB = (((long)svGroup.getNumChrB()<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopB = (((long)svGroup.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            if(annoGroupIndexF >= 0){
+                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                svGroup.setAnnoF(annoF);
+                strAnnoF = annoF.toString();
+            }
+            if(annoGroupIndexB >= 0){
+                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                svGroup.setAnnoB(annoB);
+                strAnnoB = annoB.toString();
+            }
+
+            /**********************/
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(">"+count+"\t"+svGroup.toString());
+            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
+            writer.write("\n");
+            count++;
+        }
+        
+//        writer.flush();
+//        writer.close();
+        /***************************************************/
+        /**
+         * Write interTrans cov report
+         */
+//        f = new File(interTransFile); //File object        
+//        if(f.exists()){
+////            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(interTransFile,true);
+//        }else{
+////            ps = new PrintStream(filename);
+//            writer = new FileWriter(interTransFile);
+//        }
+//        count = 1;
+        for(int i=0;i<this.interTransList.size();i++){
+            SVGroup svGroup = this.interTransList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            
+            /**
+             * annotation part
+             * Find annotation for this svGroup
+             */
+            
+            if(!svGroup.isIdentityFlag()){
+                svGroup.defineIdentity();
+            }
+            
+            long avgIniPosF = svGroup.getRPF();
+            long avgLastPosB = svGroup.getRPB();
+
+            long chrPosStartF = (((long)svGroup.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopF = (((long)svGroup.getNumChrF()<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            long chrPosStartB = (((long)svGroup.getNumChrB()<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopB = (((long)svGroup.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            if(annoGroupIndexF >= 0){
+                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                svGroup.setAnnoF(annoF);
+                strAnnoF = annoF.toString();
+            }
+            if(annoGroupIndexB >= 0){
+                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                svGroup.setAnnoB(annoB);
+                strAnnoB = annoB.toString();
+            }
+
+            /**********************/
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(">"+count+"\t"+svGroup.toString());
+            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
+            writer.write("\n");            
+            count++;
+        }
+        
+        writer.flush();
+        writer.close();
+        /***************************************************/
+    }
+    
+    public void createRefIndex(String refFaIdxFile) throws FileNotFoundException, IOException{
+        RandomAccessFile rbRefIdx = new RandomAccessFile(refFaIdxFile,"r");
+        String line;
+        String name = "";
+        long numChr = 0;
+        
+        while ((line = rbRefIdx.readLine()) != null) {
+            String[] linePortion = line.split("\t");
+            name = linePortion[0];
+            this.refIndex.put(name, ++numChr);
+        }
     }
 }

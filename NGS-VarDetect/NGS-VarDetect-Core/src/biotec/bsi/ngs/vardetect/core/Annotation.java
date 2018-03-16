@@ -24,6 +24,10 @@ public class Annotation {
     private String frame;
     private String attribute;
     
+    public Annotation(){
+
+    }
+    
     //Vector<ChromosomeSequence> chrs ;
     public Annotation(long inChrName,String inSource,String inFeature,long inStart,long inStop,String inScore,String inStrand,String inFrame,String inAttribute){
 
