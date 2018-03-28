@@ -108,13 +108,15 @@ public class ReferenceAnnotation {
          */
         
         int iniPoint = 0;
-        int lastPoint = annoBinaryTree.size();
+        int lastPoint = annoBinaryTree.size()-1;
         int midPoint = (lastPoint + iniPoint)/2;
         long compareChrPos;
         int annotationIndex = 0;
         char status = 'n';              // status indicate that the input is lower or higher than compareChrPos 'l' is lower |  'h' is higher (if 'l' it mean the chrPosStart is lower than that mid point)
         
         while(true){
+            
+            
             compareChrPos = annoBinaryTree.get(midPoint) & this.chrPosCompareMask;
             
             if(compareChrPos == chrPosStart){
@@ -137,7 +139,9 @@ public class ReferenceAnnotation {
                     midPoint = (lastPoint + iniPoint)/2;
                 }               
             }
-            
+            if(midPoint==53908){
+                System.out.println();
+            }
 //            if(iniPoint>lastPoint){
 //                // has case check to compensate to the real mid point that the chrPos has lower or higher. because midpoint has being update to new midpoint and then the while loop is break before it has been use to compare
 //                // So, the status is stiil idicate lower or higher which does not mean this new midpoint but mean the midpoint in the past
@@ -227,7 +231,7 @@ public class ReferenceAnnotation {
                 annotationIndex = midPointAnnotationIndex;
                 return annotationIndex;
 
-            }else if(midPoint == annoBinaryTree.size()){
+            }else if(midPoint == annoBinaryTree.size()-1){
                 /**
                 * midpoint is Stop Point
                 * It's higher than stop

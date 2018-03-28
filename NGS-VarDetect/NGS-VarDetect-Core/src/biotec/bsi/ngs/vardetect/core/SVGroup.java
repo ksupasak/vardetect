@@ -46,6 +46,20 @@ public class SVGroup {
     private long backCode;
     private Annotation annoF;       // object store annotation information of front part
     private Annotation annoB;       // object store annotation information of back part
+    private boolean sameChrFlag;
+    private boolean diffChrFlag;
+    private ArrayList<Double> sameChrEnclideanDistance;
+    private ArrayList<Double> diffChrEuclideanDistance;
+    private boolean sameChrEnclideanDistanceCompleteFlag;
+    private boolean diffChrEuclideanDistanceCompleteFlag;
+    private long euCalFrontCode;
+    private long euCalBackCode;
+    private boolean tandemFlag;
+    private boolean deleteFlag;
+    private boolean intraTransFlag;
+    private boolean interTransFlag;
+    private boolean chimericFlag;
+    private boolean alienFlag;
     
     public SVGroup(){
         varList = new ArrayList();        
@@ -58,7 +72,16 @@ public class SVGroup {
         this.identityFlag=false;
         this.annoF = new Annotation();      
         this.annoB = new Annotation();
-        
+        this.sameChrEnclideanDistance = new ArrayList();
+        this.diffChrEuclideanDistance = new ArrayList();
+        this.sameChrEnclideanDistanceCompleteFlag = false;
+        this.diffChrEuclideanDistanceCompleteFlag = false;
+        this.tandemFlag = false;
+        this.deleteFlag = false;
+        this.intraTransFlag = false;
+        this.interTransFlag = false;
+        this.chimericFlag = false;
+        this.alienFlag = false;
     }
     
     public void addVariationV2(VariationV2 inVar){
@@ -103,7 +126,7 @@ public class SVGroup {
 //        this.rawPosB = dummyVar.getPosCodeB();
         defineIdentity();
         /**
-         * Classify SV type
+         * This function will classify rough SV type for this SVGroup
          */
         if(this.chrF.equals(this.chrB)){
             /**
@@ -171,6 +194,100 @@ public class SVGroup {
         return this.svType;
     }
     
+    public String getPreciseSVType(){
+//        VariationV2 dummyVar = this.varList.get(0);
+//        this.RPF = dummyVar.getBreakpointF();
+//        this.RPB = dummyVar.getBreakpointB();
+//        this.APF = dummyVar.getAlignPosF();
+//        this.APB = dummyVar.getAlignPosB();
+//        this.chrF = dummyVar.getChrF();
+//        this.chrB = dummyVar.getChrB();
+//        this.strandF = dummyVar.getStrandF();
+//        this.strandB = dummyVar.getStrandB();
+//        this.rawPosF = dummyVar.getPosCodeF();
+//        this.rawPosB = dummyVar.getPosCodeB();
+
+        /**
+         * This function should be call after passing defineIdentity
+         * And complete calculate and add euclidean distance to arraylist
+         * 
+         * Because it require identity information  of this SVGroup and ArrayList of euclidean distance of this SVGroup with other SVGroup
+         * 
+         * To precisely classify SV type
+         * 
+         * not finish
+        */
+        
+        
+        /**
+         * This function will classify rough SV type for this SVGroup
+         */
+//        if(this.chrF.equals(this.chrB)){
+//            /**
+//             * Same chromosome
+//             */
+//            if(this.strandF==0 && this.strandB==0){
+//                // Strand ++
+//                if(this.RPB < this.RPF && this.APB < this.APF){
+//                    this.svType = "tandem";
+//                    this.svTypeCode=0;
+//                }else if(this.RPB > this.RPF && this.APB > this.APF){
+//                    this.svType = "indel";
+//                    this.svTypeCode=1;
+//                }else{
+//                    this.svType = "unclassify";
+//                    this.svTypeCode=4;
+//                }
+//            }else if(this.strandF==1 && this.strandB==1){
+//                // Strand --
+//                if(this.RPB > this.RPF && this.APB > this.APF){
+//                    this.svType = "tandem";
+//                    this.svTypeCode=0;
+//                }else if(this.RPB < this.RPF && this.APB < this.APF){
+//                    this.svType = "indel";
+//                    this.svTypeCode=1;
+//                }else{
+//                    this.svType = "unclassify";
+//                    this.svTypeCode=4;
+//                }
+//            }else if(this.strandF==0 && this.strandB==1){
+//                // Strand +-
+//                if(this.RPB < this.RPF && this.APB < this.APF){
+//                    this.svType = "intraTrans";
+//                    this.svTypeCode=2;
+//                }else if(this.RPB > this.RPF && this.APB > this.APF){
+//                    this.svType = "intraTrans";
+//                    this.svTypeCode=2;
+//                }else{
+//                    this.svType = "unclassify";
+//                    this.svTypeCode=4;
+//                }
+//            }else if(this.strandF==1 && this.strandB==0){
+//                // Strand -+
+//                if(this.RPB < this.RPF && this.APB < this.APF){
+//                    this.svType = "intraTrans";
+//                    this.svTypeCode=2;
+//                }else if(this.RPB > this.RPF && this.APB > this.APF){
+//                    this.svType = "intraTrans";
+//                    this.svTypeCode=2;
+//                }else{
+//                    this.svType = "unclassify";
+//                    this.svTypeCode=4;
+//                }
+//            }
+//            
+//        }else{
+//            /**
+//             * different Chromosome
+//             */
+//            this.svType = "interTrans";
+//            this.svTypeCode=3;
+//            
+//        }
+        
+        return this.svType;
+    }
+    
     public void defineIdentity(){
         /**
          * This function will define identity for this SVGroup
@@ -205,6 +322,16 @@ public class SVGroup {
                         this.numChrB = this.refIndex.get(this.chrB);
                         this.frontCode = (this.numChrF<<32)+this.RPF;
                         this.backCode = (this.numChrB<<32)+this.RPB;
+                        this.euCalFrontCode = (this.strandF<<63)+((this.numChrF<<32)+this.RPF);
+                        this.euCalBackCode = (this.strandB<<63)+((this.numChrB<<32)+this.RPB);
+                        
+                        if(numChrF==numChrB){
+                            this.sameChrFlag = true;
+                            this.diffChrFlag = false;
+                        }else{
+                            this.sameChrFlag = false;
+                            this.diffChrFlag = true;
+                        }
                         
                         break;
                     }  
@@ -229,7 +356,16 @@ public class SVGroup {
                 this.numChrB = this.refIndex.get(this.chrB);
                 this.frontCode = (this.numChrF<<32)+this.RPF;
                 this.backCode = (this.numChrB<<32)+this.RPB;
+                this.euCalFrontCode = (this.strandF<<63)+((this.numChrF<<32)+this.RPF);
+                this.euCalBackCode = (this.strandB<<63)+((this.numChrB<<32)+this.RPB);
                 
+                if(numChrF==numChrB){
+                    this.sameChrFlag = true;
+                    this.diffChrFlag = false;
+                }else{
+                    this.sameChrFlag = false;
+                    this.diffChrFlag = true;
+                }
             }
             
             
@@ -249,6 +385,16 @@ public class SVGroup {
             this.numChrB = this.refIndex.get(this.chrB);
             this.frontCode = (this.numChrF<<32)+this.RPF;
             this.backCode = (this.numChrB<<32)+this.RPB;
+            this.euCalFrontCode = (this.strandF<<63)+((this.numChrF<<32)+this.RPF);
+            this.euCalBackCode = (this.strandB<<63)+((this.numChrB<<32)+this.RPB);
+            
+            if(numChrF==numChrB){
+                this.sameChrFlag = true;
+                this.diffChrFlag = false;
+            }else{
+                this.sameChrFlag = false;
+                this.diffChrFlag = true;
+            }
         }
         
     }
@@ -349,6 +495,10 @@ public class SVGroup {
         return refIndex;
     }
 
+    public void setSvType(String svType) {
+        this.svType = svType;
+    }
+
     public String getSvType() {
         return svType;
     }
@@ -401,6 +551,10 @@ public class SVGroup {
         return strandB;
     }
 
+    public void setSvTypeCode(byte svTypeCode) {
+        this.svTypeCode = svTypeCode;
+    }
+
     public byte getSvTypeCode() {
         return svTypeCode;
     }
@@ -448,10 +602,102 @@ public class SVGroup {
     public void setAnnoB(Annotation annoB) {
         this.annoB = annoB;
     }
+
+    public boolean isSameChrFlag() {
+        return sameChrFlag;
+    }
+
+    public boolean isDiffChrFlag() {
+        return diffChrFlag;
+    }
+
+    public ArrayList<Double> getSameChrEnclideanDistance() {
+        return sameChrEnclideanDistance;
+    }
+
+    public ArrayList<Double> getDiffChrEuclideanDistance() {
+        return diffChrEuclideanDistance;
+    }
+    
+    public void addEuclideanDistance(double euclideanDistanceValue){
+        if(this.sameChrFlag==true){
+            this.sameChrEnclideanDistance.add(euclideanDistanceValue);
+        }else if(this.diffChrFlag == true){
+            this.diffChrEuclideanDistance.add(euclideanDistanceValue);
+        }
+    }
+    
+    public void euclideanDistanceComplete(double euclideanDistanceValue){
+        if(this.sameChrFlag==true){
+            this.sameChrEnclideanDistanceCompleteFlag = true;
+        }else if(this.diffChrFlag == true){
+            this.diffChrEuclideanDistanceCompleteFlag = true;
+        }
+    }
+
+    public long getEuCalFrontCode() {
+        return euCalFrontCode;
+    }
+
+    public long getEuCalBackCode() {
+        return euCalBackCode;
+    }
+
+    public boolean isTandemFlag() {
+        return tandemFlag;
+    }
+
+    public void setTandemFlag(boolean tandemFlag) {
+        this.tandemFlag = tandemFlag;
+    }
+
+    public boolean isDeleteFlag() {
+        return deleteFlag;
+    }
+
+    public void setDeleteFlag(boolean deleteFlag) {
+        this.deleteFlag = deleteFlag;
+    }
+
+    public boolean isIntraTransFlag() {
+        return intraTransFlag;
+    }
+
+    public void setIntraTransFlag(boolean intraTransFlag) {
+        this.intraTransFlag = intraTransFlag;
+    }
+
+    public boolean isInterTransFlag() {
+        return interTransFlag;
+    }
+
+    public void setInterTransFlag(boolean interTransFlag) {
+        this.interTransFlag = interTransFlag;
+    }
+
+    public boolean isChimericFlag() {
+        return chimericFlag;
+    }
+
+    public void setChimericFlag(boolean chimericFlag) {
+        this.chimericFlag = chimericFlag;
+    }
+
+    public boolean isAlienFlag() {
+        return alienFlag;
+    }
+
+    public void setAlienFlag(boolean alienFlag) {
+        this.alienFlag = alienFlag;
+    }
     
     @Override
     public String toString(){
         return rawPosF+":"+strandF+"\t"+rawPosB+":"+strandB+"\t"+chrF+":"+RPF+"\t"+chrB+":"+RPB+"\t"+getNumCoverage()+"\t"+this.svTypeCode+":"+this.svType+"\t"+this.numStrandPattern;
+    }
+    
+    public String shortSummary(){
+        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage();
     }
   
 }

@@ -133,7 +133,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
         File bamFile = new File(seq_file); 
         SamReaderFactory samReaderFactory = SamReaderFactory.makeDefault().validationStringency(ValidationStringency.SILENT);
         SamReader samReader = samReaderFactory.open(bamFile);
-        
+
         pout = System.out;
                 
         if(output!=null){

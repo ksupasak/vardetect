@@ -14,6 +14,7 @@ import java.io.PrintStream;
 import java.io.RandomAccessFile;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -84,8 +85,14 @@ public class VariationResult {
     private ArrayList<ArrayList<Long>> sortedCoverageArrayIndel;
     private ArrayList<SVGroup> tandemList;
     private ArrayList<SVGroup> indelList;
+    private ArrayList<SVGroup> deletionList;
     private ArrayList<SVGroup> intraTransList;
     private ArrayList<SVGroup> interTransList;
+    private ArrayList<SVGroup> sameChrSVGroup;
+    private ArrayList<SVGroup> diffChrSVGroup; 
+    private Map<ArrayList<SVGroup>,Boolean> intraTransPairList;
+    private Map<ArrayList<SVGroup>,Boolean> interTransPairList;
+    private ArrayList<SVGroup> chimericList;
     
     private Map<String,Long> refIndex;                              // store chrmosome name as key and assigned chr number in value (this map is very important in case of chr name is not a number we will asigned the number to it and store in this map for further reference)
     
@@ -119,9 +126,15 @@ public class VariationResult {
         this.sortedCoverageArrayIndel = new ArrayList();
         this.tandemList = new ArrayList();
         this.indelList = new ArrayList();
+        this.deletionList = new ArrayList();
         this.intraTransList = new ArrayList();
         this.interTransList = new ArrayList();
         this.refIndex = new LinkedHashMap();
+        this.sameChrSVGroup = new ArrayList();
+        this.diffChrSVGroup = new ArrayList();
+        this.intraTransPairList = new LinkedHashMap();
+        this.interTransPairList = new LinkedHashMap();
+        this.chimericList = new ArrayList();
     }
     
     public void addMerLength(int merLen){
@@ -3777,10 +3790,10 @@ public class VariationResult {
         Collections.sort(this.interTransList,SVGroup.CoverageComparator);        
     }
     
-    public void classifyPreciseSVType(){
+    public void classifyPreciseSVType(int coverageThreshold){
         /**
          * classify sv type of each sv candidate group
-         * We hasve 4 rough type of SV (but this function will classify those SV type precisely)
+         * We hasve 4 rough type of SV (but this function will classify those SV type in more precisely)
          *  1. tandem
          *  2. indel
          *  3. intraTrans
@@ -3788,9 +3801,10 @@ public class VariationResult {
          * 
          * Implement relation analysis algorithm for classify precise SV type
          * 
+         * 
          */
-        ArrayList<SVGroup> sameChrSVGroup = new ArrayList();
-        ArrayList<SVGroup> diffChrSVGroup = new ArrayList();
+        this.sameChrSVGroup = new ArrayList();
+        this.diffChrSVGroup = new ArrayList();
 //        int count=0;
         for(Map.Entry<String, Map<String,SVGroup>> entry1 : this.coverageMap.entrySet()){
             Map<String,SVGroup> coverageMapII = entry1.getValue();
@@ -3801,23 +3815,254 @@ public class VariationResult {
 //                if(count==26){
 //                    System.out.println();
 //                }
-                if(svGroup.getSVType().equals("tandem")){
-                    this.tandemList.add(svGroup);
-                }else if(svGroup.getSVType().equals("indel")){
-                    this.indelList.add(svGroup);
-                }else if(svGroup.getSVType().equals("intraTrans")){
-                    this.intraTransList.add(svGroup);
-                }else if(svGroup.getSVType().equals("interTrans")){
-                    this.interTransList.add(svGroup);
+                if(svGroup.getNumCoverage() >= coverageThreshold){
+                    svGroup.defineIdentity();
+
+                    if(svGroup.isDiffChrFlag()){
+                        diffChrSVGroup.add(svGroup);
+                    }else if(svGroup.isSameChrFlag()){
+                        sameChrSVGroup.add(svGroup);
+                    }
                 }
+                
+                
+                
+//                if(svGroup.getSVType().equals("tandem")){
+//                    this.tandemList.add(svGroup);
+//                }else if(svGroup.getSVType().equals("indel")){
+//                    this.indelList.add(svGroup);
+//                }else if(svGroup.getSVType().equals("intraTrans")){
+//                    this.intraTransList.add(svGroup);
+//                }else if(svGroup.getSVType().equals("interTrans")){
+//                    this.interTransList.add(svGroup);
+//                }
             }
         }
         
+        Collections.sort(diffChrSVGroup,SVGroup.CoverageComparator);
+        Collections.sort(sameChrSVGroup,SVGroup.CoverageComparator);
+        
+        /**
+         * Classifying precise SV type
+         *  1. Start with calculate distance 
+         *  2. classify same chromosome SV type
+         *  3. classify different chromosome SV type
+         */
+        for(int i=0;i<sameChrSVGroup.size();i++){
+            SVGroup mainSV = sameChrSVGroup.get(i);
+            for(int j=i;j<sameChrSVGroup.size();j++){
+                SVGroup subSV = sameChrSVGroup.get(j);
+                //calcualte 2D euclidean distance
+//                double frontDiffSqrt = Math.pow((subSV.getFrontCode() - mainSV.getFrontCode()),2);
+//                double backDiffSqrt = Math.pow((subSV.getBackCode() - mainSV.getBackCode()),2);
+//                double eudistance = Math.sqrt((frontDiffSqrt + backDiffSqrt));
+                /*******/
+                
+                //calcualte 2D reverse euclidean distance (switch subtraction order to x1-y2 and x2-y1)
+                double frontDiffSqrt = Math.pow((subSV.getEuCalBackCode() - mainSV.getEuCalFrontCode()),2);
+                double backDiffSqrt = Math.pow((subSV.getEuCalFrontCode() - mainSV.getEuCalBackCode()),2);
+                double eudistance = Math.sqrt((frontDiffSqrt + backDiffSqrt));
+                /*******/
+                
+                if(i==j){
+                    //add eudistance one time if it is the same SVGroup
+                    mainSV.addEuclideanDistance(eudistance);
+                }else{
+                    mainSV.addEuclideanDistance(eudistance);
+                    subSV.addEuclideanDistance(eudistance);
+                }
+                 
+            }    
+        }
+        
+        for(int i=0;i<diffChrSVGroup.size();i++){
+            SVGroup mainSV = diffChrSVGroup.get(i);
+            for(int j=i;j<diffChrSVGroup.size();j++){
+                SVGroup subSV = diffChrSVGroup.get(j);
+                //calcualte 2D euclidean distance
+//                double frontDiffSqrt = Math.pow((subSV.getFrontCode() - mainSV.getFrontCode()),2);
+//                double backDiffSqrt = Math.pow((subSV.getBackCode() - mainSV.getBackCode()),2);
+//                double eudistance = Math.sqrt((frontDiffSqrt + backDiffSqrt));
+                /*******/
+                
+                //calcualte 2D reverse euclidean distance (switch subtraction order to x1-y2 and x2-y1)
+                double frontDiffSqrt = Math.pow((subSV.getEuCalBackCode() - mainSV.getEuCalFrontCode()),2);
+                double backDiffSqrt = Math.pow((subSV.getEuCalFrontCode() - mainSV.getEuCalBackCode()),2);
+                double eudistance = Math.sqrt((frontDiffSqrt + backDiffSqrt));
+                /*******/
+                
+                if(i==j){
+                    //add eudistance one time if it is the same SVGroup
+                    mainSV.addEuclideanDistance(eudistance);
+                }else{
+                    mainSV.addEuclideanDistance(eudistance);
+                    subSV.addEuclideanDistance(eudistance);
+                }
+                 
+            }    
+        }
+        /**
+         * identify same chromosome svtype
+         */
+        Map<Integer,Boolean> skipIndex = new LinkedHashMap();
+        for(int i=0;i<this.sameChrSVGroup.size();i++){
+//            if(skipIndex.containsKey(i)){
+//                continue;
+//            }
+            SVGroup svGroupMain = this.sameChrSVGroup.get(i);
+            ArrayList<Double> euList = svGroupMain.getSameChrEnclideanDistance();
+            ArrayList<Double> dummyEuList = new ArrayList<Double>(euList);
+
+            for(int k=0;k<this.sameChrSVGroup.size();k++){
+                int minIndex = dummyEuList.indexOf(Collections.min(dummyEuList));
+                double minEuDis = dummyEuList.get(minIndex);
+
+                int realMinIndex = euList.indexOf(minEuDis);    // true min index for write report
+                SVGroup svGroupSub = this.sameChrSVGroup.get(realMinIndex);
+
+                /**
+                 * classify SV type
+                 */
+
+                String svType = identifySameChrPreciseSVType(svGroupMain,svGroupSub);  // this function will idetify SV type and put the SVGroup in to the correct SVtype list
+                
+                if(svType != null){
+                    
+                    
+                    break;
+                }
+                
+//                if(svType.equals("intraTrans")||svType.equals("interTrans")){
+//                    /**
+//                     * In case of inter and intra it will add SGroup into a list as a pair of SVGroup which compose of front and back svGroup. 
+//                     * That's mean both mainSVGroup and sunSVGroup has been added
+//                     * So, there is no reason to consider subSVGroup again when loop to it so we add the index of subSVGroup to skipIndex map
+//                     * Checking the map and skip SVGroup that already consider when it come
+//                     */
+//                    skipIndex.put(realMinIndex, true);
+//                }
+                dummyEuList.remove(minIndex);
+            }
+        }
+        
+        /**
+         * identify diff chromosome svtype
+         */
+        for(int i=0;i<this.diffChrSVGroup.size();i++){
+//            if(skipIndex.containsKey(i)){
+//                continue;
+//            }
+            SVGroup svGroupMain = this.diffChrSVGroup.get(i);
+            ArrayList<Double> euList = svGroupMain.getDiffChrEuclideanDistance();
+            ArrayList<Double> dummyEuList = new ArrayList<Double>(euList);
+
+            for(int k=0;k<this.diffChrSVGroup.size();k++){
+                int minIndex = dummyEuList.indexOf(Collections.min(dummyEuList));
+                double minEuDis = dummyEuList.get(minIndex);
+
+                int realMinIndex = euList.indexOf(minEuDis);    // true min index for write report
+                SVGroup svGroupSub = this.diffChrSVGroup.get(realMinIndex);
+
+                /**
+                 * classify SV type
+                 */
+
+                String svType = identifyDiffChrPreciseSVType(svGroupMain,svGroupSub);  // this function will idetify SV type and put the SVGroup in to the correct SVtype list
+                
+                if(svType != null){
+                    
+                    
+                    break;
+                }
+                
+//                if(svType.equals("intraTrans")||svType.equals("interTrans")){
+//                    /**
+//                     * In case of inter and intra it will add SGroup into a list as a pair of SVGroup which compose of front and back svGroup. 
+//                     * That's mean both mainSVGroup and sunSVGroup has been added
+//                     * So, there is no reason to consider subSVGroup again when loop to it so we add the index of subSVGroup to skipIndex map
+//                     * Checking the map and skip SVGroup that already consider when it come
+//                     */
+//                    skipIndex.put(realMinIndex, true);
+//                }
+                dummyEuList.remove(minIndex);
+            }
+        }
+        
+        /*******************/
+        
+        
+        /**
+         * Analyze correctness of SVType for each svGroup  
+         */
+        
+        /********************/
+        /**
+         * Grouping reverse and normal in to the same Group 
+         * calculate distant with code that compose of chromosome and breakpoint
+         */
+//        for(int i=0;i<sameChrSVGroup.size();i++){
+//            SVGroup mainSV = sameChrSVGroup.get(i);
+//            for(int j=i;j<sameChrSVGroup.size();j++){
+//                SVGroup subSV = sameChrSVGroup.get(j);
+//                //calcualte 2D euclidean distance
+//                double frontDiffSqrt = Math.pow((subSV.getFrontCode() - mainSV.getFrontCode()),2);
+//                double backDiffSqrt = Math.pow((subSV.getBackCode() - mainSV.getBackCode()),2);
+//                double eudistance = Math.sqrt((frontDiffSqrt + backDiffSqrt));
+//                /*******/
+//                
+//                //calcualte 2D reverse euclidean distance (switch subtraction order to x1-y2 and x2-y1)
+////                double frontDiffSqrt = Math.pow((subSV.getEuCalBackCode() - mainSV.getEuCalFrontCode()),2);
+////                double backDiffSqrt = Math.pow((subSV.getEuCalFrontCode() - mainSV.getEuCalBackCode()),2);
+////                double eudistance = Math.sqrt((frontDiffSqrt + backDiffSqrt));
+//                /*******/
+//                
+//                if(i==j){
+//                    //add eudistance one time if it is the same SVGroup
+//                    mainSV.addEuclideanDistance(eudistance);
+//                }else{
+//                    mainSV.addEuclideanDistance(eudistance);
+//                    subSV.addEuclideanDistance(eudistance);
+//                }
+//                 
+//            }    
+//        }
+//        
+//        for(int i=0;i<diffChrSVGroup.size();i++){
+//            SVGroup mainSV = diffChrSVGroup.get(i);
+//            for(int j=i;j<diffChrSVGroup.size();j++){
+//                SVGroup subSV = diffChrSVGroup.get(j);
+//                //calcualte 2D euclidean distance
+//                double frontDiffSqrt = Math.pow((subSV.getFrontCode() - mainSV.getFrontCode()),2);
+//                double backDiffSqrt = Math.pow((subSV.getBackCode() - mainSV.getBackCode()),2);
+//                double eudistance = Math.sqrt((frontDiffSqrt + backDiffSqrt));
+//                /*******/
+//                
+//                //calcualte 2D reverse euclidean distance (switch subtraction order to x1-y2 and x2-y1)
+////                double frontDiffSqrt = Math.pow((subSV.getEuCalBackCode() - mainSV.getEuCalFrontCode()),2);
+////                double backDiffSqrt = Math.pow((subSV.getEuCalFrontCode() - mainSV.getEuCalBackCode()),2);
+////                double eudistance = Math.sqrt((frontDiffSqrt + backDiffSqrt));
+//                /*******/
+//                
+//                if(i==j){
+//                    //add eudistance one time if it is the same SVGroup
+//                    mainSV.addEuclideanDistance(eudistance);
+//                }else{
+//                    mainSV.addEuclideanDistance(eudistance);
+//                    subSV.addEuclideanDistance(eudistance);
+//                }
+//                 
+//            }    
+//        }
+        
+        
+        /********************/
+        
+        
         // sort list of SVGroup by number of coverage fron high to low (descending) comparable has benn inplement in SVGroup object
-        Collections.sort(this.tandemList,SVGroup.CoverageComparator);
-        Collections.sort(this.indelList,SVGroup.CoverageComparator);
-        Collections.sort(this.intraTransList,SVGroup.CoverageComparator);
-        Collections.sort(this.interTransList,SVGroup.CoverageComparator);        
+//        Collections.sort(this.tandemList,SVGroup.CoverageComparator);
+//        Collections.sort(this.indelList,SVGroup.CoverageComparator);
+//        Collections.sort(this.intraTransList,SVGroup.CoverageComparator);
+//        Collections.sort(this.interTransList,SVGroup.CoverageComparator);        
     }
     
     public void writeStructureVariantV2SortedCoverageReportWithAnnotationToFile(String nameFile , String gffFile, String refFaiFile, int coverageThreshold , int merSize) throws IOException{
@@ -4381,6 +4626,331 @@ public class VariationResult {
         /***************************************************/
     }
     
+    public void writePreciseStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationToFile(String nameFile , String gffFile, String refFaiFile, int coverageThreshold , int merSize) throws IOException{
+        /**
+        * Suitable for SVGroup object that contain VariaitonV2 object
+        * write result to file format for variant report in sorted order (high to low)
+        * 
+        * "Caution : this function must be called after classifyRoughVariantReport function"
+        */
+        String tandemFile = nameFile+".tandem_cov.out";
+        String indelFile = nameFile+".indel_cov.out";
+        String intraTransFile = nameFile+".intraTrans_cov.out";
+        String interTransFile = nameFile+".interTrans_cov.out";
+        String groupCoverageReport = nameFile+".mrkDup.cov.PreciseSVType.ginfo.annotation.out";
+        
+        /**
+         * Read annotation file (GFF)
+         */
+        ReferenceAnnotation refAnno = SequenceUtil.readAnnotationFileV3(gffFile,refFaiFile, "gene" , merSize);
+        Map<Integer,Annotation> refAnnoIndex = refAnno.getAnnotationIndex();
+        /****************************/
+
+        /**
+         * Write tandem cov report
+         */
+        FileWriter writer;
+        File f = new File(groupCoverageReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(groupCoverageReport,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(groupCoverageReport);
+        }
+        
+        /**
+         * Tandem
+         */
+        writer.write("Tandem\n");
+        int count = 1;
+        for(int i=0;i<this.tandemList.size();i++){
+            SVGroup svGroup = this.tandemList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            
+            /**
+             * annotation part
+             * Find annotation for this svGroup
+             */
+            
+            if(!svGroup.isIdentityFlag()){
+                svGroup.defineIdentity();
+            }
+            
+            long avgIniPosF = svGroup.getRPF();
+            long avgLastPosB = svGroup.getRPB();
+
+            long chrPosStartF = (((long)svGroup.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopF = (((long)svGroup.getNumChrF()<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            long chrPosStartB = (((long)svGroup.getNumChrB()<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopB = (((long)svGroup.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            if(annoGroupIndexF >= 0){
+                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                svGroup.setAnnoF(annoF);
+                strAnnoF = annoF.toString();
+            }
+            if(annoGroupIndexB >= 0){
+                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                svGroup.setAnnoB(annoB);
+                strAnnoB = annoB.toString();
+            }
+
+            /**********************/
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(">"+count+"\t"+svGroup.shortSummary());
+            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
+            writer.write("\n");
+            count++;
+        }
+        
+        /******************************/
+        
+        /**
+         * Deletion
+         */
+        writer.write("Deletion\n");
+        count = 1;
+        for(int i=0;i<this.deletionList.size();i++){
+            SVGroup svGroup = this.deletionList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            
+            /**
+             * annotation part
+             * Find annotation for this svGroup
+             */
+            
+            if(!svGroup.isIdentityFlag()){
+                svGroup.defineIdentity();
+            }
+            
+            long avgIniPosF = svGroup.getRPF();
+            long avgLastPosB = svGroup.getRPB();
+
+            long chrPosStartF = (((long)svGroup.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopF = (((long)svGroup.getNumChrF()<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            long chrPosStartB = (((long)svGroup.getNumChrB()<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopB = (((long)svGroup.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            if(annoGroupIndexF >= 0){
+                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                svGroup.setAnnoF(annoF);
+                strAnnoF = annoF.toString();
+            }
+            if(annoGroupIndexB >= 0){
+                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                svGroup.setAnnoB(annoB);
+                strAnnoB = annoB.toString();
+            }
+
+            /**********************/
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(">"+count+"\t"+svGroup.shortSummary());
+            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
+            writer.write("\n");
+            count++;
+        }
+        /**********************************/
+        
+        /**
+         * Intra Translocation
+         */
+        writer.write("Intra-translocation\n");
+        count = 1;
+        for(Map.Entry<ArrayList<SVGroup>,Boolean> map : this.intraTransPairList.entrySet()){
+            ArrayList<SVGroup> intraTransPair = map.getKey();
+            SVGroup frontJunction = intraTransPair.get(0);
+            SVGroup backJunction = intraTransPair.get(1);
+            
+             /**
+             * annotation part Front Junction
+             * Find annotation for this svGroup
+             */
+            
+            if(!frontJunction.isIdentityFlag()){
+                frontJunction.defineIdentity();
+            }
+            
+            long avgIniPosF = frontJunction.getRPF();
+            long avgLastPosB = frontJunction.getRPB();
+
+            long chrPosStartF = (((long)frontJunction.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopF = (((long)frontJunction.getNumChrF()<<28)+frontJunction.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            long chrPosStartB = (((long)frontJunction.getNumChrB()<<28)+frontJunction.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopB = (((long)frontJunction.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            if(annoGroupIndexF >= 0){
+                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                frontJunction.setAnnoF(annoF);
+                strAnnoF = annoF.toString();
+            }
+            if(annoGroupIndexB >= 0){
+                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                frontJunction.setAnnoB(annoB);
+                strAnnoB = annoB.toString();
+            }
+            /**********************/
+
+            writer.write(">"+count+"\t"+frontJunction.shortSummary());
+            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
+            writer.write("\n");
+            
+            /**
+             * annotation part back Junction
+             * Find annotation for this svGroup
+             */
+            
+            if(!backJunction.isIdentityFlag()){
+                backJunction.defineIdentity();
+            }
+            
+            avgIniPosF = backJunction.getRPF();
+            avgLastPosB = backJunction.getRPB();
+
+            chrPosStartF = (((long)backJunction.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            chrPosStopF = (((long)backJunction.getNumChrF()<<28)+backJunction.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            chrPosStartB = (((long)backJunction.getNumChrB()<<28)+backJunction.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            chrPosStopB = (((long)backJunction.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+            annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+            annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+            strAnnoF = "null";
+            strAnnoB = "null";
+            if(annoGroupIndexF >= 0){
+                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                backJunction.setAnnoF(annoF);
+                strAnnoF = annoF.toString();
+            }
+            if(annoGroupIndexB >= 0){
+                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                backJunction.setAnnoB(annoB);
+                strAnnoB = annoB.toString();
+            }
+            /**********************/
+            writer.write("\t"+backJunction.shortSummary());
+            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
+            writer.write("\n");
+            count++;
+        }             
+        /*****************************************/
+        
+        /**
+         * Inter Translocation
+         */
+        writer.write("Inter-translocation\n");
+        count = 1;
+        for(Map.Entry<ArrayList<SVGroup>,Boolean> map : this.interTransPairList.entrySet()){
+            ArrayList<SVGroup> intraTransPair = map.getKey();
+            SVGroup frontJunction = intraTransPair.get(0);
+            SVGroup backJunction = intraTransPair.get(1);
+            
+             /**
+             * annotation part Front Junction
+             * Find annotation for this svGroup
+             */
+            
+            if(!frontJunction.isIdentityFlag()){
+                frontJunction.defineIdentity();
+            }
+            
+            long avgIniPosF = frontJunction.getRPF();
+            long avgLastPosB = frontJunction.getRPB();
+
+            long chrPosStartF = (((long)frontJunction.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopF = (((long)frontJunction.getNumChrF()<<28)+frontJunction.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            long chrPosStartB = (((long)frontJunction.getNumChrB()<<28)+frontJunction.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopB = (((long)frontJunction.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            if(annoGroupIndexF >= 0){
+                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                frontJunction.setAnnoF(annoF);
+                strAnnoF = annoF.toString();
+            }
+            if(annoGroupIndexB >= 0){
+                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                frontJunction.setAnnoB(annoB);
+                strAnnoB = annoB.toString();
+            }
+            /**********************/
+
+            writer.write(">"+count+"\t"+frontJunction.shortSummary());
+            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
+            writer.write("\n");
+            
+            /**
+             * annotation part back Junction
+             * Find annotation for this svGroup
+             */
+            
+            if(!backJunction.isIdentityFlag()){
+                backJunction.defineIdentity();
+            }
+            
+            avgIniPosF = backJunction.getRPF();
+            avgLastPosB = backJunction.getRPB();
+
+            chrPosStartF = (((long)backJunction.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            chrPosStopF = (((long)backJunction.getNumChrF()<<28)+backJunction.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            chrPosStartB = (((long)backJunction.getNumChrB()<<28)+backJunction.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            chrPosStopB = (((long)backJunction.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+            annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+            annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+            strAnnoF = "null";
+            strAnnoB = "null";
+            if(annoGroupIndexF >= 0){
+                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                backJunction.setAnnoF(annoF);
+                strAnnoF = annoF.toString();
+            }
+            if(annoGroupIndexB >= 0){
+                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                backJunction.setAnnoB(annoB);
+                strAnnoB = annoB.toString();
+            }
+            /**********************/
+            writer.write("\t"+backJunction.shortSummary());
+            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
+            writer.write("\n");
+            count++;
+        }
+        /**********************************************/
+        
+        writer.flush();
+        writer.close();
+        /***************************************************/
+    }
+    
     public void writeStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationToFile(String nameFile , String gffFile, String refFaiFile, int coverageThreshold , int merSize) throws IOException{
         /**
         * Suitable for SVGroup object that contain VariaitonV2 object
@@ -4660,6 +5230,145 @@ public class VariationResult {
         /***************************************************/
     }
     
+    public void writeStructureVariantV2EuclideanDistanceTable(String nameFile, int coverageThreshold) throws IOException{
+        /**
+        * Suitable for SVGroup object that contain VariaitonV2 object
+        * write result to file format for variant report in sorted order (high to low)
+        * 
+        * "Caution : this function must be called after classifyRoughVariantReport function"
+        */
+        String tandemFile = nameFile+".tandem_cov.out";
+        String indelFile = nameFile+".indel_cov.out";
+        String intraTransFile = nameFile+".intraTrans_cov.out";
+        String interTransFile = nameFile+".interTrans_cov.out";
+        String groupCoverageReport = nameFile+".mrkDup.cov.ginfo.annotation.out";
+        String euclideanFile = nameFile+"euclideanDistance.out";
+        
+        /**
+         * Read annotation file (GFF)
+         */
+//        ReferenceAnnotation refAnno = SequenceUtil.readAnnotationFileV3(gffFile,refFaiFile, "gene" , merSize);
+//        Map<Integer,Annotation> refAnnoIndex = refAnno.getAnnotationIndex();
+        /****************************/
+
+        /**
+         * Write tandem cov report
+         */
+        FileWriter writer;
+        File f = new File(euclideanFile); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(euclideanFile,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(euclideanFile);
+        }
+        
+        writer.write("Same Chromosome Euclidean distance table\n");
+        int count = 1;
+        for(int i=0;i<this.sameChrSVGroup.size();i++){
+            SVGroup svGroup = this.sameChrSVGroup.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                break;
+            }
+            
+            /**
+             * annotation part
+             * Find annotation for this svGroup
+             */
+            
+            if(!svGroup.isIdentityFlag()){
+                svGroup.defineIdentity();
+            }
+            
+            writer.write(">"+count+"\t"+svGroup.shortSummary()+"\t|");
+            ArrayList<Double> euList = svGroup.getSameChrEnclideanDistance();
+            /**
+             * print All euclidean value
+             */            
+//            for(int k=0;k<euList.size();k++){
+//                DecimalFormat df = new DecimalFormat("#.00"); // limit double to 2 decimal
+//                writer.write("\t"+df.format(euList.get(k)));
+//                int minIndex = euList.indexOf(Collections.min(euList));
+//            }
+            /*************/
+            
+            /**
+             * pick top three lowest euclidean distance value
+             */
+            ArrayList<Double> dummyEuList = new ArrayList<Double>(euList);
+            for(int k=0;k<3;k++){
+                int minIndex = dummyEuList.indexOf(Collections.min(dummyEuList));
+                DecimalFormat df = new DecimalFormat("#.00"); // limit double to 2 decimal
+                double minEuDis = dummyEuList.get(minIndex);
+                int realMinIndex = euList.indexOf(minEuDis);        // true min index for write report
+                if(realMinIndex+1 != count){ // not report eu distance that calculate between it selfe 
+                    writer.write("\t["+(realMinIndex+1)+"]"+df.format(dummyEuList.get(minIndex))); // realminindex plus one because index when write is start at 1 but real index is start at 0
+                }
+                dummyEuList.remove(minIndex);
+            }
+            /************/
+            
+            writer.write("\n");
+            count++;
+        }
+        
+        writer.write("Difference Chromosome Euclidean distance table\n");
+        count = 1;
+        for(int i=0;i<this.diffChrSVGroup.size();i++){
+            SVGroup svGroup = this.diffChrSVGroup.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                break;
+            }
+            
+            /**
+             * annotation part
+             * Find annotation for this svGroup
+             */
+            
+            if(!svGroup.isIdentityFlag()){
+                svGroup.defineIdentity();
+            }
+            
+            writer.write(">"+count+"\t"+svGroup.shortSummary()+"\t|");
+            ArrayList<Double> euList = svGroup.getDiffChrEuclideanDistance();
+            
+            /**
+             * print All euclidean value
+             */ 
+//            for(int k=0;k<euList.size();k++){
+//                DecimalFormat df = new DecimalFormat("#.00"); // limit double to 2 decimal
+//                writer.write("\t"+df.format(euList.get(k)));
+//            }
+            /**********/
+            
+            /**
+             * pick top three lowest euclidean distance value
+             */
+            ArrayList<Double> dummyEuList = new ArrayList<Double>(euList);
+            for(int k=0;k<3;k++){
+                int minIndex = dummyEuList.indexOf(Collections.min(dummyEuList));
+                DecimalFormat df = new DecimalFormat("#.00"); // limit double to 2 decimal
+                double minEuDis = dummyEuList.get(minIndex);
+                int realMinIndex = euList.indexOf(minEuDis);    // true min index for write report
+                if(realMinIndex+1 != count){
+                    writer.write("\t["+(realMinIndex+1)+"]"+df.format(dummyEuList.get(minIndex)));  // realminindex plus one because index when write is start at 1 but real index is start at 0
+                }
+                dummyEuList.remove(minIndex);
+            }
+            /************/
+
+            writer.write("\n");
+            count++;
+        }
+        
+        writer.flush();
+        writer.close();
+        /***************************************************/
+    }
+    
     public void createRefIndex(String refFaIdxFile) throws FileNotFoundException, IOException{
         RandomAccessFile rbRefIdx = new RandomAccessFile(refFaIdxFile,"r");
         String line;
@@ -4671,5 +5380,376 @@ public class VariationResult {
             name = linePortion[0];
             this.refIndex.put(name, ++numChr);
         }
+    }
+    
+    public String identifySameChrPreciseSVType(SVGroup main,SVGroup sub){
+        if(main.getStrandF()==0 && main.getStrandB()==0){
+            // main has ++ strand
+            if(sub.getStrandF()==0 && sub.getStrandB()==0){
+                if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
+                    if(main.getRPF()<sub.getRPB() && main.getRPB()<sub.getRPF()){
+                        ArrayList<SVGroup> dummyList = new ArrayList();
+                        dummyList.add(main);
+                        dummyList.add(sub);
+                        this.intraTransPairList.put(dummyList, true);
+                        main.setIntraTransFlag(true);
+                        sub.setIntraTransFlag(true);
+//                        main.setSvType("intraTrans");
+//                        main.setSvTypeCode((byte)2);
+//                        sub.setSvType("intraTrans");
+//                        sub.setSvTypeCode((byte)2);
+                        return "intraTrans";
+                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()>sub.getRPF()){
+                        ArrayList<SVGroup> dummyList = new ArrayList();
+                        dummyList.add(sub);
+                        dummyList.add(main);
+                        this.intraTransPairList.put(dummyList, true);
+                        main.setIntraTransFlag(true);
+                        sub.setIntraTransFlag(true);
+//                        main.setSvType("intraTrans");
+//                        main.setSvTypeCode((byte)2);
+//                        sub.setSvType("intraTrans");
+//                        sub.setSvTypeCode((byte)2);
+                        return "intraTrans";
+                    }else{
+                        if(main.getRPF()>main.getRPB()){
+                            this.tandemList.add(main);
+                            main.setTandemFlag(true);
+//                            main.setSvType("tandem");
+//                            main.setSvTypeCode((byte)0);
+                            return "tandem";
+                        }else{
+                            this.deletionList.add(main);
+                            main.setDeleteFlag(true);
+//                            main.setSvType("deletion");
+//                            main.setSvTypeCode((byte)1);
+                            return "deletion";
+                        }
+                    }
+                }
+            }else{
+                if(main.getRPF()>main.getRPB()){
+                    this.tandemList.add(main);
+                    main.setTandemFlag(true);
+//                    main.setSvType("tandem");
+//                    main.setSvTypeCode((byte)0);
+                    return "tandem";
+                }else{
+                    this.deletionList.add(main);
+                    main.setDeleteFlag(true);
+//                    main.setSvType("deletion");
+//                    main.setSvTypeCode((byte)1);
+                    return "deletion";
+                }
+            }
+        }else if(main.getStrandF()==1 && main.getStrandB()==1){
+            // main has -- strand
+            if(sub.getStrandF()==0 && sub.getStrandB()==0){
+                if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
+                    if(main.getRPF()<sub.getRPB() && main.getRPB()<sub.getRPF()){
+                        ArrayList<SVGroup> dummyList = new ArrayList();
+                        dummyList.add(sub);
+                        dummyList.add(main);
+                        this.intraTransPairList.put(dummyList, true);
+                        main.setIntraTransFlag(true);
+                        sub.setIntraTransFlag(true);
+//                        main.setSvType("intraTrans");
+//                        main.setSvTypeCode((byte)2);
+//                        sub.setSvType("intraTrans");
+//                        sub.setSvTypeCode((byte)2);
+                        return "intraTrans";
+                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()>sub.getRPF()){
+                        ArrayList<SVGroup> dummyList = new ArrayList();
+                        dummyList.add(main);
+                        dummyList.add(sub);
+                        this.intraTransPairList.put(dummyList, true);
+                        main.setIntraTransFlag(true);
+                        sub.setIntraTransFlag(true);
+//                        main.setSvType("intraTrans");
+//                        main.setSvTypeCode((byte)2);
+//                        sub.setSvType("intraTrans");
+//                        sub.setSvTypeCode((byte)2);
+                        return "intraTrans";
+                    }else{
+                        if(main.getRPF()<main.getRPB()){
+                            this.tandemList.add(main);
+                            main.setTandemFlag(true);
+//                            main.setSvType("tandem");
+//                            main.setSvTypeCode((byte)0);
+                            return "tandem";
+                        }else{
+                            this.deletionList.add(main);
+                            main.setDeleteFlag(true);
+//                            main.setSvType("deletion");
+//                            main.setSvTypeCode((byte)1);
+                            return "deletion";
+                        }
+                    }
+                }
+            }else{
+                if(main.getRPF()<main.getRPB()){
+                    this.tandemList.add(main);
+                    main.setTandemFlag(true);
+//                    main.setSvType("tandem");
+//                    main.setSvTypeCode((byte)0);
+                    return "tandem";
+                }else{
+                    this.deletionList.add(main);
+                    main.setDeleteFlag(true);
+//                    main.setSvType("deletion");
+//                    main.setSvTypeCode((byte)1);
+                    return "deletion";
+                }
+            }
+        }else if(main.getStrandF()==0 && main.getStrandB()==1){
+            if(sub.getStrandF()==1 && sub.getStrandB()==0){
+                if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
+                    if(main.getRPF()<sub.getRPB() && main.getRPB()>sub.getRPF()){
+                        ArrayList<SVGroup> dummyList = new ArrayList();
+                        dummyList.add(main);
+                        dummyList.add(sub);
+                        this.intraTransPairList.put(dummyList, true);
+                        main.setIntraTransFlag(true);
+                        sub.setIntraTransFlag(true);
+//                        main.setSvType("intraTrans");
+//                        main.setSvTypeCode((byte)2);
+//                        sub.setSvType("intraTrans");
+//                        sub.setSvTypeCode((byte)2);
+                        return "intraTrans";
+                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()<sub.getRPF()){
+                        ArrayList<SVGroup> dummyList = new ArrayList();
+                        dummyList.add(sub);
+                        dummyList.add(main);
+                        this.intraTransPairList.put(dummyList, true);
+                        main.setIntraTransFlag(true);
+                        sub.setIntraTransFlag(true);
+//                        main.setSvType("intraTrans");
+//                        main.setSvTypeCode((byte)2);
+//                        sub.setSvType("intraTrans");
+//                        sub.setSvTypeCode((byte)2);
+                        return "intraTrans";
+                    }else{
+                        // try with mext min
+                        return null;
+                    }
+                }
+            }else{
+                this.chimericList.add(main);
+                main.setChimericFlag(true);
+//                main.setSvType("chimeric");
+//                main.setSvTypeCode((byte)4);
+                return "chimeric";
+            }
+        }else if(main.getStrandF()==1 && main.getStrandB()==0){
+            if(sub.getStrandF()==0 && sub.getStrandB()==1){
+                if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
+                    if(main.getRPF()<sub.getRPB() && main.getRPB()>sub.getRPF()){
+                        ArrayList<SVGroup> dummyList = new ArrayList();
+                        dummyList.add(sub);
+                        dummyList.add(main);
+                        this.intraTransPairList.put(dummyList, true);
+                        main.setIntraTransFlag(true);
+                        sub.setIntraTransFlag(true);
+//                        main.setSvType("intraTrans");
+//                        main.setSvTypeCode((byte)2);
+//                        sub.setSvType("intraTrans");
+//                        sub.setSvTypeCode((byte)2);
+                        return "intraTrans";
+                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()<sub.getRPF()){
+                        ArrayList<SVGroup> dummyList = new ArrayList();
+                        dummyList.add(main);
+                        dummyList.add(sub);
+                        this.intraTransPairList.put(dummyList, true);
+                        main.setIntraTransFlag(true);
+                        sub.setIntraTransFlag(true);
+//                        main.setSvType("intraTrans");
+//                        main.setSvTypeCode((byte)2);
+//                        sub.setSvType("intraTrans");
+//                        sub.setSvTypeCode((byte)2);
+                        return "intraTrans";
+                    }else{
+                        // try with mext min
+                        return null;
+                    }
+                }
+            }else{
+                this.chimericList.add(main);
+                main.setChimericFlag(true);
+//                main.setSvType("chimeric");
+//                main.setSvTypeCode((byte)4);
+                return "chimeric";
+            }
+        }
+        return null;
+    }
+    
+    public String identifyDiffChrPreciseSVType(SVGroup main,SVGroup sub){
+        
+        if(main.getStrandF()==0 && main.getStrandB()==0){
+            // main has ++ strand
+            if(sub.getStrandF()==0 && sub.getStrandB()==0){
+                if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
+                    if(main.getRPF()<sub.getRPB() && main.getRPB()<sub.getRPF()){
+                        ArrayList<SVGroup> dummyList = new ArrayList();
+                        dummyList.add(main);
+                        dummyList.add(sub);
+                        this.interTransPairList.put(dummyList, true);
+                        main.setInterTransFlag(true);
+                        sub.setInterTransFlag(true);
+//                        main.setSvType("interTrans");
+//                        main.setSvTypeCode((byte)3);
+//                        sub.setSvType("interTrans");
+//                        sub.setSvTypeCode((byte)3);
+                        return "interTrans";
+                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()>sub.getRPF()){
+                        ArrayList<SVGroup> dummyList = new ArrayList();
+                        dummyList.add(sub);
+                        dummyList.add(main);
+                        this.interTransPairList.put(dummyList, true);
+                        main.setInterTransFlag(true);
+                        sub.setInterTransFlag(true);
+//                        main.setSvType("interTrans");
+//                        main.setSvTypeCode((byte)3);
+//                        sub.setSvType("interTrans");
+//                        sub.setSvTypeCode((byte)3);
+                        return "interTrans";
+                    }else{
+                        // try with mext min
+                        return null;
+                    }
+                }else{
+                    this.chimericList.add(main);
+                    main.setChimericFlag(true);
+//                    main.setSvType("chimeric");
+//                    main.setSvTypeCode((byte)4);
+                    return "chimeric";
+                }
+            }else{
+                this.chimericList.add(main);
+                main.setChimericFlag(true);
+//                main.setSvType("chimeric");
+//                main.setSvTypeCode((byte)4);
+                return "chimeric";
+            }
+        }else if(main.getStrandF()==1 && main.getStrandB()==1){
+            // main has -- strand
+            if(sub.getStrandF()==0 && sub.getStrandB()==0){
+                if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
+                    if(main.getRPF()<sub.getRPB() && main.getRPB()<sub.getRPF()){
+                        ArrayList<SVGroup> dummyList = new ArrayList();
+                        dummyList.add(sub);
+                        dummyList.add(main);
+                        this.interTransPairList.put(dummyList, true);
+                        main.setInterTransFlag(true);
+                        sub.setInterTransFlag(true);
+//                        main.setSvType("interTrans");
+//                        main.setSvTypeCode((byte)3);
+//                        sub.setSvType("interTrans");
+//                        sub.setSvTypeCode((byte)3);
+                        return "interTrans";
+                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()>sub.getRPF()){
+                        ArrayList<SVGroup> dummyList = new ArrayList();
+                        dummyList.add(main);
+                        dummyList.add(sub);
+                        this.interTransPairList.put(dummyList, true);
+                        main.setInterTransFlag(true);
+                        sub.setInterTransFlag(true);
+//                        main.setSvType("interTrans");
+//                        main.setSvTypeCode((byte)3);
+//                        sub.setSvType("interTrans");
+//                        sub.setSvTypeCode((byte)3);
+                        return "interTrans";
+                    }else{
+                        // try with mext min
+                        return null;
+                    }
+                }
+            }else{
+                this.chimericList.add(main);
+                main.setChimericFlag(true);
+//                main.setSvType("chimeric");
+//                main.setSvTypeCode((byte)4);
+                return "chimeric";
+            }
+        }else if(main.getStrandF()==0 && main.getStrandB()==1){
+            if(sub.getStrandF()==1 && sub.getStrandB()==0){
+                if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
+                    if(main.getRPF()<sub.getRPB() && main.getRPB()>sub.getRPF()){
+                        ArrayList<SVGroup> dummyList = new ArrayList();
+                        dummyList.add(main);
+                        dummyList.add(sub);
+                        this.interTransPairList.put(dummyList, true);
+                        main.setInterTransFlag(true);
+                        sub.setInterTransFlag(true);
+//                        main.setSvType("interTrans");
+//                        main.setSvTypeCode((byte)3);
+//                        sub.setSvType("interTrans");
+//                        sub.setSvTypeCode((byte)3);
+                        return "interTrans";
+                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()<sub.getRPF()){
+                        ArrayList<SVGroup> dummyList = new ArrayList();
+                        dummyList.add(sub);
+                        dummyList.add(main);
+                        this.interTransPairList.put(dummyList, true);
+                        main.setInterTransFlag(true);
+                        sub.setInterTransFlag(true);
+//                        main.setSvType("interTrans");
+//                        main.setSvTypeCode((byte)3);
+//                        sub.setSvType("interTrans");
+//                        sub.setSvTypeCode((byte)3);
+                        return "interTrans";
+                    }else{
+                        // try with mext min
+                        return null;
+                    }
+                }
+            }else{
+                this.chimericList.add(main);
+                main.setChimericFlag(true);
+//                main.setSvType("chimeric");
+//                main.setSvTypeCode((byte)4);
+                return "chimeric";
+            }
+        }else if(main.getStrandF()==1 && main.getStrandB()==0){
+            if(sub.getStrandF()==0 && sub.getStrandB()==1){
+                if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
+                    if(main.getRPF()<sub.getRPB() && main.getRPB()>sub.getRPF()){
+                        ArrayList<SVGroup> dummyList = new ArrayList();
+                        dummyList.add(sub);
+                        dummyList.add(main);
+                        this.interTransPairList.put(dummyList, true);
+                        main.setInterTransFlag(true);
+                        sub.setInterTransFlag(true);
+//                        main.setSvType("interTrans");
+//                        main.setSvTypeCode((byte)3);
+//                        sub.setSvType("interTrans");
+//                        sub.setSvTypeCode((byte)3);
+                        return "interTrans";
+                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()<sub.getRPF()){
+                        ArrayList<SVGroup> dummyList = new ArrayList();
+                        dummyList.add(main);
+                        dummyList.add(sub);
+                        this.interTransPairList.put(dummyList, true);
+                        main.setInterTransFlag(true);
+                        sub.setInterTransFlag(true);
+//                        main.setSvType("interTrans");
+//                        main.setSvTypeCode((byte)3);
+//                        sub.setSvType("interTrans");
+//                        sub.setSvTypeCode((byte)3);
+                        return "interTrans";
+                    }else{
+                        // try with mext min
+                        return null;
+                    }
+                }
+            }else{
+                this.chimericList.add(main);
+                main.setChimericFlag(true);
+//                main.setSvType("chimeric");
+//                main.setSvTypeCode((byte)4);
+                return "chimeric";
+            }
+        }
+        return null;
     }
 }
