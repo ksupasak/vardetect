@@ -60,6 +60,9 @@ public class SVGroup {
     private boolean interTransFlag;
     private boolean chimericFlag;
     private boolean alienFlag;
+    private int deletionCorrectness;        // store coverage of deletion breakpoint high value mean less correctness and vise versa
+    private int tandemCorrectness;          // store coverage of tandem breakpoint high value mean more correctness and vise versa
+    private int deletionSize;
     
     public SVGroup(){
         varList = new ArrayList();        
@@ -82,6 +85,9 @@ public class SVGroup {
         this.interTransFlag = false;
         this.chimericFlag = false;
         this.alienFlag = false;
+        this.deletionCorrectness=5000;  // just set random high value (no meaning)
+        this.tandemCorrectness=0;       // first set to lowest value
+        this.deletionSize=0;
     }
     
     public void addVariationV2(VariationV2 inVar){
@@ -404,6 +410,53 @@ public class SVGroup {
         return numCoverage;
     }
     
+    public static Comparator<SVGroup> CoverageCorrectnessDeletionComparator = new Comparator<SVGroup>() {
+        public int compare(SVGroup s1, SVGroup s2) {
+            
+//            -1 จะเอาตัวหลักไปไว้ด้านหน้า
+//            1 จะเอาตัวหลักไปต่อหลัง
+//            0 จะวางไว้ข้างกัน
+
+            //Coverage is sort from high to low (descending)                    
+            int value1 = s2.getNumCoverage() - s1.getNumCoverage();            
+            if(value1 == 0){
+                //DeletionCorectness is sort from low to high (ascending)
+                int value2 = s1.getDeletionCorrectness() - s2.getDeletionCorrectness();
+                return value2;
+            }
+            return value1;
+            
+//            int value1 = o1.campus.compareTo(o2.campus);
+//            if (value1 == 0) {
+//                int value2 = o1.faculty.compareTo(o2.faculty);
+//                if (value2 == 0) {
+//                    return o1.building.compareTo(o2.building);
+//                } else {
+//                    return value2;
+//                }
+//            }
+//            return value1;
+        }
+    };
+    
+    public static Comparator<SVGroup> CoverageCorrectnessTandemComparator = new Comparator<SVGroup>() {
+        public int compare(SVGroup s1, SVGroup s2) {
+            
+//            -1 จะเอาตัวหลักไปไว้ด้านหน้า
+//            1 จะเอาตัวหลักไปต่อหลัง
+//            0 จะวางไว้ข้างกัน
+
+            //Coverage is sort from high to low (descending)                    
+            int value1 = s2.getNumCoverage() - s1.getNumCoverage();            
+            if(value1 == 0){
+                //TandemCorectness is sort from high to low (decending)
+                int value2 = s2.getTandemCorrectness() - s1.getTandemCorrectness();
+                return value2;
+            }
+            return value1;
+        }
+    };
+           
     public static Comparator<SVGroup> CoverageComparator = new Comparator<SVGroup>() {
 
 	public int compare(SVGroup s1, SVGroup s2) {
@@ -657,6 +710,7 @@ public class SVGroup {
 
     public void setDeleteFlag(boolean deleteFlag) {
         this.deleteFlag = deleteFlag;
+        this.deletionSize = Math.abs(this.RPB-this.RPF);
     }
 
     public boolean isIntraTransFlag() {
@@ -690,6 +744,30 @@ public class SVGroup {
     public void setAlienFlag(boolean alienFlag) {
         this.alienFlag = alienFlag;
     }
+
+    public int getDeletionCorrectness() {
+        return deletionCorrectness;
+    }
+
+    public void setDeletionCorrectness(int deletionCorrectness) {
+        this.deletionCorrectness = deletionCorrectness;
+    }
+
+    public int getTandemCorrectness() {
+        return tandemCorrectness;
+    }
+
+    public void setTandemCorrectness(int tandemCorrectness) {
+        this.tandemCorrectness = tandemCorrectness;
+    }
+
+    public int getDeletionSize() {
+        return deletionSize;
+    }
+
+    public void setDeletionSize(int deletionSize) {
+        this.deletionSize = deletionSize;
+    }
     
     @Override
     public String toString(){
@@ -697,7 +775,24 @@ public class SVGroup {
     }
     
     public String shortSummary(){
-        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage();
+        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage();        
+    }
+    
+    public String shortDeletionSummary(){
+        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage()+"\t"+this.deletionCorrectness + "\t"+this.deletionSize; 
+    }
+    
+    public String shortTandemSummary(){
+        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage()+"\t"+this.tandemCorrectness; 
+    }
+    
+    public String getChrNameFromRefIndex(Map<String, Long> refIndexMap, Long chrNumber) {
+        for (Map.Entry<String, Long> entry : refIndexMap.entrySet()) {
+            if (chrNumber == entry.getValue()) {
+                return entry.getKey();
+            }
+        }
+        return null;
     }
   
 }

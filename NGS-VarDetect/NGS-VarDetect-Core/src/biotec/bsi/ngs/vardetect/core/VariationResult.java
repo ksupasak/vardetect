@@ -6,10 +6,12 @@
 package biotec.bsi.ngs.vardetect.core;
 
 import biotec.bsi.ngs.vardetect.core.util.SequenceUtil;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.RandomAccessFile;
 import java.nio.file.Path;
@@ -3991,11 +3993,80 @@ public class VariationResult {
         /*******************/
         
         
-        /**
-         * Analyze correctness of SVType for each svGroup  
-         */
-        
-        /********************/
+//        /**
+//         * Analyze correctness of SVType (tandem and delete) for each svGroup 
+//         * 
+//         * Loop each svType list and check with our ideal hypothesis we call "relation of coverage with correctness"
+//         * 
+//         * Utilize samtools view command to get coverage of each specific region (our breakpoint)
+//         */
+//        
+//        String baseCommand = "samtools view " + bamFile;
+//        
+//        // Loop deletion list
+//        for(int i=0;i<this.deletionList.size();i++){
+//            String addCommand = "";
+//            SVGroup svGroup = deletionList.get(i);
+//            
+//            // query Coverage of frontbreakpoint
+//            long breakpointF = svGroup.getRPF();
+//            String chrNameF = svGroup.getChrF();
+//            addCommand = "chr"+chrNameF+":"+breakpointF+"-"+breakpointF;
+//            String command = baseCommand + " " + addCommand + " | wc";
+//            
+//            String resultF = executeCommandLine(command);
+//            String[] splitResF = resultF.split("\\s+");
+//            int coverageF = Integer.parseInt(splitResF[1]);
+//            
+//            // query Coverage f backreakpoint
+//            long breakpointB = svGroup.getRPB();
+//            String chrNameB = svGroup.getChrF();
+//            addCommand = "chr"+chrNameB+":"+breakpointB+"-"+breakpointB;
+//            command = baseCommand + " " + addCommand + " | wc";
+//            
+//            String resultB = executeCommandLine(command);
+//            String[] splitResB = resultB.split("\\s+");
+//            int coverageB = Integer.parseInt(splitResB[1]);
+//            
+//            // Add sum of two coverage to delectioncorrectness field if SVGroup
+//            svGroup.setDeletionCorrectness(coverageF + coverageB);   
+//        }
+//        
+//        
+//        // Loop tandem List
+//        for(int i=0;i<this.tandemList.size();i++){
+//            String addCommand = "";
+//            SVGroup svGroup = tandemList.get(i);
+//            
+//            // query Coverage of frontbreakpoint
+//            long breakpointF = svGroup.getRPF();
+//            String chrNameF = svGroup.getChrF();
+//            addCommand = "chr"+chrNameF+":"+breakpointF+"-"+breakpointF;
+//            String command = baseCommand + " " + addCommand + " | wc";
+//            
+//            String resultF = executeCommandLine(command);
+//            String[] splitResF = resultF.split("\\s+");
+//            int coverageF = Integer.parseInt(splitResF[1]);
+//            
+//            // query Coverage f backreakpoint
+//            long breakpointB = svGroup.getRPB();
+//            String chrNameB = svGroup.getChrF();
+//            addCommand = "chr"+chrNameB+":"+breakpointB+"-"+breakpointB;
+//            command = baseCommand + " " + addCommand + " | wc";
+//            
+//            String resultB = executeCommandLine(command);
+//            String[] splitResB = resultB.split("\\s+");
+//            int coverageB = Integer.parseInt(splitResB[1]);
+//            
+//            // Add sum of two coverage to tandemcorrectness field if SVGroup
+//            svGroup.setTandemCorrectness(coverageF + coverageB);   
+//        }
+//        
+//        Collections.sort(this.deletionList,SVGroup.CoverageCorrectnessDeletionComparator);
+//        Collections.sort(this.tandemList,SVGroup.CoverageCorrectnessTandemComparator);
+//        /********************/
+
+
         /**
          * Grouping reverse and normal in to the same Group 
          * calculate distant with code that compose of chromosome and breakpoint
@@ -4707,7 +4778,7 @@ public class VariationResult {
             /**********************/
             
             ArrayList<VariationV2> varList = svGroup.getVarList();
-            writer.write(">"+count+"\t"+svGroup.shortSummary());
+            writer.write(">"+count+"\t"+svGroup.shortTandemSummary());
             writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
             writer.write("\n");
             count++;
@@ -4763,7 +4834,7 @@ public class VariationResult {
             /**********************/
             
             ArrayList<VariationV2> varList = svGroup.getVarList();
-            writer.write(">"+count+"\t"+svGroup.shortSummary());
+            writer.write(">"+count+"\t"+svGroup.shortDeletionSummary());
             writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
             writer.write("\n");
             count++;
@@ -5748,6 +5819,112 @@ public class VariationResult {
 //                main.setSvType("chimeric");
 //                main.setSvTypeCode((byte)4);
                 return "chimeric";
+            }
+        }
+        return null;
+    }
+    
+    public void identifyCorrectness(String bamFile,String samtoolsDirectory){
+        /**
+         * Analyze correctness of SVType (tandem and delete) for each svGroup 
+         * 
+         * Loop each svType list and check with our ideal hypothesis we call "relation of coverage with correctness"
+         * 
+         * Utilize samtools view command to get coverage of each specific region (our breakpoint)
+         */
+        
+        String baseCommand = samtoolsDirectory + " view " + bamFile;
+        
+        // Loop deletion list
+        for(int i=0;i<this.deletionList.size();i++){
+            String addCommand = "";
+            SVGroup svGroup = deletionList.get(i);
+            
+            // query Coverage of frontbreakpoint
+            long breakpointF = svGroup.getRPF();
+            String chrNameF = svGroup.getChrF();
+            addCommand = "chr"+chrNameF+":"+breakpointF+"-"+breakpointF;
+            String command = baseCommand + " " + addCommand + " | wc";
+            
+            String resultF = executeCommandLine(command);
+            String[] splitResF = resultF.split("\\s+");
+            int coverageF = Integer.parseInt(splitResF[1]);
+            
+            // query Coverage f backreakpoint
+            long breakpointB = svGroup.getRPB();
+            String chrNameB = svGroup.getChrF();
+            addCommand = "chr"+chrNameB+":"+breakpointB+"-"+breakpointB;
+            command = baseCommand + " " + addCommand + " | wc";
+            
+            String resultB = executeCommandLine(command);
+            String[] splitResB = resultB.split("\\s+");
+            int coverageB = Integer.parseInt(splitResB[1]);
+            
+            // Add sum of two coverage to delectioncorrectness field if SVGroup
+            svGroup.setDeletionCorrectness(coverageF + coverageB);   
+        }
+        
+        
+        // Loop tandem List
+        for(int i=0;i<this.tandemList.size();i++){
+            String addCommand = "";
+            SVGroup svGroup = tandemList.get(i);
+            
+            // query Coverage of frontbreakpoint
+            long breakpointF = svGroup.getRPF();
+            String chrNameF = svGroup.getChrF();
+            addCommand = "chr"+chrNameF+":"+breakpointF+"-"+breakpointF;
+            String command = baseCommand + " " + addCommand + " | wc";
+            
+            String resultF = executeCommandLine(command);
+            String[] splitResF = resultF.split("\\s+");
+            int coverageF = Integer.parseInt(splitResF[1]);
+            
+            // query Coverage f backreakpoint
+            long breakpointB = svGroup.getRPB();
+            String chrNameB = svGroup.getChrF();
+            addCommand = "chr"+chrNameB+":"+breakpointB+"-"+breakpointB;
+            command = baseCommand + " " + addCommand + " | wc";
+            
+            String resultB = executeCommandLine(command);
+            String[] splitResB = resultB.split("\\s+");
+            int coverageB = Integer.parseInt(splitResB[1]);
+            
+            // Add sum of two coverage to tandemcorrectness field if SVGroup
+            svGroup.setTandemCorrectness(coverageF + coverageB);   
+        }
+        
+        Collections.sort(this.deletionList,SVGroup.CoverageCorrectnessDeletionComparator);
+        Collections.sort(this.tandemList,SVGroup.CoverageCorrectnessTandemComparator);
+        /********************/
+    }
+    
+    private String executeCommandLine(String command) {
+
+            StringBuffer output = new StringBuffer();
+            String[] cmd = {"/bin/sh","-c",command};
+            Process p;
+            try {
+                    p = Runtime.getRuntime().exec(cmd);
+                    p.waitFor();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+
+                    String line = "";			
+                    while ((line = reader.readLine())!= null) {
+                        output.append(line + "\n");
+                    }
+
+            } catch (Exception e) {
+                    e.printStackTrace();
+            }
+
+            return output.toString();
+    }
+    
+    public String getChrNameFromRefIndex(Map<String, Long> refIndexMap, Long chrNumber) {
+        for (Map.Entry<String, Long> entry : refIndexMap.entrySet()) {
+            if (chrNumber == entry.getValue()) {
+                return entry.getKey();
             }
         }
         return null;
