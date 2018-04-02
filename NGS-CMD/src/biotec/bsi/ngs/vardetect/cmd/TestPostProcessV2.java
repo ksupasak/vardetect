@@ -49,8 +49,12 @@ public class TestPostProcessV2 {
 //        varRes.writeStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationToFile(saveFile, gffFile, refFaIdx, 5, 16);
         
         varRes.classifyPreciseSVType(5);
-        varRes.identifyCorrectness(bamFile,samtoolsDirectory);
-        varRes.writePreciseStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationToFile(saveFile, gffFile, refFaIdx, 5, 16);
+        //varRes.identifyCorrectness(bamFile,samtoolsDirectory);
+        //varRes.writePreciseStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationToFile(saveFile, gffFile, refFaIdx, 5, 16);
+        varRes.writeVisualizePreciseSVType(inputFile, refFile, refFaIdx, "TD", 5, 100);
+        varRes.writeVisualizePreciseSVType(inputFile, refFile, refFaIdx, "D", 5, 100);
+        varRes.writeVisualizePreciseSVType(inputFile, refFile, refFaIdx, "IA", 5, 100);
+        varRes.writeVisualizePreciseSVType(inputFile, refFile, refFaIdx, "IE", 5, 100);
 //        varRes.writeStructureVariantV2EuclideanDistanceTable(saveFile, 5);
 //        varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refFile, refFaIdx, "TD", 5, 400);
 //        varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refFile, refFaIdx, "ID", 5, 400);
