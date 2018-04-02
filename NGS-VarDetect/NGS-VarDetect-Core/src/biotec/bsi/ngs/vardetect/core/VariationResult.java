@@ -3752,6 +3752,478 @@ public class VariationResult {
         
     }
     
+    public ArrayList<String> createReferenceFromPreciseSVType(SVGroup inSVGroup, String refFile, String refIdxFile, int inExtendSize) throws IOException{
+        /**
+         * This function will pick group that past user define coverage of specific indelType (SI = small Insertion, SD = small deletion, LI = large Indel)
+         * It will pick first variation pattern of each group to create new reference 
+         * Extending left and right of the picked read sequence by cut the left wing and right wing sequence from reference
+         * Concatenate left read seq and right wing together
+         * Export into new reference fasta file
+         * 
+         * EX read has 100 base long and extendSize is 200 
+         * at the end you will got new ref with 200 + 100 + 200 = 500 base long
+         * 
+         * Implement save single junction file
+         * 
+         * ##Not finish
+         */
+        ArrayList<String> res = new ArrayList();
+        RandomAccessFile rbRef = new RandomAccessFile(refFile,"r");
+        
+        RefFaIndex refFaIdx = new RefFaIndex(refIdxFile);
+
+        int extendSize = inExtendSize;
+        int groupCount = 0;
+
+
+        /**
+         * pick first variation object to check for indel type and get 
+         */
+        VariationV2 dummyVariationV2 = inSVGroup.getVarList().get(0);        // pick first read of this group
+
+        groupCount++;
+
+        String leftWingSeq = "";
+        String rightWingSeq = "";
+        String readSeq = "";
+        String newRefSeq = "";
+        String strand = dummyVariationV2.strandF+ "" + dummyVariationV2.strandB;
+
+        long[] signatureValue =  dummyVariationV2.getSignatureForCreateRef(extendSize);
+        long startLeftWing = signatureValue[0];
+        long startRightWing = signatureValue[1];
+        int iniIndexMatch = (int)signatureValue[2];
+        int lastIndexMatch = (int)signatureValue[3];
+        int unmatchFront = (int)signatureValue[4];
+        int unmatchBack = (int)signatureValue[5];
+
+        String chrNameF = dummyVariationV2.chrF;
+        String chrNameB = dummyVariationV2.chrB;               
+
+        long compensateLeftLineByte = startLeftWing/refFaIdx.getLineBase(chrNameF);    // number of compensate byte that has to be adding back to the pointer (cause from newline byte in file)
+        long compensateRightLineByte = startRightWing/refFaIdx.getLineBase(chrNameB);  // number of compensate byte that has to be adding back to the pointer (cause from newline byte in file)
+
+        long iniLeftWingPointer = ((startLeftWing + refFaIdx.getOffSet(chrNameF)))+compensateLeftLineByte;
+        long iniRightWingPointer = ((startRightWing + refFaIdx.getOffSet(chrNameB)))+compensateRightLineByte;
+
+        long numLineRead = ((extendSize+unmatchFront)/refFaIdx.getLineBase(chrNameF))*3;
+        if(numLineRead == 0) numLineRead=1*3;
+//                long readPointer = sampleFaIdx.getOffSet(dummyVariation.readNameF);
+
+        rbRef.seek(iniLeftWingPointer);
+        String dummyLeftWingSeq = "";
+        for(int num = 0;num<numLineRead;num++){
+            dummyLeftWingSeq = dummyLeftWingSeq + rbRef.readLine();
+        }
+//                if(dummyVariationV2.readID == 71575276){
+//                    System.out.println(dummyVariationV2.readID);
+//                    System.out.println("long="+dummyLeftWingSeq.length());
+//                    System.out.println(extendSize+unmatchFront);
+//                }
+
+        leftWingSeq = dummyLeftWingSeq.substring(0, (extendSize+unmatchFront));
+        
+        numLineRead = ((extendSize+unmatchBack)/refFaIdx.getLineBase(chrNameB))*3;
+        if(numLineRead == 0) numLineRead=1*3;
+        
+        rbRef.seek(iniRightWingPointer);
+        String dummyRightWingSeq = "";
+        for(int num = 0;num<numLineRead;num++){
+            dummyRightWingSeq = dummyRightWingSeq + rbRef.readLine();
+        }
+        rightWingSeq = dummyRightWingSeq.substring(0,(extendSize+unmatchBack));
+
+//                rbSample.seek(readPointer);
+//                readSeq = rbSample.readLine().substring(iniIndexMatch, lastIndexMatch+1);
+        readSeq = dummyVariationV2.getReadSeq().substring(iniIndexMatch, lastIndexMatch+1);
+
+        if(strand.equals("00")){
+            newRefSeq = leftWingSeq + readSeq + rightWingSeq;
+        }else if(strand.equals("11")){
+            String leftWingInvSeq = SequenceUtil.inverseSequence(leftWingSeq);                                // Do invert sequence (ATCG => GCTA)
+            String leftWingCompSeq = SequenceUtil.createComplimentV2(leftWingInvSeq);                       // Do compliment on invert sequence (GCTA => CGAT)
+
+            String rightWingInvSeq = SequenceUtil.inverseSequence(rightWingSeq);                                // Do invert sequence (ATCG => GCTA)
+            String rightWingCompSeq = SequenceUtil.createComplimentV2(rightWingInvSeq);                       // Do compliment on invert sequence (GCTA => CGAT)
+
+            newRefSeq = leftWingCompSeq + readSeq + rightWingCompSeq;
+
+        }else if(strand.equals("01")){
+            String rightWingInvSeq = SequenceUtil.inverseSequence(rightWingSeq);                                // Do invert sequence (ATCG => GCTA)
+            String rightWingCompSeq = SequenceUtil.createComplimentV2(rightWingInvSeq);                       // Do compliment on invert sequence (GCTA => CGAT)
+
+            newRefSeq = leftWingSeq + readSeq + rightWingCompSeq;
+        }else if(strand.equals("10")){
+            String leftWingInvSeq = SequenceUtil.inverseSequence(leftWingSeq);                                // Do invert sequence (ATCG => GCTA)
+            String leftWingCompSeq = SequenceUtil.createComplimentV2(leftWingInvSeq);                       // Do compliment on invert sequence (GCTA => CGAT)
+
+            newRefSeq = leftWingCompSeq + readSeq + rightWingSeq;
+        }
+
+        String nameRef = ""+dummyVariationV2.readID;
+//        String newRefNumBaseBeforeBPF = "" + (leftWingSeq.length() + (dummyVariationV2.getBreakpointIndexF() + 1));
+        String newRefNumBaseBeforeBPF = "" + ((leftWingSeq.length()-unmatchFront) + (dummyVariationV2.getBreakpointIndexF() + 1));
+//        if(newRefNumBaseBeforeBPF.equals("263")){
+//                            System.out.println();
+//                        }
+        res.add(nameRef);
+        res.add(newRefSeq);
+        res.add(newRefNumBaseBeforeBPF);
+        
+        return res;
+        
+    }
+    
+    public void writeVisualizePreciseSVType(String readFile, String refFile, String refIdxFile, String SVType, int minPickCoverage, int inExtendSize) throws IOException{
+        /**
+         * this function will write the precise SVType report with single base resolution
+         * user must define SV type Code which has 5 SV Type
+         * TD = tandem, D = deletion, IA = intraTrans, IE = interTrans, CH = chimeric
+         */
+        
+        Path path = Paths.get(readFile);
+        String fileName = path.getFileName().toString();
+        String[] dummy2 = fileName.split("_unmap");         // For more generic this should be split by . (and whole protocal should use . as a filed peaparation like A.unmap.emdup.bam So, we can get read name just split by .)
+        String sampleName = dummy2[0];
+        String filename = "";
+        FileWriter writer;
+        FileWriter writer2;
+        int extendSize = inExtendSize;
+        int groupCount = 0;
+        ArrayList<SVGroup> variationList = new ArrayList();
+        Map<ArrayList<SVGroup>,Boolean> variationMap = new LinkedHashMap();
+        
+        String indelType = "";
+        if(SVType.equals("TD")){
+            variationList = this.tandemList;
+            filename = path.getParent().toString()+File.separator+sampleName+".Tandem.report";            
+        }else if(SVType.equals("D")){
+            variationList = this.deletionList;
+            filename = path.getParent().toString()+File.separator+sampleName+".Deletion.report";            
+        }else if(SVType.equals("IA")){
+            variationMap = this.intraTransPairList;
+            filename = path.getParent().toString()+File.separator+sampleName+".IntraTranslocation.report";            
+        }else if(SVType.equals("IE")){
+            variationMap = this.interTransPairList;
+            filename = path.getParent().toString()+File.separator+sampleName+".InterTranslocation.report";            
+        }else if(SVType.equals("CH")){
+            variationList = this.chimericList;
+            filename = path.getParent().toString()+File.separator+sampleName+".Chimeric.report";            
+        }
+        
+        writer = new FileWriter(filename);
+        /**
+         * For tandem or deletion
+         */
+        if(SVType.equals("TD")||SVType.equals("D")){
+            
+            for(int i=0;i<variationList.size();i++){
+//                if(i==12){
+//                            System.out.println();
+//                        }
+                SVGroup dummySVGroup = variationList.get(i);
+                ArrayList<String> res = createReferenceFromPreciseSVType(dummySVGroup,refFile,refIdxFile,extendSize);
+                String refName = res.get(0);
+                int numBaseBeforeNewRefBPF = Integer.parseInt(res.get(2));
+                
+                if(SVType.equals("TD")){
+                    writer.write(">"+i+"\t"+refName+"\t"+dummySVGroup.shortTandemSummary()+"\n");
+                }else if(SVType.equals("D")){
+                    writer.write(">"+i+"\t"+refName+"\t"+dummySVGroup.shortDeletionSummary()+"\n");
+                }
+
+                ArrayList<VariationV2> varList = dummySVGroup.getVarList();
+                
+                StringBuilder newRef = new StringBuilder(res.get(1));
+                int newRefBPIdxF = 0;
+                int newRefBPIdxB = 0;
+                
+                for(int k=0;k<varList.size();k++){
+                    VariationV2 var = varList.get(k);
+
+                    String read = var.getReadSeq();
+                    int numBaseBeforeReadBPF = var.getBreakpointIndexF()+1;
+                    int numBaseBeforeReadBPB = var.getBreakpointIndexB();               // special for breakpoint back no need to plus 1 to get num base
+                    int numAppend = numBaseBeforeNewRefBPF - numBaseBeforeReadBPF;
+//                    int numAppend = extendSize;
+                    
+                    StringBuilder readBuilder = new StringBuilder(newRef.length());
+                    for(int num=0;num<numAppend;num++){
+                        readBuilder.append(" ");
+                    }
+                    readBuilder.append(read);
+                    
+                    if(k==0){
+                        // calculate variable for reference
+                        // prepare reference and write reference
+                        newRefBPIdxF = numBaseBeforeNewRefBPF; //+ numBaseBeforeReadBPF;                        
+                        newRef.insert(newRefBPIdxF, "|");
+                        if(var.getBreakpointIndexB() - var.getBreakpointIndexF() == 1){
+                            // BPF and BPB is the same location we can insert at the same index
+                            newRefBPIdxB = newRefBPIdxF;
+                            newRef.insert(newRefBPIdxF, "|");
+                        }else{
+                            // Has unmatch base between BPF and BPB
+                            newRefBPIdxB = numAppend + numBaseBeforeReadBPB + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF
+                            newRef.insert(newRefBPIdxB, "|");             
+                        }
+                        writer.write(newRef.toString());
+                        writer.write("\n");
+                    }
+                    // calculate variable for read
+                    newRefBPIdxF = numAppend + numBaseBeforeReadBPF;
+                    if(var.getBreakpointIndexB() - var.getBreakpointIndexF() == 1){
+                        // BPF and BPB is the same location we can insert at the same index
+                        newRefBPIdxB = newRefBPIdxF;                            
+                    }else{
+                        // Has unmatch base between BPF and BPB
+                        newRefBPIdxB = numAppend + numBaseBeforeReadBPB + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF                                       
+                    }
+                    
+//                    if(newRefBPIdxF == 212){
+//                        System.out.println();
+//                    }
+                    readBuilder.insert(newRefBPIdxF, "|");
+                    readBuilder.insert(newRefBPIdxB, "|");
+                    
+                    writer.write(readBuilder.toString());
+                    writer.write("\n");    
+                } 
+            }
+            
+        }else if(SVType.equals("IA")||SVType.equals("IE")){
+            /**
+             * For inter and intra Translocation
+             */
+            String dotSeparator = "..........";
+            int count = 1;
+            for(Map.Entry<ArrayList<SVGroup>,Boolean> entry : variationMap.entrySet()){
+                SVGroup frontSVGroup = entry.getKey().get(0);
+                SVGroup backSVGroup = entry.getKey().get(1);
+                
+                //Prepare newRef Front SVGroup
+                ArrayList<String> resF = createReferenceFromPreciseSVType(frontSVGroup,refFile,refIdxFile,inExtendSize);
+                String refNameF = resF.get(0);
+//                String newRefF = resF.get(1);
+                
+                int numBaseBeforeNewRefBPF_F = Integer.parseInt(resF.get(2));
+                /********/
+                
+                //Prepare newRef Back SVGroup
+                ArrayList<String> resB = createReferenceFromPreciseSVType(backSVGroup,refFile,refIdxFile,inExtendSize);
+                String refNameB = resB.get(0);
+//                String newRefB = resB.get(1);
+                
+                int numBaseBeforeNewRefBPF_B = Integer.parseInt(resB.get(2));
+                /********/
+                
+                writer.write(">"+count+"\t"+refNameF+"_"+refNameB+"\tFront : "+frontSVGroup.shortSummary()+"\tBack : "+backSVGroup.shortSummary()+"\n");
+                
+//                writer.write(newRefF+".........."+newRefB);
+//                writer.write("\n");
+                
+                //Loop varlist pick big list as a main loop
+                ArrayList<VariationV2> varListF = frontSVGroup.getVarList();
+                ArrayList<VariationV2> varListB = backSVGroup.getVarList();
+                
+                int maxSize = 0;
+                if(varListF.size()>=varListB.size()){
+                    maxSize = varListF.size();
+                }else{
+                    maxSize = varListB.size();
+                }
+                StringBuilder newRefF = new StringBuilder(resF.get(1).length()+2);      // create stringbuilder for newrefF with size +2 of the refF size (plus 2 because we add "|" 2 time to denote the breakpoint)
+                int newRefBPIdxF_F = 0;
+                int newRefBPIdxB_F = 0;
+                newRefF.append(resF.get(1));
+                int referenceFrontLen = resF.get(1).length();
+//                int numBaseBeforeReadBPF_F = 0;
+                
+                StringBuilder newRefB = new StringBuilder(resB.get(1).length()+2);       // create stringbuilder for newrefB with size +2 of the refB size (plus 2 because we add "|" 2 time to denote the breakpoint)
+                int newRefBPIdxF_B = 0;
+                int newRefBPIdxB_B = 0;
+                newRefB.append(resB.get(1));
+//                int numBaseBeforeReadBPF_B = 0;
+                int remainBaseOnBackOfFront = 0;
+                for(int k=0;k<maxSize;k++){
+                    int numAppendF = 0;
+                    int numAppendB = 0;
+                    
+                    StringBuilder readBuilder = new StringBuilder(newRefF.length()+10+newRefB.length());
+                    StringBuilder readBuilderF = new StringBuilder(newRefF.capacity());
+                    StringBuilder readBuilderB = new StringBuilder(newRefB.capacity());
+                    
+                    //StringBuilder must be separate to readF readB then combine at the end to make it more easy to to under stand and cut the sapeend part and complex calculate off
+                    // Front
+                    if(k < varListF.size()){
+                        VariationV2 varF = varListF.get(k);
+                        String readF = varF.getReadSeq();
+                        int numBaseBeforeReadBPF_F = varF.getBreakpointIndexF()+1;
+                        int numBaseBeforeReadBPB_F = varF.getBreakpointIndexB();
+                        numAppendF = numBaseBeforeNewRefBPF_F - numBaseBeforeReadBPF_F;
+
+
+                        for(int num=0;num<numAppendF;num++){
+                            readBuilderF.append(" ");
+                        }
+                        readBuilderF.append(readF);
+                        remainBaseOnBackOfFront = referenceFrontLen - (numAppendF + readF.length());
+/********/                        
+                        if(k==0){
+                            // calculate variable for ref
+                            // prepare reference and write reference
+                            // focus on front
+//                            if(numBaseBeforeNewRefBPF_F == 120){
+//                                System.out.println();
+//                            }
+                            newRefBPIdxF_F = numBaseBeforeNewRefBPF_F; //+ numBaseBeforeReadBPF_F; 
+                            newRefF.insert(newRefBPIdxF_F, "|");
+                            if(varF.getBreakpointIndexB() - varF.getBreakpointIndexF() == 1){
+                                // BPF and BPB is the same location we can insert at the same index
+                                newRefBPIdxB_F = newRefBPIdxF_F;
+                                newRefF.insert(newRefBPIdxF_F, "|");
+                            }else{
+                                // Has unmatch base between BPF and BPB
+                                newRefBPIdxB_F = numAppendF + numBaseBeforeReadBPB_F + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF
+                                newRefF.insert(newRefBPIdxB_F, "|");             
+                            }
+//                            writer.write(newRefF.toString());
+//                            writer.write("\n");
+                        }
+                        
+                        // calculate variable for read
+                        newRefBPIdxF_F = numAppendF + numBaseBeforeReadBPF_F;
+                        if(varF.getBreakpointIndexB() - varF.getBreakpointIndexF() == 1){
+                            // BPF and BPB is the same location we can insert at the same index
+                            newRefBPIdxB_F = newRefBPIdxF_F;                            
+                        }else{
+                            // Has unmatch base between BPF and BPB
+                            newRefBPIdxB_F = numAppendF + numBaseBeforeReadBPB_F + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF                                       
+                        }
+                        /*********/
+                    }
+
+                    //Back
+                    if(k < varListB.size()){
+                        VariationV2 varB = varListB.get(k);
+                        String readB = varB.getReadSeq();
+                        int numBaseBeforeReadBPF_B = varB.getBreakpointIndexF()+1; 
+                        int numBaseBeforeReadBPB_B = varB.getBreakpointIndexB();
+                        if(readBuilderF.toString().length()==0){
+                            numAppendB = newRefF.length() + dotSeparator.length() + (numBaseBeforeNewRefBPF_B - numBaseBeforeReadBPF_B);     // plus 10 in this line came from number of dot that we add we add 10 dot to separate newRefF and newRefB
+                        }else{
+                            
+                            numAppendB = remainBaseOnBackOfFront + dotSeparator.length() + (numBaseBeforeNewRefBPF_B - numBaseBeforeReadBPF_B);     // plus 10 in this line came from number of dot that we add we add 10 dot to separate newRefF and newRefB
+                        }
+                             
+                        for(int num=0;num<numAppendB;num++){
+                            readBuilderB.append(" ");
+                        }
+                        
+                        readBuilderB.append(readB);
+ /***********/                       
+                        if(k==0){
+                            // prepare reference and write reference
+                            // focus on front
+                            newRefBPIdxF_B = numBaseBeforeNewRefBPF_B; // + numBaseBeforeReadBPF_B; 
+                            newRefB.insert(newRefBPIdxF_B, "|");
+                            if(varB.getBreakpointIndexB() - varB.getBreakpointIndexF() == 1){
+                                // BPF and BPB is the same location we can insert at the same index
+                                newRefBPIdxB_B = newRefBPIdxF_B;
+                                newRefB.insert(newRefBPIdxF_B, "|");
+                            }else{
+                                // Has unmatch base between BPF and BPB
+                                newRefBPIdxB_B = (numAppendB - (remainBaseOnBackOfFront + dotSeparator.length())) + numBaseBeforeReadBPB_B + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF
+                                newRefB.insert(newRefBPIdxB_B, "|");             
+                            }
+                            
+                            writer.write(newRefF+dotSeparator+newRefB);
+                            writer.write("\n");
+                        }
+                       
+                        // calculate variable for read
+                        newRefBPIdxF_B = numAppendB + numBaseBeforeReadBPF_B;
+                        if(varB.getBreakpointIndexB() - varB.getBreakpointIndexF() == 1){
+                            // BPF and BPB is the same location we can insert at the same index
+                            newRefBPIdxB_B = newRefBPIdxF_B;                            
+                        }else{
+                            // Has unmatch base between BPF and BPB
+                            newRefBPIdxB_B = numAppendB + numBaseBeforeReadBPB_B + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF                                       
+                        }
+                        /************/
+                    }
+                    
+                    // Fill "|" into readBuilderF and readBuilderB
+                    if(readBuilderF.toString().length()!=0){
+                        readBuilderF.insert(newRefBPIdxF_F, "|");
+                        readBuilderF.insert(newRefBPIdxB_F, "|");
+                    }else{
+//                        int numToAppend = newRefF.toString().length();
+//                        for(int r=0;r<numToAppend;r++){
+//                            readBuilderF.append(" ");
+//                        }   
+                    }
+                    
+                    if(readBuilderB.toString().length()!=0){
+                        readBuilderB.insert(newRefBPIdxF_B, "|");
+                        readBuilderB.insert(newRefBPIdxB_B, "|");
+                    }else{
+//                        int numToAppend = newRefB.toString().length();
+//                        for(int r=0;r<numToAppend;r++){
+//                            readBuilderB.append(" ");
+//                        }
+                    }
+//                    readBuilderF.insert(newRefBPIdxF_F, "|");
+//                    readBuilderF.insert(newRefBPIdxB_F, "|");
+//                    readBuilderB.insert(newRefBPIdxF_B, "|");
+//                    readBuilderB.insert(newRefBPIdxB_B, "|");
+                    
+                    writer.write(readBuilderF.toString()+readBuilderB.toString());
+                    writer.write("\n");
+                }
+            }
+            
+//            for(int i=0;i<variationList.size();i++){
+//                SVGroup dummySVGroup = variationList.get(i);
+//                ArrayList<String> res = createReferenceFromPreciseSVType(dummySVGroup,refFile,refIdxFile,inExtendSize);
+//                String refName = res.get(0);
+//                String newRef = res.get(1);
+//                int numBaseBeforeNewRefBPF = Integer.parseInt(res.get(3));
+//                
+//                if(SVType.equals("TD")){
+//                    writer.write(">"+i+"\t"+refName+"\t"+dummySVGroup.shortTandemSummary()+"\n");
+//                }else if(SVType.equals("D")){
+//                    writer.write(">"+i+"\t"+refName+"\t"+dummySVGroup.shortDeletionSummary()+"\n");
+//                }
+//                
+//                writer.write(newRef);
+//                writer.write("\n");
+//                
+//                ArrayList<VariationV2> varList = dummySVGroup.getVarList();
+//                for(int k=0;k<varList.size();k++){
+//                    VariationV2 var = varList.get(k);
+//                    String read = var.getReadSeq();
+//                    int numBaseBeforeReadBPF = var.getBreakpointIndexF()+1;
+//                    int numAppend = numBaseBeforeNewRefBPF + numBaseBeforeReadBPF;
+//                    
+//                    StringBuilder readBuilder = new StringBuilder();                    
+//                    for(int num=0;num<numAppend;num++){
+//                        readBuilder.append(" ");
+//                    }
+//                    readBuilder.append(read);
+//                    
+//                    writer.write(readBuilder.toString());
+//                    writer.write("\n");    
+//                } 
+//            }
+        }else if(SVType.equals("CH")){
+            
+        }
+        
+        writer.flush();
+        writer.close();
+    }
+    
     public void classifyRoughSVType(){
         /**
          * classify sv type of each sv candidate group

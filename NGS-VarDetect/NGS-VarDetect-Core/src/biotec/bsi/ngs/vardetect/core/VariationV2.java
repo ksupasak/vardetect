@@ -187,40 +187,63 @@ public class VariationV2 {
 
         
         boolean flagA = false;
-        
+        int sCount = 0; // number of s character in merCollection 
         /**
          * loop find firstA
          */
         boolean fullFlagF = true;
         for(int i=this.breakpointIndexF;i>=0;i--){
             if(this.merCollection.charAt(i) == 'A' ||this.merCollection.charAt(i) == 'a'){
-                this.numBaseMatchF++;    
-            }else{
-                this.iniIndexF = i+1;
-                fullFlagF=false;
-                break;
+                this.iniIndexF = i;
             }
+            
+//            if(this.merCollection.charAt(i) == 'A' ||this.merCollection.charAt(i) == 'a'){
+//                this.numBaseMatchF++; 
+//                sCount=0;
+//            }else{
+//                sCount++;
+//                if(sCount>4){
+//                    this.iniIndexF = i+5;
+//                    fullFlagF=false;
+//                    break;
+//                }        
+////                this.iniIndexF = i+1;
+////                fullFlagF=false;
+////                break;
+//            }
         }
-        if(fullFlagF==true){
-            this.iniIndexF = 0;
-        }
+//        if(fullFlagF==true){
+//            this.iniIndexF = 0;
+//        }
         
         /**
          * loop find lastB
          */
+        sCount=0;   // reset Count
         boolean fullFlagB = true;
         for(int i=this.breakpointIndexB;i<this.merCollection.length();i++){
             if(this.merCollection.charAt(i) == 'B' || this.merCollection.charAt(i) == 'b'){
-                this.numBaseMatchB++;
-            }else{
-                this.lastIndexB = i-1;
-                fullFlagB=false;
-                break;
+                this.lastIndexB = i;
             }
+
+//            if(this.merCollection.charAt(i) == 'B' || this.merCollection.charAt(i) == 'b'){
+//                this.numBaseMatchB++;
+//                sCount=0;
+//            }else{
+//                sCount++;
+//                if(sCount>4){
+//                    this.lastIndexB = i-5;
+//                    fullFlagF=false;
+//                    break;
+//                }
+////                this.lastIndexB = i-1;
+////                fullFlagB=false;
+////                break;
+//            }
         }
-        if(fullFlagB==true){
-            this.lastIndexB = this.merCollection.length()-1;
-        }
+//        if(fullFlagB==true){
+//            this.lastIndexB = this.merCollection.length()-1;
+//        }
         
 //        for(int i=0;i<this.merCollection.length();i++){
 //            if(this.merCollection.charAt(i) == 'A' ||this.merCollection.charAt(i) == 'a'){
@@ -268,6 +291,14 @@ public class VariationV2 {
 
     public int getBreakpointB() {
         return breakpointB;
+    }
+
+    public int getBreakpointIndexF() {
+        return breakpointIndexF;
+    }
+
+    public int getBreakpointIndexB() {
+        return breakpointIndexB;
     }
 
     public byte getStrandF() {
