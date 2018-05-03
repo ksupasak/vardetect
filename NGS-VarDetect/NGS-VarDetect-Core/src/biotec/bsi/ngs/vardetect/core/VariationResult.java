@@ -90,6 +90,8 @@ public class VariationResult {
     private ArrayList<SVGroup> deletionList;
     private ArrayList<SVGroup> intraTransList;
     private ArrayList<SVGroup> interTransList;
+    private ArrayList<SVGroupPair> intraInsertionList;
+    private ArrayList<SVGroupPair> interInsertionList;
     private ArrayList<SVGroup> sameChrSVGroup;
     private ArrayList<SVGroup> diffChrSVGroup; 
     private Map<ArrayList<SVGroup>,Boolean> intraTransPairList;
@@ -131,6 +133,8 @@ public class VariationResult {
         this.deletionList = new ArrayList();
         this.intraTransList = new ArrayList();
         this.interTransList = new ArrayList();
+        this.interInsertionList = new ArrayList();
+        this.intraInsertionList = new ArrayList();
         this.refIndex = new LinkedHashMap();
         this.sameChrSVGroup = new ArrayList();
         this.diffChrSVGroup = new ArrayList();
@@ -499,7 +503,7 @@ public class VariationResult {
                 svGroup.addRefIndex(this.refIndex);
             }            
         }
-        System.out.println("");
+//        System.out.println("");
     }
     
     public void analyzeCoverageFusion(){
@@ -2926,6 +2930,16 @@ public class VariationResult {
         /**********************************************************************/   
     }
     
+    public void sortInsertionByInsertSize(){
+        Collections.sort(this.intraInsertionList,SVGroupPair.InsertSizeComparatorLowToHigh);
+        Collections.sort(this.interInsertionList,SVGroupPair.InsertSizeComparatorLowToHigh);
+    }
+    
+    public void sortInsertionByInsertJunctiontLowtoHigh(){
+        Collections.sort(this.intraInsertionList,SVGroupPair.InsertJunctionComparatorLowToHigh);
+        Collections.sort(this.interInsertionList,SVGroupPair.InsertJunctionComparatorLowToHigh);
+    }
+    
     public void sortCoverageFusion(){
         /**
          * This function will create a Array of coverageFusion that sort by high to low (descending)
@@ -4018,7 +4032,7 @@ public class VariationResult {
                 /********/
                 
                 writer.write(">"+count+"\t"+refNameF+"_"+refNameB+"\tFront : "+frontSVGroup.shortSummary()+"\tBack : "+backSVGroup.shortSummary()+"\n");
-                
+                count++;
 //                writer.write(newRefF+".........."+newRefB);
 //                writer.write("\n");
                 
@@ -4224,6 +4238,725 @@ public class VariationResult {
         writer.close();
     }
     
+    public void writeVisualizePreciseSVTypeWithAnnotation(String readFile, String refFile, String refFaIndex, String gffFile, String SVType, int minPickCoverage, int inExtendSize, int merSize) throws IOException{
+        /**
+         * this function will write the precise SVType report with single base resolution
+         * user must define SV type Code which has 5 SV Type
+         * TD = tandem, D = deletion, IA = intraIns, IE = interIns, CH = chimeric
+         */
+        
+        /**
+        * Read annotation file (GFF)
+        */
+        ReferenceAnnotation refAnno = SequenceUtil.readAnnotationFileV4(gffFile,refFaIndex, "gene" , merSize);
+        Map<Integer,Annotation> refAnnoIndex = refAnno.getAnnotationIndex();
+        /****************************/
+        
+        Path path = Paths.get(readFile);
+        String fileName = path.getFileName().toString();
+        String[] dummy2 = fileName.split("_unmap");         // For more generic this should be split by . (and whole protocal should use . as a filed peaparation like A.unmap.emdup.bam So, we can get read name just split by .)
+        String sampleName = dummy2[0];
+        String filename = "";
+        String readmeFile = "";
+        FileWriter writer;
+        FileWriter readmeWriter;
+        FileWriter writer2;
+        int extendSize = inExtendSize;
+        int groupCount = 0;
+        ArrayList<SVGroup> variationList = new ArrayList();
+        ArrayList<SVGroupPair> variationPairList = new ArrayList();
+        
+        String indelType = "";
+        if(SVType.equals("TD")){
+            variationList = this.tandemList;
+            filename = path.getParent().toString()+File.separator+"Tandem"+File.separator+sampleName+".Tandem.Anno.report";
+            readmeFile = path.getParent().toString()+File.separator+"Tandem"+File.separator+sampleName+".Tandem.Anno.readme.txt";
+            File file = new File(filename);
+            if(!file.getParentFile().exists()){
+                try{
+                    file.getParentFile().mkdirs();
+                } 
+                catch(SecurityException se){
+                    System.out.println("Can not create directory : " + file.getParent());
+                }
+            }
+        }else if(SVType.equals("D")){
+            variationList = this.deletionList;
+            filename = path.getParent().toString()+File.separator+"Deletion"+File.separator+sampleName+".Deletion.Anno.report";
+            readmeFile = path.getParent().toString()+File.separator+"Deletion"+File.separator+sampleName+".Deletion.Anno.readme.txt";
+            File file = new File(filename);
+            if(!file.getParentFile().exists()){
+                try{
+                    file.getParentFile().mkdirs();
+                } 
+                catch(SecurityException se){
+                    System.out.println("Can not create directory : " + file.getParent());
+                }
+            }
+        }else if(SVType.equals("IA")){
+            variationPairList = this.intraInsertionList;
+            filename = path.getParent().toString()+File.separator+"IntraInsertion"+File.separator+sampleName+".IntraInsertion.Anno.report";
+            readmeFile = path.getParent().toString()+File.separator+"IntraInsertion"+File.separator+sampleName+".IntraInsertion.Anno.readme.txt";
+            File file = new File(filename);
+            if(!file.getParentFile().exists()){
+                try{
+                    file.getParentFile().mkdirs();
+                } 
+                catch(SecurityException se){
+                    System.out.println("Can not create directory : " + file.getParent());
+                }
+            }
+        }else if(SVType.equals("IE")){
+            variationPairList = this.interInsertionList;
+            filename = path.getParent().toString()+File.separator+"InterInsertion"+File.separator+sampleName+".InterInsertion.Anno.report";
+            readmeFile = path.getParent().toString()+File.separator+"InterInsertion"+File.separator+sampleName+".InterInsertion.Anno.readme.txt";
+            File file = new File(filename);
+            if(!file.getParentFile().exists()){
+                try{
+                    file.getParentFile().mkdirs();
+                } 
+                catch(SecurityException se){
+                    System.out.println("Can not create directory : " + file.getParent());
+                }
+            }            
+        }else if(SVType.equals("CH")){
+            variationList = this.chimericList;
+            filename = path.getParent().toString()+File.separator+"Chimeric"+File.separator+sampleName+".Chimeric.Anno.report";
+            readmeFile = path.getParent().toString()+File.separator+"Chimeric"+File.separator+sampleName+".Chimeric.Anno.readme.txt";
+            File file = new File(filename);
+            if(!file.getParentFile().exists()){
+                try{
+                    file.getParentFile().mkdirs();
+                } 
+                catch(SecurityException se){
+                    System.out.println("Can not create directory : " + file.getParent());
+                }
+            }
+        }
+        
+        writer = new FileWriter(filename);
+        readmeWriter = new FileWriter(readmeFile);
+        readmeWriter.write(generateReadme(SVType));
+        /**
+         * For tandem or deletion
+         */
+        if(SVType.equals("TD")||SVType.equals("D")||SVType.equals("CH")){
+            int count = 1;
+            for(int i=0;i<variationList.size();i++){
+//                if(i==12){
+//                            System.out.println();
+//                        }
+                SVGroup dummySVGroup = variationList.get(i);
+                ArrayList<String> res = createReferenceFromPreciseSVType(dummySVGroup,refFile,refFaIndex,extendSize);
+                String refName = res.get(0);
+                int numBaseBeforeNewRefBPF = Integer.parseInt(res.get(2));
+                
+                /**
+                 * Annotation part
+                 */
+                ArrayList<String> annotation = getAnnotationOfSVGroupV3(dummySVGroup, refAnno, refAnnoIndex, "gene",merSize);
+                String annoF = annotation.get(0);
+                String annoB = annotation.get(1);
+                /******************/
+                
+                if(SVType.equals("TD")){
+                    writer.write(">"+count+"\t"+refName+"\t"+dummySVGroup.shortTandemSummary()+"\tAnnotation front : " + annoF + "\tAnnotation back : "+ annoB + "\n");                    
+                }else if(SVType.equals("D")){
+                    writer.write(">"+count+"\t"+refName+"\t"+dummySVGroup.shortDeletionSummary()+"\tAnnotation front : " + annoF + "\tAnnotation back : "+ annoB+"\n");
+                }else if(SVType.equals("CH")){
+                    writer.write(">"+count+"\t"+refName+"\t"+dummySVGroup.shortSummary()+"\tAnnotation front : " + annoF + "\tAnnotation back : "+ annoB+"\n");
+                }
+                count++;
+                ArrayList<VariationV2> varList = dummySVGroup.getVarList();
+                
+                StringBuilder newRef = new StringBuilder(res.get(1));
+                int newRefBPIdxF = 0;
+                int newRefBPIdxB = 0;
+                
+                for(int k=0;k<varList.size();k++){
+                    VariationV2 var = varList.get(k);
+
+                    String read = var.getReadSeq();
+                    int numBaseBeforeReadBPF = var.getBreakpointIndexF()+1;
+                    int numBaseBeforeReadBPB = var.getBreakpointIndexB();               // special for breakpoint back no need to plus 1 to get num base
+                    int numAppend = numBaseBeforeNewRefBPF - numBaseBeforeReadBPF;
+//                    int numAppend = extendSize;
+                    
+                    StringBuilder readBuilder = new StringBuilder(newRef.length());
+                    for(int num=0;num<numAppend;num++){
+                        readBuilder.append(" ");
+                    }
+                    readBuilder.append(read);
+                    
+                    if(k==0){
+                        // calculate variable for reference
+                        // prepare reference and write reference
+                        newRefBPIdxF = numBaseBeforeNewRefBPF; //+ numBaseBeforeReadBPF;                        
+                        newRef.insert(newRefBPIdxF, "|");
+                        if(var.getBreakpointIndexB() - var.getBreakpointIndexF() == 1){
+                            // BPF and BPB is the same location we can insert at the same index
+                            newRefBPIdxB = newRefBPIdxF;
+                            newRef.insert(newRefBPIdxF, "|");
+                        }else{
+                            // Has unmatch base between BPF and BPB
+                            newRefBPIdxB = numAppend + numBaseBeforeReadBPB + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF
+                            newRef.insert(newRefBPIdxB, "|");             
+                        }
+                        writer.write(newRef.toString());
+                        writer.write("\n");
+                    }
+                    // calculate variable for read
+                    newRefBPIdxF = numAppend + numBaseBeforeReadBPF;
+                    if(var.getBreakpointIndexB() - var.getBreakpointIndexF() == 1){
+                        // BPF and BPB is the same location we can insert at the same index
+                        newRefBPIdxB = newRefBPIdxF;                            
+                    }else{
+                        // Has unmatch base between BPF and BPB
+                        newRefBPIdxB = numAppend + numBaseBeforeReadBPB + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF                                       
+                    }
+                    
+//                    if(newRefBPIdxF == 212){
+//                        System.out.println();
+//                    }
+                    readBuilder.insert(newRefBPIdxF, "|");
+                    readBuilder.insert(newRefBPIdxB, "|");
+                    
+                    writer.write(readBuilder.toString());
+                    writer.write("\n");    
+                }
+                writer.write("\n");
+            }
+            
+        }else if(SVType.equals("IA")||SVType.equals("IE")){
+            /**
+             * For inter and intra Translocation
+             */
+            String dotSeparator = "..........";
+            int count = 1;
+//            for(Map.Entry<ArrayList<SVGroup>,Boolean> entry : variationMap.entrySet()){
+//                SVGroup frontSVGroup = entry.getKey().get(0);
+//                SVGroup backSVGroup = entry.getKey().get(1);
+                
+            for(int i=0;i<variationPairList.size();i++){
+                SVGroupPair svPair = variationPairList.get(i);
+                SVGroup frontSVGroup = svPair.getFrontSVGroup();
+                SVGroup backSVGroup = svPair.getBackSVGroup();
+                
+                //Prepare newRef Front SVGroup
+                ArrayList<String> resF = createReferenceFromPreciseSVType(frontSVGroup,refFile,refFaIndex,inExtendSize);
+                String refNameF = resF.get(0);
+//                String newRefF = resF.get(1);
+                
+                int numBaseBeforeNewRefBPF_F = Integer.parseInt(resF.get(2));
+                /********/
+                
+                //Prepare newRef Back SVGroup
+                ArrayList<String> resB = createReferenceFromPreciseSVType(backSVGroup,refFile,refFaIndex,inExtendSize);
+                String refNameB = resB.get(0);
+//                String newRefB = resB.get(1);
+                
+                int numBaseBeforeNewRefBPF_B = Integer.parseInt(resB.get(2));
+                /********/
+                
+                /**
+                 * Annotation part
+                 */
+                ArrayList<String> annotationF = getAnnotationOfSVGroupV3(frontSVGroup, refAnno, refAnnoIndex, "gene", merSize);
+                String annoF_F = annotationF.get(0);
+                String annoB_F = annotationF.get(1);
+                ArrayList<String> annotationB = getAnnotationOfSVGroupV3(backSVGroup, refAnno, refAnnoIndex, "gene", merSize);
+                String annoF_B = annotationB.get(0);
+                String annoB_B = annotationB.get(1);
+                /******************/
+                
+                
+                writer.write(">"+count+"\t"+refNameF+"_"+refNameB+"\tFront : "+frontSVGroup.shortSummary()+"\tAnnotation Front : "+annoF_F+"\tAnnotation back : "+annoB_F+"\t||\tBack : "+backSVGroup.shortSummary()+"\tAnnotation Front : "+annoF_B+"\tAnnotation back : "+annoB_B
+                        +"\t"+svPair.getInsertionSize()+"\t"+svPair.getInsertionJunction()+"\n");
+                count++;
+//                writer.write(newRefF+".........."+newRefB);
+//                writer.write("\n");
+                
+                //Loop varlist pick big list as a main loop
+                ArrayList<VariationV2> varListF = frontSVGroup.getVarList();
+                ArrayList<VariationV2> varListB = backSVGroup.getVarList();
+                
+                int maxSize = 0;
+                if(varListF.size()>=varListB.size()){
+                    maxSize = varListF.size();
+                }else{
+                    maxSize = varListB.size();
+                }
+                StringBuilder newRefF = new StringBuilder(resF.get(1).length()+2);      // create stringbuilder for newrefF with size +2 of the refF size (plus 2 because we add "|" 2 time to denote the breakpoint)
+                int newRefBPIdxF_F = 0;
+                int newRefBPIdxB_F = 0;
+                newRefF.append(resF.get(1));
+                int referenceFrontLen = resF.get(1).length();
+//                int numBaseBeforeReadBPF_F = 0;
+                
+                StringBuilder newRefB = new StringBuilder(resB.get(1).length()+2);       // create stringbuilder for newrefB with size +2 of the refB size (plus 2 because we add "|" 2 time to denote the breakpoint)
+                int newRefBPIdxF_B = 0;
+                int newRefBPIdxB_B = 0;
+                newRefB.append(resB.get(1));
+//                int numBaseBeforeReadBPF_B = 0;
+                int remainBaseOnBackOfFront = 0;
+                for(int k=0;k<maxSize;k++){
+                    int numAppendF = 0;
+                    int numAppendB = 0;
+                    
+                    StringBuilder readBuilder = new StringBuilder(newRefF.length()+10+newRefB.length());
+                    StringBuilder readBuilderF = new StringBuilder(newRefF.capacity());
+                    StringBuilder readBuilderB = new StringBuilder(newRefB.capacity());
+                    
+                    //StringBuilder must be separate to readF readB then combine at the end to make it more easy to to under stand and cut the sapeend part and complex calculate off
+                    // Front
+                    if(k < varListF.size()){
+                        VariationV2 varF = varListF.get(k);
+                        String readF = varF.getReadSeq();
+                        int numBaseBeforeReadBPF_F = varF.getBreakpointIndexF()+1;
+                        int numBaseBeforeReadBPB_F = varF.getBreakpointIndexB();
+                        numAppendF = numBaseBeforeNewRefBPF_F - numBaseBeforeReadBPF_F;
+
+
+                        for(int num=0;num<numAppendF;num++){
+                            readBuilderF.append(" ");
+                        }
+                        readBuilderF.append(readF);
+                        remainBaseOnBackOfFront = referenceFrontLen - (numAppendF + readF.length());
+/********/                        
+                        if(k==0){
+                            // calculate variable for ref
+                            // prepare reference and write reference
+                            // focus on front
+//                            if(numBaseBeforeNewRefBPF_F == 120){
+//                                System.out.println();
+//                            }
+                            newRefBPIdxF_F = numBaseBeforeNewRefBPF_F; //+ numBaseBeforeReadBPF_F; 
+                            newRefF.insert(newRefBPIdxF_F, "|");
+                            if(varF.getBreakpointIndexB() - varF.getBreakpointIndexF() == 1){
+                                // BPF and BPB is the same location we can insert at the same index
+                                newRefBPIdxB_F = newRefBPIdxF_F;
+                                newRefF.insert(newRefBPIdxF_F, "|");
+                            }else{
+                                // Has unmatch base between BPF and BPB
+                                newRefBPIdxB_F = numAppendF + numBaseBeforeReadBPB_F + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF
+                                newRefF.insert(newRefBPIdxB_F, "|");             
+                            }
+//                            writer.write(newRefF.toString());
+//                            writer.write("\n");
+                        }
+                        
+                        // calculate variable for read
+                        newRefBPIdxF_F = numAppendF + numBaseBeforeReadBPF_F;
+                        if(varF.getBreakpointIndexB() - varF.getBreakpointIndexF() == 1){
+                            // BPF and BPB is the same location we can insert at the same index
+                            newRefBPIdxB_F = newRefBPIdxF_F;                            
+                        }else{
+                            // Has unmatch base between BPF and BPB
+                            newRefBPIdxB_F = numAppendF + numBaseBeforeReadBPB_F + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF                                       
+                        }
+                        /*********/
+                    }
+
+                    //Back
+                    if(k < varListB.size()){
+                        VariationV2 varB = varListB.get(k);
+                        String readB = varB.getReadSeq();
+                        int numBaseBeforeReadBPF_B = varB.getBreakpointIndexF()+1; 
+                        int numBaseBeforeReadBPB_B = varB.getBreakpointIndexB();
+                        if(readBuilderF.toString().length()==0){
+                            numAppendB = newRefF.length() + dotSeparator.length() + (numBaseBeforeNewRefBPF_B - numBaseBeforeReadBPF_B);     // plus 10 in this line came from number of dot that we add we add 10 dot to separate newRefF and newRefB
+                        }else{
+                            
+                            numAppendB = remainBaseOnBackOfFront + dotSeparator.length() + (numBaseBeforeNewRefBPF_B - numBaseBeforeReadBPF_B);     // plus 10 in this line came from number of dot that we add we add 10 dot to separate newRefF and newRefB
+                        }
+                             
+                        for(int num=0;num<numAppendB;num++){
+                            readBuilderB.append(" ");
+                        }
+                        
+                        readBuilderB.append(readB);
+ /***********/                       
+                        if(k==0){
+                            // prepare reference and write reference
+                            // focus on front
+                            newRefBPIdxF_B = numBaseBeforeNewRefBPF_B; // + numBaseBeforeReadBPF_B; 
+                            newRefB.insert(newRefBPIdxF_B, "|");
+                            if(varB.getBreakpointIndexB() - varB.getBreakpointIndexF() == 1){
+                                // BPF and BPB is the same location we can insert at the same index
+                                newRefBPIdxB_B = newRefBPIdxF_B;
+                                newRefB.insert(newRefBPIdxF_B, "|");
+                            }else{
+                                // Has unmatch base between BPF and BPB
+                                newRefBPIdxB_B = (numAppendB - (remainBaseOnBackOfFront + dotSeparator.length())) + numBaseBeforeReadBPB_B + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF
+                                newRefB.insert(newRefBPIdxB_B, "|");             
+                            }
+                            
+                            writer.write(newRefF+dotSeparator+newRefB);
+                            writer.write("\n");
+                        }
+                       
+                        // calculate variable for read
+                        newRefBPIdxF_B = numAppendB + numBaseBeforeReadBPF_B;
+                        if(varB.getBreakpointIndexB() - varB.getBreakpointIndexF() == 1){
+                            // BPF and BPB is the same location we can insert at the same index
+                            newRefBPIdxB_B = newRefBPIdxF_B;                            
+                        }else{
+                            // Has unmatch base between BPF and BPB
+                            newRefBPIdxB_B = numAppendB + numBaseBeforeReadBPB_B + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF                                       
+                        }
+                        /************/
+                    }
+                    
+                    // Fill "|" into readBuilderF and readBuilderB
+                    if(readBuilderF.toString().length()!=0){
+                        readBuilderF.insert(newRefBPIdxF_F, "|");
+                        readBuilderF.insert(newRefBPIdxB_F, "|");
+                    }else{
+//                        int numToAppend = newRefF.toString().length();
+//                        for(int r=0;r<numToAppend;r++){
+//                            readBuilderF.append(" ");
+//                        }   
+                    }
+                    
+                    if(readBuilderB.toString().length()!=0){
+                        readBuilderB.insert(newRefBPIdxF_B, "|");
+                        readBuilderB.insert(newRefBPIdxB_B, "|");
+                    }else{
+//                        int numToAppend = newRefB.toString().length();
+//                        for(int r=0;r<numToAppend;r++){
+//                            readBuilderB.append(" ");
+//                        }
+                    }
+//                    readBuilderF.insert(newRefBPIdxF_F, "|");
+//                    readBuilderF.insert(newRefBPIdxB_F, "|");
+//                    readBuilderB.insert(newRefBPIdxF_B, "|");
+//                    readBuilderB.insert(newRefBPIdxB_B, "|");
+                    
+                    writer.write(readBuilderF.toString()+readBuilderB.toString());
+                    writer.write("\n");
+                }
+                writer.write("\n");
+            }
+            
+//            for(int i=0;i<variationList.size();i++){
+//                SVGroup dummySVGroup = variationList.get(i);
+//                ArrayList<String> res = createReferenceFromPreciseSVType(dummySVGroup,refFile,refIdxFile,inExtendSize);
+//                String refName = res.get(0);
+//                String newRef = res.get(1);
+//                int numBaseBeforeNewRefBPF = Integer.parseInt(res.get(3));
+//                
+//                if(SVType.equals("TD")){
+//                    writer.write(">"+i+"\t"+refName+"\t"+dummySVGroup.shortTandemSummary()+"\n");
+//                }else if(SVType.equals("D")){
+//                    writer.write(">"+i+"\t"+refName+"\t"+dummySVGroup.shortDeletionSummary()+"\n");
+//                }
+//                
+//                writer.write(newRef);
+//                writer.write("\n");
+//                
+//                ArrayList<VariationV2> varList = dummySVGroup.getVarList();
+//                for(int k=0;k<varList.size();k++){
+//                    VariationV2 var = varList.get(k);
+//                    String read = var.getReadSeq();
+//                    int numBaseBeforeReadBPF = var.getBreakpointIndexF()+1;
+//                    int numAppend = numBaseBeforeNewRefBPF + numBaseBeforeReadBPF;
+//                    
+//                    StringBuilder readBuilder = new StringBuilder();                    
+//                    for(int num=0;num<numAppend;num++){
+//                        readBuilder.append(" ");
+//                    }
+//                    readBuilder.append(read);
+//                    
+//                    writer.write(readBuilder.toString());
+//                    writer.write("\n");    
+//                } 
+//            }
+        }
+        
+        writer.flush();
+        writer.close();
+        readmeWriter.flush();
+        readmeWriter.close();
+    }
+    
+    public ArrayList<String> getAnnotationOfSVGroup(SVGroup svGroup, ReferenceAnnotation refAnno, Map<Integer,Annotation> refAnnoIndex, String annotationField, int merSize) throws IOException{
+            
+//        /**
+//        * Read annotation file (GFF)
+//        */
+//        ReferenceAnnotation refAnno = SequenceUtil.readAnnotationFileV3(gffFile,refFaIndex, annotationField , merSize);
+//        Map<Integer,Annotation> refAnnoIndex = refAnno.getAnnotationIndex();
+//        /****************************/
+        
+        /**
+         * annotation part
+         * Find annotation for this svGroup
+         */
+        ArrayList<String> result = new ArrayList();
+        if(!svGroup.isIdentityFlag()){
+            svGroup.defineIdentity();
+        }
+
+        long avgIniPosF = svGroup.getRPF();
+        long avgLastPosB = svGroup.getRPB();
+        
+        long strandChrF = ((long)svGroup.getStrandF()<<11)+(long)svGroup.getNumChrF();
+        long strandChrB = ((long)svGroup.getStrandB()<<11)+(long)svGroup.getNumChrB();
+
+        long chrPosStartF = ((strandChrF<<28)+avgIniPosF)<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+        long chrPosStopF = ((strandChrF<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+        long chrPosStartB = ((strandChrB<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+        long chrPosStopB = ((strandChrB<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            
+//        long chrPosStartF = (((long)svGroup.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+//        long chrPosStopF = (((long)svGroup.getNumChrF()<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//        long chrPosStartB = (((long)svGroup.getNumChrB()<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+//        long chrPosStopB = (((long)svGroup.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+        int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+        int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+        String strAnnoF = "null";
+        String strAnnoB = "null";
+        if(annoGroupIndexF >= 0){
+            Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+            svGroup.setAnnoF(annoF);
+            strAnnoF = annoF.toString();
+        }
+        if(annoGroupIndexB >= 0){
+            Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+            svGroup.setAnnoB(annoB);
+            strAnnoB = annoB.toString();
+        }
+
+        /**********************/
+        result.add(strAnnoF);   // index 0 is front annotation
+        result.add(strAnnoB);   // index 1 is back annotation
+
+        return result;
+    }
+    
+    public ArrayList<String> getAnnotationOfSVGroupV2(SVGroup svGroup, ReferenceAnnotation refAnno, Map<Integer,Annotation> refAnnoIndex, String annotationField, int merSize) throws IOException{
+            
+//        /**
+//        * Read annotation file (GFF)
+//        */
+//        ReferenceAnnotation refAnno = SequenceUtil.readAnnotationFileV3(gffFile,refFaIndex, annotationField , merSize);
+//        Map<Integer,Annotation> refAnnoIndex = refAnno.getAnnotationIndex();
+//        /****************************/
+        
+        /**
+         * annotation part
+         * Find annotation for this svGroup
+         */
+        boolean firstFoundFlagF = true;
+        boolean firstFoundFlagB = true;
+        ArrayList<String> strandPattern = new ArrayList();
+        
+        if(svGroup.isPpFlag()){
+            strandPattern.add("++");
+        }
+        if(svGroup.isMmFlag()){
+            strandPattern.add("--");
+        }
+        if(svGroup.isPmFlag()){
+            strandPattern.add("+-");
+        }
+        if(svGroup.isMpFlag()){
+            strandPattern.add("-+");
+        }
+        
+        
+        ArrayList<String> result = new ArrayList();
+        if(!svGroup.isIdentityFlag()){
+            svGroup.defineIdentity();
+        }
+
+        long strandF = 0;
+        long strandB = 0;
+        String strAnnoF = "null";
+        String strAnnoB = "null";
+        
+        for(int i=0;i<strandPattern.size();i++){
+            if(strandPattern.get(i).equals("++")){
+                strandF = 0;
+                strandB = 0;
+            }else if(strandPattern.get(i).equals("--")){
+                strandF = 1;
+                strandB = 1;
+            }else if(strandPattern.get(i).equals("+-")){
+                strandF = 0;
+                strandB = 1;
+            }else if(strandPattern.get(i).equals("-+")){
+                strandF = 1;
+                strandB = 0;
+            }
+        
+            long avgIniPosF = svGroup.getRPF();
+            long avgLastPosB = svGroup.getRPB();
+
+            long strandChrF = (strandF<<11)+(long)svGroup.getNumChrF();
+            long strandChrB = (strandB<<11)+(long)svGroup.getNumChrB();
+
+            long chrPosStartF = ((strandChrF<<28)+avgIniPosF)<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+            long chrPosStopF = ((strandChrF<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            long chrPosStartB = ((strandChrB<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+            long chrPosStopB = ((strandChrB<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+    //        long chrPosStartF = (((long)svGroup.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+    //        long chrPosStopF = (((long)svGroup.getNumChrF()<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+    //        long chrPosStartB = (((long)svGroup.getNumChrB()<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+    //        long chrPosStopB = (((long)svGroup.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+            if(annoGroupIndexF >= 0){
+                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                svGroup.setAnnoF(annoF);
+                if(firstFoundFlagF==true){
+                    strAnnoF = annoF.toString();
+                    firstFoundFlagF = false;
+                }else{
+                    strAnnoF = strAnnoF + " | " + annoF.toString();
+                }               
+            }
+            
+            if(annoGroupIndexB >= 0){
+                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                svGroup.setAnnoB(annoB);
+                if(firstFoundFlagB==true){
+                    strAnnoB = annoB.toString();
+                    firstFoundFlagB = false;
+                }else{
+                    strAnnoB = strAnnoB + " | " + annoB.toString();
+                }
+            }
+
+            /**********************/
+            
+        }
+        result.add(strAnnoF);   // index 0 is front annotation
+        result.add(strAnnoB);   // index 1 is back annotation
+        return result;
+    }
+    
+    public ArrayList<String> getAnnotationOfSVGroupV3(SVGroup svGroup, ReferenceAnnotation refAnno, Map<Integer,Annotation> refAnnoIndex, String annotationField, int merSize) throws IOException{
+        /**
+         * Annotated both strand + and - for every SVGroup even SVgroup it self did not have - strand or + strand
+         */
+//        /**
+//        * Read annotation file (GFF) 
+//        */
+//        ReferenceAnnotation refAnno = SequenceUtil.readAnnotationFileV3(gffFile,refFaIndex, annotationField , merSize);
+//        Map<Integer,Annotation> refAnnoIndex = refAnno.getAnnotationIndex();
+//        /****************************/
+        
+        /**
+         * annotation part
+         * Find annotation for this svGroup
+         */
+        boolean firstFoundFlagF = true;
+        boolean firstFoundFlagB = true;
+//        ArrayList<String> strandPattern = new ArrayList();
+//        
+//        if(svGroup.isPpFlag()){
+//            strandPattern.add("++");
+//        }
+//        if(svGroup.isMmFlag()){
+//            strandPattern.add("--");
+//        }
+//        if(svGroup.isPmFlag()){
+//            strandPattern.add("+-");
+//        }
+//        if(svGroup.isMpFlag()){
+//            strandPattern.add("-+");
+//        }
+        
+        
+        ArrayList<String> result = new ArrayList();
+        if(!svGroup.isIdentityFlag()){
+            svGroup.defineIdentity();
+        }
+
+        long strandF = 0;
+        long strandB = 0;
+        String strAnnoF = "null";
+        String strAnnoB = "null";
+        
+        // loop 2 time fist stran + and second strand -
+        for(int i=0;i<2;i++){
+            if(i==0){
+                strandF = 0;
+                strandB = 0;
+            }else if(i==1){
+                strandF = 1;
+                strandF = 1;
+            }
+            
+//            if(strandPattern.get(i).equals("++")){
+//                strandF = 0;
+//                strandB = 0;
+//            }else if(strandPattern.get(i).equals("--")){
+//                strandF = 1;
+//                strandB = 1;
+//            }else if(strandPattern.get(i).equals("+-")){
+//                strandF = 0;
+//                strandB = 1;
+//            }else if(strandPattern.get(i).equals("-+")){
+//                strandF = 1;
+//                strandB = 0;
+//            }
+        
+            long avgIniPosF = svGroup.getRPF();
+            long avgLastPosB = svGroup.getRPB();
+
+            long strandChrF = (strandF<<11)+(long)svGroup.getNumChrF();
+            long strandChrB = (strandB<<11)+(long)svGroup.getNumChrB();
+
+            long chrPosStartF = ((strandChrF<<28)+avgIniPosF)<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+            long chrPosStopF = ((strandChrF<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            long chrPosStartB = ((strandChrB<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+            long chrPosStopB = ((strandChrB<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+    //        long chrPosStartF = (((long)svGroup.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+    //        long chrPosStopF = (((long)svGroup.getNumChrF()<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+    //        long chrPosStartB = (((long)svGroup.getNumChrB()<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+    //        long chrPosStopB = (((long)svGroup.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+            if(annoGroupIndexF >= 0){
+                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                svGroup.setAnnoF(annoF);
+                if(firstFoundFlagF==true){
+                    strAnnoF = annoF.toString();
+                    firstFoundFlagF = false;
+                }else{
+                    strAnnoF = strAnnoF + " | " + annoF.toString();
+                }               
+            }
+            
+            if(annoGroupIndexB >= 0){
+                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                svGroup.setAnnoB(annoB);
+                if(firstFoundFlagB==true){
+                    strAnnoB = annoB.toString();
+                    firstFoundFlagB = false;
+                }else{
+                    strAnnoB = strAnnoB + " | " + annoB.toString();
+                }
+            }
+
+            /**********************/
+            
+        }
+        result.add(strAnnoF);   // index 0 is front annotation
+        result.add(strAnnoB);   // index 1 is back annotation
+        return result;
+    }
+    
     public void classifyRoughSVType(){
         /**
          * classify sv type of each sv candidate group
@@ -4267,11 +5000,12 @@ public class VariationResult {
     public void classifyPreciseSVType(int coverageThreshold){
         /**
          * classify sv type of each sv candidate group
-         * We hasve 4 rough type of SV (but this function will classify those SV type in more precisely)
+         * We hasve 5 precise type of SV (but this function will classify those SV type in more precisely)
          *  1. tandem
          *  2. indel
-         *  3. intraTrans
-         *  4. interTrans
+         *  3. intraIns
+         *  4. interIns
+         *  5. chimeric
          * 
          * Implement relation analysis algorithm for classify precise SV type
          * 
@@ -4322,6 +5056,7 @@ public class VariationResult {
          *  2. classify same chromosome SV type
          *  3. classify different chromosome SV type
          */
+        double eudistance = 0;
         for(int i=0;i<sameChrSVGroup.size();i++){
             SVGroup mainSV = sameChrSVGroup.get(i);
             for(int j=i;j<sameChrSVGroup.size();j++){
@@ -4331,12 +5066,15 @@ public class VariationResult {
 //                double backDiffSqrt = Math.pow((subSV.getBackCode() - mainSV.getBackCode()),2);
 //                double eudistance = Math.sqrt((frontDiffSqrt + backDiffSqrt));
                 /*******/
-                
-                //calcualte 2D reverse euclidean distance (switch subtraction order to x1-y2 and x2-y1)
-                double frontDiffSqrt = Math.pow((subSV.getEuCalBackCode() - mainSV.getEuCalFrontCode()),2);
-                double backDiffSqrt = Math.pow((subSV.getEuCalFrontCode() - mainSV.getEuCalBackCode()),2);
-                double eudistance = Math.sqrt((frontDiffSqrt + backDiffSqrt));
-                /*******/
+                if(mainSV.getEuCalFrontCode() == subSV.getEuCalFrontCode() && mainSV.getEuCalBackCode() == mainSV.getEuCalBackCode()){
+                    eudistance = 0;
+                }else{
+                    //calcualte 2D reverse euclidean distance (switch subtraction order to x1-y2 and x2-y1)
+                    double frontDiffSqrt = Math.pow((subSV.getEuCalBackCode() - mainSV.getEuCalFrontCode()),2);
+                    double backDiffSqrt = Math.pow((subSV.getEuCalFrontCode() - mainSV.getEuCalBackCode()),2);
+                    eudistance = Math.sqrt((frontDiffSqrt + backDiffSqrt));
+                    /*******/
+                }
                 
                 if(i==j){
                     //add eudistance one time if it is the same SVGroup
@@ -4362,7 +5100,7 @@ public class VariationResult {
                 //calcualte 2D reverse euclidean distance (switch subtraction order to x1-y2 and x2-y1)
                 double frontDiffSqrt = Math.pow((subSV.getEuCalBackCode() - mainSV.getEuCalFrontCode()),2);
                 double backDiffSqrt = Math.pow((subSV.getEuCalFrontCode() - mainSV.getEuCalBackCode()),2);
-                double eudistance = Math.sqrt((frontDiffSqrt + backDiffSqrt));
+                eudistance = Math.sqrt((frontDiffSqrt + backDiffSqrt));
                 /*******/
                 
                 if(i==j){
@@ -4390,7 +5128,14 @@ public class VariationResult {
             for(int k=0;k<this.sameChrSVGroup.size();k++){
                 int minIndex = dummyEuList.indexOf(Collections.min(dummyEuList));
                 double minEuDis = dummyEuList.get(minIndex);
-
+                
+                if(minEuDis == 0){
+                    // erase minindex if minEudis is 0 then repick
+                    dummyEuList.remove(minIndex);
+                    minIndex = dummyEuList.indexOf(Collections.min(dummyEuList));
+                    minEuDis = dummyEuList.get(minIndex);
+                }
+                
                 int realMinIndex = euList.indexOf(minEuDis);    // true min index for write report
                 SVGroup svGroupSub = this.sameChrSVGroup.get(realMinIndex);
 
@@ -4433,7 +5178,14 @@ public class VariationResult {
             for(int k=0;k<this.diffChrSVGroup.size();k++){
                 int minIndex = dummyEuList.indexOf(Collections.min(dummyEuList));
                 double minEuDis = dummyEuList.get(minIndex);
-
+                
+                if(minEuDis == 0){
+                    // erase minindex if minEudis is 0 then repick
+                    dummyEuList.remove(minIndex);
+                    minIndex = dummyEuList.indexOf(Collections.min(dummyEuList));
+                    minEuDis = dummyEuList.get(minIndex);
+                }
+                
                 int realMinIndex = euList.indexOf(minEuDis);    // true min index for write report
                 SVGroup svGroupSub = this.diffChrSVGroup.get(realMinIndex);
 
@@ -5169,6 +5921,868 @@ public class VariationResult {
         /***************************************************/
     }
     
+    public void writePreciseStructureVariantV2SortedCoverageGroupInfoReportExcel(String nameFile , String refFaiFile, int coverageThreshold) throws IOException{
+        /**
+        * Suitable for SVGroup object that contain VariaitonV2 object
+        * write result to file format for variant report in sorted order (high to low)
+        * 
+        * "Caution : this function must be called after classifyRoughVariantReport function"
+        */
+        String tandemReport = nameFile+"_rmDup_tandem.csv";
+        String deletionReport = nameFile+"_rmDup_deletion.csv";
+        String intraInsertionReport = nameFile+"_rmDup_intraInsertion.csv";
+        String interInsertionReport = nameFile+"_rmDup_interInsertion.csv";
+        String chimericReport = nameFile+"_rmDup_chimeric.csv";
+        String summaryReport = nameFile+"_SummaryStats.txt";
+        String groupCoverageReport = nameFile+".mrkDup.cov.PreciseSVType.ginfo.annotation.out";
+        
+        /**
+         * write summary report
+         */
+        FileWriter writer;
+        File f = new File(summaryReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(summaryReport,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(summaryReport);
+        }
+        writer.write("Total Breakpoint Found = " + (this.sameChrSVGroup.size()+this.diffChrSVGroup.size())+"\n");
+        writer.write("Total BreakPoint with same Chromosome = " + this.sameChrSVGroup.size() + "\n");
+        writer.write("Total BreakPoint with different Chromosome = " + this.diffChrSVGroup.size() + "\n");
+        writer.write("Possible Tandem = " + this.tandemList.size() + "\n");
+        writer.write("Possible Deletion = " + this.deletionList.size()+"\n");
+        writer.write("Possible Intra-Insertion = " + this.intraInsertionList.size()+"\n");
+        writer.write("Possible Inter-Insertion = " + this.interInsertionList.size()+"\n");
+        writer.write("Possible Chimeric = " + this.chimericList.size()+"\n");
+        writer.flush();
+        writer.close();
+
+        /**
+         * Write tandem report
+         */
+        f = new File(tandemReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(tandemReport,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(tandemReport);
+        }
+        
+        /**
+         * Tandem
+         */
+        writer.write("Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,Correctness(High is best),Annotation Front,Annotation Back"); // header
+        writer.write("\n");
+        int count = 1;
+        for(int i=0;i<this.tandemList.size();i++){
+            SVGroup svGroup = this.tandemList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(count+","+svGroup.excelTandemSummary());
+            writer.write("\n");
+            count++;
+        }
+        
+        writer.flush();
+        writer.close();
+        /******************************/
+        
+        /**
+         * Deletion
+         */
+        
+        f = new File(deletionReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(deletionReport,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(deletionReport);
+        }
+        writer.write("Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,Correctness(Low is best),Deletion Size,Annotation Front,Annotation Back"); // header
+        writer.write("\n");
+        count = 1;
+        for(int i=0;i<this.deletionList.size();i++){
+            SVGroup svGroup = this.deletionList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(count+","+svGroup.excelDeletionSummary());
+            writer.write("\n");
+            count++;
+        }
+        writer.flush();
+        writer.close();
+        /**********************************/
+        
+        /**
+         * Intra Insertion
+         */
+        f = new File(intraInsertionReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(intraInsertionReport,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(intraInsertionReport);
+        }
+        writer.write("Group,Chromosome Front(Front Junction),BreakPoint Front(Front Junction),Strand Front(Front Junction)"
+                + ",Chromosome Back(Front Junction),BreakPoint Back(Front Junction),Strand Back(Front Junction),Support Reads(Front Junction)"
+                + ",Chromosome Front(Back Junction),BreakPoint Front(Back Junction),Strand Front(Back Junction)"
+                + ",Chromosome Back(Back Junction),BreakPoint Back(Back Junction),Strand Back(Back Junction),Support Reads(Back Junction)"
+                + ",Insertion Size,Insertion Junction,Annotation Front(Front Junction),Annotation Back(Front Junction),Annotation Front(Back Junction),Annotation Back(Back Junction)"); // header
+        writer.write("\n");
+        count = 1;
+//        for(Map.Entry<ArrayList<SVGroup>,Boolean> map : this.intraTransPairList.entrySet()){
+        for(int i=0;i<this.intraInsertionList.size();i++){
+            String anno = "";
+            SVGroupPair svPair = this.intraInsertionList.get(i);
+            SVGroup frontJunction = svPair.getFrontSVGroup();
+            SVGroup backJunction = svPair.getBackSVGroup();
+            
+            writer.write(count+","+frontJunction.excelShortSummary());
+            writer.write(","+backJunction.excelShortSummary());
+            writer.write("\n");
+            count++;
+        }
+        
+        writer.flush();
+        writer.close();
+        /*****************************************/
+        
+        /**
+         * Inter Translocation
+         */
+        f = new File(interInsertionReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(interInsertionReport,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(interInsertionReport);
+        }
+        writer.write("Group,Chromosome Front(Front Junction),BreakPoint Front(Front Junction),Strand Front(Front Junction)"
+                + ",Chromosome Back(Front Junction),BreakPoint Back(Front Junction),Strand Back(Front Junction),Support Reads(Front Junction)"
+                + ",Chromosome Front(Back Junction),BreakPoint Front(Back Junction),Strand Front(Back Junction)"
+                + ",Chromosome Back(Back Junction),BreakPoint Back(Back Junction),Strand Back(Back Junction),Support Reads(Back Junction)"
+                + ",Insertion Size,Insertion Junction,Annotation Front(Front Junction),Annotation Back(Front Junction),Annotation Front(Back Junction),Annotation Back(Back Junction)"); // header
+        writer.write("\n");
+        count = 1;
+//        for(Map.Entry<ArrayList<SVGroup>,Boolean> map : this.interTransPairList.entrySet()){
+        for(int i=0;i<this.interInsertionList.size();i++){
+            String anno = "";
+            SVGroupPair svPair = this.interInsertionList.get(i);
+            SVGroup frontJunction = svPair.getFrontSVGroup();
+            SVGroup backJunction = svPair.getBackSVGroup();
+
+            writer.write(count+","+frontJunction.excelShortSummary());
+            writer.write(","+backJunction.excelShortSummary());
+            writer.write("\n");
+            count++;
+        }
+        writer.flush();
+        writer.close();
+        /**********************************************/
+        
+        /**
+         * Chimeric
+         */
+        f = new File(chimericReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(chimericReport,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(chimericReport);
+        }
+        writer.write("Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,Annotation Front,Annotation Back"); // header
+        writer.write("\n");
+        count = 1;
+        Collections.sort(this.chimericList,SVGroup.CoverageComparator);
+        for(int i=0;i<this.chimericList.size();i++){
+            SVGroup svGroup = this.chimericList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(count+","+svGroup.excelShortSummary());
+            writer.write("\n");
+            count++;
+        }
+        writer.flush();
+        writer.close();
+        /***********************************************/
+        
+        
+        /***************************************************/
+    }
+    
+    public void writePreciseStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationExcel(String readFile , String gffFile, String refFaiFile, int coverageThreshold , int merSize) throws IOException{
+        /**
+        * Suitable for SVGroup object that contain VariaitonV2 object
+        * write result to file format for variant report in sorted order (high to low)
+        * 
+        * "Caution : this function must be called after classifyRoughVariantReport function"
+        */
+        
+        Path path = Paths.get(readFile);
+        String fileName = path.getFileName().toString();
+        String[] dummy2 = fileName.split("_unmap");         // For more generic this should be split by . (and whole protocal should use . as a filed peaparation like A.unmap.emdup.bam So, we can get read name just split by .)
+        String sampleName = dummy2[0];
+        
+        String tandemReport = path.getParent().toString()+File.separator+"Tandem"+File.separator+sampleName+"_tandem.csv";
+        File file = new File(tandemReport);
+        if(!file.getParentFile().exists()){
+            try{
+                file.getParentFile().mkdirs();
+            } 
+            catch(SecurityException se){
+                System.out.println("Can not create directory : " + file.getParent());
+            }
+        }
+        
+        String deletionReport = path.getParent().toString()+File.separator+"Deletion"+File.separator+sampleName+"_deletion.csv";
+        file = new File(deletionReport);
+        if(!file.getParentFile().exists()){
+            try{
+                file.getParentFile().mkdirs();
+            } 
+            catch(SecurityException se){
+                System.out.println("Can not create directory : " + file.getParent());
+            }
+        }
+        
+        String intraInsertionReport = path.getParent().toString()+File.separator+"IntraInsertion"+File.separator+sampleName+"_intraInsertion.csv";
+        file = new File(intraInsertionReport);
+        if(!file.getParentFile().exists()){
+            try{
+                file.getParentFile().mkdirs();
+            } 
+            catch(SecurityException se){
+                System.out.println("Can not create directory : " + file.getParent());
+            }
+        }
+        
+        String interInsertionReport = path.getParent().toString()+File.separator+"InterInsertion"+File.separator+sampleName+"_interInsertion.csv";
+        file = new File(interInsertionReport);
+        if(!file.getParentFile().exists()){
+            try{
+                file.getParentFile().mkdirs();
+            } 
+            catch(SecurityException se){
+                System.out.println("Can not create directory : " + file.getParent());
+            }
+        }
+        
+        String chimericReport = path.getParent().toString()+File.separator+"Chimeric"+File.separator+sampleName+"_chimeric.csv";
+        file = new File(chimericReport);
+        if(!file.getParentFile().exists()){
+            try{
+                file.getParentFile().mkdirs();
+            } 
+            catch(SecurityException se){
+                System.out.println("Can not create directory : " + file.getParent());
+            }
+        }
+//        
+//        String tandemReport = nameFile+"_rmDup_tandem.csv";
+//        String deletionReport = nameFile+"_rmDup_deletion.csv";
+//        String intraInsertionReport = nameFile+"_rmDup_intraInsertion.csv";
+//        String interInsertionReport = nameFile+"_rmDup_interInsertion.csv";
+//        String chimericReport = nameFile+"_rmDup_chimeric.csv";
+        String summaryReport = path.getParent().toString()+File.separator+sampleName+"_SummaryStats.txt";
+//        String groupCoverageReport = nameFile+".mrkDup.cov.PreciseSVType.ginfo.annotation.out";
+        
+        
+        /**
+         * write summary report
+         */
+        FileWriter writer;
+        File f = new File(summaryReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(summaryReport,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(summaryReport);
+        }
+        writer.write("Total Breakpoint Found = " + (this.sameChrSVGroup.size()+this.diffChrSVGroup.size())+"\n");
+        writer.write("Total BreakPoint with same Chromosome = " + this.sameChrSVGroup.size() + "\n");
+        writer.write("Total BreakPoint with different Chromosome = " + this.diffChrSVGroup.size() + "\n");
+        writer.write("Possible Tandem = " + this.tandemList.size() + "\n");
+        writer.write("Possible Deletion = " + this.deletionList.size()+"\n");
+        writer.write("Possible Intra-Insertion = " + this.intraInsertionList.size()+"\n");
+        writer.write("Possible Inter-Insertion = " + this.interInsertionList.size()+"\n");
+        writer.write("Possible Chimeric = " + this.chimericList.size()+"\n");
+        writer.flush();
+        writer.close();
+        
+        
+        /**
+         * Read annotation file (GFF)
+         */
+        ReferenceAnnotation refAnno = SequenceUtil.readAnnotationFileV4(gffFile,refFaiFile, "gene" , merSize);
+        Map<Integer,Annotation> refAnnoIndex = refAnno.getAnnotationIndex();
+        
+        System.out.println("refAnno is empty? = "+refAnnoIndex.size());
+        /****************************/
+
+        /**
+         * Write tandem report
+         */
+        f = new File(tandemReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(tandemReport,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(tandemReport);
+        }
+        
+        /**
+         * Tandem
+         */
+        writer.write("Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,Correctness(High is best),numStrandPattern,+|+,-|-,+|-,-|+,Annotation Front,Annotation Back"); // header
+        writer.write("\n");
+        int count = 1;
+        for(int i=0;i<this.tandemList.size();i++){
+            SVGroup svGroup = this.tandemList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            
+//            /**
+//             * annotation part
+//             * Find annotation for this svGroup
+//             */
+//            
+//            if(!svGroup.isIdentityFlag()){
+//                svGroup.defineIdentity();
+//            }
+//            
+//            long avgIniPosF = svGroup.getRPF();
+//            long avgLastPosB = svGroup.getRPB();
+//            
+//            long strandChrF = ((long)svGroup.getStrandF()<<11)+(long)svGroup.getNumChrF();
+//            long strandChrB = ((long)svGroup.getStrandB()<<11)+(long)svGroup.getNumChrB();
+//            
+//            long chrPosStartF = ((strandChrF<<28)+avgIniPosF)<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+//            long chrPosStopF = ((strandChrF<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//            long chrPosStartB = ((strandChrB<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+//            long chrPosStopB = ((strandChrB<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//            
+////            long chrPosStartF = (((long)svGroup.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+////            long chrPosStopF = (((long)svGroup.getNumChrF()<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+////            long chrPosStartB = (((long)svGroup.getNumChrB()<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+////            long chrPosStopB = (((long)svGroup.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//
+//            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+//            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+//
+//            String strAnnoF = "null";
+//            String strAnnoB = "null";
+//            if(annoGroupIndexF >= 0){
+//                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+//                svGroup.setAnnoF(annoF);
+//                strAnnoF = annoF.toString();
+//            }
+//            if(annoGroupIndexB >= 0){
+//                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+//                svGroup.setAnnoB(annoB);
+//                strAnnoB = annoB.toString();
+//            }
+            
+            /**
+            * Annotation part
+            */
+            ArrayList<String> annotation = getAnnotationOfSVGroupV3(svGroup, refAnno, refAnnoIndex, "gene",merSize);
+            String strAnnoF = annotation.get(0);
+            String strAnnoB = annotation.get(1);
+            /******************/
+                
+            /**********************/
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(count+","+svGroup.excelTandemSummary());
+            writer.write(","+strAnnoF+","+strAnnoB);
+            writer.write("\n");
+            count++;
+        }
+        
+        writer.flush();
+        writer.close();
+        /******************************/
+        
+        /**
+         * Deletion
+         */
+        
+        f = new File(deletionReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(deletionReport,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(deletionReport);
+        }
+        writer.write("Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,Correctness(Low is best),Deletion Size,numStrandPattern,+|+,-|-,+|-,-|+,Annotation Front,Annotation Back"); // header
+        writer.write("\n");
+        count = 1;
+        for(int i=0;i<this.deletionList.size();i++){
+            SVGroup svGroup = this.deletionList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            
+//            /**
+//             * annotation part
+//             * Find annotation for this svGroup
+//             */
+//            
+//            if(!svGroup.isIdentityFlag()){
+//                svGroup.defineIdentity();
+//            }
+//            
+//            long avgIniPosF = svGroup.getRPF();
+//            long avgLastPosB = svGroup.getRPB();
+//            
+//            long strandChrF = ((long)svGroup.getStrandF()<<11)+(long)svGroup.getNumChrF();
+//            long strandChrB = ((long)svGroup.getStrandB()<<11)+(long)svGroup.getNumChrB();
+//            
+//            long chrPosStartF = ((strandChrF<<28)+avgIniPosF)<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+//            long chrPosStopF = ((strandChrF<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//            long chrPosStartB = ((strandChrB<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+//            long chrPosStopB = ((strandChrB<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//            
+////            long chrPosStartF = (((long)svGroup.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+////            long chrPosStopF = (((long)svGroup.getNumChrF()<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+////            long chrPosStartB = (((long)svGroup.getNumChrB()<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+////            long chrPosStopB = (((long)svGroup.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//
+//            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+//            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+//
+//            String strAnnoF = "null";
+//            String strAnnoB = "null";
+//            if(annoGroupIndexF >= 0){
+//                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+//                svGroup.setAnnoF(annoF);
+//                strAnnoF = annoF.toString();
+//            }
+//            if(annoGroupIndexB >= 0){
+//                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+//                svGroup.setAnnoB(annoB);
+//                strAnnoB = annoB.toString();
+//            }
+
+            /**
+            * Annotation part
+            */
+            ArrayList<String> annotation = getAnnotationOfSVGroupV3(svGroup, refAnno, refAnnoIndex, "gene",merSize);
+            String strAnnoF = annotation.get(0);
+            String strAnnoB = annotation.get(1);
+            /******************/
+            
+            /**********************/
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(count+","+svGroup.excelDeletionSummary());
+            writer.write("," + strAnnoF + "," + strAnnoB);
+            writer.write("\n");
+            count++;
+        }
+        writer.flush();
+        writer.close();
+        /**********************************/
+        
+        /**
+         * Intra Insertion
+         */
+        f = new File(intraInsertionReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(intraInsertionReport,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(intraInsertionReport);
+        }
+        writer.write("Group,Chromosome Front(Front Junction),BreakPoint Front(Front Junction),Strand Front(Front Junction)"
+                + ",Chromosome Back(Front Junction),BreakPoint Back(Front Junction),Strand Back(Front Junction),Support Reads(Front Junction),numStrandPattern,+|+,-|-,+|-,-|+"
+                + ",Chromosome Front(Back Junction),BreakPoint Front(Back Junction),Strand Front(Back Junction)"
+                + ",Chromosome Back(Back Junction),BreakPoint Back(Back Junction),Strand Back(Back Junction),Support Reads(Back Junction),numStrandPattern,+|+,-|-,+|-,-|+"
+                + ",Insert Portion Size,Insertion Junction,Annotation Front(Front Junction),Annotation Back(Front Junction),Annotation Front(Back Junction),Annotation Back(Back Junction)"); // header
+        writer.write("\n");
+        count = 1;
+//        for(Map.Entry<ArrayList<SVGroup>,Boolean> map : this.intraTransPairList.entrySet()){
+        for(int i=0;i<this.intraInsertionList.size();i++){
+            String anno = "";
+            SVGroupPair svPair = this.intraInsertionList.get(i);
+            SVGroup frontJunction = svPair.getFrontSVGroup();
+            SVGroup backJunction = svPair.getBackSVGroup();
+        
+//            ArrayList<SVGroup> intraTransPair = map.getKey();
+//            SVGroup frontJunction = intraTransPair.get(0);
+//            SVGroup backJunction = intraTransPair.get(1);
+            
+//             /**
+//             * annotation part Front Junction
+//             * Find annotation for this svGroup
+//             */
+//            
+//            if(!frontJunction.isIdentityFlag()){
+//                frontJunction.defineIdentity();
+//            }
+//            
+//            long avgIniPosF = frontJunction.getRPF();
+//            long avgLastPosB = frontJunction.getRPB();
+//
+//            long strandChrF = ((long)frontJunction.getStrandF()<<11)+(long)frontJunction.getNumChrF();
+//            long strandChrB = ((long)frontJunction.getStrandB()<<11)+(long)frontJunction.getNumChrB();
+//            
+//            long chrPosStartF = ((strandChrF<<28)+avgIniPosF)<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+//            long chrPosStopF = ((strandChrF<<28)+frontJunction.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//            long chrPosStartB = ((strandChrB<<28)+frontJunction.getRPB())<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+//            long chrPosStopB = ((strandChrB<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//            
+////            long chrPosStartF = (((long)frontJunction.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+////            long chrPosStopF = (((long)frontJunction.getNumChrF()<<28)+frontJunction.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+////            long chrPosStartB = (((long)frontJunction.getNumChrB()<<28)+frontJunction.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+////            long chrPosStopB = (((long)frontJunction.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//
+//            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+//            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+//
+//            String strAnnoF = "null";
+//            String strAnnoB = "null";
+//            if(annoGroupIndexF >= 0){
+//                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+//                frontJunction.setAnnoF(annoF);
+//                strAnnoF = annoF.toString();
+//            }
+//            if(annoGroupIndexB >= 0){
+//                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+//                frontJunction.setAnnoB(annoB);
+//                strAnnoB = annoB.toString();
+//            }
+//            /**********************/
+            /**
+            * Annotation part
+            */
+            ArrayList<String> annotationF = getAnnotationOfSVGroupV3(frontJunction, refAnno, refAnnoIndex, "gene", merSize);
+            String strAnnoF = annotationF.get(0);
+            String strAnnoB = annotationF.get(1);
+            /******************/
+            
+
+            writer.write(count+","+frontJunction.excelShortSummary());
+            anno = anno+strAnnoF+","+strAnnoB;
+//            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
+//            writer.write("\n");
+            
+//            /**
+//             * annotation part back Junction
+//             * Find annotation for this svGroup
+//             */
+            
+//            if(!backJunction.isIdentityFlag()){
+//                backJunction.defineIdentity();
+//            }
+//            
+//            avgIniPosF = backJunction.getRPF();
+//            avgLastPosB = backJunction.getRPB();
+//            
+//            strandChrF = ((long)backJunction.getStrandF()<<11)+(long)backJunction.getNumChrF();
+//            strandChrB = ((long)backJunction.getStrandB()<<11)+(long)backJunction.getNumChrB();
+//            
+//            chrPosStartF = ((strandChrF<<28)+avgIniPosF)<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+//            chrPosStopF = ((strandChrF<<28)+backJunction.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//            chrPosStartB = ((strandChrB<<28)+backJunction.getRPB())<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+//            chrPosStopB = ((strandChrB<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//            
+////            chrPosStartF = (((long)backJunction.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+////            chrPosStopF = (((long)backJunction.getNumChrF()<<28)+backJunction.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+////            chrPosStartB = (((long)backJunction.getNumChrB()<<28)+backJunction.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+////            chrPosStopB = (((long)backJunction.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//
+//            annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+//            annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+//
+//            strAnnoF = "null";
+//            strAnnoB = "null";
+//            if(annoGroupIndexF >= 0){
+//                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+//                backJunction.setAnnoF(annoF);
+//                strAnnoF = annoF.toString();
+//            }
+//            if(annoGroupIndexB >= 0){
+//                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+//                backJunction.setAnnoB(annoB);
+//                strAnnoB = annoB.toString();
+//            }
+//            /**********************/
+            /**
+            * Annotation part
+            */
+            ArrayList<String> annotationB = getAnnotationOfSVGroupV3(backJunction, refAnno, refAnnoIndex, "gene", merSize);
+            strAnnoF = annotationB.get(0);
+            strAnnoB = annotationB.get(1);
+            /******************/
+            
+            writer.write(","+backJunction.excelShortSummary());
+            anno = anno + "," + strAnnoF+","+strAnnoB;
+            writer.write("," + svPair.getInsertionSize()+","+svPair.getInsertionJunction()+","+ anno);
+            writer.write("\n");
+            count++;
+        }
+        
+        writer.flush();
+        writer.close();
+        /*****************************************/
+        
+        /**
+         * Inter Translocation
+         */
+        f = new File(interInsertionReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(interInsertionReport,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(interInsertionReport);
+        }
+        writer.write("Group,Chromosome Front(Front Junction),BreakPoint Front(Front Junction),Strand Front(Front Junction)"
+                + ",Chromosome Back(Front Junction),BreakPoint Back(Front Junction),Strand Back(Front Junction),Support Reads(Front Junction),numStrandPattern,+|+,-|-,+|-,-|+"
+                + ",Chromosome Front(Back Junction),BreakPoint Front(Back Junction),Strand Front(Back Junction)"
+                + ",Chromosome Back(Back Junction),BreakPoint Back(Back Junction),Strand Back(Back Junction),Support Reads(Back Junction),numStrandPattern,+|+,-|-,+|-,-|+"
+                + ",Insert Portion Size,Insertion Junction,Annotation Front(Front Junction),Annotation Back(Front Junction),Annotation Front(Back Junction),Annotation Back(Back Junction)"); // header
+        writer.write("\n");
+        count = 1;
+//        for(Map.Entry<ArrayList<SVGroup>,Boolean> map : this.interTransPairList.entrySet()){
+        for(int i=0;i<this.interInsertionList.size();i++){
+            String anno = "";
+            SVGroupPair svPair = this.interInsertionList.get(i);
+            SVGroup frontJunction = svPair.getFrontSVGroup();
+            SVGroup backJunction = svPair.getBackSVGroup();
+            
+//            ArrayList<SVGroup> intraTransPair = map.getKey();
+//            SVGroup frontJunction = intraTransPair.get(0);
+//            SVGroup backJunction = intraTransPair.get(1);
+            
+//             /**
+//             * annotation part Front Junction
+//             * Find annotation for this svGroup
+//             */
+//            
+//            if(!frontJunction.isIdentityFlag()){
+//                frontJunction.defineIdentity();
+//            }
+//            
+//            long avgIniPosF = frontJunction.getRPF();
+//            long avgLastPosB = frontJunction.getRPB();
+//
+//            long strandChrF = ((long)frontJunction.getStrandF()<<11)+(long)frontJunction.getNumChrF();
+//            long strandChrB = ((long)frontJunction.getStrandB()<<11)+(long)frontJunction.getNumChrB();
+//            
+//            long chrPosStartF = ((strandChrF<<28)+avgIniPosF)<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+//            long chrPosStopF = ((strandChrF<<28)+frontJunction.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//            long chrPosStartB = ((strandChrB<<28)+frontJunction.getRPB())<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+//            long chrPosStopB = ((strandChrB<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//            
+////            long chrPosStartF = (((long)frontJunction.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+////            long chrPosStopF = (((long)frontJunction.getNumChrF()<<28)+frontJunction.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+////            long chrPosStartB = (((long)frontJunction.getNumChrB()<<28)+frontJunction.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+////            long chrPosStopB = (((long)frontJunction.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//
+//            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+//            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+//
+//            String strAnnoF = "null";
+//            String strAnnoB = "null";
+//            if(annoGroupIndexF >= 0){
+//                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+//                frontJunction.setAnnoF(annoF);
+//                strAnnoF = annoF.toString();
+//            }
+//            if(annoGroupIndexB >= 0){
+//                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+//                frontJunction.setAnnoB(annoB);
+//                strAnnoB = annoB.toString();
+//            }
+//            /**********************/
+            /**
+            * Annotation part
+            */
+            ArrayList<String> annotationF = getAnnotationOfSVGroupV3(frontJunction, refAnno, refAnnoIndex, "gene", merSize);
+            String strAnnoF = annotationF.get(0);
+            String strAnnoB = annotationF.get(1);
+            /******************/
+            
+            writer.write(count+","+frontJunction.excelShortSummary());
+            anno = anno + strAnnoF+","+strAnnoB;
+//            writer.write("\t" + anno);
+//            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
+
+            
+//            /**
+//             * annotation part back Junction
+//             * Find annotation for this svGroup
+//             */
+//            
+//            if(!backJunction.isIdentityFlag()){
+//                backJunction.defineIdentity();
+//            }
+//            
+//            avgIniPosF = backJunction.getRPF();
+//            avgLastPosB = backJunction.getRPB();
+//            
+//            strandChrF = ((long)backJunction.getStrandF()<<11)+(long)backJunction.getNumChrF();
+//            strandChrB = ((long)backJunction.getStrandB()<<11)+(long)backJunction.getNumChrB();
+//            
+//            chrPosStartF = ((strandChrF<<28)+avgIniPosF)<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+//            chrPosStopF = ((strandChrF<<28)+backJunction.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//            chrPosStartB = ((strandChrB<<28)+backJunction.getRPB())<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+//            chrPosStopB = ((strandChrB<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//            
+////            chrPosStartF = (((long)backJunction.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+////            chrPosStopF = (((long)backJunction.getNumChrF()<<28)+backJunction.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+////            chrPosStartB = (((long)backJunction.getNumChrB()<<28)+backJunction.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+////            chrPosStopB = (((long)backJunction.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//
+//            annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+//            annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+//
+//            strAnnoF = "null";
+//            strAnnoB = "null";
+//            if(annoGroupIndexF >= 0){
+//                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+//                backJunction.setAnnoF(annoF);
+//                strAnnoF = annoF.toString();
+//            }
+//            if(annoGroupIndexB >= 0){
+//                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+//                backJunction.setAnnoB(annoB);
+//                strAnnoB = annoB.toString();
+//            }
+//            /**********************/
+            /**
+            * Annotation part
+            */
+            ArrayList<String> annotationB = getAnnotationOfSVGroupV3(backJunction, refAnno, refAnnoIndex, "gene", merSize);
+            strAnnoF = annotationB.get(0);
+            strAnnoB = annotationB.get(1);
+            /******************/
+
+            writer.write(","+backJunction.excelShortSummary());
+            anno = anno + "," + strAnnoF+","+strAnnoB;
+            writer.write(","+svPair.getInsertionSize()+","+svPair.getInsertionJunction()+ "," + anno);
+            writer.write("\n");
+            count++;
+        }
+        writer.flush();
+        writer.close();
+        /**********************************************/
+        
+        /**
+         * Chimeric
+         */
+        f = new File(chimericReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(chimericReport,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(chimericReport);
+        }
+        writer.write("Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,numStrandPattern,+|+,-|-,+|-,-|+,Annotation Front,Annotation Back"); // header
+        writer.write("\n");
+        count = 1;
+        Collections.sort(this.chimericList,SVGroup.CoverageComparator);
+        for(int i=0;i<this.chimericList.size();i++){
+            SVGroup svGroup = this.chimericList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            
+//            /**
+//             * annotation part
+//             * Find annotation for this svGroup
+//             */
+//            
+//            if(!svGroup.isIdentityFlag()){
+//                svGroup.defineIdentity();
+//            }
+//            
+//            long avgIniPosF = svGroup.getRPF();
+//            long avgLastPosB = svGroup.getRPB();
+//
+//            long strandChrF = ((long)svGroup.getStrandF()<<11)+(long)svGroup.getNumChrF();
+//            long strandChrB = ((long)svGroup.getStrandB()<<11)+(long)svGroup.getNumChrB();
+//            
+//            long chrPosStartF = ((strandChrF<<28)+avgIniPosF)<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+//            long chrPosStopF = ((strandChrF<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//            long chrPosStartB = ((strandChrB<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [strand 1bit][chr11bit][position28bit][empty23bit] 
+//            long chrPosStopB = ((strandChrB<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//            
+////            long chrPosStartF = (((long)svGroup.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+////            long chrPosStopF = (((long)svGroup.getNumChrF()<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+////            long chrPosStartB = (((long)svGroup.getNumChrB()<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+////            long chrPosStopB = (((long)svGroup.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+//
+//            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+//            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+//
+//            String strAnnoF = "null";
+//            String strAnnoB = "null";
+//            if(annoGroupIndexF >= 0){
+//                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+//                svGroup.setAnnoF(annoF);
+//                strAnnoF = annoF.toString();
+//            }
+//            if(annoGroupIndexB >= 0){
+//                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+//                svGroup.setAnnoB(annoB);
+//                strAnnoB = annoB.toString();
+//            }
+//
+//            /**********************/
+            
+            /**
+            * Annotation part
+            */
+            ArrayList<String> annotation = getAnnotationOfSVGroupV3(svGroup, refAnno, refAnnoIndex, "gene",merSize);
+            String strAnnoF = annotation.get(0);
+            String strAnnoB = annotation.get(1);
+            /******************/
+
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(count+","+svGroup.excelShortSummary());
+            writer.write("," + strAnnoF + "," + strAnnoB);
+            writer.write("\n");
+            count++;
+        }
+        writer.flush();
+        writer.close();
+        /***********************************************/
+        
+        
+        /***************************************************/
+    }
+    
     public void writePreciseStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationToFile(String nameFile , String gffFile, String refFaiFile, int coverageThreshold , int merSize) throws IOException{
         /**
         * Suitable for SVGroup object that contain VariaitonV2 object
@@ -5314,14 +6928,19 @@ public class VariationResult {
         /**********************************/
         
         /**
-         * Intra Translocation
+         * Intra Insertion
          */
-        writer.write("Intra-translocation\n");
+        writer.write("Intra-Insertion\n");
         count = 1;
-        for(Map.Entry<ArrayList<SVGroup>,Boolean> map : this.intraTransPairList.entrySet()){
-            ArrayList<SVGroup> intraTransPair = map.getKey();
-            SVGroup frontJunction = intraTransPair.get(0);
-            SVGroup backJunction = intraTransPair.get(1);
+//        for(Map.Entry<ArrayList<SVGroup>,Boolean> map : this.intraTransPairList.entrySet()){
+        for(int i=0;i<this.intraInsertionList.size();i++){
+            SVGroupPair svPair = this.intraInsertionList.get(i);
+            SVGroup frontJunction = svPair.getFrontSVGroup();
+            SVGroup backJunction = svPair.getBackSVGroup();
+        
+//            ArrayList<SVGroup> intraTransPair = map.getKey();
+//            SVGroup frontJunction = intraTransPair.get(0);
+//            SVGroup backJunction = intraTransPair.get(1);
             
              /**
              * annotation part Front Junction
@@ -5404,12 +7023,17 @@ public class VariationResult {
         /**
          * Inter Translocation
          */
-        writer.write("Inter-translocation\n");
+        writer.write("Inter-Insertion\n");
         count = 1;
-        for(Map.Entry<ArrayList<SVGroup>,Boolean> map : this.interTransPairList.entrySet()){
-            ArrayList<SVGroup> intraTransPair = map.getKey();
-            SVGroup frontJunction = intraTransPair.get(0);
-            SVGroup backJunction = intraTransPair.get(1);
+//        for(Map.Entry<ArrayList<SVGroup>,Boolean> map : this.interTransPairList.entrySet()){
+        for(int i=0;i<this.interInsertionList.size();i++){
+            SVGroupPair svPair = this.interInsertionList.get(i);
+            SVGroup frontJunction = svPair.getFrontSVGroup();
+            SVGroup backJunction = svPair.getBackSVGroup();
+            
+//            ArrayList<SVGroup> intraTransPair = map.getKey();
+//            SVGroup frontJunction = intraTransPair.get(0);
+//            SVGroup backJunction = intraTransPair.get(1);
             
              /**
              * annotation part Front Junction
@@ -5486,13 +7110,70 @@ public class VariationResult {
             writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
             writer.write("\n");
             count++;
-        }
+        }             
         /**********************************************/
+        
+        /**
+         * Inter Translocation
+         */
+        writer.write("Chimeric\n");
+        count = 1;
+        Collections.sort(this.chimericList,SVGroup.CoverageComparator);
+        for(int i=0;i<this.chimericList.size();i++){
+            SVGroup svGroup = this.chimericList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            
+            /**
+             * annotation part
+             * Find annotation for this svGroup
+             */
+            
+            if(!svGroup.isIdentityFlag()){
+                svGroup.defineIdentity();
+            }
+            
+            long avgIniPosF = svGroup.getRPF();
+            long avgLastPosB = svGroup.getRPB();
+
+            long chrPosStartF = (((long)svGroup.getNumChrF()<<28)+avgIniPosF)<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopF = (((long)svGroup.getNumChrF()<<28)+svGroup.getRPF())<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+            long chrPosStartB = (((long)svGroup.getNumChrB()<<28)+svGroup.getRPB())<<23;     // create chrPosStart code [chr5bit][position28bit][empty23bit] 
+            long chrPosStopB = (((long)svGroup.getNumChrB()<<28)+avgLastPosB)<<23;     // (the reason that we have to have empty bit 23 bit at the back is It help us to do binary search more easily with reference annotation. the reference annotation have been operate by AND with mask that will make the 23bit on the back chenge to 0 value)
+
+            int annoGroupIndexF = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartF, chrPosStopF);
+            int annoGroupIndexB = refAnno.mapToAnotationBinaryTreeWithPosStart(chrPosStartB, chrPosStopB);
+
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            if(annoGroupIndexF >= 0){
+                Annotation annoF = refAnnoIndex.get(annoGroupIndexF);
+                svGroup.setAnnoF(annoF);
+                strAnnoF = annoF.toString();
+            }
+            if(annoGroupIndexB >= 0){
+                Annotation annoB = refAnnoIndex.get(annoGroupIndexB);
+                svGroup.setAnnoB(annoB);
+                strAnnoB = annoB.toString();
+            }
+
+            /**********************/
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(">"+count+"\t"+svGroup.shortSummary());
+            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
+            writer.write("\n");
+            count++;
+        }
+        /***********************************************/
         
         writer.flush();
         writer.close();
         /***************************************************/
     }
+    
     
     public void writeStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationToFile(String nameFile , String gffFile, String refFaiFile, int coverageThreshold , int merSize) throws IOException{
         /**
@@ -5929,31 +7610,85 @@ public class VariationResult {
         if(main.getStrandF()==0 && main.getStrandB()==0){
             // main has ++ strand
             if(sub.getStrandF()==0 && sub.getStrandB()==0){
+//                if(main.getRPF() == 140773609 && main.getRPB() == 140777194){
+//                    System.out.println();
+//                }else if(main.getRPF() == 140772667 && main.getRPB() == 140773504){
+//                    System.out.println();
+//                }
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
                     if(main.getRPF()<sub.getRPB() && main.getRPB()<sub.getRPF()){
-                        ArrayList<SVGroup> dummyList = new ArrayList();
-                        dummyList.add(main);
-                        dummyList.add(sub);
-                        this.intraTransPairList.put(dummyList, true);
-                        main.setIntraTransFlag(true);
-                        sub.setIntraTransFlag(true);
+//                        ArrayList<SVGroup> dummyList = new ArrayList();
+//                        dummyList.add(main);
+//                        dummyList.add(sub);
+//                        this.intraTransPairList.put(dummyList, true);
+//                        main.setIntraTransFlag(true);
+//                        sub.setIntraTransFlag(true);
+                        if(!(main.isIntraInsertionFlag() && sub.isIntraInsertionFlag())){
+                            // add to list (only svgroup that did not have add before)
+                            SVGroupPair svPair = new SVGroupPair();                            
+                            main.setIntraInsertionFlag(true);
+                            sub.setIntraInsertionFlag(true);
+                            svPair.setFrontSVGroup(main);
+                            svPair.setBackSVGroup(sub);
+                            this.intraInsertionList.add(svPair);
+                        }
+                        // classify main as tandem or delete in the same time when class as intrainsertion 
+                        if(main.getRPF()>main.getRPB()){
+                            this.tandemList.add(main);
+                            main.setTandemFlag(true);
+//                            main.setSvType("tandem");
+//                            main.setSvTypeCode((byte)0);
+//                            return "tandem";
+                        }else{
+                            this.deletionList.add(main);
+                            main.setDeleteFlag(true);
+//                            main.setSvType("deletion");
+//                            main.setSvTypeCode((byte)1);
+//                            return "deletion";
+                        }
+                        
 //                        main.setSvType("intraTrans");
 //                        main.setSvTypeCode((byte)2);
 //                        sub.setSvType("intraTrans");
 //                        sub.setSvTypeCode((byte)2);
-                        return "intraTrans";
+                        return "intraIns";
                     }else if(main.getRPF()>sub.getRPB() && main.getRPB()>sub.getRPF()){
-                        ArrayList<SVGroup> dummyList = new ArrayList();
-                        dummyList.add(sub);
-                        dummyList.add(main);
-                        this.intraTransPairList.put(dummyList, true);
-                        main.setIntraTransFlag(true);
-                        sub.setIntraTransFlag(true);
+//                        ArrayList<SVGroup> dummyList = new ArrayList();
+//                        dummyList.add(sub);
+//                        dummyList.add(main);
+//                        this.intraTransPairList.put(dummyList, true);
+//                        main.setIntraTransFlag(true);
+//                        sub.setIntraTransFlag(true);
+                        if(!(main.isIntraInsertionFlag() && sub.isIntraInsertionFlag())){
+                            // add to list (only svgroup that did not have add before)
+                            SVGroupPair svPair = new SVGroupPair();
+                            main.setIntraInsertionFlag(true);
+                            sub.setIntraInsertionFlag(true);
+                            svPair.setFrontSVGroup(sub);
+                            svPair.setBackSVGroup(main);
+                            this.intraInsertionList.add(svPair);
+                        }
+                        
+                        // classify main as tandem or delete in the same time when class as intrainsertion 
+                        if(main.getRPF()>main.getRPB()){
+                            this.tandemList.add(main);
+                            main.setTandemFlag(true);
+//                            main.setSvType("tandem");
+//                            main.setSvTypeCode((byte)0);
+//                            return "tandem";
+                        }else{
+                            this.deletionList.add(main);
+                            main.setDeleteFlag(true);
+//                            main.setSvType("deletion");
+//                            main.setSvTypeCode((byte)1);
+//                            return "deletion";
+                        }
+                        
 //                        main.setSvType("intraTrans");
 //                        main.setSvTypeCode((byte)2);
 //                        sub.setSvType("intraTrans");
 //                        sub.setSvTypeCode((byte)2);
-                        return "intraTrans";
+                        return "intraIns";
                     }else{
                         if(main.getRPF()>main.getRPB()){
                             this.tandemList.add(main);
@@ -5968,6 +7703,20 @@ public class VariationResult {
 //                            main.setSvTypeCode((byte)1);
                             return "deletion";
                         }
+                    }
+                }else{
+                    if(main.getRPF()>main.getRPB()){
+                        this.tandemList.add(main);
+                        main.setTandemFlag(true);
+//                            main.setSvType("tandem");
+//                            main.setSvTypeCode((byte)0);
+                        return "tandem";
+                    }else{
+                        this.deletionList.add(main);
+                        main.setDeleteFlag(true);
+//                            main.setSvType("deletion");
+//                            main.setSvTypeCode((byte)1);
+                        return "deletion";
                     }
                 }
             }else{
@@ -5987,32 +7736,80 @@ public class VariationResult {
             }
         }else if(main.getStrandF()==1 && main.getStrandB()==1){
             // main has -- strand
-            if(sub.getStrandF()==0 && sub.getStrandB()==0){
+            if(sub.getStrandF()==1 && sub.getStrandB()==1){
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
                     if(main.getRPF()<sub.getRPB() && main.getRPB()<sub.getRPF()){
-                        ArrayList<SVGroup> dummyList = new ArrayList();
-                        dummyList.add(sub);
-                        dummyList.add(main);
-                        this.intraTransPairList.put(dummyList, true);
-                        main.setIntraTransFlag(true);
-                        sub.setIntraTransFlag(true);
+//                        ArrayList<SVGroup> dummyList = new ArrayList();
+//                        dummyList.add(sub);
+//                        dummyList.add(main);
+//                        this.intraTransPairList.put(dummyList, true);
+//                        main.setIntraTransFlag(true);
+//                        sub.setIntraTransFlag(true);
+                        if(!(main.isIntraInsertionFlag() && sub.isIntraInsertionFlag())){
+                            // add to list (only svgroup that did not have add before)
+                            SVGroupPair svPair = new SVGroupPair();
+                            main.setIntraInsertionFlag(true);
+                            sub.setIntraInsertionFlag(true);
+                            svPair.setFrontSVGroup(sub);
+                            svPair.setBackSVGroup(main);
+                            this.intraInsertionList.add(svPair);
+                        }
+                        
+                        // classify main as tandem or delete in the same time when class as intrainsertion 
+                        if(main.getRPF()<main.getRPB()){
+                            this.tandemList.add(main);
+                            main.setTandemFlag(true);
+//                            main.setSvType("tandem");
+//                            main.setSvTypeCode((byte)0);
+//                            return "tandem";
+                        }else{
+                            this.deletionList.add(main);
+                            main.setDeleteFlag(true);
+//                            main.setSvType("deletion");
+//                            main.setSvTypeCode((byte)1);
+//                            return "deletion";
+                        }
 //                        main.setSvType("intraTrans");
 //                        main.setSvTypeCode((byte)2);
 //                        sub.setSvType("intraTrans");
 //                        sub.setSvTypeCode((byte)2);
-                        return "intraTrans";
+                        return "intraIns";
                     }else if(main.getRPF()>sub.getRPB() && main.getRPB()>sub.getRPF()){
-                        ArrayList<SVGroup> dummyList = new ArrayList();
-                        dummyList.add(main);
-                        dummyList.add(sub);
-                        this.intraTransPairList.put(dummyList, true);
-                        main.setIntraTransFlag(true);
-                        sub.setIntraTransFlag(true);
+//                        ArrayList<SVGroup> dummyList = new ArrayList();
+//                        dummyList.add(main);
+//                        dummyList.add(sub);
+//                        this.intraTransPairList.put(dummyList, true);
+//                        main.setIntraTransFlag(true);
+//                        sub.setIntraTransFlag(true);
+                        if(!(main.isIntraInsertionFlag() && sub.isIntraInsertionFlag())){
+                            // add to list (only svgroup that did not have add before)
+                            SVGroupPair svPair = new SVGroupPair();
+                            main.setIntraInsertionFlag(true);
+                            sub.setIntraInsertionFlag(true);
+                            svPair.setFrontSVGroup(main);
+                            svPair.setBackSVGroup(sub);
+                            this.intraInsertionList.add(svPair);
+                        }
+                        
+                        // classify main as tandem or delete in the same time when class as intrainsertion 
+                        if(main.getRPF()<main.getRPB()){
+                            this.tandemList.add(main);
+                            main.setTandemFlag(true);
+//                            main.setSvType("tandem");
+//                            main.setSvTypeCode((byte)0);
+//                            return "tandem";
+                        }else{
+                            this.deletionList.add(main);
+                            main.setDeleteFlag(true);
+//                            main.setSvType("deletion");
+//                            main.setSvTypeCode((byte)1);
+//                            return "deletion";
+                        }
 //                        main.setSvType("intraTrans");
 //                        main.setSvTypeCode((byte)2);
 //                        sub.setSvType("intraTrans");
 //                        sub.setSvTypeCode((byte)2);
-                        return "intraTrans";
+                        return "intraIns";
                     }else{
                         if(main.getRPF()<main.getRPB()){
                             this.tandemList.add(main);
@@ -6027,6 +7824,20 @@ public class VariationResult {
 //                            main.setSvTypeCode((byte)1);
                             return "deletion";
                         }
+                    }
+                }else{
+                    if(main.getRPF()<main.getRPB()){
+                        this.tandemList.add(main);
+                        main.setTandemFlag(true);
+//                            main.setSvType("tandem");
+//                            main.setSvTypeCode((byte)0);
+                        return "tandem";
+                    }else{
+                        this.deletionList.add(main);
+                        main.setDeleteFlag(true);
+//                            main.setSvType("deletion");
+//                            main.setSvTypeCode((byte)1);
+                        return "deletion";
                     }
                 }
             }else{
@@ -6048,33 +7859,55 @@ public class VariationResult {
             if(sub.getStrandF()==1 && sub.getStrandB()==0){
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
                     if(main.getRPF()<sub.getRPB() && main.getRPB()>sub.getRPF()){
-                        ArrayList<SVGroup> dummyList = new ArrayList();
-                        dummyList.add(main);
-                        dummyList.add(sub);
-                        this.intraTransPairList.put(dummyList, true);
-                        main.setIntraTransFlag(true);
-                        sub.setIntraTransFlag(true);
+//                        ArrayList<SVGroup> dummyList = new ArrayList();
+//                        dummyList.add(main);
+//                        dummyList.add(sub);
+//                        this.intraTransPairList.put(dummyList, true);
+//                        main.setIntraTransFlag(true);
+//                        sub.setIntraTransFlag(true);
+                        if(!(main.isIntraInsertionFlag() && sub.isIntraInsertionFlag())){
+                            // add to list (only svgroup that did not have add before)
+                            SVGroupPair svPair = new SVGroupPair();
+                            main.setIntraInsertionFlag(true);
+                            sub.setIntraInsertionFlag(true);
+                            svPair.setFrontSVGroup(main);
+                            svPair.setBackSVGroup(sub);
+                            this.intraInsertionList.add(svPair);
+                        }
 //                        main.setSvType("intraTrans");
 //                        main.setSvTypeCode((byte)2);
 //                        sub.setSvType("intraTrans");
 //                        sub.setSvTypeCode((byte)2);
-                        return "intraTrans";
+                        return "intraIns";
                     }else if(main.getRPF()>sub.getRPB() && main.getRPB()<sub.getRPF()){
-                        ArrayList<SVGroup> dummyList = new ArrayList();
-                        dummyList.add(sub);
-                        dummyList.add(main);
-                        this.intraTransPairList.put(dummyList, true);
-                        main.setIntraTransFlag(true);
-                        sub.setIntraTransFlag(true);
+//                        ArrayList<SVGroup> dummyList = new ArrayList();
+//                        dummyList.add(sub);
+//                        dummyList.add(main);
+//                        this.intraTransPairList.put(dummyList, true);
+//                        main.setIntraTransFlag(true);
+//                        sub.setIntraTransFlag(true);
+                        if(!(main.isIntraInsertionFlag() && sub.isIntraInsertionFlag())){
+                            // add to list (only svgroup that did not have add before)
+                            SVGroupPair svPair = new SVGroupPair();
+                            main.setIntraInsertionFlag(true);
+                            sub.setIntraInsertionFlag(true);
+                            svPair.setFrontSVGroup(sub);
+                            svPair.setBackSVGroup(main);
+                            this.intraInsertionList.add(svPair);
+                        }
 //                        main.setSvType("intraTrans");
 //                        main.setSvTypeCode((byte)2);
 //                        sub.setSvType("intraTrans");
 //                        sub.setSvTypeCode((byte)2);
-                        return "intraTrans";
+                        return "intraIns";
                     }else{
                         // try with mext min
                         return null;
                     }
+                }else{
+                    this.chimericList.add(main);
+                    main.setChimericFlag(true);
+                    return "chimeric";
                 }
             }else{
                 this.chimericList.add(main);
@@ -6087,33 +7920,55 @@ public class VariationResult {
             if(sub.getStrandF()==0 && sub.getStrandB()==1){
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
                     if(main.getRPF()<sub.getRPB() && main.getRPB()>sub.getRPF()){
-                        ArrayList<SVGroup> dummyList = new ArrayList();
-                        dummyList.add(sub);
-                        dummyList.add(main);
-                        this.intraTransPairList.put(dummyList, true);
-                        main.setIntraTransFlag(true);
-                        sub.setIntraTransFlag(true);
+//                        ArrayList<SVGroup> dummyList = new ArrayList();
+//                        dummyList.add(sub);
+//                        dummyList.add(main);
+//                        this.intraTransPairList.put(dummyList, true);
+//                        main.setIntraTransFlag(true);
+//                        sub.setIntraTransFlag(true);
+                        if(!(main.isIntraInsertionFlag() && sub.isIntraInsertionFlag())){
+                            // add to list (only svgroup that did not have add before)
+                            SVGroupPair svPair = new SVGroupPair();
+                            main.setIntraInsertionFlag(true);
+                            sub.setIntraInsertionFlag(true);
+                            svPair.setFrontSVGroup(sub);
+                            svPair.setBackSVGroup(main);
+                            this.intraInsertionList.add(svPair);
+                        }
 //                        main.setSvType("intraTrans");
 //                        main.setSvTypeCode((byte)2);
 //                        sub.setSvType("intraTrans");
 //                        sub.setSvTypeCode((byte)2);
-                        return "intraTrans";
+                        return "intraIns";
                     }else if(main.getRPF()>sub.getRPB() && main.getRPB()<sub.getRPF()){
-                        ArrayList<SVGroup> dummyList = new ArrayList();
-                        dummyList.add(main);
-                        dummyList.add(sub);
-                        this.intraTransPairList.put(dummyList, true);
-                        main.setIntraTransFlag(true);
-                        sub.setIntraTransFlag(true);
+//                        ArrayList<SVGroup> dummyList = new ArrayList();
+//                        dummyList.add(main);
+//                        dummyList.add(sub);
+//                        this.intraTransPairList.put(dummyList, true);
+//                        main.setIntraTransFlag(true);
+//                        sub.setIntraTransFlag(true);
+                        if(!(main.isIntraInsertionFlag() && sub.isIntraInsertionFlag())){
+                            // add to list (only svgroup that did not have add before)
+                            SVGroupPair svPair = new SVGroupPair();
+                            main.setIntraInsertionFlag(true);
+                            sub.setIntraInsertionFlag(true);
+                            svPair.setFrontSVGroup(main);
+                            svPair.setBackSVGroup(sub);
+                            this.intraInsertionList.add(svPair);
+                        }
 //                        main.setSvType("intraTrans");
 //                        main.setSvTypeCode((byte)2);
 //                        sub.setSvType("intraTrans");
 //                        sub.setSvTypeCode((byte)2);
-                        return "intraTrans";
+                        return "intraIns";
                     }else{
                         // try with mext min
                         return null;
                     }
+                }else{
+                    this.chimericList.add(main);
+                    main.setChimericFlag(true);
+                    return "chimeric";
                 }
             }else{
                 this.chimericList.add(main);
@@ -6126,38 +7981,52 @@ public class VariationResult {
         return null;
     }
     
-    public String identifyDiffChrPreciseSVType(SVGroup main,SVGroup sub){
-        
+    public String identifyDiffChrPreciseSVType(SVGroup main,SVGroup sub){       
         if(main.getStrandF()==0 && main.getStrandB()==0){
             // main has ++ strand
             if(sub.getStrandF()==0 && sub.getStrandB()==0){
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
                     if(main.getRPF()<sub.getRPB() && main.getRPB()<sub.getRPF()){
-                        ArrayList<SVGroup> dummyList = new ArrayList();
-                        dummyList.add(main);
-                        dummyList.add(sub);
-                        this.interTransPairList.put(dummyList, true);
-                        main.setInterTransFlag(true);
-                        sub.setInterTransFlag(true);
+//                        ArrayList<SVGroup> dummyList = new ArrayList();
+//                        dummyList.add(main);
+//                        dummyList.add(sub);
+                        if(!(main.isInterInsertionFlag() && sub.isInterInsertionFlag())){
+                            // add to list (only svgroup that did not have add before)
+                            SVGroupPair svPair = new SVGroupPair();
+                            main.setInterInsertionFlag(true);
+                            sub.setInterInsertionFlag(true);
+                            svPair.setFrontSVGroup(main);
+                            svPair.setBackSVGroup(sub);
+                            this.interInsertionList.add(svPair);
+                        }
+                        
+//                        this.interTransPairList.put(dummyList, true);
 //                        main.setSvType("interTrans");
 //                        main.setSvTypeCode((byte)3);
 //                        sub.setSvType("interTrans");
 //                        sub.setSvTypeCode((byte)3);
-                        return "interTrans";
+                        return "interIns";
                     }else if(main.getRPF()>sub.getRPB() && main.getRPB()>sub.getRPF()){
-                        ArrayList<SVGroup> dummyList = new ArrayList();
-                        dummyList.add(sub);
-                        dummyList.add(main);
-                        this.interTransPairList.put(dummyList, true);
-                        main.setInterTransFlag(true);
-                        sub.setInterTransFlag(true);
+//                        ArrayList<SVGroup> dummyList = new ArrayList();
+//                        dummyList.add(sub);
+//                        dummyList.add(main);
+                        if(!(main.isInterInsertionFlag() && sub.isInterInsertionFlag())){
+                            // add to list (only svgroup that did not have add before)
+                            SVGroupPair svPair = new SVGroupPair();
+                            main.setInterInsertionFlag(true);
+                            sub.setInterInsertionFlag(true);
+                            svPair.setFrontSVGroup(sub);
+                            svPair.setBackSVGroup(main);
+                            this.interInsertionList.add(svPair);
+                        }
+//                        this.interTransPairList.put(dummyList, true);                        
 //                        main.setSvType("interTrans");
 //                        main.setSvTypeCode((byte)3);
 //                        sub.setSvType("interTrans");
 //                        sub.setSvTypeCode((byte)3);
-                        return "interTrans";
+                        return "interIns";
                     }else{
-                        // try with mext min
+                        // try with next min
                         return null;
                     }
                 }else{
@@ -6176,36 +8045,61 @@ public class VariationResult {
             }
         }else if(main.getStrandF()==1 && main.getStrandB()==1){
             // main has -- strand
-            if(sub.getStrandF()==0 && sub.getStrandB()==0){
+            if(sub.getStrandF()==1 && sub.getStrandB()==1){
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
                     if(main.getRPF()<sub.getRPB() && main.getRPB()<sub.getRPF()){
-                        ArrayList<SVGroup> dummyList = new ArrayList();
-                        dummyList.add(sub);
-                        dummyList.add(main);
-                        this.interTransPairList.put(dummyList, true);
-                        main.setInterTransFlag(true);
-                        sub.setInterTransFlag(true);
+//                        ArrayList<SVGroup> dummyList = new ArrayList();
+//                        dummyList.add(sub);
+//                        dummyList.add(main);
+//                        this.interTransPairList.put(dummyList, true);
+//                        main.setInterTransFlag(true);
+//                        sub.setInterTransFlag(true);
+                        if(!(main.isInterInsertionFlag() && sub.isInterInsertionFlag())){
+                            // add to list (only svgroup that did not have add before)
+                            SVGroupPair svPair = new SVGroupPair();
+                            main.setInterInsertionFlag(true);
+                            sub.setInterInsertionFlag(true);
+                            svPair.setFrontSVGroup(sub);
+                            svPair.setBackSVGroup(main);
+                            this.interInsertionList.add(svPair);
+                        }
+                        
 //                        main.setSvType("interTrans");
 //                        main.setSvTypeCode((byte)3);
 //                        sub.setSvType("interTrans");
 //                        sub.setSvTypeCode((byte)3);
-                        return "interTrans";
+                        return "interIns";
                     }else if(main.getRPF()>sub.getRPB() && main.getRPB()>sub.getRPF()){
-                        ArrayList<SVGroup> dummyList = new ArrayList();
-                        dummyList.add(main);
-                        dummyList.add(sub);
-                        this.interTransPairList.put(dummyList, true);
-                        main.setInterTransFlag(true);
-                        sub.setInterTransFlag(true);
+//                        ArrayList<SVGroup> dummyList = new ArrayList();
+//                        dummyList.add(main);
+//                        dummyList.add(sub);
+//                        this.interTransPairList.put(dummyList, true);
+//                        main.setInterTransFlag(true);
+//                        sub.setInterTransFlag(true);
+                        if(!(main.isInterInsertionFlag() && sub.isInterInsertionFlag())){
+                            // add to list (only svgroup that did not have add before)    
+                            SVGroupPair svPair = new SVGroupPair();
+                            main.setInterInsertionFlag(true);
+                            sub.setInterInsertionFlag(true);
+                            svPair.setFrontSVGroup(main);
+                            svPair.setBackSVGroup(sub);
+                            this.interInsertionList.add(svPair);
+                        }
 //                        main.setSvType("interTrans");
 //                        main.setSvTypeCode((byte)3);
 //                        sub.setSvType("interTrans");
 //                        sub.setSvTypeCode((byte)3);
-                        return "interTrans";
+                        return "interIns";
                     }else{
-                        // try with mext min
+                        // try with next min
                         return null;
                     }
+                }else{
+                    this.chimericList.add(main);
+                    main.setChimericFlag(true);
+//                    main.setSvType("chimeric");
+//                    main.setSvTypeCode((byte)4);
+                    return "chimeric";
                 }
             }else{
                 this.chimericList.add(main);
@@ -6218,33 +8112,57 @@ public class VariationResult {
             if(sub.getStrandF()==1 && sub.getStrandB()==0){
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
                     if(main.getRPF()<sub.getRPB() && main.getRPB()>sub.getRPF()){
-                        ArrayList<SVGroup> dummyList = new ArrayList();
-                        dummyList.add(main);
-                        dummyList.add(sub);
-                        this.interTransPairList.put(dummyList, true);
-                        main.setInterTransFlag(true);
-                        sub.setInterTransFlag(true);
+//                        ArrayList<SVGroup> dummyList = new ArrayList();
+//                        dummyList.add(main);
+//                        dummyList.add(sub);
+//                        this.interTransPairList.put(dummyList, true);
+//                        main.setInterTransFlag(true);
+//                        sub.setInterTransFlag(true);
+                        if(!(main.isInterInsertionFlag() && sub.isInterInsertionFlag())){
+                            // add to list (only svgroup that did not have add before)
+                            SVGroupPair svPair = new SVGroupPair();
+                            main.setInterInsertionFlag(true);
+                            sub.setInterInsertionFlag(true);
+                            svPair.setFrontSVGroup(main);
+                            svPair.setBackSVGroup(sub);
+                            this.interInsertionList.add(svPair);
+                        }
 //                        main.setSvType("interTrans");
 //                        main.setSvTypeCode((byte)3);
 //                        sub.setSvType("interTrans");
 //                        sub.setSvTypeCode((byte)3);
-                        return "interTrans";
+                        return "interIns";
                     }else if(main.getRPF()>sub.getRPB() && main.getRPB()<sub.getRPF()){
-                        ArrayList<SVGroup> dummyList = new ArrayList();
-                        dummyList.add(sub);
-                        dummyList.add(main);
-                        this.interTransPairList.put(dummyList, true);
-                        main.setInterTransFlag(true);
-                        sub.setInterTransFlag(true);
+//                        ArrayList<SVGroup> dummyList = new ArrayList();
+//                        dummyList.add(sub);
+//                        dummyList.add(main);
+//                        this.interTransPairList.put(dummyList, true);
+//                        main.setInterTransFlag(true);
+//                        sub.setInterTransFlag(true);
+                        if(!(main.isInterInsertionFlag() && sub.isInterInsertionFlag())){
+                            // add to list (only svgroup that did not have add before)    
+                            SVGroupPair svPair = new SVGroupPair();
+                            main.setInterInsertionFlag(true);
+                            sub.setInterInsertionFlag(true);
+                            svPair.setFrontSVGroup(sub);
+                            svPair.setBackSVGroup(main);
+                            this.interInsertionList.add(svPair);
+                        }
 //                        main.setSvType("interTrans");
 //                        main.setSvTypeCode((byte)3);
 //                        sub.setSvType("interTrans");
 //                        sub.setSvTypeCode((byte)3);
-                        return "interTrans";
+                        return "interIns";
                     }else{
-                        // try with mext min
+                        // try with next min
                         return null;
                     }
+                }else{
+                    this.chimericList.add(main);
+                    main.setChimericFlag(true);
+//                    main.setSvType("chimeric");
+//                    main.setSvTypeCode((byte)4);
+                    return "chimeric";
                 }
             }else{
                 this.chimericList.add(main);
@@ -6257,33 +8175,57 @@ public class VariationResult {
             if(sub.getStrandF()==0 && sub.getStrandB()==1){
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
                     if(main.getRPF()<sub.getRPB() && main.getRPB()>sub.getRPF()){
-                        ArrayList<SVGroup> dummyList = new ArrayList();
-                        dummyList.add(sub);
-                        dummyList.add(main);
-                        this.interTransPairList.put(dummyList, true);
-                        main.setInterTransFlag(true);
-                        sub.setInterTransFlag(true);
+//                        ArrayList<SVGroup> dummyList = new ArrayList();
+//                        dummyList.add(sub);
+//                        dummyList.add(main);
+//                        this.interTransPairList.put(dummyList, true);
+//                        main.setInterTransFlag(true);
+//                        sub.setInterTransFlag(true);
+                        if(!(main.isInterInsertionFlag() && sub.isInterInsertionFlag())){
+                            // add to list (only svgroup that did not have add before)
+                            SVGroupPair svPair = new SVGroupPair();
+                            main.setInterInsertionFlag(true);
+                            sub.setInterInsertionFlag(true);
+                            svPair.setFrontSVGroup(sub);
+                            svPair.setBackSVGroup(main);
+                            this.interInsertionList.add(svPair);
+                        }
 //                        main.setSvType("interTrans");
 //                        main.setSvTypeCode((byte)3);
 //                        sub.setSvType("interTrans");
 //                        sub.setSvTypeCode((byte)3);
-                        return "interTrans";
+                        return "interIns";
                     }else if(main.getRPF()>sub.getRPB() && main.getRPB()<sub.getRPF()){
-                        ArrayList<SVGroup> dummyList = new ArrayList();
-                        dummyList.add(main);
-                        dummyList.add(sub);
-                        this.interTransPairList.put(dummyList, true);
-                        main.setInterTransFlag(true);
-                        sub.setInterTransFlag(true);
+//                        ArrayList<SVGroup> dummyList = new ArrayList();
+//                        dummyList.add(main);
+//                        dummyList.add(sub);
+//                        this.interTransPairList.put(dummyList, true);
+//                        main.setInterTransFlag(true);
+//                        sub.setInterTransFlag(true);
+                        if(!(main.isInterInsertionFlag() && sub.isInterInsertionFlag())){
+                            // add to list (only svgroup that did not have add before)
+                            SVGroupPair svPair = new SVGroupPair();
+                            main.setInterInsertionFlag(true);
+                            sub.setInterInsertionFlag(true);
+                            svPair.setFrontSVGroup(main);
+                            svPair.setBackSVGroup(sub);
+                            this.interInsertionList.add(svPair);
+                        }
 //                        main.setSvType("interTrans");
 //                        main.setSvTypeCode((byte)3);
 //                        sub.setSvType("interTrans");
 //                        sub.setSvTypeCode((byte)3);
-                        return "interTrans";
+                        return "interIns";
                     }else{
-                        // try with mext min
+                        // try with next min
                         return null;
                     }
+                }else{
+                    this.chimericList.add(main);
+                    main.setChimericFlag(true);
+//                    main.setSvType("chimeric");
+//                    main.setSvTypeCode((byte)4);
+                    return "chimeric";
                 }
             }else{
                 this.chimericList.add(main);
@@ -6305,35 +8247,48 @@ public class VariationResult {
          * Utilize samtools view command to get coverage of each specific region (our breakpoint)
          */
         
-        String baseCommand = samtoolsDirectory + " view " + bamFile;
+        String baseCommand = samtoolsDirectory + " view -F 0X100 " + bamFile;                // base command is samtools view with option 0F 0x100 which mean not include secondary map read
         
         // Loop deletion list
+        // the correctness of deletion is the coverage of base that has position in the middle of deletion (the coverage should be zero if it is real deletion)
         for(int i=0;i<this.deletionList.size();i++){
             String addCommand = "";
             SVGroup svGroup = deletionList.get(i);
             
-            // query Coverage of frontbreakpoint
+            // query Coverage of middle base it the deletiob region
+            int deletionSize = svGroup.getDeletionSize();
             long breakpointF = svGroup.getRPF();
+            long middleDelBasePos = breakpointF + (deletionSize/2);
             String chrNameF = svGroup.getChrF();
-            addCommand = "chr"+chrNameF+":"+breakpointF+"-"+breakpointF;
+            addCommand = "chr"+chrNameF+":"+middleDelBasePos+"-"+middleDelBasePos;
             String command = baseCommand + " " + addCommand + " | wc";
+            String result = executeCommandLine(command);
+            String[] splitRes = result.split("\\s+");
+            int coverage = Integer.parseInt(splitRes[1]);
+            svGroup.setDeletionCorrectness(coverage);
             
-            String resultF = executeCommandLine(command);
-            String[] splitResF = resultF.split("\\s+");
-            int coverageF = Integer.parseInt(splitResF[1]);
+//            // query Coverage of frontbreakpoint
+//            long breakpointF = svGroup.getRPF();
+//            String chrNameF = svGroup.getChrF();
+//            addCommand = "chr"+chrNameF+":"+breakpointF+"-"+breakpointF;
+//            String command = baseCommand + " " + addCommand + " | wc";
             
-            // query Coverage f backreakpoint
-            long breakpointB = svGroup.getRPB();
-            String chrNameB = svGroup.getChrF();
-            addCommand = "chr"+chrNameB+":"+breakpointB+"-"+breakpointB;
-            command = baseCommand + " " + addCommand + " | wc";
-            
-            String resultB = executeCommandLine(command);
-            String[] splitResB = resultB.split("\\s+");
-            int coverageB = Integer.parseInt(splitResB[1]);
-            
-            // Add sum of two coverage to delectioncorrectness field if SVGroup
-            svGroup.setDeletionCorrectness(coverageF + coverageB);   
+//            String resultF = executeCommandLine(command);
+//            String[] splitResF = resultF.split("\\s+");
+//            int coverageF = Integer.parseInt(splitResF[1]);
+//            
+//            // query Coverage f backreakpoint
+//            long breakpointB = svGroup.getRPB();
+//            String chrNameB = svGroup.getChrF();
+//            addCommand = "chr"+chrNameB+":"+breakpointB+"-"+breakpointB;
+//            command = baseCommand + " " + addCommand + " | wc";
+//            
+//            String resultB = executeCommandLine(command);
+//            String[] splitResB = resultB.split("\\s+");
+//            int coverageB = Integer.parseInt(splitResB[1]);
+//            
+//            // Add sum of two coverage to delectioncorrectness field if SVGroup
+//            svGroup.setDeletionCorrectness(coverageF + coverageB);   
         }
         
         
@@ -6365,7 +8320,7 @@ public class VariationResult {
             // Add sum of two coverage to tandemcorrectness field if SVGroup
             svGroup.setTandemCorrectness(coverageF + coverageB);   
         }
-        
+
         Collections.sort(this.deletionList,SVGroup.CoverageCorrectnessDeletionComparator);
         Collections.sort(this.tandemList,SVGroup.CoverageCorrectnessTandemComparator);
         /********************/
@@ -6400,5 +8355,91 @@ public class VariationResult {
             }
         }
         return null;
+    }
+
+    public String checkRefIndex() {
+        
+        if(this.refIndex.size()>0){
+            
+            return "refIndex Has value : EX key 0 is "+this.refIndex.get(1);
+        }else{
+            return "refIndex Has No value";    
+        }
+    }
+
+    public String generateReadme(String svType){
+        String readme = "";
+        if(svType.equals("TD")){
+            readme = "Tandem Report Format\n\n"
+                    + ">Group\tGroup ID\tChromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tCorrectness\tNumber of Strand Pattern\tAnnotation Front\tAnnotation Back\n"
+                    + "Extend view of junction [Reference]\n"
+                    + "Support reads sequence [number of line equal to number of support reads]\n"
+                    + ".\n"
+                    + ".\n"
+                    + ".\n"
+                    + ">[Next Group]\n\n"
+                    + "/********************************************/\n"
+                    + "Junction can split into two part front and back\n"
+                    + "Strand code : 0 = strand + and 1 = strand -\n"
+                    + "For tandem Correctness higher is better";
+        }else if(svType.equals("D")){
+            readme = "Deletion Report Format\n\n"
+                    + ">Group\tGroup ID\tChromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tCorrectness\tDeletion Size\tNumber of Strand Pattern\tAnnotation Front\tAnnotation Back\n"
+                    + "Extend view of junction [Reference]\n"
+                    + "Support reads sequence [number of line equal to number of support reads]\n"
+                    + ".\n"
+                    + ".\n"
+                    + ".\n"
+                    + ">[Next Group]\n\n"
+                    + "/********************************************/\n"
+                    + "Junction can split into two part front and back\n"
+                    + "Strand code : 0 = strand + and 1 = strand -\n"
+                    + "For deletion Correctness lower is better";
+        }else if(svType.equals("IE")){
+            readme = "InterInsertion Report Format\n\n"
+                    + ">Group\tGroup ID\t[Front Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tAnnotation Front\tAnnotation Back"
+                    + "\t||\t"
+                    + "[Back Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tAnnotation Front\tAnnotation Back"
+                    + "\tInsert Portion Size\tInsertion Junction\n"
+                    + "Extend view of junction [Reference]\n"
+                    + "Support reads sequence of both junction[number of line equal to number of support reads]\n"
+                    + ".\n"
+                    + ".\n"
+                    + ".\n"
+                    + ">[Next Group]\n\n"
+                    + "/********************************************/\n"
+                    + "Junction can split into two part front and back\n"
+                    + "Strand code : 0 = strand + and 1 = strand -";                    
+        }else if(svType.equals("IA")){
+            readme = "IntraInsertion Report Format\n\n"
+                    + ">Group\tGroup ID\t[Front Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tAnnotation Front\tAnnotation Back"
+                    + "\t||\t"
+                    + "[Back Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tAnnotation Front\tAnnotation Back"
+                    + "\tInsert Portion Size\tInsertion Junction\n"
+                    + "Extend view of junction [Reference]\n"
+                    + "Support reads sequence of both junction[number of line equal to number of support reads]\n"
+                    + ".\n"
+                    + ".\n"
+                    + ".\n"
+                    + ">[Next Group]\n\n"
+                    + "/********************************************/\n"
+                    + "Junction can split into two part front and back\n"
+                    + "Strand code : 0 = strand + and 1 = strand -";                    
+        }else if(svType.equals("CH")){
+            readme = "Chimeric Report Format\n\n"
+                    + ">Group\tGroup ID\tChromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tAnnotation Front\tAnnotation Back\n"
+                    + "Extend view of junction [Reference]\n"
+                    + "Support reads sequence [number of line equal to number of support reads]\n"
+                    + ".\n"
+                    + ".\n"
+                    + ".\n"
+                    + ">[Next Group]\n\n"
+                    + "/********************************************/\n"
+                    + "Junction can split into two part front and back\n"
+                    + "Strand code : 0 = strand + and 1 = strand -\n"
+                    + "For deletion Correctness lower is better";
+        }
+        
+        return readme;
     }
 }

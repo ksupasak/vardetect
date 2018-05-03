@@ -3506,7 +3506,7 @@ public class SequenceUtil {
 //                            System.out.println();
 //                        }
                     }else{
-                        System.out.println();
+//                        System.out.println();
                         continue;
                     }
 //                    /**
@@ -3554,8 +3554,8 @@ public class SequenceUtil {
                         long startCode = (chr<<28)+start;
                         long stopCode = (chr<<28)+stop;
                         
-                        long startChrPosIdx = (startCode<<23)+annoIndex;            // startChrPosIdx has structure like this [chr 5bit][start position 28bit][annotation index 31bit]
-                        long stopChrPosIdx = (stopCode<<23)+annoIndex;              // stopChrPosIdx has structure like this [chr 5bit][stop position 28bit][annotation index 31bit]
+                        long startChrPosIdx = (startCode<<23)+annoIndex;            // startChrPosIdx has structure like this [chr 5bit][start position 28bit][annotation index 23bit]
+                        long stopChrPosIdx = (stopCode<<23)+annoIndex;              // stopChrPosIdx has structure like this [chr 5bit][stop position 28bit][annotation index 23bit]
                         
                         annoBinaryTree.add(startChrPosIdx);
                         annoBinaryTree.add(stopChrPosIdx);
@@ -3577,6 +3577,159 @@ public class SequenceUtil {
         return refAnno;
     }
     
+    public static ReferenceAnnotation readAnnotationFileV4(String gffFile,String refFaiFile, String specificSourceOrFeature, int merSize) throws FileNotFoundException, IOException{
+        /**
+         * This function will read .gff3 file
+         * Then store each Annotation that came from the specificSource in to Annotation object
+         * After that store Annotation object in ReferenceAnnotation
+         * 
+         * The string specificSourceOrFeature is stand for filter only specific source of annotation EX ensemble etc. or specific Feature EX gene etc. (just one of both)
+         * 
+         * Add refIndex which allow us to define number to chromosome that may not be number in some case (EX TB has chr name in string not number)
+         * 
+         * Consider strand of gene as 1 bit give 0 is + strand and 1 is minus  (put on the front)
+         * 
+         *  ****Important***
+         *  chr name in GFF and faindex must!! be the same 
+         */
+        int numBitForPostiotn = 64-(merSize*2);
+        Map<String,Long> refIndex = new LinkedHashMap();
+        RandomAccessFile rbRefIdx = new RandomAccessFile(refFaiFile,"r");
+        String rbline;
+        String name = "";
+        long numChr = 0;
+        
+        while ((rbline = rbRefIdx.readLine()) != null) {
+            String[] linePortion = rbline.split("\t");
+            name = linePortion[0];
+            refIndex.put(name, ++numChr);
+        }
+        
+        
+        Annotation anno;
+        ReferenceAnnotation refAnno = new ReferenceAnnotation();
+        Path path = Paths.get(gffFile);
+        StringBuffer seq = new StringBuffer();
+        Map<String,Long> chrNameIndex = new LinkedHashMap();         // store chr Index (Map that link btw original chr name and new chr name) key is chr name ()
+        Map<Long,String> chrNameIndexReverse = new LinkedHashMap();  // store chr Index (Map that link btw original chr name and new chr name) key is chr number
+        Map<Integer,Annotation> annotationIndex = new LinkedHashMap();  // store Anootation and it index
+        ArrayList<Long> annoBinaryTree = new ArrayList();               // store start and stop code for binary search purpose (may be no need to sort because the gff file already rearrange in ascending)
+        long chr = 0;               // define long for store chr because it has to be shift left 28 bit to create the code (if it int wwhen weshift left 28 bit it will exceed the limit of int and cause the minus number that we didn't expect)
+        long chrCount=1;            // this variable has index begin at 1 because it has to be count one step ahead of real chr index (In no human case this chrCount will be use as chr index instead)
+        int annoIndex = 0;
+        
+        try (BufferedReader reader = new BufferedReader(new FileReader(gffFile));) {
+            String line = null;
+            String setA[] = null;
+            String setB[] = null;
+//            String chrName = null;
+            String geneName = null;
+            long startPos = 0;
+            long stopPos = 0;
+            int direction = 0;
+        
+            while ((line = reader.readLine()) != null) {
+                
+                if(line.charAt(0) == '#'){
+                    
+                    if(line.charAt(1) == '#'){
+                        
+                    }else{
+                        
+                        if(line.charAt(3) == '#'){
+                            
+                        }
+                    }
+                }else{
+                    setA = line.split("\\s+");         
+                    String chrName = setA[0];
+//                    if(chrName.equals("X")){
+//                        System.out.println();
+//                    }
+                    if(refIndex.containsKey(chrName)){
+                        chr = refIndex.get(chrName);
+//                        if(chr==23||chr==24){
+//                            System.out.println();
+//                        }
+                    }else{
+//                        System.out.println();
+                        continue;
+                    }
+//                    /**
+//                     * Case check for chromosome Name  (Handle with special case if it is human genome because human chromosome has been represent by real number not combine number like 2L or 2R in drosophila )
+//                     * For human x is tranform to number 23 and y is 24 
+//                     * For mitocondria or mt is number 25
+//                     * 
+//                     */
+//                    if(isInteger(chrName)){
+//                        chr = Long.parseLong(chrName);
+//                    }else{
+//                        if(chrName.toLowerCase().equals("x")){
+//                            chr = 23;
+//                        }else if(chrName.toLowerCase().equals("y")){
+//                            chr = 24;
+//                        }else if(chrName.toLowerCase().equals("mt")){
+//                            chr = 25;
+//                        }else{
+//                            chr = chrCount;
+//                        }
+//                    }
+//                    /****************************/
+//                    
+//                    if(chrNameIndex.containsKey(chrName)){
+//                        chr = chrNameIndex.get(chrName);
+//                    }else{
+//                        chrCount++;
+//                        chrNameIndex.put(chrName, chr);
+//                    }
+                    
+                    String source = setA[1];
+                    String feature = setA[2];
+                    if(source.equals(specificSourceOrFeature)||feature.equals(specificSourceOrFeature)){        // case check for specific line that we want (specify by user via specificSourceOrFeature variable)
+
+                        long start = Long.parseLong(setA[3]);
+                        long stop = Long.parseLong(setA[4]);
+                        String score = setA[5];
+                        String strand = setA[6];
+                        String frame = setA[7];
+                        String attribute = setA[8];
+                    
+//                    if(source.equals(specificSourceOrFeature)||feature.equals(specificSourceOrFeature)){
+                        annoIndex++;
+                        anno = new Annotation(chr,source,feature,start,stop,score,strand,frame,attribute);
+                        
+                        long strandCode = 0;
+                        if(strand.equals("-")){
+                            strandCode = 1;
+                        }
+                        
+                        long strandChr = (strandCode<<11)+chr;                      // strandChr has structure [strand 1bit][chr 11bit]
+                        
+                        long startCode = (strandChr<<28)+start;                     // startCode has structure [strand 1bit][chr 11bit][start position 28bit]
+                        long stopCode = (strandChr<<28)+stop;                       // startCode has structure [strand 1bit][chr 11bit][stop position 28bit]
+                            
+                        long startChrPosIdx = (startCode<<23)+annoIndex;            // startChrPosIdx has structure like this [strand 1bit][chr 11bit][start position 28bit][annotation index 23bit]
+                        long stopChrPosIdx = (stopCode<<23)+annoIndex;              // stopChrPosIdx has structure like this [strand 1bit][chr 11bit][stop position 28bit][annotation index 23bit]
+
+                        annoBinaryTree.add(startChrPosIdx);
+                        annoBinaryTree.add(stopChrPosIdx);
+                        
+                        annotationIndex.put(annoIndex, anno);
+                        
+                        refAnno.putData(anno,startCode,stopCode);
+                    }    
+                }
+            }
+        } catch (IOException x) {
+            System.err.format("IOException: %s%n", x);
+        }    
+        
+        refAnno.putAnnotationBinaryTree(annoBinaryTree);
+        refAnno.putAnnotationIndex(annotationIndex);
+        refAnno.putChrIndex(chrNameIndex,chrNameIndexReverse);
+        
+        return refAnno;
+    }
 //    public static ReferenceAnnotation randomExonIntron(ReferenceAnnotation ref){
 //        ReferenceAnnotation output = new ReferenceAnnotation();
 //        ArrayList<Annotation> data = ref.getdata();

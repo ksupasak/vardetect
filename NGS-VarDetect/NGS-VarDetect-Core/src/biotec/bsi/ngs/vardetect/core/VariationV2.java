@@ -260,7 +260,10 @@ public class VariationV2 {
 //            }
 //        }
         this.lastIndexF = this.breakpointIndexF;
-        this.iniIndexB = this.breakpointIndexB+1;
+        this.iniIndexB = this.breakpointIndexB;
+        
+        this.numBaseMatchF = (this.lastIndexF - this.iniIndexF) + 1;
+        this.numBaseMatchB = (this.lastIndexB - this.iniIndexB) + 1;
         
         if(this.strandF == 0 &&this.strandB == 0){
             this.iniPosF = this.breakpointF-this.numBaseMatchF+1;
