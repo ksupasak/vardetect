@@ -29,14 +29,14 @@ public class TestPostProcessV2 {
 //        String refFaIdx = "/Users/worawich/Reference/hg19_SVP2/hg19_main.fa.fai";
 //        String gffFile = "/Users/worawich/Reference/hg19_SVP2/Homo_sapiens.GRCh37.87.chr.gff3";
         
-
-        String inputFile = "/Users/worawich/Download_dataset/HiSeq_X_Ten_TruSeq_Nano_4_replicates_of_NA12878_-8998991/BWA_Whole_Genome_Sequencing_NA12878_L1-10532644/NA12878_L1-ds_d51e1a3660b647f09677f58400c86764/Result_firstVersion_nonSeparateJunction/NA12878-L1_S1_unmap_filter.out";
-        String saveFile = "/Users/worawich/Download_dataset/HiSeq_X_Ten_TruSeq_Nano_4_replicates_of_NA12878_-8998991/BWA_Whole_Genome_Sequencing_NA12878_L1-10532644/NA12878_L1-ds_d51e1a3660b647f09677f58400c86764/Result_firstVersion_nonSeparateJunction/NA12878-L1_S1_unmap_filter";
+//        String inputFile = "/Users/worawich/Download_dataset/verayuth/res/T102_dad.recal/T102_dad.recal_unmap_filter.out";
+        String inputFile = "/Users/worawich/Download_dataset/SLE/SLE_bam/res_rmDup/SLE-5.recal/SLE-5.recal_unmap_filter.out";
+//        String saveFile = "/Users/worawich/Download_dataset/SLE/SLE_bam/res_rmDup/SLE-5.recal/SLE-5.recal_unmap_filter";
         String refFile = "/Users/worawich/Reference/hg19_SVP2/hg19_main.fa";
         String refFaIdx = "/Users/worawich/Reference/hg19_SVP2/hg19_main.fa.fai";
         String gffFile = "/Users/worawich/Reference/hg19_SVP2/Homo_sapiens.GRCh37.87.chr.gff3";
-        
-        String bamFile = "/Users/worawich/Download_dataset/HiSeq_X_Ten_TruSeq_Nano_4_replicates_of_NA12878_-8998991/BWA_Whole_Genome_Sequencing_NA12878_L1-10532644/NA12878_L1-ds_d51e1a3660b647f09677f58400c86764/rmDup_Bam/NA12878-L1.rmdup.bam";
+//        String bamFile = "/Users/worawich/Download_dataset/verayuth/T102_dad.recal.bam";
+        String bamFile = "/Users/worawich/Download_dataset/SLE/SLE_bam/res_rmDup/SLE-5.recal/SLE-5.recal_removeDup.bam";
         String samtoolsDirectory = "/usr/local/bin/samtools";
         
         VariationResult varRes = SequenceUtil.readVersion2AlignmentResult(inputFile);
@@ -48,13 +48,19 @@ public class TestPostProcessV2 {
 //        varRes.writeStructureVariantV2SortedCoverageReportWithAnnotationToFile(saveFile, gffFile, refFaIdx, 5, 16);
 //        varRes.writeStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationToFile(saveFile, gffFile, refFaIdx, 5, 16);
         
-        varRes.classifyPreciseSVType(5);
-        //varRes.identifyCorrectness(bamFile,samtoolsDirectory);
-        //varRes.writePreciseStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationToFile(saveFile, gffFile, refFaIdx, 5, 16);
-        varRes.writeVisualizePreciseSVType(inputFile, refFile, refFaIdx, "TD", 5, 100);
-        varRes.writeVisualizePreciseSVType(inputFile, refFile, refFaIdx, "D", 5, 100);
-        varRes.writeVisualizePreciseSVType(inputFile, refFile, refFaIdx, "IA", 5, 100);
-        varRes.writeVisualizePreciseSVType(inputFile, refFile, refFaIdx, "IE", 5, 100);
+        varRes.classifyPreciseSVType(3);
+        varRes.identifyCorrectness(bamFile,samtoolsDirectory);
+        varRes.sortInsertionByInsertJunctiontLowtoHigh();
+        varRes.writePreciseStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationExcel(inputFile, gffFile, refFaIdx, 3, 16);
+        varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refFile, refFaIdx, gffFile, "TD", 3, 100, 16);
+        varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refFile, refFaIdx, gffFile, "D", 3, 100, 16);
+        varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refFile, refFaIdx, gffFile, "IA", 3, 100, 16);
+        varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refFile, refFaIdx, gffFile, "IE", 3, 100, 16);
+        varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refFile, refFaIdx, gffFile, "CH", 3, 100, 16);
+//        varRes.writeVisualizePreciseSVType(inputFile, refFile, refFaIdx, "TD", 5, 100);
+//        varRes.writeVisualizePreciseSVType(inputFile, refFile, refFaIdx, "D", 5, 100);
+//        varRes.writeVisualizePreciseSVType(inputFile, refFile, refFaIdx, "IA", 5, 100);
+//        varRes.writeVisualizePreciseSVType(inputFile, refFile, refFaIdx, "IE", 5, 100);
 //        varRes.writeStructureVariantV2EuclideanDistanceTable(saveFile, 5);
 //        varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refFile, refFaIdx, "TD", 5, 400);
 //        varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refFile, refFaIdx, "ID", 5, 400);

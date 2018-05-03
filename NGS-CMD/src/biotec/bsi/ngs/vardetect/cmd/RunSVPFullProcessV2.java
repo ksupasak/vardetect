@@ -35,12 +35,14 @@ public class RunSVPFullProcessV2 {
     private static String refPath="";
     private static String gffFile="";
     private static String inputPath = "";
+    private static String samtools = "";
+    private static String mainBamFile = "";
     private static int numRead=1000000;
     private static int numMer=16;
     private static int filterMode=3;
     private static int minIndelSize=30;
     private static int minReadPerGroup=5;
-    private static int maxExtend=300;
+    private static int maxExtend=100;
     
     public static void main(String[] args) throws IOException, FileNotFoundException, InterruptedException{
     // create the command line parser
@@ -53,6 +55,18 @@ public class RunSVPFullProcessV2 {
 //        options.addOption( "b", "escape", false, "print octal escapes for nongraphic "
         options.addOption( Option.builder("b").longOpt("bam-file")
                                         .desc("input file in bam format (.bam)")
+                                        .required()
+                                        .hasArg()
+                                        .argName("file")
+                                        .build());
+        options.addOption( Option.builder("B").longOpt("main bam-file")
+                                        .desc("Main bam file that include both map and unmap (.bam)")
+                                        .required()
+                                        .hasArg()
+                                        .argName("file")
+                                        .build());
+        options.addOption( Option.builder("S").longOpt("samtools path")
+                                        .desc("Full path of samtools ex. use/bin/samtools")
                                         .required()
                                         .hasArg()
                                         .argName("file")
@@ -167,7 +181,7 @@ public class RunSVPFullProcessV2 {
             if(line.hasOption("m")) numMer = Integer.parseInt(line.getOptionValue("m"));
             if(line.hasOption("n")) numRead = Integer.parseInt(line.getOptionValue("n"));
             if(line.hasOption("r")) refPath = line.getOptionValue("r");
-            if(line.hasOption("a")) gffFile = line.getOptionValue("r");
+            if(line.hasOption("a")) gffFile = line.getOptionValue("a");
             if(line.hasOption("b")) inputPath = line.getOptionValue("b");
             if(line.hasOption("R")) numRepeat = Integer.parseInt(line.getOptionValue("R"));
             if(line.hasOption("s")) numSkip = Long.parseLong(line.getOptionValue("s"));
@@ -175,6 +189,8 @@ public class RunSVPFullProcessV2 {
             if(line.hasOption("i")) minIndelSize = Integer.parseInt(line.getOptionValue("i"));
             if(line.hasOption("g")) minReadPerGroup = Integer.parseInt(line.getOptionValue("g"));
             if(line.hasOption("e")) maxExtend = Integer.parseInt(line.getOptionValue("e"));
+            if(line.hasOption("B")) mainBamFile = line.getOptionValue("B");
+            if(line.hasOption("S")) samtools = line.getOptionValue("S");
 
             if(line.hasOption("h")){
                 HelpFormatter formatter = new HelpFormatter();
@@ -189,8 +205,9 @@ public class RunSVPFullProcessV2 {
 //        String refPath = args[0];
 //         String refPath = "/Users/worawich/Reference/hg19_SVP2/hg19_main.fa";
 //        String inBam = args[1];
-
-        String[] dummy = inputPath.split("\\.");
+        System.out.println("gffFile = "+gffFile);
+        String[] dummy = inputPath.split("\\.bam");
+        System.out.println("root="+dummy[0]);
         String outputAllFile = dummy[0]+"_all.out";
         String outputFilterFile = dummy[0]+"_filter.out";
 
@@ -247,23 +264,56 @@ public class RunSVPFullProcessV2 {
         
         System.out.println("Post processing");
         String inputFile = outputFilterFile;
-        String saveFile = outputFilterFile.split("\\.")[0];
+        String saveFile = outputFilterFile.split("\\.out")[0];
         String refFaIdx = refPath+".fai";
+        System.out.println("refFaIdx = "+refFaIdx);
         VariationResult varRes = SequenceUtil.readVersion2AlignmentResult(inputFile);
         varRes.createRefIndex(refFaIdx);
+        varRes.checkRefIndex();
         varRes.analyzeCoverage();
-        varRes.classifyRoughSVType();
-        if(gffFile.equals("")){
-            varRes.writeStructureVariantV2SortedCoverageReportToFile(saveFile, minReadPerGroup);
-            varRes.writeStructureVariantV2SortedCoverageGroupInfoReportToFile(saveFile, minReadPerGroup);
+//        /**
+//         * Rough SV protocol
+//         */
+//        varRes.classifyRoughSVType();
+//        if(gffFile.equals("")){
+//            varRes.writeStructureVariantV2SortedCoverageReportToFile(saveFile, minReadPerGroup);
+//            varRes.writeStructureVariantV2SortedCoverageGroupInfoReportToFile(saveFile, minReadPerGroup);
+//        }else{
+//            varRes.writeStructureVariantV2SortedCoverageReportWithAnnotationToFile(saveFile, gffFile, refFaIdx, minReadPerGroup, numMer);
+//            varRes.writeStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationToFile(saveFile, gffFile, refFaIdx, minReadPerGroup, numMer);
+//        }
+//        varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refPath, refFaIdx, "TD", minReadPerGroup, maxExtend);
+//        varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refPath, refFaIdx, "ID", minReadPerGroup, maxExtend);
+//        varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refPath, refFaIdx, "IC", minReadPerGroup, maxExtend);
+//        varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refPath, refFaIdx, "IT", minReadPerGroup, maxExtend);
+//        /*****/
+        
+        /**
+         * Precise SV protocol
+         */
+        varRes.classifyPreciseSVType(minReadPerGroup);
+        varRes.identifyCorrectness(mainBamFile,samtools);
+        varRes.sortInsertionByInsertJunctiontLowtoHigh();
+        
+        if(!gffFile.equals("")){
+            System.out.println("Generate Annotation report");
+            varRes.writePreciseStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationExcel(inputFile, gffFile, refFaIdx, minReadPerGroup, numMer);
+            varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refPath, refFaIdx, gffFile, "TD", minReadPerGroup, maxExtend, numMer);
+            varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refPath, refFaIdx, gffFile, "D", minReadPerGroup, maxExtend, numMer);
+            varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refPath, refFaIdx, gffFile, "IA", minReadPerGroup, maxExtend, numMer);
+            varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refPath, refFaIdx, gffFile, "IE", minReadPerGroup, maxExtend, numMer);
+            varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refPath, refFaIdx, gffFile, "CH", minReadPerGroup, maxExtend, numMer);
         }else{
-            varRes.writeStructureVariantV2SortedCoverageReportWithAnnotationToFile(saveFile, gffFile, refFaIdx, minReadPerGroup, numMer);
-            varRes.writeStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationToFile(saveFile, gffFile, refFaIdx, minReadPerGroup, numMer);
+            System.out.println("Generate report");
+            varRes.writePreciseStructureVariantV2SortedCoverageGroupInfoReportExcel(inputFile, refFaIdx, minReadPerGroup);
+            varRes.writeVisualizePreciseSVType(inputFile, refPath, refFaIdx, "TD", minReadPerGroup, maxExtend);
+            varRes.writeVisualizePreciseSVType(inputFile, refPath, refFaIdx, "D", minReadPerGroup, maxExtend);
+            varRes.writeVisualizePreciseSVType(inputFile, refPath, refFaIdx, "IA", minReadPerGroup, maxExtend);
+            varRes.writeVisualizePreciseSVType(inputFile, refPath, refFaIdx, "IE", minReadPerGroup, maxExtend);
+            varRes.writeVisualizePreciseSVType(inputFile, refPath, refFaIdx, "CH", minReadPerGroup, maxExtend);
         }
-        varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refPath, refFaIdx, "TD", minReadPerGroup, maxExtend);
-        varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refPath, refFaIdx, "ID", minReadPerGroup, maxExtend);
-        varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refPath, refFaIdx, "IC", minReadPerGroup, maxExtend);
-        varRes.createReferenceFromNovelIndelResult_VariationV2(inputFile, refPath, refFaIdx, "IT", minReadPerGroup, maxExtend);
+        
+        /**********/
         
         System.out.println("Done");
         System.exit(0);
