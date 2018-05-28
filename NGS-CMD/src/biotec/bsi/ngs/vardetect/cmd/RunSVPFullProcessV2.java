@@ -31,7 +31,7 @@ public class RunSVPFullProcessV2 {
     private static int countDup=1;
     private static int numThread=1;
     private static long numSkip=0;
-    private static int numRepeat=50;
+    private static int percentBaseRepeat=50;
     private static String refPath="";
     private static String gffFile="";
     private static String inputPath = "";
@@ -83,67 +83,67 @@ public class RunSVPFullProcessV2 {
                                         .argName("file")
                                         .build());
         options.addOption( Option.builder("t").longOpt("thread-num")
-                                        .desc("number of Thread" )
+                                        .desc("number of Thread [1]" )
                                         .hasArg()
                                         .argName("int")
                                         .build());
         options.addOption( Option.builder("n").longOpt("read-num")
-                                        .desc("total number of read per thread" )
+                                        .desc("total number of read per thread [1000000]" )
                                         .hasArg()
                                         .argName("int")
                                         .build());
         options.addOption( Option.builder("s").longOpt("skip-read")
-                                        .desc("number of read to skip (use when debug)" )
+                                        .desc("number of read to skip (use when debug) [0]" )
                                         .hasArg()
                                         .argName("long")
                                         .build());
         options.addOption( Option.builder("d").longOpt("max-dup")
-                                        .desc("maximum duplicate pattern" )
+                                        .desc("maximum duplicate pattern [1]" )
                                         .hasArg()
                                         .argName("int")
                                         .build());
         options.addOption( Option.builder("p").longOpt("mix-pattern")
-                                        .desc("minimum peak pattern" )
+                                        .desc("minimum peak pattern [10,5]" )
                                         .hasArgs().numberOfArgs(2)
                                         .argName("int int")
                                         .build());
         options.addOption( Option.builder("m").longOpt("mer-size")
-                                        .desc("size of mer" )
+                                        .desc("size of mer [16]" )
                                         .hasArg()
                                         .argName("int")
                                         .build());
         options.addOption( Option.builder("C").longOpt("mer-coverage")
-                                        .desc("Filter value : number of mer coverage" )
+                                        .desc("Filter value : number of mer coverage [50]" )
                                         .hasArg()
                                         .argName("int")
                                         .build());
         options.addOption( Option.builder("F").longOpt("filter-mode")
-                                        .desc("Filter mode has 1,2,3  number of mode" )
+                                        .desc("Filter mode has 1,2,3  number of mode [1]" )
                                         .hasArg()
                                         .argName("int")
                                         .build());
         options.addOption( Option.builder("R").longOpt("ref-repeat")
-                                        .desc("Filter value : number of base repeat" )
+                                        .desc("Filter value : percent of base repeat (percent of lowercase letter) [50]" )
                                         .hasArg()
                                         .argName("int")
                                         .build());
         options.addOption( Option.builder("D").longOpt("filter-dup")
-                                        .desc("Filter duplication count" )
+                                        .desc("Filter duplication count [1]" )
                                         .hasArg()
                                         .argName("int")
                                         .build());
         options.addOption( Option.builder("i").longOpt("min-indelSize")
-                                        .desc("minimum indel size" )
+                                        .desc("minimum indel size [30]" )
                                         .hasArg()
                                         .argName("int")
                                         .build());
         options.addOption( Option.builder("g").longOpt("min-readPerGroup")
-                                        .desc("minimum read per group (clustering)" )
+                                        .desc("minimum read per group (clustering) [5]" )
                                         .hasArg()
                                         .argName("int")
                                         .build());
         options.addOption( Option.builder("e").longOpt("max-extendRef")
-                                        .desc("maximum base extend per side" )
+                                        .desc("maximum base extend per side [100]" )
                                         .hasArg()
                                         .argName("int")
                                         .build());
@@ -183,7 +183,7 @@ public class RunSVPFullProcessV2 {
             if(line.hasOption("r")) refPath = line.getOptionValue("r");
             if(line.hasOption("a")) gffFile = line.getOptionValue("a");
             if(line.hasOption("b")) inputPath = line.getOptionValue("b");
-            if(line.hasOption("R")) numRepeat = Integer.parseInt(line.getOptionValue("R"));
+            if(line.hasOption("R")) percentBaseRepeat = Integer.parseInt(line.getOptionValue("R"));
             if(line.hasOption("s")) numSkip = Long.parseLong(line.getOptionValue("s"));
             if(line.hasOption("t")) numThread = Integer.parseInt(line.getOptionValue("t"));
             if(line.hasOption("i")) minIndelSize = Integer.parseInt(line.getOptionValue("i"));
@@ -226,7 +226,7 @@ public class RunSVPFullProcessV2 {
 
         ref.setFilterMerCoverage(merCov);          // defualt 50
         ref.setFilterMode(filterMode);                  // defualt 1
-        ref.setFilterRefRepeatCount(numRepeat);       // defualt 50
+        ref.setFilterRefRepeatCount(percentBaseRepeat);       // defualt 50
         ref.setFilterDupCount(countDup);              // defualt 1;
 
         ref.setMinimumIndelSize(minIndelSize);            // defualt is 30 

@@ -18,8 +18,8 @@ import java.io.IOException;
 public class RunSimulateSample {
     
     public static void main(String args[]) throws IOException{
-        String refPath = "/Volumes/PromisePegasus/worawich/Referense/hg38/hg38_filter.fa";
-        int numMer = 18;
+        String refPath = "/Users/worawich/Reference/hg19/hg19_main_reIndex.fa";
+        int numMer = 16;
         int numRead = 20;
         int readLen = 100;
         int readCoverage = 30;
