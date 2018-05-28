@@ -6,6 +6,7 @@
 package biotec.bsi.ngs.vardetect.core.util;
 
 import biotec.bsi.ngs.vardetect.core.CombineReferenceSequence;
+import biotec.bsi.ngs.vardetect.core.ShortgunSequence;
 import biotec.bsi.ngs.vardetect.core.ThreadPool;
 import htsjdk.samtools.SAMFileWriter;
 import htsjdk.samtools.SAMFileWriterFactory;
@@ -14,9 +15,13 @@ import htsjdk.samtools.SAMRecordIterator;
 import htsjdk.samtools.SamReader;
 import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -445,5 +450,66 @@ public class SVPUtility {
         samReaderTarget.close();
         
         System.out.println("num read modifued = "+count);
+    }
+    
+    public static void fastIntersectExcelReport(String fileA, String fileB, String outputPath) throws FileNotFoundException{
+        File inputFileA = new File(fileA);
+        boolean eof = false;
+        
+//        try{
+//            
+//            DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(inputFileA)));
+//            
+//            while(!eof){
+//                String readName = is.readUTF();
+//                int resultSize = is.readInt();
+//                
+//                inSS = new ShortgunSequence(null);               
+//                listChr = new ArrayList();
+//                listPos = new ArrayList();
+//                listLastPos = new ArrayList();
+//                listStrand = new ArrayList();
+//                listNumCount = new ArrayList();
+//                listIniIdx = new ArrayList();
+//                
+//                for(int i=0;i<resultSize;i++){
+//                    long code = is.readLong();  // code has structure like this [count|Chr|strand|alignPosition]                         
+//                    long numCount = code>>42;                                               //Shift 34 bit to get count number
+//                    long chrIdxStrandAln = code&mask_chrIdxStrandAln;
+//                    long alignPos = chrIdxStrandAln&mask;                                      // And with 28bit binary to get position
+//                    long chrNumber = chrIdxStrandAln>>37;
+//                    long iniIdx = (chrIdxStrandAln>>29)&255;
+//
+//                    String strandNot = "no";                                                // Identify the strand type of this align Position
+//                    if(((chrIdxStrandAln>>28)&1) == 1){
+//                        strandNot = "+";
+//                    }else if(((chrIdxStrandAln>>28)&1) == 0){
+//                        strandNot = "-";
+//                    }
+//                    
+//                    listChr.add((int)chrNumber);
+//                    listPos.add(alignPos);
+//                    listStrand.add(strandNot);
+//                    listNumCount.add((int)numCount);
+//                    listIniIdx.add((int)iniIdx);
+//
+//                    int numBase = (mer+(int)numCount)-1;
+//                    long lastPos = (alignPos + numBase)-1;
+//
+//                    listLastPos.add(lastPos);
+//                }
+//                
+//                inSS.addReadName(readName);
+//                inSS.addListChr(listChr);
+//                inSS.addListPos(listPos);
+//                inSS.addListLastPos(listLastPos);
+//                inSS.addListStrand(listStrand);
+//                inSS.addListNumMatch(listNumCount);
+//                inSS.addListIniIdx(listIniIdx);
+//                alnResult.addResult(inSS);
+//            }
+//        }catch(EOFException e){
+//            eof = true;
+//        }
     }
 }
