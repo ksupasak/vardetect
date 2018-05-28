@@ -45,6 +45,7 @@ public class RefFaIndex {
             
             refFaIdx.put(name, listIdxInfo);
         }
+        rbRefIdx.close();
     }
     
     public long getTotalLength(String chrName){

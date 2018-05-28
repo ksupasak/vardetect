@@ -3574,6 +3574,8 @@ public class SequenceUtil {
         refAnno.putAnnotationIndex(annotationIndex);
         refAnno.putChrIndex(chrNameIndex,chrNameIndexReverse);
         
+        rbRefIdx.close();
+        
         return refAnno;
     }
     
@@ -3727,7 +3729,7 @@ public class SequenceUtil {
         refAnno.putAnnotationBinaryTree(annoBinaryTree);
         refAnno.putAnnotationIndex(annotationIndex);
         refAnno.putChrIndex(chrNameIndex,chrNameIndexReverse);
-        
+        rbRefIdx.close();
         return refAnno;
     }
 //    public static ReferenceAnnotation randomExonIntron(ReferenceAnnotation ref){

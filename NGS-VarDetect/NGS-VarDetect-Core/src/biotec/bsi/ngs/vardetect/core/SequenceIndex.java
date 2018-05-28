@@ -34,6 +34,6 @@ public class SequenceIndex {
             this.seqIdxMap.put(dummyLine[0], Long.parseLong(dummyLine[2]));
             this.lineBase = Long.parseLong(dummyLine[3]);
         }
-        
+        raf.close();
     }
 }

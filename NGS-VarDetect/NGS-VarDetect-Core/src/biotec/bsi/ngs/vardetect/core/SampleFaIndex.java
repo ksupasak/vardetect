@@ -45,6 +45,7 @@ public class SampleFaIndex {
             
             this.sampleFaIdx.put(name, listIdxInfo);
         }
+        rbSampleIdx.close();
     }
     
     public long getTotalLength(String readName){

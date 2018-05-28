@@ -1421,7 +1421,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                         }
                         
                     }
-                    
+                    fi.close();
                     return r;
                 }
                     
@@ -2519,7 +2519,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
 //                i++;
 //               }
 //           }
-           
+           ref.close();
            return sb.substring(0, length);
            }
        }

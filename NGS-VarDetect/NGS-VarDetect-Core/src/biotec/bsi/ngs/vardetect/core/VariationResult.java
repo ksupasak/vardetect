@@ -3266,6 +3266,8 @@ public class VariationResult {
         
         writer.flush();
         writer.close();
+        rbRef.close();
+        rbSample.close();
         
     }
     
@@ -3478,6 +3480,7 @@ public class VariationResult {
         
         writer.flush();
         writer.close();
+        rbRef.close();
         
     }
     
@@ -3763,6 +3766,7 @@ public class VariationResult {
         }
         writer2.flush();
         writer2.close();
+        rbRef.close();
         
     }
     
@@ -3884,6 +3888,7 @@ public class VariationResult {
         res.add(newRefSeq);
         res.add(newRefNumBaseBeforeBPF);
         
+        rbRef.close();
         return res;
         
     }
@@ -7604,6 +7609,7 @@ public class VariationResult {
             name = linePortion[0];
             this.refIndex.put(name, ++numChr);
         }
+        rbRefIdx.close();
     }
     
     public String identifySameChrPreciseSVType(SVGroup main,SVGroup sub){
@@ -7977,7 +7983,7 @@ public class VariationResult {
 //                main.setSvTypeCode((byte)4);
                 return "chimeric";
             }
-        }
+        }        
         return null;
     }
     

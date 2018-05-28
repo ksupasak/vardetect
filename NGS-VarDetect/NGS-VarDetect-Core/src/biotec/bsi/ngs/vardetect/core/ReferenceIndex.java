@@ -34,7 +34,7 @@ public class ReferenceIndex {
             this.refIdxMap.put(dummyLine[0], Long.parseLong(dummyLine[2]));
             this.lineBase = Long.parseLong(dummyLine[3]);
         }
-        
+        raf.close();
     }
     
 }
