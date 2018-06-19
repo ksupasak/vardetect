@@ -24,8 +24,8 @@ import org.apache.commons.cli.ParseException;
  */
 public class RunSVPFullProcessV2 {
     
-    private static int minPeakF=10;
-    private static int minPeakB=5;
+    private static int minPeakF=5;
+    private static int minPeakB=2;
     private static int merCov=50;
     private static int maxDup=1;
     private static int countDup=1;
@@ -294,6 +294,7 @@ public class RunSVPFullProcessV2 {
         varRes.classifyPreciseSVType(minReadPerGroup);
         varRes.identifyCorrectness(mainBamFile,samtools);
         varRes.sortInsertionByInsertJunctiontLowtoHigh();
+        varRes.FilterIntraInsertion();  // Del Del filter
         
         if(!gffFile.equals("")){
             System.out.println("Generate Annotation report");
