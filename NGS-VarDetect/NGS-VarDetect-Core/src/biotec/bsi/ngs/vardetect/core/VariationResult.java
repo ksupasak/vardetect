@@ -91,6 +91,7 @@ public class VariationResult {
     private ArrayList<SVGroup> intraTransList;
     private ArrayList<SVGroup> interTransList;
     private ArrayList<SVGroupPair> intraInsertionList;
+    private ArrayList<SVGroupPair> intraInsertionList_outFilter;
     private ArrayList<SVGroupPair> interInsertionList;
     private ArrayList<SVGroup> sameChrSVGroup;
     private ArrayList<SVGroup> diffChrSVGroup; 
@@ -141,6 +142,7 @@ public class VariationResult {
         this.intraTransPairList = new LinkedHashMap();
         this.interTransPairList = new LinkedHashMap();
         this.chimericList = new ArrayList();
+        this.intraInsertionList_outFilter = new ArrayList();
     }
     
     public void addMerLength(int merLen){
@@ -8447,5 +8449,26 @@ public class VariationResult {
         }
         
         return readme;
+    }
+    
+    public void FilterIntraInsertion(){
+        /**
+         * this function will filter intrainsertionList by filter out SVPair that has a combination of DEl DEl out and save to separate list (intraInsertionList_outFilter)
+         * It will replace the intrainsertionList with new set of filtered SVPair.
+         */
+        ArrayList<SVGroupPair> intraInsertionList_filter = new ArrayList(); 
+        for(int i =0 ;i<this.intraInsertionList.size();i++){
+            SVGroupPair svPair = this.intraInsertionList.get(i);
+            if(svPair.istDelDel()){
+                this.intraInsertionList_outFilter.add(svPair);
+            }else{
+                intraInsertionList_filter.add(svPair);
+            }
+        }
+        
+        this.intraInsertionList.clear();
+        this.intraInsertionList.addAll(intraInsertionList_filter);
+        
+        intraInsertionList_filter.clear();
     }
 }

@@ -23,10 +23,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.Writer;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -39,6 +41,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.zip.GZIPInputStream;
 import javax.xml.bind.DatatypeConverter;
+
 
 /**
  *
@@ -452,64 +455,184 @@ public class SVPUtility {
         System.out.println("num read modifued = "+count);
     }
     
-    public static void fastIntersectExcelReport(String fileA, String fileB, String outputPath) throws FileNotFoundException{
+    public static void fastIntersectCSVReport(String fileA, String fileB, String outputPath, String svType) throws FileNotFoundException, IOException{
+        // This function will return 3 report file 1. unique SV report of fileA 2. unique SV report of fileB 3. intersersect report of file A and B
+        // user must define type of sv ["DEL","TAN","CHI","INTER","INTRA"]
+        
         File inputFileA = new File(fileA);
+        File inputFileB = new File(fileB);
+        String fileAName = inputFileA.getName().split("\\.csv")[0];
+        String fileBName = inputFileB.getName().split("\\.csv")[0];
+        String headerA = "";
+        String headerB = "";
+        
         boolean eof = false;
         
-//        try{
-//            
-//            DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(inputFileA)));
-//            
-//            while(!eof){
-//                String readName = is.readUTF();
-//                int resultSize = is.readInt();
-//                
-//                inSS = new ShortgunSequence(null);               
-//                listChr = new ArrayList();
-//                listPos = new ArrayList();
-//                listLastPos = new ArrayList();
-//                listStrand = new ArrayList();
-//                listNumCount = new ArrayList();
-//                listIniIdx = new ArrayList();
-//                
-//                for(int i=0;i<resultSize;i++){
-//                    long code = is.readLong();  // code has structure like this [count|Chr|strand|alignPosition]                         
-//                    long numCount = code>>42;                                               //Shift 34 bit to get count number
-//                    long chrIdxStrandAln = code&mask_chrIdxStrandAln;
-//                    long alignPos = chrIdxStrandAln&mask;                                      // And with 28bit binary to get position
-//                    long chrNumber = chrIdxStrandAln>>37;
-//                    long iniIdx = (chrIdxStrandAln>>29)&255;
-//
-//                    String strandNot = "no";                                                // Identify the strand type of this align Position
-//                    if(((chrIdxStrandAln>>28)&1) == 1){
-//                        strandNot = "+";
-//                    }else if(((chrIdxStrandAln>>28)&1) == 0){
-//                        strandNot = "-";
-//                    }
-//                    
-//                    listChr.add((int)chrNumber);
-//                    listPos.add(alignPos);
-//                    listStrand.add(strandNot);
-//                    listNumCount.add((int)numCount);
-//                    listIniIdx.add((int)iniIdx);
-//
-//                    int numBase = (mer+(int)numCount)-1;
-//                    long lastPos = (alignPos + numBase)-1;
-//
-//                    listLastPos.add(lastPos);
-//                }
-//                
-//                inSS.addReadName(readName);
-//                inSS.addListChr(listChr);
-//                inSS.addListPos(listPos);
-//                inSS.addListLastPos(listLastPos);
-//                inSS.addListStrand(listStrand);
-//                inSS.addListNumMatch(listNumCount);
-//                inSS.addListIniIdx(listIniIdx);
-//                alnResult.addResult(inSS);
-//            }
-//        }catch(EOFException e){
-//            eof = true;
-//        }
+        Map<String,String> fileAMap = new LinkedHashMap();
+        Map<String,String> fileBMap = new LinkedHashMap();
+        Map<String,String> uniqueMapA = new LinkedHashMap();
+        Map<String,String> uniqueMapB = new LinkedHashMap();
+        Map<String,String> intersectMap = new LinkedHashMap();
+        
+        BufferedReader br = null;
+        String line = "";
+        String cvsSplitBy = ",";
+        
+        if(svType.equals("DEL")){
+            
+        }
+        
+        
+        // Read fileA
+        try {
+
+            br = new BufferedReader(new FileReader(fileA));
+            headerA = br.readLine();
+            while ((line = br.readLine()) != null) {
+
+                // use comma as separator
+                String[] svInfo = line.split(cvsSplitBy);
+                
+                if(svType.equals("DEL")||svType.equals("TAN")||svType.equals("CHI")){
+                    String key = svInfo[1]+","+svInfo[2]+","+svInfo[3]+","+svInfo[4]+","+svInfo[5]+","+svInfo[6];
+                    fileAMap.put(key, line);
+                }else if(svType.equals("INTER")||svType.equals("INTRA")){
+                    String key = svInfo[1]+","+svInfo[2]+","+svInfo[3]+","+svInfo[4]+","+svInfo[5]+","+svInfo[6]+","+svInfo[13]+","+svInfo[14]+","+svInfo[15]+","+svInfo[16]+","+svInfo[17]+","+svInfo[18];
+                    fileAMap.put(key, line);
+                }
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        
+        // Read fileB
+        try {
+
+            br = new BufferedReader(new FileReader(fileB));
+            headerB = br.readLine();
+            while ((line = br.readLine()) != null) {
+
+                // use comma as separator
+                String[] svInfo = line.split(cvsSplitBy);
+                
+                if(svType.equals("DEL")||svType.equals("TAN")||svType.equals("CHI")){
+                    String key = svInfo[1]+","+svInfo[2]+","+svInfo[3]+","+svInfo[4]+","+svInfo[5]+","+svInfo[6];
+                    fileBMap.put(key, line);
+                }else if(svType.equals("INTER")||svType.equals("INTRA")){
+                    String key = svInfo[1]+","+svInfo[2]+","+svInfo[3]+","+svInfo[4]+","+svInfo[5]+","+svInfo[6]+","+svInfo[13]+","+svInfo[14]+","+svInfo[15]+","+svInfo[16]+","+svInfo[17]+","+svInfo[18];
+                    fileBMap.put(key, line);
+                }
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (br != null) {
+                try {
+                    br.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        
+        // extract unique Map and intersect map
+        uniqueMapA = mapDifference(fileAMap,fileBMap);
+        uniqueMapB = mapDifference(fileBMap,fileAMap);
+        intersectMap = getMapIntersection(fileAMap,fileBMap);
+        
+        // WriteFile
+        String uniqueFileA = outputPath + File.separator + fileAName + "_unique.csv";
+        String uniqueFileB = outputPath + File.separator + fileBName + "_unique.csv";
+        String intersectFile = outputPath + File.separator + fileAName + "_intersect_"+ fileBName + ".csv";
+        
+        Writer writer;
+        // Write unique FileA
+        File f = new File(uniqueFileA); //File object
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(uniqueFileA,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(uniqueFileA);
+        }
+        writer.write(headerA);
+        writer.write("\n");        
+        for(Map.Entry<String,String> entry : uniqueMapA.entrySet()){
+            writer.write(entry.getValue());
+            writer.write("\n");
+        }
+        writer.flush();
+        writer.close();
+        
+        // Write unique FileB
+        f = new File(uniqueFileB); //File object
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(uniqueFileB,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(uniqueFileB);
+        }
+        writer.write(headerB);
+        writer.write("\n");        
+        for(Map.Entry<String,String> entry : uniqueMapB.entrySet()){
+            writer.write(entry.getValue());
+            writer.write("\n");
+        }
+        writer.flush();
+        writer.close();
+        
+        // Write intersect
+        f = new File(intersectFile); //File object
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+            writer = new FileWriter(intersectFile,true);
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(intersectFile);
+        }
+        writer.write(headerA);
+        writer.write("\n");        
+        for(Map.Entry<String,String> entry : intersectMap.entrySet()){
+            writer.write(entry.getValue());
+            writer.write("\n");
+        }
+        writer.flush();
+        writer.close();
+    }
+    
+    public static <K, V> Map<K, V> mapDifference(Map<? extends K, ? extends V> left, Map<? extends K, ? extends V> right) {
+        /**
+         * Find different between 2 Map (left and right) (use key) 
+         * function will return unique Map of left Map
+         */
+        Map<K, V> difference = new LinkedHashMap<>();
+        difference.putAll(left);
+        difference.putAll(right);
+        difference.entrySet().removeAll(right.entrySet());
+        return difference;
+    }
+    
+    public static <K, V> Map<K, V> getMapIntersection(Map<? extends K, ? extends V> mapOne, Map<? extends K, ? extends V> mapTwo){
+    Map intersection = new LinkedHashMap();
+    for (Object key: mapOne.keySet()){
+        if (mapTwo.containsKey(key))
+           intersection.put(key, mapOne.get(key));
+    }
+    return intersection;
     }
 }

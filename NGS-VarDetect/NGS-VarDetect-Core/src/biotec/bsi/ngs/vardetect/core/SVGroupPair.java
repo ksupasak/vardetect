@@ -89,4 +89,12 @@ public class SVGroupPair{
         
         return null;
     }
+    
+    public boolean istDelDel(){
+        if(frontSVGroup.isDeleteFlag() && backSVGroup.isDeleteFlag()){
+            return true;
+        }else{
+            return false; 
+        }
+    }
 }
