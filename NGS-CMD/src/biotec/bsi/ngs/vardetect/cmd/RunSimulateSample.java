@@ -18,7 +18,7 @@ import java.io.IOException;
 public class RunSimulateSample {
     
     public static void main(String args[]) throws IOException{
-        String refPath = "/Users/worawich/Reference/hg19/hg19_main_reIndex.fa";
+        String refPath = "/Users/worawich/Reference/hg38/hg38_filter_reIndex.fa";
         int numMer = 16;
         int numRead = 20;
         int readLen = 100;
