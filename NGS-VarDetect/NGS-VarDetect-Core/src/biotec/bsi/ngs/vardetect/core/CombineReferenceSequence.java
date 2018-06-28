@@ -341,6 +341,19 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
             try{
                 
             String read = r.getReadString();
+            /**
+             * check read unmap or not 
+             * if read is unmap => flagUnmap will be 1
+             * else read is map => flagUnmap will be 0
+             */
+            byte flagUnmap = 1;
+            if(r.getReadUnmappedFlag()==true){
+                flagUnmap = 1;
+            }else{
+                flagUnmap = 0;
+            }
+            /*******************************************/        
+                    
             String sb = read;
             
               
@@ -737,7 +750,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                     }
                     String sread = resf.getEvaluateTag();
                        
-                    pout.println(""+(z+1)+"\t"+resf.getCoverage()+"\t"+resf.getSwitchCount()+"\t"+resf.getDupCount()+"\t"+maxAc+"\t"+maxBc+"\t"+maxposA+"\t"+maxposB+"\t"+chrposA+"\t"+chrposB+"\t"+r.getReadString()+"\t"+refseq+"\t"+refseq2+"\t"+sread);
+                    pout.println(""+(z+1)+"\t"+resf.getCoverage()+"\t"+resf.getSwitchCount()+"\t"+resf.getDupCount()+"\t"+maxAc+"\t"+maxBc+"\t"+maxposA+"\t"+maxposB+"\t"+chrposA+"\t"+chrposB+"\t"+r.getReadString()+"\t"+refseq+"\t"+refseq2+"\t"+sread+"\t"+flagUnmap);
                     
 //                    if(fout!=null){
                         
@@ -767,7 +780,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                             String junctionB = ""+tB[0]+":"+(Integer.parseInt(tB[1])+bp1);
                             
                             
-                            fout.println(""+(z+1)+"\t"+resf.getCoverage()+"\t"+resf.getSwitchCount()+"\t"+resf.getDupCount()+"\t"+maxAc+"\t"+maxBc+"\t"+maxposA+"\t"+maxposB+"\t"+chrposA+"\t"+chrposB+"\t"+r.getReadString()+"\t"+refseq+"\t"+refseq2+"\t"+sread+"\t"+resf.getResolveTag()+"\t"+bp[0]+"\t"+bp[1]+"\t"+junctionA+"\t"+junctionB+"\t"+junction);
+                            fout.println(""+(z+1)+"\t"+resf.getCoverage()+"\t"+resf.getSwitchCount()+"\t"+resf.getDupCount()+"\t"+maxAc+"\t"+maxBc+"\t"+maxposA+"\t"+maxposB+"\t"+chrposA+"\t"+chrposB+"\t"+r.getReadString()+"\t"+refseq+"\t"+refseq2+"\t"+sread+"\t"+resf.getResolveTag()+"\t"+bp[0]+"\t"+bp[1]+"\t"+junctionA+"\t"+junctionB+"\t"+junction+"\t"+flagUnmap);
 
                             
                         }

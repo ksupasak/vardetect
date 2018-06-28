@@ -65,6 +65,9 @@ public class SVGroup {
     private int deletionSize;
     private String strandStrF;
     private String strandStrB;
+    private int numUnmapRead;
+    private int numMapRead;
+    private int tandemSize;
     
     public SVGroup(){
         varList = new ArrayList();        
@@ -92,6 +95,9 @@ public class SVGroup {
         this.deletionSize=0;
         this.strandStrF="";
         this.strandStrB="";
+        this.numUnmapRead=0;
+        this.numMapRead=0;
+        this.tandemSize=0;
     }
     
     public void addVariationV2(VariationV2 inVar){
@@ -110,6 +116,14 @@ public class SVGroup {
             }else if(inVar.getStrandF()==1 && inVar.getStrandB()==0 && this.mpFlag==false){
                 this.mpFlag = true;
                 this.numStrandPattern++;
+            }
+            
+            if(inVar.getFlagUnmap() == 1){
+                // read is unmap
+                numUnmapRead = numUnmapRead+1;
+            }else{
+                // read is map
+                numMapRead = numMapRead+1;
             }
         } 
     }
@@ -742,6 +756,7 @@ public class SVGroup {
 
     public void setTandemFlag(boolean tandemFlag) {
         this.tandemFlag = tandemFlag;
+        this.tandemSize = Math.abs(this.RPB-this.RPF)+1;
     }
 
     public boolean isDeleteFlag() {
@@ -811,31 +826,31 @@ public class SVGroup {
     
     @Override
     public String toString(){
-        return rawPosF+":"+strandF+"\t"+rawPosB+":"+strandB+"\t"+chrF+":"+RPF+"\t"+chrB+":"+RPB+"\t"+getNumCoverage()+"\t"+this.svTypeCode+":"+this.svType+"\t"+this.numStrandPattern;
+        return rawPosF+":"+strandF+"\t"+rawPosB+":"+strandB+"\t"+chrF+":"+RPF+"\t"+chrB+":"+RPB+"\t"+getNumCoverage()+"\t"+this.svTypeCode+":"+this.svType+"\t"+this.numStrandPattern+","+this.numMapRead+","+this.numUnmapRead;
     }
     
     public String excelTandemSummary(){
-        return chrF+","+RPF+","+strandStrF+","+chrB+","+RPB+","+strandStrB+","+getNumCoverage()+","+this.tandemCorrectness+","+this.numStrandPattern+","+this.ppFlag+","+this.mmFlag+","+this.pmFlag+","+this.mpFlag;        
+        return chrF+","+RPF+","+strandStrF+","+chrB+","+RPB+","+strandStrB+","+getNumCoverage()+","+this.tandemCorrectness+","+this.tandemSize+","+this.numStrandPattern+","+this.ppFlag+","+this.mmFlag+","+this.pmFlag+","+this.mpFlag+","+this.numMapRead+","+this.numUnmapRead;        
     }
     
     public String excelDeletionSummary(){
-        return chrF+","+RPF+","+strandStrF+","+chrB+","+RPB+","+strandStrB+","+getNumCoverage()+","+this.deletionCorrectness + ","+this.deletionSize+","+this.numStrandPattern+","+this.ppFlag+","+this.mmFlag+","+this.pmFlag+","+this.mpFlag;        
+        return chrF+","+RPF+","+strandStrF+","+chrB+","+RPB+","+strandStrB+","+getNumCoverage()+","+this.deletionCorrectness + ","+this.deletionSize+","+this.numStrandPattern+","+this.ppFlag+","+this.mmFlag+","+this.pmFlag+","+this.mpFlag+","+this.numMapRead+","+this.numUnmapRead;        
     }
     
     public String excelShortSummary(){
-        return chrF+","+RPF+","+strandStrF+","+chrB+","+RPB+","+strandStrB+","+getNumCoverage()+","+this.numStrandPattern+","+this.ppFlag+","+this.mmFlag+","+this.pmFlag+","+this.mpFlag;        
+        return chrF+","+RPF+","+strandStrF+","+chrB+","+RPB+","+strandStrB+","+getNumCoverage()+","+this.numStrandPattern+","+this.ppFlag+","+this.mmFlag+","+this.pmFlag+","+this.mpFlag+","+this.numMapRead+","+this.numUnmapRead;        
     }
     
     public String shortSummary(){
-        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage() + "\t"+this.numStrandPattern;        
+        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage() + "\t"+this.numStrandPattern+","+this.numMapRead+","+this.numUnmapRead;        
     }
     
     public String shortDeletionSummary(){
-        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage()+"\t"+this.deletionCorrectness + "\t"+this.deletionSize + "\t"+this.numStrandPattern; 
+        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage()+"\t"+this.deletionCorrectness + "\t"+this.deletionSize + "\t"+this.numStrandPattern+","+this.numMapRead+","+this.numUnmapRead; 
     }
     
     public String shortTandemSummary(){
-        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage()+"\t"+this.tandemCorrectness + "\t"+this.numStrandPattern; 
+        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage()+"\t"+this.tandemCorrectness + "\t"+this.numStrandPattern+","+this.numMapRead+","+this.numUnmapRead; 
     }
     
     public String getChrNameFromRefIndex(Map<String, Long> refIndexMap, Long chrNumber) {

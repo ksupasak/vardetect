@@ -5138,9 +5138,15 @@ public class VariationResult {
                 
                 if(minEuDis == 0){
                     // erase minindex if minEudis is 0 then repick
-                    dummyEuList.remove(minIndex);
-                    minIndex = dummyEuList.indexOf(Collections.min(dummyEuList));
-                    minEuDis = dummyEuList.get(minIndex);
+                    if(dummyEuList.size()==1){
+                        minIndex = dummyEuList.indexOf(Collections.min(dummyEuList));
+                        minEuDis = dummyEuList.get(minIndex);
+                    }else{
+                        dummyEuList.remove(minIndex);
+                        minIndex = dummyEuList.indexOf(Collections.min(dummyEuList));
+                        minEuDis = dummyEuList.get(minIndex);
+                    }
+                    
                 }
                 
                 int realMinIndex = euList.indexOf(minEuDis);    // true min index for write report
@@ -5188,9 +5194,17 @@ public class VariationResult {
                 
                 if(minEuDis == 0){
                     // erase minindex if minEudis is 0 then repick
-                    dummyEuList.remove(minIndex);
-                    minIndex = dummyEuList.indexOf(Collections.min(dummyEuList));
-                    minEuDis = dummyEuList.get(minIndex);
+                    if(dummyEuList.size()==1){
+                        minIndex = dummyEuList.indexOf(Collections.min(dummyEuList));
+                        minEuDis = dummyEuList.get(minIndex);
+                    }else{
+                        dummyEuList.remove(minIndex);
+                        minIndex = dummyEuList.indexOf(Collections.min(dummyEuList));
+                        minEuDis = dummyEuList.get(minIndex);
+                    }
+//                    dummyEuList.remove(minIndex);
+//                    minIndex = dummyEuList.indexOf(Collections.min(dummyEuList));
+//                    minEuDis = dummyEuList.get(minIndex);
                 }
                 
                 int realMinIndex = euList.indexOf(minEuDis);    // true min index for write report
@@ -6261,7 +6275,7 @@ public class VariationResult {
         /**
          * Tandem
          */
-        writer.write("Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,Correctness(High is best),numStrandPattern,+|+,-|-,+|-,-|+,Annotation Front,Annotation Back"); // header
+        writer.write("Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,Correctness(High is best),Tandem size,numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read,number of unMap Read,Annotation Front,Annotation Back"); // header
         writer.write("\n");
         int count = 1;
         for(int i=0;i<this.tandemList.size();i++){
@@ -6345,7 +6359,7 @@ public class VariationResult {
 //            ps = new PrintStream(filename);
             writer = new FileWriter(deletionReport);
         }
-        writer.write("Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,Correctness(Low is best),Deletion Size,numStrandPattern,+|+,-|-,+|-,-|+,Annotation Front,Annotation Back"); // header
+        writer.write("Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,Correctness(Low is best),Deletion Size,numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read,number of unMap Read,Annotation Front,Annotation Back"); // header
         writer.write("\n");
         count = 1;
         for(int i=0;i<this.deletionList.size();i++){
@@ -6428,9 +6442,9 @@ public class VariationResult {
             writer = new FileWriter(intraInsertionReport);
         }
         writer.write("Group,Chromosome Front(Front Junction),BreakPoint Front(Front Junction),Strand Front(Front Junction)"
-                + ",Chromosome Back(Front Junction),BreakPoint Back(Front Junction),Strand Back(Front Junction),Support Reads(Front Junction),numStrandPattern,+|+,-|-,+|-,-|+"
+                + ",Chromosome Back(Front Junction),BreakPoint Back(Front Junction),Strand Back(Front Junction),Support Reads(Front Junction),numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read(Front Junction),number of unMap Read(Front Junction)"
                 + ",Chromosome Front(Back Junction),BreakPoint Front(Back Junction),Strand Front(Back Junction)"
-                + ",Chromosome Back(Back Junction),BreakPoint Back(Back Junction),Strand Back(Back Junction),Support Reads(Back Junction),numStrandPattern,+|+,-|-,+|-,-|+"
+                + ",Chromosome Back(Back Junction),BreakPoint Back(Back Junction),Strand Back(Back Junction),Support Reads(Back Junction),numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read(Back Junction),number of unMap Read(Back Junction)"
                 + ",Insert Portion Size,Insertion Junction,Annotation Front(Front Junction),Annotation Back(Front Junction),Annotation Front(Back Junction),Annotation Back(Back Junction)"); // header
         writer.write("\n");
         count = 1;
@@ -6572,9 +6586,8 @@ public class VariationResult {
             writer = new FileWriter(interInsertionReport);
         }
         writer.write("Group,Chromosome Front(Front Junction),BreakPoint Front(Front Junction),Strand Front(Front Junction)"
-                + ",Chromosome Back(Front Junction),BreakPoint Back(Front Junction),Strand Back(Front Junction),Support Reads(Front Junction),numStrandPattern,+|+,-|-,+|-,-|+"
-                + ",Chromosome Front(Back Junction),BreakPoint Front(Back Junction),Strand Front(Back Junction)"
-                + ",Chromosome Back(Back Junction),BreakPoint Back(Back Junction),Strand Back(Back Junction),Support Reads(Back Junction),numStrandPattern,+|+,-|-,+|-,-|+"
+                + ",Chromosome Back(Front Junction),BreakPoint Back(Front Junction),Strand Back(Front Junction),Support Reads(Front Junction),numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read(Front Junction),number of unMap Read(Front Junction)"
+                + ",Chromosome Back(Back Junction),BreakPoint Back(Back Junction),Strand Back(Back Junction),Support Reads(Back Junction),numStrandPattern,+|+,-|-,+|-,-|+number of Map Read(Back Junction),number of unMap Read(Back Junction)"
                 + ",Insert Portion Size,Insertion Junction,Annotation Front(Front Junction),Annotation Back(Front Junction),Annotation Front(Back Junction),Annotation Back(Back Junction)"); // header
         writer.write("\n");
         count = 1;
@@ -6714,7 +6727,7 @@ public class VariationResult {
 //            ps = new PrintStream(filename);
             writer = new FileWriter(chimericReport);
         }
-        writer.write("Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,numStrandPattern,+|+,-|-,+|-,-|+,Annotation Front,Annotation Back"); // header
+        writer.write("Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read,number of unMap Read,Annotation Front,Annotation Back"); // header
         writer.write("\n");
         count = 1;
         Collections.sort(this.chimericList,SVGroup.CoverageComparator);
@@ -8379,7 +8392,7 @@ public class VariationResult {
         String readme = "";
         if(svType.equals("TD")){
             readme = "Tandem Report Format\n\n"
-                    + ">Group\tGroup ID\tChromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tCorrectness\tNumber of Strand Pattern\tAnnotation Front\tAnnotation Back\n"
+                    + ">Group\tGroup ID\tChromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tCorrectness\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back\n"
                     + "Extend view of junction [Reference]\n"
                     + "Support reads sequence [number of line equal to number of support reads]\n"
                     + ".\n"
@@ -8392,7 +8405,7 @@ public class VariationResult {
                     + "For tandem Correctness higher is better";
         }else if(svType.equals("D")){
             readme = "Deletion Report Format\n\n"
-                    + ">Group\tGroup ID\tChromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tCorrectness\tDeletion Size\tNumber of Strand Pattern\tAnnotation Front\tAnnotation Back\n"
+                    + ">Group\tGroup ID\tChromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tCorrectness\tDeletion Size\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back\n"
                     + "Extend view of junction [Reference]\n"
                     + "Support reads sequence [number of line equal to number of support reads]\n"
                     + ".\n"
@@ -8405,9 +8418,9 @@ public class VariationResult {
                     + "For deletion Correctness lower is better";
         }else if(svType.equals("IE")){
             readme = "InterInsertion Report Format\n\n"
-                    + ">Group\tGroup ID\t[Front Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tAnnotation Front\tAnnotation Back"
+                    + ">Group\tGroup ID\t[Front Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back"
                     + "\t||\t"
-                    + "[Back Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tAnnotation Front\tAnnotation Back"
+                    + "[Back Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back"
                     + "\tInsert Portion Size\tInsertion Junction\n"
                     + "Extend view of junction [Reference]\n"
                     + "Support reads sequence of both junction[number of line equal to number of support reads]\n"
@@ -8420,9 +8433,9 @@ public class VariationResult {
                     + "Strand code : 0 = strand + and 1 = strand -";                    
         }else if(svType.equals("IA")){
             readme = "IntraInsertion Report Format\n\n"
-                    + ">Group\tGroup ID\t[Front Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tAnnotation Front\tAnnotation Back"
+                    + ">Group\tGroup ID\t[Front Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back"
                     + "\t||\t"
-                    + "[Back Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tAnnotation Front\tAnnotation Back"
+                    + "[Back Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back"
                     + "\tInsert Portion Size\tInsertion Junction\n"
                     + "Extend view of junction [Reference]\n"
                     + "Support reads sequence of both junction[number of line equal to number of support reads]\n"
@@ -8435,7 +8448,7 @@ public class VariationResult {
                     + "Strand code : 0 = strand + and 1 = strand -";                    
         }else if(svType.equals("CH")){
             readme = "Chimeric Report Format\n\n"
-                    + ">Group\tGroup ID\tChromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tAnnotation Front\tAnnotation Back\n"
+                    + ">Group\tGroup ID\tChromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back\n"
                     + "Extend view of junction [Reference]\n"
                     + "Support reads sequence [number of line equal to number of support reads]\n"
                     + ".\n"

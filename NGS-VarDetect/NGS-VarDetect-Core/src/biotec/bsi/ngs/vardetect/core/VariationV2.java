@@ -46,11 +46,19 @@ public class VariationV2 {
     int lastIndexB;
     int iniPosB;          // first base real position
     int lastPosB;           // last base real position (if minus strand lastposB < iniPosB)
-
+    byte flagUnmap;
     
     public VariationV2(){
         this.numBaseMatchF = 0;
         this.numBaseMatchB = 0;
+    }
+
+    public byte getFlagUnmap() {
+        return flagUnmap;
+    }
+
+    public void setFlagUnmap(byte flagUnmap) {
+        this.flagUnmap = flagUnmap;
     }
 
     public int getReadID() {

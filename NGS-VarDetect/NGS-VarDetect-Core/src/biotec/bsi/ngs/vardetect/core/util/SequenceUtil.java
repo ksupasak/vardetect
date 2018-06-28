@@ -2057,7 +2057,7 @@ public class SequenceUtil {
         Random r = new Random();
         int posSNP = 0;
         String snpBase = null;
-        while(dif <= minIndelSize || dif > maxIndelSize){
+        while((dif <= minIndelSize || dif > maxIndelSize)){
             iniA = r.nextInt(rangeA);
             lastA = (iniA+cutLengthA)-1;                    
             indelSize = minIndelSize + r.nextInt((maxIndelSize-minIndelSize)+1);
@@ -2065,6 +2065,10 @@ public class SequenceUtil {
                                                                 // So, if you want indelSize=4 the gap between lastA and iniB should be index 6,7,8 and 9. This mean iniB should be 10 to make a 4 base gap size.
                                                                 // Finally ==> iniB = (5+4)+1 = 10 
             dif = Math.abs(lastA - iniB);                  // the value of dif has benn strict to positive by the case check of while loop
+        }
+        
+        if(iniA>=lengthA || iniB>=lengthB){
+            System.out.println("Noooo");
         }
         
         cutA = chrA.getSequence().substring(iniA, iniA+cutLengthA);
@@ -8102,6 +8106,7 @@ public class SequenceUtil {
                 var.setBreakpointF(Integer.parseInt(data[17].split(":")[1]));
                 var.setBreakpointB(Integer.parseInt(data[18].split(":")[1]));
                 var.setMiddleBase(data[19]);
+                var.setFlagUnmap(Byte.parseByte(data[20]));
                 
                 varList.add(var);
                 count++;

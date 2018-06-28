@@ -1968,17 +1968,17 @@ public class SimulatorUtil_WholeGene {
 
     //            System.out.println("Begin Simulate large indel samples");
 
-                if (numberChrA.equalsIgnoreCase("24")){
-                    numberChrA = "Y";
-                }else if(numberChrA.equalsIgnoreCase("23")){
-                    numberChrA = "X";
-                }
-
-                if (numberChrB.equalsIgnoreCase("24")){
-                    numberChrB = "Y";
-                }else if(numberChrB.equalsIgnoreCase("23")){
-                    numberChrB = "X";
-                }
+//                if (numberChrA.equalsIgnoreCase("24")){
+//                    numberChrA = "Y";
+//                }else if(numberChrA.equalsIgnoreCase("23")){
+//                    numberChrA = "X";
+//                }
+//
+//                if (numberChrB.equalsIgnoreCase("24")){
+//                    numberChrB = "Y";
+//                }else if(numberChrB.equalsIgnoreCase("23")){
+//                    numberChrB = "X";
+//                }
 
                 String namechrA = "chr"+ numberChrA;
                 String namechrB = "chr"+ numberChrB;
