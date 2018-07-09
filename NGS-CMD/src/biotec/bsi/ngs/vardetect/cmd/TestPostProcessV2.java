@@ -32,10 +32,13 @@ public class TestPostProcessV2 {
 //        String inputFile = "/Users/worawich/Download_dataset/verayuth/res/T102_dad.recal/T102_dad.recal_unmap_filter.out";
 //        String inputFile = "/Users/worawich/Download_dataset/DupDel/res_rmDup/SEAdel/SEAdel_unmap_filter.out";
 //        String inputFile = "/Users/worawich/Download_dataset/SLE/SLE_bam/res_rmDup/SLE-5.recal/del_del_filter/SLE-5.recal_unmap_filter.out";
-        String inputFile = "/Users/worawich/Download_dataset/Ratina_cancer/277T_sorted_unmap_filter.out";
+        String inputFile = "/Users/worawich/Download_dataset/testTB/dummy/ERR718192_unmap_filter.out";
 //        String saveFile = "/Users/worawich/Download_dataset/SLE/SLE_bam/res_rmDup/SLE-5.recal/SLE-5.recal_unmap_filter";
-        String refFile = "/Users/worawich/Reference/hg19_SVP2/hg19_main.fa";
-        String refFaIdx = "/Users/worawich/Reference/hg19_SVP2/hg19_main.fa.fai";
+//        String refFile = "/Users/worawich/Reference/hg19_SVP2/hg19_main.fa";
+        String refFile = "/Users/worawich/Reference/TB_reference/H37Rv_NC_000962_reIndex.fa";
+//        String refFaIdx = "/Users/worawich/Reference/hg19_SVP2/hg19_main.fa.fai";
+        String refFaIdx = "/Users/worawich/Reference/TB_reference/H37Rv_NC_000962_reIndex.fa.fai";
+//        String gffFile = "/Users/worawich/Reference/hg19_SVP2/Homo_sapiens.GRCh37.87.chr.gff3";
         String gffFile = "/Users/worawich/Reference/hg19_SVP2/Homo_sapiens.GRCh37.87.chr.gff3";
 //        String bamFile = "/Users/worawich/Download_dataset/verayuth/T102_dad.recal.bam";
 //        String bamFile = "/Users/worawich/Download_dataset/DupDel/res_rmDup/SEAdel/SEAdel_removeDup.bam";
