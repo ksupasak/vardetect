@@ -6234,7 +6234,8 @@ public class VariationResult {
         File f = new File(summaryReport); //File object        
         if(f.exists()){
 //            ps = new PrintStream(new FileOutputStream(filename,true));
-            writer = new FileWriter(summaryReport,true);
+//            writer = new FileWriter(summaryReport,true);
+            writer = new FileWriter(summaryReport); //not append
         }else{
 //            ps = new PrintStream(filename);
             writer = new FileWriter(summaryReport);
@@ -6266,7 +6267,8 @@ public class VariationResult {
         f = new File(tandemReport); //File object        
         if(f.exists()){
 //            ps = new PrintStream(new FileOutputStream(filename,true));
-            writer = new FileWriter(tandemReport,true);
+//            writer = new FileWriter(tandemReport,true);       //append
+            writer = new FileWriter(tandemReport);              //not append
         }else{
 //            ps = new PrintStream(filename);
             writer = new FileWriter(tandemReport);
@@ -6354,7 +6356,8 @@ public class VariationResult {
         f = new File(deletionReport); //File object        
         if(f.exists()){
 //            ps = new PrintStream(new FileOutputStream(filename,true));
-            writer = new FileWriter(deletionReport,true);
+//            writer = new FileWriter(deletionReport,true);
+            writer = new FileWriter(deletionReport);//not append
         }else{
 //            ps = new PrintStream(filename);
             writer = new FileWriter(deletionReport);
@@ -6436,7 +6439,8 @@ public class VariationResult {
         f = new File(intraInsertionReport); //File object        
         if(f.exists()){
 //            ps = new PrintStream(new FileOutputStream(filename,true));
-            writer = new FileWriter(intraInsertionReport,true);
+//            writer = new FileWriter(intraInsertionReport,true);
+            writer = new FileWriter(intraInsertionReport);//not append
         }else{
 //            ps = new PrintStream(filename);
             writer = new FileWriter(intraInsertionReport);
@@ -6580,7 +6584,8 @@ public class VariationResult {
         f = new File(interInsertionReport); //File object        
         if(f.exists()){
 //            ps = new PrintStream(new FileOutputStream(filename,true));
-            writer = new FileWriter(interInsertionReport,true);
+//            writer = new FileWriter(interInsertionReport,true);
+            writer = new FileWriter(interInsertionReport);//not append
         }else{
 //            ps = new PrintStream(filename);
             writer = new FileWriter(interInsertionReport);
@@ -6722,7 +6727,8 @@ public class VariationResult {
         f = new File(chimericReport); //File object        
         if(f.exists()){
 //            ps = new PrintStream(new FileOutputStream(filename,true));
-            writer = new FileWriter(chimericReport,true);
+//            writer = new FileWriter(chimericReport,true);
+            writer = new FileWriter(chimericReport);//not append
         }else{
 //            ps = new PrintStream(filename);
             writer = new FileWriter(chimericReport);

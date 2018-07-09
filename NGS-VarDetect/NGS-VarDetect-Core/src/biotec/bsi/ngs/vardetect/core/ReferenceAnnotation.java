@@ -176,7 +176,7 @@ public class ReferenceAnnotation {
                 
                 return -1;
 
-            }else if(midPoint == annoBinaryTree.size()){
+            }else if(midPoint == annoBinaryTree.size()-1){
                 int midPointAnnotationIndex = (int)(this.annoBinaryTree.get(midPoint) & this.indexAnnoMask);
                 /**
                 * midpoint is Stop Point
