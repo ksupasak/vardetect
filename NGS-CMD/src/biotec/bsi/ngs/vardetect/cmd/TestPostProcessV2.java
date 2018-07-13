@@ -32,12 +32,14 @@ public class TestPostProcessV2 {
 //        String inputFile = "/Users/worawich/Download_dataset/verayuth/res/T102_dad.recal/T102_dad.recal_unmap_filter.out";
 //        String inputFile = "/Users/worawich/Download_dataset/DupDel/res_rmDup/SEAdel/SEAdel_unmap_filter.out";
 //        String inputFile = "/Users/worawich/Download_dataset/SLE/SLE_bam/res_rmDup/SLE-5.recal/del_del_filter/SLE-5.recal_unmap_filter.out";
-        String inputFile = "/Users/worawich/Download_dataset/testTB/dummy/ERR718192_unmap_filter.out";
+//        String inputFile = "/Users/worawich/Download_dataset/testTB/dummy/ERR718192_unmap_filter.out";
+        String inputFile = "/Users/worawich/Download_dataset/Ratina_cancer/res/277T_sorted/277T_sorted_unmap_filter.out";
+//        String inputFile = "/Users/worawich/Download_dataset/Ratina_cancer/small_test/277T_small.out";
 //        String saveFile = "/Users/worawich/Download_dataset/SLE/SLE_bam/res_rmDup/SLE-5.recal/SLE-5.recal_unmap_filter";
-//        String refFile = "/Users/worawich/Reference/hg19_SVP2/hg19_main.fa";
-        String refFile = "/Users/worawich/Reference/TB_reference/H37Rv_NC_000962_reIndex.fa";
-//        String refFaIdx = "/Users/worawich/Reference/hg19_SVP2/hg19_main.fa.fai";
-        String refFaIdx = "/Users/worawich/Reference/TB_reference/H37Rv_NC_000962_reIndex.fa.fai";
+        String refFile = "/Users/worawich/Reference/hg19_SVP2/hg19_main.fa";
+//        String refFile = "/Users/worawich/Reference/TB_reference/H37Rv_NC_000962_reIndex.fa";
+        String refFaIdx = "/Users/worawich/Reference/hg19_SVP2/hg19_main.fa.fai";
+//        String refFaIdx = "/Users/worawich/Reference/TB_reference/H37Rv_NC_000962_reIndex.fa.fai";
 //        String gffFile = "/Users/worawich/Reference/hg19_SVP2/Homo_sapiens.GRCh37.87.chr.gff3";
         String gffFile = "/Users/worawich/Reference/hg19_SVP2/Homo_sapiens.GRCh37.87.chr.gff3";
 //        String bamFile = "/Users/worawich/Download_dataset/verayuth/T102_dad.recal.bam";
@@ -67,6 +69,7 @@ public class TestPostProcessV2 {
         varRes.writePreciseStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationExcel(inputFile, gffFile, refFaIdx, numPerGroup, numMer);
         varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refFile, refFaIdx, gffFile, "TD", numPerGroup, maxExtend, numMer);
         varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refFile, refFaIdx, gffFile, "D", numPerGroup, maxExtend, numMer);
+        varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refFile, refFaIdx, gffFile, "SI", numPerGroup, maxExtend, numMer);
         varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refFile, refFaIdx, gffFile, "IA", numPerGroup, maxExtend, numMer);
         varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refFile, refFaIdx, gffFile, "IE", numPerGroup, maxExtend, numMer);
         varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refFile, refFaIdx, gffFile, "CH", numPerGroup, maxExtend, numMer);

@@ -301,17 +301,19 @@ public class RunSVPFullProcessV2 {
             varRes.writePreciseStructureVariantV2SortedCoverageGroupInfoReportWithAnnotationExcel(inputFile, gffFile, refFaIdx, minReadPerGroup, numMer);
             varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refPath, refFaIdx, gffFile, "TD", minReadPerGroup, maxExtend, numMer);
             varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refPath, refFaIdx, gffFile, "D", minReadPerGroup, maxExtend, numMer);
+            varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refPath, refFaIdx, gffFile, "SI", minReadPerGroup, maxExtend, numMer);
             varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refPath, refFaIdx, gffFile, "IA", minReadPerGroup, maxExtend, numMer);
             varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refPath, refFaIdx, gffFile, "IE", minReadPerGroup, maxExtend, numMer);
             varRes.writeVisualizePreciseSVTypeWithAnnotation(inputFile, refPath, refFaIdx, gffFile, "CH", minReadPerGroup, maxExtend, numMer);
         }else{
             System.out.println("Generate report");
-            varRes.writePreciseStructureVariantV2SortedCoverageGroupInfoReportExcel(inputFile, refFaIdx, minReadPerGroup);
-            varRes.writeVisualizePreciseSVType(inputFile, refPath, refFaIdx, "TD", minReadPerGroup, maxExtend);
-            varRes.writeVisualizePreciseSVType(inputFile, refPath, refFaIdx, "D", minReadPerGroup, maxExtend);
-            varRes.writeVisualizePreciseSVType(inputFile, refPath, refFaIdx, "IA", minReadPerGroup, maxExtend);
-            varRes.writeVisualizePreciseSVType(inputFile, refPath, refFaIdx, "IE", minReadPerGroup, maxExtend);
-            varRes.writeVisualizePreciseSVType(inputFile, refPath, refFaIdx, "CH", minReadPerGroup, maxExtend);
+            varRes.writePreciseStructureVariantV2SortedCoverageGroupInfoReportWithOutAnnotationExcel(inputFile, refFaIdx, minReadPerGroup, numMer);
+            varRes.writeVisualizePreciseSVTypeWithOutAnnotation(inputFile, refPath, refFaIdx, "TD", minReadPerGroup, maxExtend, numMer);
+            varRes.writeVisualizePreciseSVTypeWithOutAnnotation(inputFile, refPath, refFaIdx, "D", minReadPerGroup, maxExtend,numMer);
+            varRes.writeVisualizePreciseSVTypeWithOutAnnotation(inputFile, refPath, refFaIdx, "SI", minReadPerGroup, maxExtend,numMer);
+            varRes.writeVisualizePreciseSVTypeWithOutAnnotation(inputFile, refPath, refFaIdx, "IA", minReadPerGroup, maxExtend,numMer);
+            varRes.writeVisualizePreciseSVTypeWithOutAnnotation(inputFile, refPath, refFaIdx, "IE", minReadPerGroup, maxExtend,numMer);
+            varRes.writeVisualizePreciseSVTypeWithOutAnnotation(inputFile, refPath, refFaIdx, "CH", minReadPerGroup, maxExtend,numMer);
         }
         
         /**********/
