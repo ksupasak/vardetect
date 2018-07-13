@@ -88,6 +88,7 @@ public class VariationResult {
     private ArrayList<SVGroup> tandemList;
     private ArrayList<SVGroup> indelList;
     private ArrayList<SVGroup> deletionList;
+    private ArrayList<SVGroup> smallInsertionList;
     private ArrayList<SVGroup> intraTransList;
     private ArrayList<SVGroup> interTransList;
     private ArrayList<SVGroupPair> intraInsertionList;
@@ -143,6 +144,7 @@ public class VariationResult {
         this.interTransPairList = new LinkedHashMap();
         this.chimericList = new ArrayList();
         this.intraInsertionList_outFilter = new ArrayList();
+        this.smallInsertionList = new ArrayList();
     }
     
     public void addMerLength(int merLen){
@@ -4245,11 +4247,467 @@ public class VariationResult {
         writer.close();
     }
     
+    public void writeVisualizePreciseSVTypeWithOutAnnotation(String readFile, String refFile, String refFaIndex, String SVType, int minPickCoverage, int inExtendSize, int merSize) throws IOException{
+        /**
+         * this function will write the precise SVType report with single base resolution
+         * user must define SV type Code which has 5 SV Type
+         * TD = tandem, D = deletion, IA = intraIns, IE = interIns, CH = chimeric, SI = small Insertion
+         */
+        
+        /**
+        * Read annotation file (GFF)
+        */
+//        ReferenceAnnotation refAnno = SequenceUtil.readAnnotationFileV4(gffFile,refFaIndex, "gene" , merSize);
+//        Map<Integer,Annotation> refAnnoIndex = refAnno.getAnnotationIndex();
+        /****************************/
+        
+        Path path = Paths.get(readFile);
+        String fileName = path.getFileName().toString();
+        String[] dummy2 = fileName.split("_unmap");         // For more generic this should be split by . (and whole protocal should use . as a filed peaparation like A.unmap.emdup.bam So, we can get read name just split by .)
+        String sampleName = dummy2[0];
+        String filename = "";
+        String readmeFile = "";
+        FileWriter writer;
+        FileWriter readmeWriter;
+        FileWriter writer2;
+        int extendSize = inExtendSize;
+        int groupCount = 0;
+        ArrayList<SVGroup> variationList = new ArrayList();
+        ArrayList<SVGroupPair> variationPairList = new ArrayList();
+        
+        String indelType = "";
+        if(SVType.equals("TD")){
+            variationList = this.tandemList;
+            filename = path.getParent().toString()+File.separator+"Tandem"+File.separator+sampleName+".Tandem.report";
+            readmeFile = path.getParent().toString()+File.separator+"Tandem"+File.separator+sampleName+".Tandem.readme.txt";
+            File file = new File(filename);
+            if(!file.getParentFile().exists()){
+                try{
+                    file.getParentFile().mkdirs();
+                } 
+                catch(SecurityException se){
+                    System.out.println("Can not create directory : " + file.getParent());
+                }
+            }
+        }else if(SVType.equals("D")){
+            variationList = this.deletionList;
+            filename = path.getParent().toString()+File.separator+"Deletion"+File.separator+sampleName+".Deletion.report";
+            readmeFile = path.getParent().toString()+File.separator+"Deletion"+File.separator+sampleName+".Deletion.readme.txt";
+            File file = new File(filename);
+            if(!file.getParentFile().exists()){
+                try{
+                    file.getParentFile().mkdirs();
+                } 
+                catch(SecurityException se){
+                    System.out.println("Can not create directory : " + file.getParent());
+                }
+            }
+        }else if(SVType.equals("SI")){
+            variationList = this.smallInsertionList;
+            filename = path.getParent().toString()+File.separator+"smallInsertion"+File.separator+sampleName+".smallInsertion.report";
+            readmeFile = path.getParent().toString()+File.separator+"smallInsertion"+File.separator+sampleName+".smallInsertion.readme.txt";
+            File file = new File(filename);
+            if(!file.getParentFile().exists()){
+                try{
+                    file.getParentFile().mkdirs();
+                } 
+                catch(SecurityException se){
+                    System.out.println("Can not create directory : " + file.getParent());
+                }
+            }
+        }else if(SVType.equals("IA")){
+            variationPairList = this.intraInsertionList;
+            filename = path.getParent().toString()+File.separator+"IntraInsertion"+File.separator+sampleName+".IntraInsertion.report";
+            readmeFile = path.getParent().toString()+File.separator+"IntraInsertion"+File.separator+sampleName+".IntraInsertion.readme.txt";
+            File file = new File(filename);
+            if(!file.getParentFile().exists()){
+                try{
+                    file.getParentFile().mkdirs();
+                } 
+                catch(SecurityException se){
+                    System.out.println("Can not create directory : " + file.getParent());
+                }
+            }
+        }else if(SVType.equals("IE")){
+            variationPairList = this.interInsertionList;
+            filename = path.getParent().toString()+File.separator+"InterInsertion"+File.separator+sampleName+".InterInsertion.report";
+            readmeFile = path.getParent().toString()+File.separator+"InterInsertion"+File.separator+sampleName+".InterInsertion.readme.txt";
+            File file = new File(filename);
+            if(!file.getParentFile().exists()){
+                try{
+                    file.getParentFile().mkdirs();
+                } 
+                catch(SecurityException se){
+                    System.out.println("Can not create directory : " + file.getParent());
+                }
+            }            
+        }else if(SVType.equals("CH")){
+            variationList = this.chimericList;
+            filename = path.getParent().toString()+File.separator+"Chimeric"+File.separator+sampleName+".Chimeric.report";
+            readmeFile = path.getParent().toString()+File.separator+"Chimeric"+File.separator+sampleName+".Chimeric.readme.txt";
+            File file = new File(filename);
+            if(!file.getParentFile().exists()){
+                try{
+                    file.getParentFile().mkdirs();
+                } 
+                catch(SecurityException se){
+                    System.out.println("Can not create directory : " + file.getParent());
+                }
+            }
+        }
+        
+        writer = new FileWriter(filename);
+        readmeWriter = new FileWriter(readmeFile);
+        readmeWriter.write(generateReadme(SVType));
+        /**
+         * For tandem or deletion
+         */
+        if(SVType.equals("TD")||SVType.equals("D")||SVType.equals("CH")||SVType.equals("SI")){
+            int count = 1;
+            for(int i=0;i<variationList.size();i++){
+//                if(i==12){
+//                            System.out.println();
+//                        }
+                SVGroup dummySVGroup = variationList.get(i);
+                ArrayList<String> res = createReferenceFromPreciseSVType(dummySVGroup,refFile,refFaIndex,extendSize);
+                String refName = res.get(0);
+                int numBaseBeforeNewRefBPF = Integer.parseInt(res.get(2));
+                
+                /**
+                 * Annotation part
+                 */
+//                ArrayList<String> annotation = getAnnotationOfSVGroupV3(dummySVGroup, refAnno, refAnnoIndex, "gene",merSize);
+                String annoF = "null";
+                String annoB = "null";
+                /******************/
+                
+                if(SVType.equals("TD")){
+                    writer.write(">"+count+"["+sampleName+"]"+"\t"+refName+"\t"+dummySVGroup.shortTandemSummary()+"\tAnnotation front : " + annoF + "\tAnnotation back : "+ annoB + "\n");                    
+                }else if(SVType.equals("D")){
+                    writer.write(">"+count+"["+sampleName+"]"+"\t"+refName+"\t"+dummySVGroup.shortDeletionSummary()+"\tAnnotation front : " + annoF + "\tAnnotation back : "+ annoB+"\n");
+                }else if(SVType.equals("CH")){
+                    writer.write(">"+count+"["+sampleName+"]"+"\t"+refName+"\t"+dummySVGroup.shortSummary()+"\tAnnotation front : " + annoF + "\tAnnotation back : "+ annoB+"\n");
+                }else if(SVType.equals("SI")){
+                    writer.write(">"+count+"["+sampleName+"]"+"\t"+refName+"\t"+dummySVGroup.shortSmallInsSummary()+"\tAnnotation front : " + annoF + "\tAnnotation back : "+ annoB+"\n");
+                }
+                count++;
+                ArrayList<VariationV2> varList = dummySVGroup.getVarList();
+                
+                StringBuilder newRef = new StringBuilder(res.get(1));
+                int newRefBPIdxF = 0;
+                int newRefBPIdxB = 0;
+                
+                for(int k=0;k<varList.size();k++){
+                    VariationV2 var = varList.get(k);
+
+                    String read = var.getReadSeq();
+                    int numBaseBeforeReadBPF = var.getBreakpointIndexF()+1;
+                    int numBaseBeforeReadBPB = var.getBreakpointIndexB();               // special for breakpoint back no need to plus 1 to get num base
+                    int numAppend = numBaseBeforeNewRefBPF - numBaseBeforeReadBPF;
+//                    int numAppend = extendSize;
+                    
+                    StringBuilder readBuilder = new StringBuilder(newRef.length());
+                    for(int num=0;num<numAppend;num++){
+                        readBuilder.append(" ");
+                    }
+                    readBuilder.append(read);
+                    
+                    if(k==0){
+                        // calculate variable for reference
+                        // prepare reference and write reference
+                        newRefBPIdxF = numBaseBeforeNewRefBPF; //+ numBaseBeforeReadBPF;                        
+                        newRef.insert(newRefBPIdxF, "|");
+                        if(var.getBreakpointIndexB() - var.getBreakpointIndexF() == 1){
+                            // BPF and BPB is the same location we can insert at the same index
+                            newRefBPIdxB = newRefBPIdxF;
+                            newRef.insert(newRefBPIdxF, "|");
+                        }else{
+                            // Has unmatch base between BPF and BPB
+                            newRefBPIdxB = numAppend + numBaseBeforeReadBPB + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF
+                            newRef.insert(newRefBPIdxB, "|");             
+                        }
+                        writer.write(newRef.toString());
+                        writer.write("\n");
+                    }
+                    // calculate variable for read
+                    newRefBPIdxF = numAppend + numBaseBeforeReadBPF;
+                    if(var.getBreakpointIndexB() - var.getBreakpointIndexF() == 1){
+                        // BPF and BPB is the same location we can insert at the same index
+                        newRefBPIdxB = newRefBPIdxF;                            
+                    }else{
+                        // Has unmatch base between BPF and BPB
+                        newRefBPIdxB = numAppend + numBaseBeforeReadBPB + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF                                       
+                    }
+                    
+//                    if(newRefBPIdxF == 212){
+//                        System.out.println();
+//                    }
+                    readBuilder.insert(newRefBPIdxF, "|");
+                    readBuilder.insert(newRefBPIdxB, "|");
+                    
+                    writer.write(readBuilder.toString());
+                    writer.write("\n");    
+                }
+                writer.write("\n");
+            }
+            
+        }else if(SVType.equals("IA")||SVType.equals("IE")){
+            /**
+             * For inter and intra Translocation
+             */
+            String dotSeparator = "..........";
+            int count = 1;
+//            for(Map.Entry<ArrayList<SVGroup>,Boolean> entry : variationMap.entrySet()){
+//                SVGroup frontSVGroup = entry.getKey().get(0);
+//                SVGroup backSVGroup = entry.getKey().get(1);
+                
+            for(int i=0;i<variationPairList.size();i++){
+                SVGroupPair svPair = variationPairList.get(i);
+                SVGroup frontSVGroup = svPair.getFrontSVGroup();
+                SVGroup backSVGroup = svPair.getBackSVGroup();
+                
+                //Prepare newRef Front SVGroup
+                ArrayList<String> resF = createReferenceFromPreciseSVType(frontSVGroup,refFile,refFaIndex,inExtendSize);
+                String refNameF = resF.get(0);
+//                String newRefF = resF.get(1);
+                
+                int numBaseBeforeNewRefBPF_F = Integer.parseInt(resF.get(2));
+                /********/
+                
+                //Prepare newRef Back SVGroup
+                ArrayList<String> resB = createReferenceFromPreciseSVType(backSVGroup,refFile,refFaIndex,inExtendSize);
+                String refNameB = resB.get(0);
+//                String newRefB = resB.get(1);
+                
+                int numBaseBeforeNewRefBPF_B = Integer.parseInt(resB.get(2));
+                /********/
+                
+                /**
+                 * Annotation part
+                 */
+//                ArrayList<String> annotationF = getAnnotationOfSVGroupV3(frontSVGroup, refAnno, refAnnoIndex, "gene", merSize);
+                String annoF_F = "null";
+                String annoB_F = "null";
+//                ArrayList<String> annotationB = getAnnotationOfSVGroupV3(backSVGroup, refAnno, refAnnoIndex, "gene", merSize);
+                String annoF_B = "null";
+                String annoB_B = "null";
+                /******************/
+                
+                
+                writer.write(">"+count+"["+sampleName+"]"+"\t"+refNameF+"_"+refNameB+"\tFront : "+frontSVGroup.shortSummary()+"\tAnnotation Front : "+annoF_F+"\tAnnotation back : "+annoB_F+"\t||\tBack : "+backSVGroup.shortSummary()+"\tAnnotation Front : "+annoF_B+"\tAnnotation back : "+annoB_B
+                        +"\t"+svPair.getInsertionSize()+"\t"+svPair.getInsertionJunction()+"\n");
+                count++;
+//                writer.write(newRefF+".........."+newRefB);
+//                writer.write("\n");
+                
+                //Loop varlist pick big list as a main loop
+                ArrayList<VariationV2> varListF = frontSVGroup.getVarList();
+                ArrayList<VariationV2> varListB = backSVGroup.getVarList();
+                
+                int maxSize = 0;
+                if(varListF.size()>=varListB.size()){
+                    maxSize = varListF.size();
+                }else{
+                    maxSize = varListB.size();
+                }
+                StringBuilder newRefF = new StringBuilder(resF.get(1).length()+2);      // create stringbuilder for newrefF with size +2 of the refF size (plus 2 because we add "|" 2 time to denote the breakpoint)
+                int newRefBPIdxF_F = 0;
+                int newRefBPIdxB_F = 0;
+                newRefF.append(resF.get(1));
+                int referenceFrontLen = resF.get(1).length();
+//                int numBaseBeforeReadBPF_F = 0;
+                
+                StringBuilder newRefB = new StringBuilder(resB.get(1).length()+2);       // create stringbuilder for newrefB with size +2 of the refB size (plus 2 because we add "|" 2 time to denote the breakpoint)
+                int newRefBPIdxF_B = 0;
+                int newRefBPIdxB_B = 0;
+                newRefB.append(resB.get(1));
+//                int numBaseBeforeReadBPF_B = 0;
+                int remainBaseOnBackOfFront = 0;
+                for(int k=0;k<maxSize;k++){
+                    int numAppendF = 0;
+                    int numAppendB = 0;
+                    
+                    StringBuilder readBuilder = new StringBuilder(newRefF.length()+10+newRefB.length());
+                    StringBuilder readBuilderF = new StringBuilder(newRefF.capacity());
+                    StringBuilder readBuilderB = new StringBuilder(newRefB.capacity());
+                    
+                    //StringBuilder must be separate to readF readB then combine at the end to make it more easy to to under stand and cut the sapeend part and complex calculate off
+                    // Front
+                    if(k < varListF.size()){
+                        VariationV2 varF = varListF.get(k);
+                        String readF = varF.getReadSeq();
+                        int numBaseBeforeReadBPF_F = varF.getBreakpointIndexF()+1;
+                        int numBaseBeforeReadBPB_F = varF.getBreakpointIndexB();
+                        numAppendF = numBaseBeforeNewRefBPF_F - numBaseBeforeReadBPF_F;
+
+
+                        for(int num=0;num<numAppendF;num++){
+                            readBuilderF.append(" ");
+                        }
+                        readBuilderF.append(readF);
+                        remainBaseOnBackOfFront = referenceFrontLen - (numAppendF + readF.length());
+/********/                        
+                        if(k==0){
+                            // calculate variable for ref
+                            // prepare reference and write reference
+                            // focus on front
+//                            if(numBaseBeforeNewRefBPF_F == 120){
+//                                System.out.println();
+//                            }
+                            newRefBPIdxF_F = numBaseBeforeNewRefBPF_F; //+ numBaseBeforeReadBPF_F; 
+                            newRefF.insert(newRefBPIdxF_F, "|");
+                            if(varF.getBreakpointIndexB() - varF.getBreakpointIndexF() == 1){
+                                // BPF and BPB is the same location we can insert at the same index
+                                newRefBPIdxB_F = newRefBPIdxF_F;
+                                newRefF.insert(newRefBPIdxF_F, "|");
+                            }else{
+                                // Has unmatch base between BPF and BPB
+                                newRefBPIdxB_F = numAppendF + numBaseBeforeReadBPB_F + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF
+                                newRefF.insert(newRefBPIdxB_F, "|");             
+                            }
+//                            writer.write(newRefF.toString());
+//                            writer.write("\n");
+                        }
+                        
+                        // calculate variable for read
+                        newRefBPIdxF_F = numAppendF + numBaseBeforeReadBPF_F;
+                        if(varF.getBreakpointIndexB() - varF.getBreakpointIndexF() == 1){
+                            // BPF and BPB is the same location we can insert at the same index
+                            newRefBPIdxB_F = newRefBPIdxF_F;                            
+                        }else{
+                            // Has unmatch base between BPF and BPB
+                            newRefBPIdxB_F = numAppendF + numBaseBeforeReadBPB_F + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF                                       
+                        }
+                        /*********/
+                    }
+
+                    //Back
+                    if(k < varListB.size()){
+                        VariationV2 varB = varListB.get(k);
+                        String readB = varB.getReadSeq();
+                        int numBaseBeforeReadBPF_B = varB.getBreakpointIndexF()+1; 
+                        int numBaseBeforeReadBPB_B = varB.getBreakpointIndexB();
+                        if(readBuilderF.toString().length()==0){
+                            numAppendB = newRefF.length() + dotSeparator.length() + (numBaseBeforeNewRefBPF_B - numBaseBeforeReadBPF_B);     // plus 10 in this line came from number of dot that we add we add 10 dot to separate newRefF and newRefB
+                        }else{
+                            
+                            numAppendB = remainBaseOnBackOfFront + dotSeparator.length() + (numBaseBeforeNewRefBPF_B - numBaseBeforeReadBPF_B);     // plus 10 in this line came from number of dot that we add we add 10 dot to separate newRefF and newRefB
+                        }
+                             
+                        for(int num=0;num<numAppendB;num++){
+                            readBuilderB.append(" ");
+                        }
+                        
+                        readBuilderB.append(readB);
+ /***********/                       
+                        if(k==0){
+                            // prepare reference and write reference
+                            // focus on front
+                            newRefBPIdxF_B = numBaseBeforeNewRefBPF_B; // + numBaseBeforeReadBPF_B; 
+                            newRefB.insert(newRefBPIdxF_B, "|");
+                            if(varB.getBreakpointIndexB() - varB.getBreakpointIndexF() == 1){
+                                // BPF and BPB is the same location we can insert at the same index
+                                newRefBPIdxB_B = newRefBPIdxF_B;
+                                newRefB.insert(newRefBPIdxF_B, "|");
+                            }else{
+                                // Has unmatch base between BPF and BPB
+                                newRefBPIdxB_B = (numAppendB - (remainBaseOnBackOfFront + dotSeparator.length())) + numBaseBeforeReadBPB_B + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF
+                                newRefB.insert(newRefBPIdxB_B, "|");             
+                            }
+                            
+                            writer.write(newRefF+dotSeparator+newRefB);
+                            writer.write("\n");
+                        }
+                       
+                        // calculate variable for read
+                        newRefBPIdxF_B = numAppendB + numBaseBeforeReadBPF_B;
+                        if(varB.getBreakpointIndexB() - varB.getBreakpointIndexF() == 1){
+                            // BPF and BPB is the same location we can insert at the same index
+                            newRefBPIdxB_B = newRefBPIdxF_B;                            
+                        }else{
+                            // Has unmatch base between BPF and BPB
+                            newRefBPIdxB_B = numAppendB + numBaseBeforeReadBPB_B + 1; // plus 1 because breakpint is far from each other there is some shift base when we add "|" on BPF                                       
+                        }
+                        /************/
+                    }
+                    
+                    // Fill "|" into readBuilderF and readBuilderB
+                    if(readBuilderF.toString().length()!=0){
+                        readBuilderF.insert(newRefBPIdxF_F, "|");
+                        readBuilderF.insert(newRefBPIdxB_F, "|");
+                    }else{
+//                        int numToAppend = newRefF.toString().length();
+//                        for(int r=0;r<numToAppend;r++){
+//                            readBuilderF.append(" ");
+//                        }   
+                    }
+                    
+                    if(readBuilderB.toString().length()!=0){
+                        readBuilderB.insert(newRefBPIdxF_B, "|");
+                        readBuilderB.insert(newRefBPIdxB_B, "|");
+                    }else{
+//                        int numToAppend = newRefB.toString().length();
+//                        for(int r=0;r<numToAppend;r++){
+//                            readBuilderB.append(" ");
+//                        }
+                    }
+//                    readBuilderF.insert(newRefBPIdxF_F, "|");
+//                    readBuilderF.insert(newRefBPIdxB_F, "|");
+//                    readBuilderB.insert(newRefBPIdxF_B, "|");
+//                    readBuilderB.insert(newRefBPIdxB_B, "|");
+                    
+                    writer.write(readBuilderF.toString()+readBuilderB.toString());
+                    writer.write("\n");
+                }
+                writer.write("\n");
+            }
+            
+//            for(int i=0;i<variationList.size();i++){
+//                SVGroup dummySVGroup = variationList.get(i);
+//                ArrayList<String> res = createReferenceFromPreciseSVType(dummySVGroup,refFile,refIdxFile,inExtendSize);
+//                String refName = res.get(0);
+//                String newRef = res.get(1);
+//                int numBaseBeforeNewRefBPF = Integer.parseInt(res.get(3));
+//                
+//                if(SVType.equals("TD")){
+//                    writer.write(">"+i+"\t"+refName+"\t"+dummySVGroup.shortTandemSummary()+"\n");
+//                }else if(SVType.equals("D")){
+//                    writer.write(">"+i+"\t"+refName+"\t"+dummySVGroup.shortDeletionSummary()+"\n");
+//                }
+//                
+//                writer.write(newRef);
+//                writer.write("\n");
+//                
+//                ArrayList<VariationV2> varList = dummySVGroup.getVarList();
+//                for(int k=0;k<varList.size();k++){
+//                    VariationV2 var = varList.get(k);
+//                    String read = var.getReadSeq();
+//                    int numBaseBeforeReadBPF = var.getBreakpointIndexF()+1;
+//                    int numAppend = numBaseBeforeNewRefBPF + numBaseBeforeReadBPF;
+//                    
+//                    StringBuilder readBuilder = new StringBuilder();                    
+//                    for(int num=0;num<numAppend;num++){
+//                        readBuilder.append(" ");
+//                    }
+//                    readBuilder.append(read);
+//                    
+//                    writer.write(readBuilder.toString());
+//                    writer.write("\n");    
+//                } 
+//            }
+        }
+        
+        writer.flush();
+        writer.close();
+        readmeWriter.flush();
+        readmeWriter.close();
+    }
+    
     public void writeVisualizePreciseSVTypeWithAnnotation(String readFile, String refFile, String refFaIndex, String gffFile, String SVType, int minPickCoverage, int inExtendSize, int merSize) throws IOException{
         /**
          * this function will write the precise SVType report with single base resolution
          * user must define SV type Code which has 5 SV Type
-         * TD = tandem, D = deletion, IA = intraIns, IE = interIns, CH = chimeric
+         * TD = tandem, D = deletion, IA = intraIns, IE = interIns, CH = chimeric, SI = small Insertion
          */
         
         /**
@@ -4291,6 +4749,19 @@ public class VariationResult {
             variationList = this.deletionList;
             filename = path.getParent().toString()+File.separator+"Deletion"+File.separator+sampleName+".Deletion.Anno.report";
             readmeFile = path.getParent().toString()+File.separator+"Deletion"+File.separator+sampleName+".Deletion.Anno.readme.txt";
+            File file = new File(filename);
+            if(!file.getParentFile().exists()){
+                try{
+                    file.getParentFile().mkdirs();
+                } 
+                catch(SecurityException se){
+                    System.out.println("Can not create directory : " + file.getParent());
+                }
+            }
+        }else if(SVType.equals("SI")){
+            variationList = this.smallInsertionList;
+            filename = path.getParent().toString()+File.separator+"smallInsertion"+File.separator+sampleName+".smallInsertion.Anno.report";
+            readmeFile = path.getParent().toString()+File.separator+"smallInsertion"+File.separator+sampleName+".smallInsertion.Anno.readme.txt";
             File file = new File(filename);
             if(!file.getParentFile().exists()){
                 try{
@@ -4347,7 +4818,7 @@ public class VariationResult {
         /**
          * For tandem or deletion
          */
-        if(SVType.equals("TD")||SVType.equals("D")||SVType.equals("CH")){
+        if(SVType.equals("TD")||SVType.equals("D")||SVType.equals("CH")||SVType.equals("SI")){
             int count = 1;
             for(int i=0;i<variationList.size();i++){
 //                if(i==12){
@@ -4367,11 +4838,13 @@ public class VariationResult {
                 /******************/
                 
                 if(SVType.equals("TD")){
-                    writer.write(">"+count+"\t"+refName+"\t"+dummySVGroup.shortTandemSummary()+"\tAnnotation front : " + annoF + "\tAnnotation back : "+ annoB + "\n");                    
+                    writer.write(">"+count+"["+sampleName+"]"+"\t"+refName+"\t"+dummySVGroup.shortTandemSummary()+"\tAnnotation front : " + annoF + "\tAnnotation back : "+ annoB + "\n");                    
                 }else if(SVType.equals("D")){
-                    writer.write(">"+count+"\t"+refName+"\t"+dummySVGroup.shortDeletionSummary()+"\tAnnotation front : " + annoF + "\tAnnotation back : "+ annoB+"\n");
+                    writer.write(">"+count+"["+sampleName+"]"+"\t"+refName+"\t"+dummySVGroup.shortDeletionSummary()+"\tAnnotation front : " + annoF + "\tAnnotation back : "+ annoB+"\n");
                 }else if(SVType.equals("CH")){
-                    writer.write(">"+count+"\t"+refName+"\t"+dummySVGroup.shortSummary()+"\tAnnotation front : " + annoF + "\tAnnotation back : "+ annoB+"\n");
+                    writer.write(">"+count+"["+sampleName+"]"+"\t"+refName+"\t"+dummySVGroup.shortSummary()+"\tAnnotation front : " + annoF + "\tAnnotation back : "+ annoB+"\n");
+                }else if(SVType.equals("SI")){
+                    writer.write(">"+count+"["+sampleName+"]"+"\t"+refName+"\t"+dummySVGroup.shortSmallInsSummary()+"\tAnnotation front : " + annoF + "\tAnnotation back : "+ annoB+"\n");
                 }
                 count++;
                 ArrayList<VariationV2> varList = dummySVGroup.getVarList();
@@ -4477,7 +4950,7 @@ public class VariationResult {
                 /******************/
                 
                 
-                writer.write(">"+count+"\t"+refNameF+"_"+refNameB+"\tFront : "+frontSVGroup.shortSummary()+"\tAnnotation Front : "+annoF_F+"\tAnnotation back : "+annoB_F+"\t||\tBack : "+backSVGroup.shortSummary()+"\tAnnotation Front : "+annoF_B+"\tAnnotation back : "+annoB_B
+                writer.write(">"+count+"["+sampleName+"]"+"\t"+refNameF+"_"+refNameB+"\tFront : "+frontSVGroup.shortSummary()+"\tAnnotation Front : "+annoF_F+"\tAnnotation back : "+annoB_F+"\t||\tBack : "+backSVGroup.shortSummary()+"\tAnnotation Front : "+annoF_B+"\tAnnotation back : "+annoB_B
                         +"\t"+svPair.getInsertionSize()+"\t"+svPair.getInsertionJunction()+"\n");
                 count++;
 //                writer.write(newRefF+".........."+newRefB);
@@ -5374,8 +5847,8 @@ public class VariationResult {
         /********************/
         
         
-        // sort list of SVGroup by number of coverage fron high to low (descending) comparable has benn inplement in SVGroup object
-//        Collections.sort(this.tandemList,SVGroup.CoverageComparator);
+        // sort list of SVGroup (only small Insertion) by number of coverage from high to low (descending) comparable has been implement in SVGroup object
+        Collections.sort(this.smallInsertionList,SVGroup.CoverageComparator);
 //        Collections.sort(this.indelList,SVGroup.CoverageComparator);
 //        Collections.sort(this.intraTransList,SVGroup.CoverageComparator);
 //        Collections.sort(this.interTransList,SVGroup.CoverageComparator);        
@@ -6185,6 +6658,17 @@ public class VariationResult {
             }
         }
         
+        String smallInsertionReport = path.getParent().toString()+File.separator+"smallInsertion"+File.separator+sampleName+"_smallInsertion.csv";
+        file = new File(smallInsertionReport);
+        if(!file.getParentFile().exists()){
+            try{
+                file.getParentFile().mkdirs();
+            } 
+            catch(SecurityException se){
+                System.out.println("Can not create directory : " + file.getParent());
+            }
+        }
+        
         String intraInsertionReport = path.getParent().toString()+File.separator+"IntraInsertion"+File.separator+sampleName+"_intraInsertion.csv";
         file = new File(intraInsertionReport);
         if(!file.getParentFile().exists()){
@@ -6245,6 +6729,7 @@ public class VariationResult {
         writer.write("Total BreakPoint with different Chromosome = " + this.diffChrSVGroup.size() + "\n");
         writer.write("Possible Tandem = " + this.tandemList.size() + "\n");
         writer.write("Possible Deletion = " + this.deletionList.size()+"\n");
+        writer.write("Possible Small Insertion = " + this.smallInsertionList.size()+"\n");
         writer.write("Possible Intra-Insertion = " + this.intraInsertionList.size()+"\n");
         writer.write("Possible Inter-Insertion = " + this.interInsertionList.size()+"\n");
         writer.write("Possible Chimeric = " + this.chimericList.size()+"\n");
@@ -6277,7 +6762,7 @@ public class VariationResult {
         /**
          * Tandem
          */
-        writer.write("Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,Correctness(High is best),Tandem size,numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read,number of unMap Read,Annotation Front,Annotation Back"); // header
+        writer.write("SampleName,Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,Correctness(High is best),Tandem size,numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read,number of unMap Read,Annotation Front,Annotation Back"); // header
         writer.write("\n");
         int count = 1;
         for(int i=0;i<this.tandemList.size();i++){
@@ -6339,7 +6824,7 @@ public class VariationResult {
             /**********************/
             
             ArrayList<VariationV2> varList = svGroup.getVarList();
-            writer.write(count+","+svGroup.excelTandemSummary());
+            writer.write(sampleName+","+count+","+svGroup.excelTandemSummary());
             writer.write(","+strAnnoF+","+strAnnoB);
             writer.write("\n");
             count++;
@@ -6362,7 +6847,7 @@ public class VariationResult {
 //            ps = new PrintStream(filename);
             writer = new FileWriter(deletionReport);
         }
-        writer.write("Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,Correctness(Low is best),Deletion Size,numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read,number of unMap Read,Annotation Front,Annotation Back"); // header
+        writer.write("SampleName,Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,Correctness(Low is best),Deletion Size,numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read,number of unMap Read,Annotation Front,Annotation Back"); // header
         writer.write("\n");
         count = 1;
         for(int i=0;i<this.deletionList.size();i++){
@@ -6424,7 +6909,49 @@ public class VariationResult {
             /**********************/
             
             ArrayList<VariationV2> varList = svGroup.getVarList();
-            writer.write(count+","+svGroup.excelDeletionSummary());
+            writer.write(sampleName+","+count+","+svGroup.excelDeletionSummary());
+            writer.write("," + strAnnoF + "," + strAnnoB);
+            writer.write("\n");
+            count++;
+        }
+        writer.flush();
+        writer.close();
+        /**********************************/
+        
+        /**
+        * small Insertion
+        */
+        
+        f = new File(smallInsertionReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(deletionReport,true);
+            writer = new FileWriter(smallInsertionReport);//not append
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(smallInsertionReport);
+        }
+        writer.write("SampleName,Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,Insertion Size,numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read,number of unMap Read,Annotation Front,Annotation Back"); // header
+        writer.write("\n");
+        count = 1;
+        for(int i=0;i<this.smallInsertionList.size();i++){
+            SVGroup svGroup = this.smallInsertionList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            /**
+            * Annotation part
+            */
+            ArrayList<String> annotation = getAnnotationOfSVGroupV3(svGroup, refAnno, refAnnoIndex, "gene",merSize);
+            String strAnnoF = annotation.get(0);
+            String strAnnoB = annotation.get(1);
+            /******************/
+            
+            /**********************/
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(sampleName+","+count+","+svGroup.excelSmallInsSummary());
             writer.write("," + strAnnoF + "," + strAnnoB);
             writer.write("\n");
             count++;
@@ -6445,7 +6972,7 @@ public class VariationResult {
 //            ps = new PrintStream(filename);
             writer = new FileWriter(intraInsertionReport);
         }
-        writer.write("Group,Chromosome Front(Front Junction),BreakPoint Front(Front Junction),Strand Front(Front Junction)"
+        writer.write("SampleName,Group,Chromosome Front(Front Junction),BreakPoint Front(Front Junction),Strand Front(Front Junction)"
                 + ",Chromosome Back(Front Junction),BreakPoint Back(Front Junction),Strand Back(Front Junction),Support Reads(Front Junction),numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read(Front Junction),number of unMap Read(Front Junction)"
                 + ",Chromosome Front(Back Junction),BreakPoint Front(Back Junction),Strand Front(Back Junction)"
                 + ",Chromosome Back(Back Junction),BreakPoint Back(Back Junction),Strand Back(Back Junction),Support Reads(Back Junction),numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read(Back Junction),number of unMap Read(Back Junction)"
@@ -6513,7 +7040,7 @@ public class VariationResult {
             /******************/
             
 
-            writer.write(count+","+frontJunction.excelShortSummary());
+            writer.write(sampleName+","+count+","+frontJunction.excelShortSummary());
             anno = anno+strAnnoF+","+strAnnoB;
 //            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
 //            writer.write("\n");
@@ -6590,7 +7117,7 @@ public class VariationResult {
 //            ps = new PrintStream(filename);
             writer = new FileWriter(interInsertionReport);
         }
-        writer.write("Group,Chromosome Front(Front Junction),BreakPoint Front(Front Junction),Strand Front(Front Junction)"
+        writer.write("SampleName,Group,Chromosome Front(Front Junction),BreakPoint Front(Front Junction),Strand Front(Front Junction)"
                 + ",Chromosome Back(Front Junction),BreakPoint Back(Front Junction),Strand Back(Front Junction),Support Reads(Front Junction),numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read(Front Junction),number of unMap Read(Front Junction)"
                 + ",Chromosome Back(Back Junction),BreakPoint Back(Back Junction),Strand Back(Back Junction),Support Reads(Back Junction),numStrandPattern,+|+,-|-,+|-,-|+number of Map Read(Back Junction),number of unMap Read(Back Junction)"
                 + ",Insert Portion Size,Insertion Junction,Annotation Front(Front Junction),Annotation Back(Front Junction),Annotation Front(Back Junction),Annotation Back(Back Junction)"); // header
@@ -6656,7 +7183,7 @@ public class VariationResult {
             String strAnnoB = annotationF.get(1);
             /******************/
             
-            writer.write(count+","+frontJunction.excelShortSummary());
+            writer.write(sampleName+","+count+","+frontJunction.excelShortSummary());
             anno = anno + strAnnoF+","+strAnnoB;
 //            writer.write("\t" + anno);
 //            writer.write("\t" + "Annotation Front : " + strAnnoF + "\t" + "Annotation back : " + strAnnoB);
@@ -6733,7 +7260,7 @@ public class VariationResult {
 //            ps = new PrintStream(filename);
             writer = new FileWriter(chimericReport);
         }
-        writer.write("Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read,number of unMap Read,Annotation Front,Annotation Back"); // header
+        writer.write("SampleName,Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read,number of unMap Read,Annotation Front,Annotation Back"); // header
         writer.write("\n");
         count = 1;
         Collections.sort(this.chimericList,SVGroup.CoverageComparator);
@@ -6796,7 +7323,418 @@ public class VariationResult {
             /******************/
 
             ArrayList<VariationV2> varList = svGroup.getVarList();
-            writer.write(count+","+svGroup.excelShortSummary());
+            writer.write(sampleName+","+count+","+svGroup.excelShortSummary());
+            writer.write("," + strAnnoF + "," + strAnnoB);
+            writer.write("\n");
+            count++;
+        }
+        writer.flush();
+        writer.close();
+        /***********************************************/
+        
+        
+        /***************************************************/
+    }
+    
+    public void writePreciseStructureVariantV2SortedCoverageGroupInfoReportWithOutAnnotationExcel(String readFile, String refFaiFile, int coverageThreshold , int merSize) throws IOException{
+        /**
+        * Suitable for SVGroup object that contain VariaitonV2 object
+        * write result to file format for variant report in sorted order (high to low)
+        * 
+        * "Caution : this function must be called after classifyRoughVariantReport function"
+        */
+        
+        Path path = Paths.get(readFile);
+        String fileName = path.getFileName().toString();
+        String[] dummy2 = fileName.split("_unmap");         // For more generic this should be split by . (and whole protocal should use . as a filed peaparation like A.unmap.emdup.bam So, we can get read name just split by .)
+        String sampleName = dummy2[0];
+        
+        String tandemReport = path.getParent().toString()+File.separator+"Tandem"+File.separator+sampleName+"_tandem.csv";
+        File file = new File(tandemReport);
+        if(!file.getParentFile().exists()){
+            try{
+                file.getParentFile().mkdirs();
+            } 
+            catch(SecurityException se){
+                System.out.println("Can not create directory : " + file.getParent());
+            }
+        }
+        
+        String deletionReport = path.getParent().toString()+File.separator+"Deletion"+File.separator+sampleName+"_deletion.csv";
+        file = new File(deletionReport);
+        if(!file.getParentFile().exists()){
+            try{
+                file.getParentFile().mkdirs();
+            } 
+            catch(SecurityException se){
+                System.out.println("Can not create directory : " + file.getParent());
+            }
+        }
+        
+        String smallInsertionReport = path.getParent().toString()+File.separator+"smallInsertion"+File.separator+sampleName+"_smallInsertion.csv";
+        file = new File(smallInsertionReport);
+        if(!file.getParentFile().exists()){
+            try{
+                file.getParentFile().mkdirs();
+            } 
+            catch(SecurityException se){
+                System.out.println("Can not create directory : " + file.getParent());
+            }
+        }
+        
+        String intraInsertionReport = path.getParent().toString()+File.separator+"IntraInsertion"+File.separator+sampleName+"_intraInsertion.csv";
+        file = new File(intraInsertionReport);
+        if(!file.getParentFile().exists()){
+            try{
+                file.getParentFile().mkdirs();
+            } 
+            catch(SecurityException se){
+                System.out.println("Can not create directory : " + file.getParent());
+            }
+        }
+        
+        String interInsertionReport = path.getParent().toString()+File.separator+"InterInsertion"+File.separator+sampleName+"_interInsertion.csv";
+        file = new File(interInsertionReport);
+        if(!file.getParentFile().exists()){
+            try{
+                file.getParentFile().mkdirs();
+            } 
+            catch(SecurityException se){
+                System.out.println("Can not create directory : " + file.getParent());
+            }
+        }
+        
+        String chimericReport = path.getParent().toString()+File.separator+"Chimeric"+File.separator+sampleName+"_chimeric.csv";
+        file = new File(chimericReport);
+        if(!file.getParentFile().exists()){
+            try{
+                file.getParentFile().mkdirs();
+            } 
+            catch(SecurityException se){
+                System.out.println("Can not create directory : " + file.getParent());
+            }
+        }
+//        
+//        String tandemReport = nameFile+"_rmDup_tandem.csv";
+//        String deletionReport = nameFile+"_rmDup_deletion.csv";
+//        String intraInsertionReport = nameFile+"_rmDup_intraInsertion.csv";
+//        String interInsertionReport = nameFile+"_rmDup_interInsertion.csv";
+//        String chimericReport = nameFile+"_rmDup_chimeric.csv";
+        String summaryReport = path.getParent().toString()+File.separator+sampleName+"_SummaryStats.txt";
+//        String groupCoverageReport = nameFile+".mrkDup.cov.PreciseSVType.ginfo.annotation.out";
+        
+        
+        /**
+         * write summary report
+         */
+        FileWriter writer;
+        File f = new File(summaryReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(summaryReport,true);
+            writer = new FileWriter(summaryReport); //not append
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(summaryReport);
+        }
+        writer.write("Total Breakpoint Found = " + (this.sameChrSVGroup.size()+this.diffChrSVGroup.size())+"\n");
+        writer.write("Total BreakPoint with same Chromosome = " + this.sameChrSVGroup.size() + "\n");
+        writer.write("Total BreakPoint with different Chromosome = " + this.diffChrSVGroup.size() + "\n");
+        writer.write("Possible Tandem = " + this.tandemList.size() + "\n");
+        writer.write("Possible Deletion = " + this.deletionList.size()+"\n");
+        writer.write("Possible Small Intra-Insertion = " + this.smallInsertionList.size()+"\n");
+        writer.write("Possible Intra-Insertion = " + this.intraInsertionList.size()+"\n");
+        writer.write("Possible Inter-Insertion = " + this.interInsertionList.size()+"\n");
+        writer.write("Possible Chimeric = " + this.chimericList.size()+"\n");
+        writer.flush();
+        writer.close();
+        
+        
+        /**
+         * Read annotation file (GFF)
+         */
+//        ReferenceAnnotation refAnno = SequenceUtil.readAnnotationFileV4(gffFile,refFaiFile, "gene" , merSize);
+//        Map<Integer,Annotation> refAnnoIndex = refAnno.getAnnotationIndex();
+        
+        System.out.println("refAnno is empty? = No Annotation");
+        /****************************/
+
+        /**
+         * Write tandem report
+         */
+        f = new File(tandemReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(tandemReport,true);       //append
+            writer = new FileWriter(tandemReport);              //not append
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(tandemReport);
+        }
+        
+        /**
+         * Tandem
+         */
+        writer.write("SampleName,Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,Correctness(High is best),Tandem size,numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read,number of unMap Read,Annotation Front,Annotation Back"); // header
+        writer.write("\n");
+        int count = 1;
+        for(int i=0;i<this.tandemList.size();i++){
+            SVGroup svGroup = this.tandemList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }           
+            
+            /**
+            * Annotation part
+            */
+//            ArrayList<String> annotation = getAnnotationOfSVGroupV3(svGroup, refAnno, refAnnoIndex, "gene",merSize);
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            /******************/
+                
+            /**********************/
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(sampleName+","+count+","+svGroup.excelTandemSummary());
+            writer.write(","+strAnnoF+","+strAnnoB);
+            writer.write("\n");
+            count++;
+        }
+        
+        writer.flush();
+        writer.close();
+        /******************************/
+        
+        /**
+         * Deletion
+         */
+        
+        f = new File(deletionReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(deletionReport,true);
+            writer = new FileWriter(deletionReport);//not append
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(deletionReport);
+        }
+        writer.write("SampleName,Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,Correctness(Low is best),Deletion Size,numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read,number of unMap Read,Annotation Front,Annotation Back"); // header
+        writer.write("\n");
+        count = 1;
+        for(int i=0;i<this.deletionList.size();i++){
+            SVGroup svGroup = this.deletionList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+
+            /**
+            * Annotation part
+            */
+//            ArrayList<String> annotation = getAnnotationOfSVGroupV3(svGroup, refAnno, refAnnoIndex, "gene",merSize);
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            /******************/
+            
+            /**********************/
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(sampleName+","+count+","+svGroup.excelDeletionSummary());
+            writer.write("," + strAnnoF + "," + strAnnoB);
+            writer.write("\n");
+            count++;
+        }
+        writer.flush();
+        writer.close();
+        /**********************************/
+        
+        /**
+        * small Insertion
+        */
+        
+        f = new File(smallInsertionReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(deletionReport,true);
+            writer = new FileWriter(smallInsertionReport);//not append
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(smallInsertionReport);
+        }
+        writer.write("SampleName,Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,Insertion Size,numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read,number of unMap Read,Annotation Front,Annotation Back"); // header
+        writer.write("\n");
+        count = 1;
+        for(int i=0;i<this.smallInsertionList.size();i++){
+            SVGroup svGroup = this.smallInsertionList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }
+            /**
+            * Annotation part
+            */
+//            ArrayList<String> annotation = getAnnotationOfSVGroupV3(svGroup, refAnno, refAnnoIndex, "gene",merSize);
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            /******************/
+            
+            /**********************/
+            
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(sampleName+","+count+","+svGroup.excelSmallInsSummary());
+            writer.write("," + strAnnoF + "," + strAnnoB);
+            writer.write("\n");
+            count++;
+        }
+        writer.flush();
+        writer.close();
+        /**********************************/
+        
+        /**
+         * Intra Insertion
+         */
+        f = new File(intraInsertionReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(intraInsertionReport,true);
+            writer = new FileWriter(intraInsertionReport);//not append
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(intraInsertionReport);
+        }
+        writer.write("SampleName,Group,Chromosome Front(Front Junction),BreakPoint Front(Front Junction),Strand Front(Front Junction)"
+                + ",Chromosome Back(Front Junction),BreakPoint Back(Front Junction),Strand Back(Front Junction),Support Reads(Front Junction),numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read(Front Junction),number of unMap Read(Front Junction)"
+                + ",Chromosome Front(Back Junction),BreakPoint Front(Back Junction),Strand Front(Back Junction)"
+                + ",Chromosome Back(Back Junction),BreakPoint Back(Back Junction),Strand Back(Back Junction),Support Reads(Back Junction),numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read(Back Junction),number of unMap Read(Back Junction)"
+                + ",Insert Portion Size,Insertion Junction,Annotation Front(Front Junction),Annotation Back(Front Junction),Annotation Front(Back Junction),Annotation Back(Back Junction)"); // header
+        writer.write("\n");
+        count = 1;
+//        for(Map.Entry<ArrayList<SVGroup>,Boolean> map : this.intraTransPairList.entrySet()){
+        for(int i=0;i<this.intraInsertionList.size();i++){
+            String anno = "";
+            SVGroupPair svPair = this.intraInsertionList.get(i);
+            SVGroup frontJunction = svPair.getFrontSVGroup();
+            SVGroup backJunction = svPair.getBackSVGroup();
+        
+            /**
+            * Annotation part
+            */
+//            ArrayList<String> annotationF = getAnnotationOfSVGroupV3(frontJunction, refAnno, refAnnoIndex, "gene", merSize);
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            /******************/
+            
+
+            writer.write(sampleName+","+count+","+frontJunction.excelShortSummary());
+            anno = anno+strAnnoF+","+strAnnoB;
+
+            /**
+            * Annotation part
+            */
+//            ArrayList<String> annotationB = getAnnotationOfSVGroupV3(backJunction, refAnno, refAnnoIndex, "gene", merSize);
+            strAnnoF = "null";
+            strAnnoB = "null";
+            /******************/
+            
+            writer.write(","+backJunction.excelShortSummary());
+            anno = anno + "," + strAnnoF+","+strAnnoB;
+            writer.write("," + svPair.getInsertionSize()+","+svPair.getInsertionJunction()+","+ anno);
+            writer.write("\n");
+            count++;
+        }
+        
+        writer.flush();
+        writer.close();
+        /*****************************************/
+        
+        /**
+         * Inter Translocation
+         */
+        f = new File(interInsertionReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(interInsertionReport,true);
+            writer = new FileWriter(interInsertionReport);//not append
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(interInsertionReport);
+        }
+        writer.write("SampleName,Group,Chromosome Front(Front Junction),BreakPoint Front(Front Junction),Strand Front(Front Junction)"
+                + ",Chromosome Back(Front Junction),BreakPoint Back(Front Junction),Strand Back(Front Junction),Support Reads(Front Junction),numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read(Front Junction),number of unMap Read(Front Junction)"
+                + ",Chromosome Back(Back Junction),BreakPoint Back(Back Junction),Strand Back(Back Junction),Support Reads(Back Junction),numStrandPattern,+|+,-|-,+|-,-|+number of Map Read(Back Junction),number of unMap Read(Back Junction)"
+                + ",Insert Portion Size,Insertion Junction,Annotation Front(Front Junction),Annotation Back(Front Junction),Annotation Front(Back Junction),Annotation Back(Back Junction)"); // header
+        writer.write("\n");
+        count = 1;
+//        for(Map.Entry<ArrayList<SVGroup>,Boolean> map : this.interTransPairList.entrySet()){
+        for(int i=0;i<this.interInsertionList.size();i++){
+            String anno = "";
+            SVGroupPair svPair = this.interInsertionList.get(i);
+            SVGroup frontJunction = svPair.getFrontSVGroup();
+            SVGroup backJunction = svPair.getBackSVGroup();
+            
+            /**
+            * Annotation part
+            */
+//            ArrayList<String> annotationF = getAnnotationOfSVGroupV3(frontJunction, refAnno, refAnnoIndex, "gene", merSize);
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            /******************/
+            
+            writer.write(sampleName+","+count+","+frontJunction.excelShortSummary());
+            anno = anno + strAnnoF+","+strAnnoB;
+
+            /**
+            * Annotation part
+            */
+//            ArrayList<String> annotationB = getAnnotationOfSVGroupV3(backJunction, refAnno, refAnnoIndex, "gene", merSize);
+            strAnnoF = "null";
+            strAnnoB = "null";
+            /******************/
+
+            writer.write(","+backJunction.excelShortSummary());
+            anno = anno + "," + strAnnoF+","+strAnnoB;
+            writer.write(","+svPair.getInsertionSize()+","+svPair.getInsertionJunction()+ "," + anno);
+            writer.write("\n");
+            count++;
+        }
+        writer.flush();
+        writer.close();
+        /**********************************************/
+        
+        /**
+         * Chimeric
+         */
+        f = new File(chimericReport); //File object        
+        if(f.exists()){
+//            ps = new PrintStream(new FileOutputStream(filename,true));
+//            writer = new FileWriter(chimericReport,true);
+            writer = new FileWriter(chimericReport);//not append
+        }else{
+//            ps = new PrintStream(filename);
+            writer = new FileWriter(chimericReport);
+        }
+        writer.write("SampleName,Group,Chromosome Front,BreakPoint Front,Strand Front,Chromosome Back,BreakPoint Back,Strand Back,Support Reads,numStrandPattern,+|+,-|-,+|-,-|+,number of Map Read,number of unMap Read,Annotation Front,Annotation Back"); // header
+        writer.write("\n");
+        count = 1;
+        Collections.sort(this.chimericList,SVGroup.CoverageComparator);
+        for(int i=0;i<this.chimericList.size();i++){
+            SVGroup svGroup = this.chimericList.get(i);
+            if(svGroup.getNumCoverage()<coverageThreshold){
+                // fall threshold ignore this group
+                continue;
+            }           
+            
+            /**
+            * Annotation part
+            */
+//            ArrayList<String> annotation = getAnnotationOfSVGroupV3(svGroup, refAnno, refAnnoIndex, "gene",merSize);
+            String strAnnoF = "null";
+            String strAnnoB = "null";
+            /******************/
+
+            ArrayList<VariationV2> varList = svGroup.getVarList();
+            writer.write(sampleName+","+count+","+svGroup.excelShortSummary());
             writer.write("," + strAnnoF + "," + strAnnoB);
             writer.write("\n");
             count++;
@@ -7659,19 +8597,31 @@ public class VariationResult {
                             svPair.setBackSVGroup(sub);
                             this.intraInsertionList.add(svPair);
                         }
-                        // classify main as tandem or delete in the same time when class as intrainsertion 
-                        if(main.getRPF()>main.getRPB()){
+//                        // classify main as tandem or delete in the same time when class as intrainsertion 
+//                        if(main.getRPF()>main.getRPB()){
+//                            this.tandemList.add(main);
+//                            main.setTandemFlag(true);
+////                            main.setSvType("tandem");
+////                            main.setSvTypeCode((byte)0);
+////                            return "tandem";
+//                        }else{
+//                            this.deletionList.add(main);
+//                            main.setDeleteFlag(true);
+////                            main.setSvType("deletion");
+////                            main.setSvTypeCode((byte)1);
+////                            return "deletion";
+//                        }
+                        
+                        // classify main as tandem or delete or small insertion in the same time when class as intrainsertion
+                        if(main.getRPF()>main.getRPB() && main.getAPF()>main.getAPB()){
                             this.tandemList.add(main);
                             main.setTandemFlag(true);
-//                            main.setSvType("tandem");
-//                            main.setSvTypeCode((byte)0);
-//                            return "tandem";
-                        }else{
+                        }else if(main.getRPF()<main.getRPB() && main.getAPF()<main.getAPB()){
                             this.deletionList.add(main);
                             main.setDeleteFlag(true);
-//                            main.setSvType("deletion");
-//                            main.setSvTypeCode((byte)1);
-//                            return "deletion";
+                        }else if(main.getRPF()<main.getRPB() && main.getAPF()>main.getAPB()){
+                            this.smallInsertionList.add(main);
+                            main.setSmallInsertionFlag(true);
                         }
                         
 //                        main.setSvType("intraTrans");
@@ -7696,19 +8646,31 @@ public class VariationResult {
                             this.intraInsertionList.add(svPair);
                         }
                         
-                        // classify main as tandem or delete in the same time when class as intrainsertion 
-                        if(main.getRPF()>main.getRPB()){
+//                        // classify main as tandem or delete in the same time when class as intrainsertion 
+//                        if(main.getRPF()>main.getRPB()){
+//                            this.tandemList.add(main);
+//                            main.setTandemFlag(true);
+////                            main.setSvType("tandem");
+////                            main.setSvTypeCode((byte)0);
+////                            return "tandem";
+//                        }else{
+//                            this.deletionList.add(main);
+//                            main.setDeleteFlag(true);
+////                            main.setSvType("deletion");
+////                            main.setSvTypeCode((byte)1);
+////                            return "deletion";
+//                        }
+                        
+                        // classify main as tandem or delete or small insertion in the same time when class as intrainsertion
+                        if(main.getRPF()>main.getRPB() && main.getAPF()>main.getAPB()){
                             this.tandemList.add(main);
                             main.setTandemFlag(true);
-//                            main.setSvType("tandem");
-//                            main.setSvTypeCode((byte)0);
-//                            return "tandem";
-                        }else{
+                        }else if(main.getRPF()<main.getRPB() && main.getAPF()<main.getAPB()){
                             this.deletionList.add(main);
                             main.setDeleteFlag(true);
-//                            main.setSvType("deletion");
-//                            main.setSvTypeCode((byte)1);
-//                            return "deletion";
+                        }else if(main.getRPF()<main.getRPB() && main.getAPF()>main.getAPB()){
+                            this.smallInsertionList.add(main);
+                            main.setSmallInsertionFlag(true);
                         }
                         
 //                        main.setSvType("intraTrans");
@@ -7717,48 +8679,60 @@ public class VariationResult {
 //                        sub.setSvTypeCode((byte)2);
                         return "intraIns";
                     }else{
-                        if(main.getRPF()>main.getRPB()){
+                        if(main.getRPF()>main.getRPB() && main.getAPF()>main.getAPB()){
                             this.tandemList.add(main);
                             main.setTandemFlag(true);
 //                            main.setSvType("tandem");
 //                            main.setSvTypeCode((byte)0);
                             return "tandem";
-                        }else{
+                        }else if(main.getRPF()<main.getRPB() && main.getAPF()<main.getAPB()){
                             this.deletionList.add(main);
                             main.setDeleteFlag(true);
 //                            main.setSvType("deletion");
 //                            main.setSvTypeCode((byte)1);
                             return "deletion";
+                        }else if(main.getRPF()<main.getRPB() && main.getAPF()>main.getAPB()){
+                            this.smallInsertionList.add(main);
+                            main.setSmallInsertionFlag(true);
+                            return "smallIns";
                         }
                     }
                 }else{
-                    if(main.getRPF()>main.getRPB()){
+                    if(main.getRPF()>main.getRPB() && main.getAPF()>main.getAPB()){
                         this.tandemList.add(main);
                         main.setTandemFlag(true);
 //                            main.setSvType("tandem");
 //                            main.setSvTypeCode((byte)0);
                         return "tandem";
-                    }else{
+                    }else if(main.getRPF()<main.getRPB() && main.getAPF()<main.getAPB()){
                         this.deletionList.add(main);
                         main.setDeleteFlag(true);
 //                            main.setSvType("deletion");
 //                            main.setSvTypeCode((byte)1);
                         return "deletion";
+                    }else if(main.getRPF()<main.getRPB() && main.getAPF()>main.getAPB()){
+                        this.smallInsertionList.add(main);
+                        main.setSmallInsertionFlag(true);
+                        return "smallIns";
                     }
                 }
             }else{
-                if(main.getRPF()>main.getRPB()){
+                if(main.getRPF()>main.getRPB() && main.getAPF()>main.getAPB()){
                     this.tandemList.add(main);
                     main.setTandemFlag(true);
-//                    main.setSvType("tandem");
-//                    main.setSvTypeCode((byte)0);
+//                            main.setSvType("tandem");
+//                            main.setSvTypeCode((byte)0);
                     return "tandem";
-                }else{
+                }else if(main.getRPF()<main.getRPB() && main.getAPF()<main.getAPB()){
                     this.deletionList.add(main);
                     main.setDeleteFlag(true);
-//                    main.setSvType("deletion");
-//                    main.setSvTypeCode((byte)1);
+//                            main.setSvType("deletion");
+//                            main.setSvTypeCode((byte)1);
                     return "deletion";
+                }else if(main.getRPF()<main.getRPB() && main.getAPF()>main.getAPB()){
+                    this.smallInsertionList.add(main);
+                    main.setSmallInsertionFlag(true);
+                    return "smallIns";
                 }
             }
         }else if(main.getStrandF()==1 && main.getStrandB()==1){
@@ -7782,19 +8756,31 @@ public class VariationResult {
                             this.intraInsertionList.add(svPair);
                         }
                         
-                        // classify main as tandem or delete in the same time when class as intrainsertion 
-                        if(main.getRPF()<main.getRPB()){
+//                        // classify main as tandem or delete in the same time when class as intrainsertion 
+//                        if(main.getRPF()<main.getRPB()){
+//                            this.tandemList.add(main);
+//                            main.setTandemFlag(true);
+////                            main.setSvType("tandem");
+////                            main.setSvTypeCode((byte)0);
+////                            return "tandem";
+//                        }else{
+//                            this.deletionList.add(main);
+//                            main.setDeleteFlag(true);
+////                            main.setSvType("deletion");
+////                            main.setSvTypeCode((byte)1);
+////                            return "deletion";
+//                        }
+                        
+                        // classify main as tandem or delete or small insertion in the same time when class as intrainsertion
+                        if(main.getRPF()<main.getRPB() && main.getAPF()<main.getAPB()){
                             this.tandemList.add(main);
                             main.setTandemFlag(true);
-//                            main.setSvType("tandem");
-//                            main.setSvTypeCode((byte)0);
-//                            return "tandem";
-                        }else{
+                        }else if(main.getRPF()>main.getRPB() && main.getAPF()>main.getAPB()){
                             this.deletionList.add(main);
                             main.setDeleteFlag(true);
-//                            main.setSvType("deletion");
-//                            main.setSvTypeCode((byte)1);
-//                            return "deletion";
+                        }else if(main.getRPF()>main.getRPB() && main.getAPF()<main.getAPB()){
+                            this.smallInsertionList.add(main);
+                            main.setSmallInsertionFlag(true);
                         }
 //                        main.setSvType("intraTrans");
 //                        main.setSvTypeCode((byte)2);
@@ -7818,19 +8804,30 @@ public class VariationResult {
                             this.intraInsertionList.add(svPair);
                         }
                         
-                        // classify main as tandem or delete in the same time when class as intrainsertion 
-                        if(main.getRPF()<main.getRPB()){
+//                        // classify main as tandem or delete in the same time when class as intrainsertion 
+//                        if(main.getRPF()<main.getRPB()){
+//                            this.tandemList.add(main);
+//                            main.setTandemFlag(true);
+////                            main.setSvType("tandem");
+////                            main.setSvTypeCode((byte)0);
+////                            return "tandem";
+//                        }else{
+//                            this.deletionList.add(main);
+//                            main.setDeleteFlag(true);
+////                            main.setSvType("deletion");
+////                            main.setSvTypeCode((byte)1);
+////                            return "deletion";
+//                        }
+                        // classify main as tandem or delete or small insertion in the same time when class as intrainsertion
+                        if(main.getRPF()<main.getRPB() && main.getAPF()<main.getAPB()){
                             this.tandemList.add(main);
                             main.setTandemFlag(true);
-//                            main.setSvType("tandem");
-//                            main.setSvTypeCode((byte)0);
-//                            return "tandem";
-                        }else{
+                        }else if(main.getRPF()>main.getRPB() && main.getAPF()>main.getAPB()){
                             this.deletionList.add(main);
                             main.setDeleteFlag(true);
-//                            main.setSvType("deletion");
-//                            main.setSvTypeCode((byte)1);
-//                            return "deletion";
+                        }else if(main.getRPF()>main.getRPB() && main.getAPF()<main.getAPB()){
+                            this.smallInsertionList.add(main);
+                            main.setSmallInsertionFlag(true);
                         }
 //                        main.setSvType("intraTrans");
 //                        main.setSvTypeCode((byte)2);
@@ -7838,48 +8835,60 @@ public class VariationResult {
 //                        sub.setSvTypeCode((byte)2);
                         return "intraIns";
                     }else{
-                        if(main.getRPF()<main.getRPB()){
+                        if(main.getRPF()<main.getRPB() && main.getAPF()<main.getAPB()){
                             this.tandemList.add(main);
                             main.setTandemFlag(true);
 //                            main.setSvType("tandem");
 //                            main.setSvTypeCode((byte)0);
                             return "tandem";
-                        }else{
+                        }else if(main.getRPF()>main.getRPB() && main.getAPF()>main.getAPB()){
                             this.deletionList.add(main);
                             main.setDeleteFlag(true);
 //                            main.setSvType("deletion");
 //                            main.setSvTypeCode((byte)1);
                             return "deletion";
+                        }else if(main.getRPF()>main.getRPB() && main.getAPF()<main.getAPB()){
+                            this.smallInsertionList.add(main);
+                            main.setSmallInsertionFlag(true);
+                            return "smallIns";
                         }
                     }
                 }else{
-                    if(main.getRPF()<main.getRPB()){
+                    if(main.getRPF()<main.getRPB() && main.getAPF()<main.getAPB()){
                         this.tandemList.add(main);
                         main.setTandemFlag(true);
 //                            main.setSvType("tandem");
 //                            main.setSvTypeCode((byte)0);
                         return "tandem";
-                    }else{
+                    }else if(main.getRPF()>main.getRPB() && main.getAPF()>main.getAPB()){
                         this.deletionList.add(main);
                         main.setDeleteFlag(true);
 //                            main.setSvType("deletion");
 //                            main.setSvTypeCode((byte)1);
                         return "deletion";
+                    }else if(main.getRPF()>main.getRPB() && main.getAPF()<main.getAPB()){
+                        this.smallInsertionList.add(main);
+                        main.setSmallInsertionFlag(true);
+                        return "smallIns";
                     }
                 }
             }else{
-                if(main.getRPF()<main.getRPB()){
+                if(main.getRPF()<main.getRPB() && main.getAPF()<main.getAPB()){
                     this.tandemList.add(main);
                     main.setTandemFlag(true);
-//                    main.setSvType("tandem");
-//                    main.setSvTypeCode((byte)0);
+//                            main.setSvType("tandem");
+//                            main.setSvTypeCode((byte)0);
                     return "tandem";
-                }else{
+                }else if(main.getRPF()>main.getRPB() && main.getAPF()>main.getAPB()){
                     this.deletionList.add(main);
                     main.setDeleteFlag(true);
-//                    main.setSvType("deletion");
-//                    main.setSvTypeCode((byte)1);
+//                            main.setSvType("deletion");
+//                            main.setSvTypeCode((byte)1);
                     return "deletion";
+                }else if(main.getRPF()>main.getRPB() && main.getAPF()<main.getAPB()){
+                    this.smallInsertionList.add(main);
+                    main.setSmallInsertionFlag(true);
+                    return "smallIns";
                 }
             }
         }else if(main.getStrandF()==0 && main.getStrandB()==1){
@@ -8398,7 +9407,7 @@ public class VariationResult {
         String readme = "";
         if(svType.equals("TD")){
             readme = "Tandem Report Format\n\n"
-                    + ">Group\tGroup ID\tChromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tCorrectness\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back\n"
+                    + ">Group\tGroup ID[SampleName]\tChromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tCorrectness\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back\n"
                     + "Extend view of junction [Reference]\n"
                     + "Support reads sequence [number of line equal to number of support reads]\n"
                     + ".\n"
@@ -8411,7 +9420,7 @@ public class VariationResult {
                     + "For tandem Correctness higher is better";
         }else if(svType.equals("D")){
             readme = "Deletion Report Format\n\n"
-                    + ">Group\tGroup ID\tChromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tCorrectness\tDeletion Size\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back\n"
+                    + ">Group\tGroup ID[SampleName]\tChromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tCorrectness\tDeletion Size\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back\n"
                     + "Extend view of junction [Reference]\n"
                     + "Support reads sequence [number of line equal to number of support reads]\n"
                     + ".\n"
@@ -8422,9 +9431,21 @@ public class VariationResult {
                     + "Junction can split into two part front and back\n"
                     + "Strand code : 0 = strand + and 1 = strand -\n"
                     + "For deletion Correctness lower is better";
+        }else if(svType.equals("SI")){
+            readme = "Small Insertion Report Format\n\n"
+                    + ">Group\tGroup ID[SampleName]\tChromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tInsertion Size\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back\n"
+                    + "Extend view of junction [Reference]\n"
+                    + "Support reads sequence [number of line equal to number of support reads]\n"
+                    + ".\n"
+                    + ".\n"
+                    + ".\n"
+                    + ">[Next Group]\n\n"
+                    + "/********************************************/\n"
+                    + "Junction can split into two part front and back\n"
+                    + "Strand code : 0 = strand + and 1 = strand -";
         }else if(svType.equals("IE")){
             readme = "InterInsertion Report Format\n\n"
-                    + ">Group\tGroup ID\t[Front Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back"
+                    + ">Group\tGroup ID[SampleName]\t[Front Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back"
                     + "\t||\t"
                     + "[Back Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back"
                     + "\tInsert Portion Size\tInsertion Junction\n"
@@ -8439,7 +9460,7 @@ public class VariationResult {
                     + "Strand code : 0 = strand + and 1 = strand -";                    
         }else if(svType.equals("IA")){
             readme = "IntraInsertion Report Format\n\n"
-                    + ">Group\tGroup ID\t[Front Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back"
+                    + ">Group\tGroup ID[SampleName]\t[Front Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back"
                     + "\t||\t"
                     + "[Back Junction] Chromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back"
                     + "\tInsert Portion Size\tInsertion Junction\n"
@@ -8454,7 +9475,7 @@ public class VariationResult {
                     + "Strand code : 0 = strand + and 1 = strand -";                    
         }else if(svType.equals("CH")){
             readme = "Chimeric Report Format\n\n"
-                    + ">Group\tGroup ID\tChromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back\n"
+                    + ">Group\tGroup ID[SampleName]\tChromosome Front:Position Front:Strand Front\tChromosome Back:Position Back:Strand Back\tSupport Reads\tNumber of Strand Pattern\tnum Map Read\tnum unMap Read\tAnnotation Front\tAnnotation Back\n"
                     + "Extend view of junction [Reference]\n"
                     + "Support reads sequence [number of line equal to number of support reads]\n"
                     + ".\n"

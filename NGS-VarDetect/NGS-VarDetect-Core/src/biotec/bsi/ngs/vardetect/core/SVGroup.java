@@ -68,6 +68,8 @@ public class SVGroup {
     private int numUnmapRead;
     private int numMapRead;
     private int tandemSize;
+    private boolean smallInsertionFlag;
+    private int smallInsSize;
     
     public SVGroup(){
         varList = new ArrayList();        
@@ -98,6 +100,8 @@ public class SVGroup {
         this.numUnmapRead=0;
         this.numMapRead=0;
         this.tandemSize=0;
+        this.smallInsertionFlag = false;
+        this.smallInsSize = 0;
     }
     
     public void addVariationV2(VariationV2 inVar){
@@ -585,6 +589,14 @@ public class SVGroup {
         }
     };
     
+    public boolean isSmallInsertionFlag() {
+        return smallInsertionFlag;
+    }
+    
+    public int getSmallInsSize() {
+        return smallInsSize;
+    }
+
 //    @Override
 //    public int compareTo(SVGroup compareSVGroup) {
 //        int compareCov = ((SVGroup)compareSVGroup).getNumCoverage();
@@ -593,6 +605,14 @@ public class SVGroup {
 //        /* For Descending order do like this */
 //        return compareCov-getNumCoverage();
 //    }
+    public void setSmallInsSize(int smallInsSize) {    
+        this.smallInsSize = smallInsSize;
+    }
+
+    public void setSmallInsertionFlag(boolean smallInsertionFlag) {
+        this.smallInsertionFlag = smallInsertionFlag;
+        this.smallInsSize = Math.abs(this.APB-this.APF);
+    }
 
     public boolean isIdentityFlag() {
         return identityFlag;
@@ -837,20 +857,28 @@ public class SVGroup {
         return chrF+","+RPF+","+strandStrF+","+chrB+","+RPB+","+strandStrB+","+getNumCoverage()+","+this.deletionCorrectness + ","+this.deletionSize+","+this.numStrandPattern+","+this.ppFlag+","+this.mmFlag+","+this.pmFlag+","+this.mpFlag+","+this.numMapRead+","+this.numUnmapRead;        
     }
     
+    public String excelSmallInsSummary(){
+        return chrF+","+RPF+","+strandStrF+","+chrB+","+RPB+","+strandStrB+","+getNumCoverage()+","+this.smallInsSize+","+this.numStrandPattern+","+this.ppFlag+","+this.mmFlag+","+this.pmFlag+","+this.mpFlag+","+this.numMapRead+","+this.numUnmapRead;        
+    }
+    
     public String excelShortSummary(){
         return chrF+","+RPF+","+strandStrF+","+chrB+","+RPB+","+strandStrB+","+getNumCoverage()+","+this.numStrandPattern+","+this.ppFlag+","+this.mmFlag+","+this.pmFlag+","+this.mpFlag+","+this.numMapRead+","+this.numUnmapRead;        
     }
     
     public String shortSummary(){
-        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage() + "\t"+this.numStrandPattern+","+this.numMapRead+","+this.numUnmapRead;        
+        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage() + "\t"+this.numStrandPattern+"\t"+this.numMapRead+"\t"+this.numUnmapRead;        
     }
     
     public String shortDeletionSummary(){
-        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage()+"\t"+this.deletionCorrectness + "\t"+this.deletionSize + "\t"+this.numStrandPattern+","+this.numMapRead+","+this.numUnmapRead; 
+        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage()+"\t"+this.deletionCorrectness + "\t"+this.deletionSize + "\t"+this.numStrandPattern+"\t"+this.numMapRead+"\t"+this.numUnmapRead; 
     }
     
     public String shortTandemSummary(){
-        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage()+"\t"+this.tandemCorrectness + "\t"+this.numStrandPattern+","+this.numMapRead+","+this.numUnmapRead; 
+        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage()+"\t"+this.tandemCorrectness + "\t"+this.numStrandPattern+"\t"+this.numMapRead+"\t"+this.numUnmapRead; 
+    }
+    
+    public String shortSmallInsSummary(){
+        return chrF+":"+RPF+":"+strandF+"\t"+chrB+":"+RPB+":"+strandB+"\t"+getNumCoverage()+ "\t"+this.smallInsSize + "\t"+this.numStrandPattern+"\t"+this.numMapRead+"\t"+this.numUnmapRead; 
     }
     
     public String getChrNameFromRefIndex(Map<String, Long> refIndexMap, Long chrNumber) {
