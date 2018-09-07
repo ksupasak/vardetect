@@ -32,9 +32,9 @@ public class NGSCMD12 {
         String inputFileName = "/Users/worawich/VMdev/Siriraj/JT/JT.unmapped.sam";
         String filename = "hg19JT_unalign_Format_AlignSortedCutResultMap_part1";
         AlignmentResultRead readAlign = SequenceUtil.readAlignmentReport("/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/"+filename+".txt");
-        ArrayList<AlignmentResultRead> localAlignRes = new ArrayList();
-        Map<Integer,ArrayList<String>> groupMap = new HashMap();
-        ArrayList<Map<Integer,ArrayList<String>>> groupList = new ArrayList();
+        ArrayList<AlignmentResultRead> localAlignRes = new ArrayList<AlignmentResultRead>();
+        Map<Integer,ArrayList<String>> groupMap = new HashMap<Integer,ArrayList<String>>();
+        ArrayList<Map<Integer,ArrayList<String>>> groupList = new ArrayList<Map<Integer,ArrayList<String>>>();
         
         String path = "/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/"+filename;
         String savePath = "/Users/worawich/VMdev/dataScieneToolBox/projects/NGS/";
@@ -76,7 +76,7 @@ public class NGSCMD12 {
         */
         System.out.println("Filter Group");
         int minCoverage = 2;
-        Map<Integer,ArrayList<String>> groupResult = new HashMap();
+        Map<Integer,ArrayList<String>> groupResult = new HashMap<Integer,ArrayList<String>>();
         groupResult = Clustering.filterClusterGroupLocalAlignment(groupList, minCoverage);
         System.out.println("Save cluster Result");
         Clustering.writeLocalAlignmentInFile(groupResult, savePath, saveFilename);

@@ -27,7 +27,7 @@ public class RunSVPFullProcessV2 {
     private static int minPeakF=10;
     private static int minPeakB=5;
     private static int merCov=50;
-    private static int maxDup=1;
+    private static int maxDup=2;
     private static int countDup=1;
     private static int numThread=1;
     private static long numSkip=0;
@@ -37,7 +37,7 @@ public class RunSVPFullProcessV2 {
     private static String inputPath = "";
     private static String samtools = "";
     private static String mainBamFile = "";
-    private static int numRead=1000000;
+    private static int numRead=100000;
     private static int numMer=16;
     private static int filterMode=3;
     private static int minIndelSize=30;
@@ -211,7 +211,7 @@ public class RunSVPFullProcessV2 {
         String outputAllFile = dummy[0]+"_all.out";
         String outputFilterFile = dummy[0]+"_filter.out";
 
-        CombineReferenceSequence ref = SequenceUtil.getCombineReferenceSequence(refPath,numMer); //runFile hg19.fa
+        CombineReferenceSequence ref = SequenceUtil.getCombineReferenceSequence(refPath,numMer,numThread); //runFile hg19.fa
 
         ref.setMinimumPeakPattern(minPeakF, minPeakB);       // minimum mer per pattern A and B
 

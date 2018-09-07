@@ -39,7 +39,7 @@ public class NGSCMD {
          String outputAllFile = dummy[0]+"_all.out";
          String outputFilterFile = dummy[0]+"_filter.out";
          
-         CombineReferenceSequence ref = SequenceUtil.getCombineReferenceSequence(refPath,16); //runFile hg19.fa
+         CombineReferenceSequence ref = SequenceUtil.getCombineReferenceSequence(refPath,16,4); //runFile hg19.fa
          
          ref.setMinimumPeakPattern(5, 5);       // minimum mer per pattern A and B
 

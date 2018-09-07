@@ -25,7 +25,7 @@ public class RunSimulateSample {
         int readCoverage = 30;
         int diffL = 10000;
         int indelSize = 10;
-        char variantType = 'L';                 // 4 variant type F=fusion L=large indel I=insert D=delete
+        char variantType = 'T';                 // 4 variant type F=fusion L=large deeltion I=small insert D=small delete A=Large Insertion T=tandem Duplication
         char insertSNPFlag = 'F';               // T = true(insert) and F = false(not insert)
 //        int minIndelSize = 10;
 //        int maxIndelSize = 100;
@@ -39,14 +39,14 @@ public class RunSimulateSample {
 //        tempInSS = SimulatorUtil_WholeGene.simulateComplexWholeGeneRandomSingleTypeFixRange(ref, numRead, readLen, readCoverage, minIndelSize, maxIndelSize, diffL, indelSize,filename,variantType);
 //        System.out.println("done");
         
-        for(int indelSizeMultiplier=1; indelSizeMultiplier<=maxMultiplier;indelSizeMultiplier++){        // indelSizeMultiplier start at 1
+        for(int indelSizeMultiplier=3; indelSizeMultiplier<=maxMultiplier;indelSizeMultiplier++){        // indelSizeMultiplier start at 1
             long startTime = System.currentTimeMillis();
             
             int minIndelSize = (int)Math.pow(indelSizeBase, indelSizeMultiplier);                       // minIndelSize is indelSizeBase power by indelSizeMultiplier
             int maxIndelSize = (int)Math.pow(indelSizeBase, indelSizeMultiplier+1);                     // maxIndelSize is indelSizeBase power by indelSizeMultiplier+1
             
             
-            String sampleFilename = "_sim_"+variantType+"_SNP_"+insertSNPFlag+"_"+indelSizeMultiplier; 
+            String sampleFilename = "_tandemSim_"+variantType+"_SNP_"+insertSNPFlag+"_"+indelSizeMultiplier; 
 //            ReferenceSequence ref = SequenceUtil.getReferenceSequence(refPath,numMer); //runFile reference
             /**
              * Simulate data
