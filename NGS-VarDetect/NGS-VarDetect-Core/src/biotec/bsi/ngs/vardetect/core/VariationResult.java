@@ -8581,7 +8581,7 @@ public class VariationResult {
 //                    System.out.println();
 //                }
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
-                    if(main.getRPF()<sub.getRPB() && main.getRPB()<sub.getRPF()){
+                    if(main.getRPF()<=sub.getRPB() && main.getRPB()<sub.getRPF()){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(main);
 //                        dummyList.add(sub);
@@ -8629,7 +8629,7 @@ public class VariationResult {
 //                        sub.setSvType("intraTrans");
 //                        sub.setSvTypeCode((byte)2);
                         return "intraIns";
-                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()>sub.getRPF()){
+                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()>=sub.getRPF()){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(sub);
 //                        dummyList.add(main);
@@ -8739,7 +8739,7 @@ public class VariationResult {
             // main has -- strand
             if(sub.getStrandF()==1 && sub.getStrandB()==1){
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
-                    if(main.getRPF()<sub.getRPB() && main.getRPB()<sub.getRPF()){
+                    if(main.getRPF()<sub.getRPB() && main.getRPB()<=sub.getRPF()){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(sub);
 //                        dummyList.add(main);
@@ -8787,7 +8787,7 @@ public class VariationResult {
 //                        sub.setSvType("intraTrans");
 //                        sub.setSvTypeCode((byte)2);
                         return "intraIns";
-                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()>sub.getRPF()){
+                    }else if(main.getRPF()>=sub.getRPB() && main.getRPB()>sub.getRPF()){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(main);
 //                        dummyList.add(sub);
@@ -8894,7 +8894,7 @@ public class VariationResult {
         }else if(main.getStrandF()==0 && main.getStrandB()==1){
             if(sub.getStrandF()==1 && sub.getStrandB()==0){
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
-                    if(main.getRPF()<sub.getRPB() && main.getRPB()>sub.getRPF()){
+                    if(main.getRPF()<=sub.getRPB() && main.getRPB()>sub.getRPF()){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(main);
 //                        dummyList.add(sub);
@@ -8915,7 +8915,7 @@ public class VariationResult {
 //                        sub.setSvType("intraTrans");
 //                        sub.setSvTypeCode((byte)2);
                         return "intraIns";
-                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()<sub.getRPF()){
+                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()<=sub.getRPF()){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(sub);
 //                        dummyList.add(main);
@@ -8955,7 +8955,7 @@ public class VariationResult {
         }else if(main.getStrandF()==1 && main.getStrandB()==0){
             if(sub.getStrandF()==0 && sub.getStrandB()==1){
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
-                    if(main.getRPF()<sub.getRPB() && main.getRPB()>sub.getRPF()){
+                    if(main.getRPF()<=sub.getRPB() && main.getRPB()>sub.getRPF()){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(sub);
 //                        dummyList.add(main);
@@ -8976,7 +8976,7 @@ public class VariationResult {
 //                        sub.setSvType("intraTrans");
 //                        sub.setSvTypeCode((byte)2);
                         return "intraIns";
-                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()<sub.getRPF()){
+                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()<=sub.getRPF()){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(main);
 //                        dummyList.add(sub);

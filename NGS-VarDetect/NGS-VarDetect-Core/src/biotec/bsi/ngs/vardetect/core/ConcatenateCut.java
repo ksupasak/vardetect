@@ -36,7 +36,7 @@ public class ConcatenateCut {                                                   
             this.type = "+-";
         }else if(inType == 2){
             this.type = "-+";
-        }else{
+        }else if(inType == 3){
             this.type = "--";
         }
     }

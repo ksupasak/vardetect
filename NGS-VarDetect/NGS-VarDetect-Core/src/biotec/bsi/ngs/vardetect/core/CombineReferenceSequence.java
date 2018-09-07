@@ -72,6 +72,12 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
     
     int minimumIndelSize = 1;     // minimum size of indel Eg 1 mean allow indel has indel size more or equal to 2
 
+    int numBasePerMer = 16;
+
+    public void setNumBasePerMer(int numBasePerMer) {
+        this.numBasePerMer = numBasePerMer;
+    }
+    
     public void setMinimumIndelSize(int minimumIndelSize) {
         this.minimumIndelSize = minimumIndelSize;
     }
@@ -1460,15 +1466,22 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                     DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(fi)));
                     
                     long size = fi.length();
-                     System.out.println("Name "+ name+" : " + size);
+                    System.out.println("Name "+ name+" : " + size);
                     if(i==1){
                         
-                        size /= 8; 
+                        size /= 8; // divide by 8 because calculate the total number of byte that we have to read (we write this binary file with writelong. So,we read it as readLong so wach time we read will read 8 byte so the number of time we have to read on this file will eaual to size of file divde by 8)
                         long[] list = new long[(int)size];
                        
                         for(int j=0;j<size;j++){
                             
                             list[j] = is.readLong();
+                            
+//                            long mask = mask();
+//                            long test = 3218168257L;
+//                            long tc = (long)((list[j]>>32)&mask);
+//                            if(tc==test){
+//                                System.out.println();
+//                            }
                             if(j%100000000==0){
                                 System.out.println("loading RefIndex "+i+" : "+(j/1000000)+"M");
                             }
@@ -1485,6 +1498,17 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                         for(int j=0;j<size;j++){
                             
                             list[j] = is.readInt();
+                            
+                            long test = 249476838;
+                            int tt = (int)test;
+                            if(list[j]==(int)test){
+                                System.out.println();
+                            }
+//                            
+//                            if(list[j]==-1076799039){
+//                                System.out.println();
+//                            }
+                            
                             if(j%100000000==0){
                                 System.out.println("loading RefIndex "+i+" : "+(j/1000000)+"M");
                             }
@@ -1511,71 +1535,74 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                 for(int i=1;i<=mx;i++){
                  
                 
-                if(i==1){
-                 
-                long[] map = (long[])indeies.get(i);
-                
-                a = 0;
-                b = map.length-1;
-               
-                long l =0;
-                long mask = mask();
-                while(a<=b){
-                    mid = a+ (b-a)/2;
-                    l = map[mid];
-                    m = (int)(l>>32);
-                    if(mer==m){
-                        break;
-                    }else
-                        if(mer>m){
-                            a = mid+1; 
-//                            System.out.println("Gt " +m);
-                        }else{
-                            b = mid-1;
-//                            System.out.println("Lt " +m);
+                    if(i==1){
+
+                        long[] map = (long[])indeies.get(i);
+
+                        a = 0;
+                        b = map.length-1;
+
+                        long l =0;
+                        long mask = mask();
+                        while(a<=b){
+                            mid = a+ (b-a)/2;
+                            l = map[mid];
+                            m = (int)(l>>32);
+                            if(mer==m){
+                                break;
+                            }else
+                                if(mer>m){
+                                    a = mid+1; 
+        //                            System.out.println("Gt " +m);
+                                }else{
+                                    b = mid-1;
+        //                            System.out.println("Lt " +m);
+                                }
                         }
-                }
-                if(m==mer){
-                    int r[] = {(int)(l&mask)};
-                    return r;
-                }
-                     
-                }  else{
-                    
-                int block = (1+i);    
-                int[] map = (int[])indeies.get(i);
-                
-                a = 0;
-                b = (map.length/block)-1;
-               
-                long l =0;
-                long mask = mask();
-                while(a<=b){
-                    mid = a+ (b-a)/2;
-                    m = map[mid*block];
-                    if(mer==m){
-                        break;
-                    }else
-                        if(mer>m){
-                            a = mid+1; 
-//                            System.out.println("Gt " +m);
-                        }else{
-                            b = mid-1;
-//                            System.out.println("Lt " +m);
+                        if(m==mer){
+                            int r[] = {(int)(l&mask)};
+                            return r;
                         }
-                }
-                if(m==mer){
-                   int r[] = new int[i];
-                    for(int j=0;j<i;j++){
-                        r[j] = map[mid+j];
+
+                    }else{
+//                        if(mer == -1076799039){
+//                            System.out.println();
+//                        }
+                        int block = (1+i);    
+                        int[] map = (int[])indeies.get(i);
+
+                        a = 0;
+                        b = (map.length/block)-1;
+
+                        long l =0;
+                        long mask = mask();
+                        while(a<=b){
+                            mid = a+ (b-a)/2;
+                            m = map[mid*block];
+                            if(mer==m){
+                                break;
+                            }else
+                                if(mer>m){
+                                    a = mid+1; 
+        //                            System.out.println("Gt " +m);
+                                }else{
+                                    b = mid-1;
+        //                            System.out.println("Lt " +m);
+                                }
+                        }
+                        if(m==mer){
+                           int r[] = new int[i];
+//                            for(int j=0;j<i;j++){
+//                                r[j] = map[mid+j];
+//                            }
+                            for(int j=0;j<i;j++){
+                                r[j] = map[(mid*block)+j+1];
+                            }
+
+                            return r;
+                        }    
+
                     }
-                    
-                    return r;
-                }    
-                    
-                    
-                    
-                }
                    
                 }
                 
@@ -1645,14 +1672,16 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
         int start;
         long length;
         long offset;
+        int numBasePerMer;
         
-        public Worker(String name, StringBuffer seq, long list[], int start, int length, long offset){
+        public Worker(String name, StringBuffer seq, long list[], int start, int length, long offset, int numBasePerMer){
             sb = seq;
             this.name = name;
             this.list = list;
             this.start = start;
             this.length = length;
             this.offset = offset;
+            this.numBasePerMer = numBasePerMer;
         }
         
         @Override
@@ -1660,10 +1689,10 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
             
             
             
-            int kmer = 16;
+            int kmer = this.numBasePerMer;
             int sliding = 1;
             
-            int n = (sb.length()-kmer)/sliding;       
+            int n = ((sb.length()-kmer)+1)/sliding;       
             long cmer = -1;
             long mask = 0; 
             int count = 0;
@@ -1677,11 +1706,16 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
 
                 long pos = i*sliding+offset;
                 
-                
+//                if(i==1474942){
+//                    System.out.println();
+//                }
                 char chx = sb.charAt(i*sliding+kmer-1);
                 if(chx!='N'){
                     if(cmer==-1){
                         String s = sb.substring(i*sliding,i*sliding+kmer);
+//                        if(s.equals("GTTTTCACCCGCTAAC")){
+//                            System.out.println();
+//                        }
                         cmer = encodeMer(s,kmer);
                     }else{
 
@@ -1724,7 +1758,11 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                         }  
                     }  
                     if(i%10000000==0)System.out.println("Encode - "+name+" "+(i*sliding));
-
+                    
+//                    if(cmer == 3218168257L){
+//                        System.out.println();
+//                    }
+                    
                     if(cmer>=0){  
 //                        long x = (cmer<<(64- kmer*2))|pos;
                         long x = (cmer<<32)|(pos&mask);       
@@ -1735,7 +1773,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                 }
             }
 
-            
+            System.out.println();
 
         }
         
@@ -1785,20 +1823,20 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
 
             StringBuffer sb = chr.getSequence();
 
-            int kmer = 4;
+            int kmer = this.numBasePerMer;
             int sliding = 1;
             
-            int n = (sb.length()-kmer)/sliding;       
+            int n = (sb.length()-kmer+1)/sliding;       
             long list[] = new long[n]; // Pre - allocate Array by n
             
-            int nthread = 8;
+            int nthread = this.number_of_thread;
             Thread[] tlist = new Thread[nthread]; 
             
             for(int i=0;i<nthread;i++){
                 int nlength = n/nthread;
                 
                 System.out.println(chr.getName()+" start with offset = " +offset+" in thread "+i);
-                Worker w = new Worker(chr.getName(),sb,list,nlength*i,nlength,offset);
+                Worker w = new Worker(chr.getName(),sb,list,nlength*i,nlength,offset,this.numBasePerMer);
                 Thread t = new Thread(w);
                 t.start();
                 tlist[i] = t;
@@ -1831,6 +1869,13 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                 int pos = (int)(list[i]&mask);
                 int mer = (int)(list[i]>>32);
                 
+//                if(list[i]== -4624816656867818221L){
+//                    System.out.println();
+//                }
+//                if(pos==1474942){
+//                    System.out.println();
+//                }
+                
                 if(proc){
               
                 
@@ -1849,7 +1894,8 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                         
                         DataOutputStream osd = osx.get(s);
                         
-                        osd.writeInt(mer);
+//                        osd.writeInt(mer);
+                        osd.writeInt(last);
                         
                         ArrayList<Integer> l = dup.getPos();
                         for(int k=0;k<s;k++){
@@ -1966,7 +2012,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
             File fi = new File(this.filename+"."+i+".bin16.part"); //File object
             DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(fi)));
            
-            long size = fi.length()/((1+i)*4);
+            long size = fi.length()/((1+i)*4);  // overall number of information (information is include mer and all position relate to this mer)
             boolean filter = false;
             boolean discard = false;
             int max_array = Integer.MAX_VALUE-8;
@@ -1983,413 +2029,419 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
             System.out.println("Part "+i+" "+size+ " left "+time);
             
             if(time>1){ // large element
-            
-            int binc[] = new int[4];    
-            for(int k=0;k<binc.length;k++)
-            binc[i] = 0; 
-            int binmask = 3<<28;
-            
-            for(int t=0;t<time;t++){
-                
-                int lsize = max_array;
-                if(size-max_array<0)lsize = (int)(size%max_array);
-                
-                long list[] = new long[lsize];
-                System.out.println("Part "+i+" "+size+ " left "+t+ " "+lsize+" "+max_array);
-            
-                for(int j=0;j<lsize;j++){
-                    long l = is.readLong();
-                    mer = (int)(l>>32);
-                    
-                    bid = 3&((int)((mer)>>30));
-                    if(j%1000000==0)
-                    System.out.println("Part "+i+" read "+j+" "+Integer.toBinaryString(bid));//+" "+Integer.toBinaryString(mer)+" l "+Long.toBinaryString(l));
-                    binc[bid]++;
-                    
-                    list[j] = l;
-                    
-                    
-                    
-                }
-                
-                setlist.add(list);
-                size -= lsize;
-                
-            }
-            
-            ArrayList outlist = new ArrayList();
-            
-            int a=0;
-            int b=0;
-            int c=0;
-            int d=0;
-            long al[]=null;
-            long bl[]=null;
-            long cl[]=null;
-            long dl[]=null;
-            
-            
-            
-            for(int k=0;k<binc.length;k++){
-                System.out.println("Binc "+k+" read "+binc[k]);
-                if(k==0){
-                    a = 0;
-                    al=new long[binc[k]];
-                }else
-                if(k==1){
-                    b = 0;
-                    bl=new long[binc[k]];
-                }else        
-                 if(k==2){
-                    c = 0;
-                    cl=new long[binc[k]];
-                }else
-                if(k==3){
-                    d = 0;
-                    dl=new long[binc[k]];
-                }
-            }
-
-
-            for(int k=0;k<setlist.size();k++){
-                long plist[] = (long[])setlist.get(k);
-                
-                for(int j=0;j<plist.length;j++){
-                    long l = plist[j];
-                    mer = (int)(l>>32);
-                    bid = 3&((int)((mer)>>30));
-                    
-                
-                if(bid==0){
-                    al[a++] = l;
-                }else
-                if(bid==1){
-                    bl[b++] = l;
-                }else        
-                 if(bid==2){
-                    cl[c++] = l;
-                }else
-                if(bid==3){
-                    dl[d++] = l;
-                }
-                            
-                }
-                
-                
-            }
-            
-            
-            outlist.add(cl);
-            outlist.add(dl);
-            outlist.add(al);
-            outlist.add(bl);
-            
-            
-            File fx = new File(this.filename+"."+i+".bin16.final"); //File object
-            DataOutputStream osi = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fx))); // create object for output data stream
-//            File fxt = new File(this.filename+"."+i+".bin16.test"); //File object
-//            DataOutputStream ost = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fxt))); // create object for output data stream    
-           
-            
-            for(int k=0;k<outlist.size();k++){
-                
-                long plist[] = (long[])outlist.get(k);
-                
-                Arrays.parallelSort(plist);
-                
-                
-//            DataOutputStream osi = osx.get(1);
-           
-            long mask = mask();
-            long j = -1;
-            int pos = 0;
-            int last = -1;
-            int lastpos = -1;
-            DuplicateMer dup = null;
-            boolean proc = false;
-            
-            
-            
-//            os.writeInt(list.length);
-            for(int n=0;n<plist.length;n++){
-                if(n%10000000==0)System.out.println("Write unique part of "+i+" : "+ n);
-//                ost.writeLong(plist[n]);
-                pos = (int)(plist[n]&mask);
-                mer = (int)(plist[n]>>32);
-                
-                if(proc){
-                if(mer!=last){
-                    if(dup!=null){
-//                        dup.addPos(lastpos);
-                        // write dup mer
-                        int sum = 0;
-                        int uni = 0;
-                        int s = dup.size();
-                        long luni = -1;
-                        ArrayList<Integer> l = dup.getPos();
-
-                        for(int m=0;m<s;m++){
-                            
-                            pos = l.get(m);
-                            
-                            if(pos<100)
-                                sum+=pos;
-                            else{
-                                luni = ((j>>32)<<32)+pos;
-                                sum++;
-                                uni++;
-                            }
-                                
-                        }
-                        
-                        j = ((j>>32)<<32)+sum;
-                        
-                       
-                        osi.writeLong(j);
-                        
-                        if(uni<=10){
-                        
-                        if(uni>1){
-                        DataOutputStream osd = osx.get(uni);
-                        //&&&&&&
-                        osd.writeInt(last);
-                        
-                        // write only uniq
-                        for(int m=0;m<s;m++){
-                            pos = l.get(m);
-                            if(pos>100)
-                            osd.writeInt(pos);
-                        }
-                        }else{
-                           if(luni!=-1)
-                           osi.writeLong(luni); 
-                        }
-                        }
-//                        }
-                        
-                        
-                    }else{
-                        // unique write
-                        osi.writeLong(j);
-                    }
-                    dup = null;
-                }else{
-                    if(dup==null){
-                        dup = new DuplicateMer(mer);
-                        dup.addPos(lastpos);
-                    }
-                    if(dup!=null){
-                        dup.addPos(pos);
-                    }
-                }
-                }
-                proc = true;
-//                os.writeLong(list[i]); // write list variable to file .bin
-                last = mer;
-                lastpos = pos;        
-                j = plist[n];
-            
-            }
-            
-//            
-            
-
-            
-            plist=null;
-            System.gc();
-            
-         
-        }     
-         osi.close();
-               
-                
-        }else{
-            if(time==1){
-                
-         
-            
-//            osx.clear();
-            
-//            for(int z=0;z<=10;z++){
-//            
-//            File f = new File(this.filename+"."+z+".bin16.part.final2"); //File object
-//            DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f,true))); // create object for output data stream
-//            osx.add(z, os);
-//        
-//            }
-            
-            File fi2 = new File(this.filename+"."+i+".bin16.part.final"); //File object
-            DataInputStream is2 = new DataInputStream(new BufferedInputStream(new FileInputStream(fi2)));
+            /**
+             * Due to the actual size of DNA that we want to process is exceed the possible maximun size of array (which is just one Integer long)
+             * So we decide to divide our DNA in to 4 portion. To be able to store all information and sort it by array sort.
+             */ 
              
-           
-            //            DataOutputStream osi = osx.get(1);
-            File fx = new File(this.filename+"."+i+".bin16.final"); //File object
-            DataOutputStream osi = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fx))); // create object for output data stream    
-            //            DataOutputStream osi = osx.get(1);
-            
-//            File fxt = new File(this.filename+"."+i+".bin16.test"); //File object
-//            DataOutputStream ost = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fxt))); // create object for output data stream    
-//            
-           
-            int block = (1+i);
-            int is_size = (int)(fi.length()/4/block);
-            int is2_size = (int)(fi2.length()/4/block);
-            int to_read = is_size*block;
-            int to_read2 = is2_size*block;
-  
-            int idx = 0;
-            
-          size = is_size + is2_size;
-          int data[] = new int[to_read+to_read2];
-            
-//            size = is2_size;
-//            int data[] = new int[to_read2];
-            
+                int binc[] = new int[4];    
+                for(int k=0;k<binc.length;k++)
+                binc[k] = 0;
+//                binc[i] = 0; 
+                int binmask = 3<<28;
+
+                for(int t=0;t<time;t++){
+
+                    int lsize = max_array;
+                    if(size-max_array<0)lsize = (int)(size%max_array);      //If size is lower than max_array ==> lsize = size
+
+                    long list[] = new long[lsize];
+                    System.out.println("Part "+i+" "+size+ " left "+t+ " "+lsize+" "+max_array);
+
+                    for(int j=0;j<lsize;j++){
+                        long l = is.readLong();
+                        mer = (int)(l>>32);
+
+                        bid = 3&((int)((mer)>>30));
+                        if(j%1000000==0)
+                        System.out.println("Part "+i+" read "+j+" "+Integer.toBinaryString(bid));//+" "+Integer.toBinaryString(mer)+" l "+Long.toBinaryString(l));
+                        binc[bid]++;
+
+                        list[j] = l;
 
 
-            long idxl[] = new long[(int)size];
-          
-            
-            System.out.println("Part "+i+" size1= "+is_size+ " size2="+is2_size);
-            int v;
-            
-            
-            // read 1
-            for(int k=0;k<to_read;k++){
-                v = is.readInt();
-                data[k] = v;
-                if(k%block==0){
-                    
-                    long l = ((long)v<<32)+k;
-//                     System.out.println("Mer v "+Integer.toBinaryString(v)+" Mer= "+Long.toBinaryString((long)v<<32)+ " size2="+Long.toBinaryString(l));
-                    
-                    idxl[idx] = l;
-                    idx++;
+
+                    }
+
+                    setlist.add(list);
+                    size -= lsize;
+
                 }
-                if(k%10000000==0)
-                System.out.println("Read part "+i+":1 "+k);
-            }
-            
-//            for(int z=0;z<10;z++){
-//                System.out.println(Long.toBinaryString(idxl[z]));
-//            }
-            
-            // read 2
-        
-            for(int k=0;k<to_read2;k++){
-                v = is2.readInt();
-                data[k+to_read] = v;
-                if(k%block==0){
-                    long l = ((long)v<<32)+(k+to_read);
-                    idxl[idx] = l;
-                    idx++;
+
+                ArrayList outlist = new ArrayList();
+
+                int a=0;
+                int b=0;
+                int c=0;
+                int d=0;
+                long al[]=null;
+                long bl[]=null;
+                long cl[]=null;
+                long dl[]=null;
+
+
+                    
+                for(int k=0;k<binc.length;k++){
+                    // loop for preallocate size of al bl cl dl array
+                    System.out.println("Binc "+k+" read "+binc[k]);
+                    if(k==0){
+                        a = 0;
+                        al=new long[binc[k]];
+                    }else
+                    if(k==1){
+                        b = 0;
+                        bl=new long[binc[k]];
+                    }else        
+                     if(k==2){
+                        c = 0;
+                        cl=new long[binc[k]];
+                    }else
+                    if(k==3){
+                        d = 0;
+                        dl=new long[binc[k]];
+                    }
                 }
-                if(k%10000000==0)
-                System.out.println("Read part "+i+":2 "+k);
-            }
-            
-            Arrays.parallelSort(idxl);
-            
-            
-            long mask = mask();
-            long j = -1;
-            int pos = 0;
-            int last = -1;
-            int lastpos = -1;
-            DuplicateMer dup = null;
-            boolean proc = false;
-                
-            for(int k=0;k<idxl.length;k++){
-                
-                if(k%10000000==0)System.out.println("Write unique part of "+i+" : "+ k);
-               
-                pos = (int)(idxl[k]&mask);
-                mer = (int)(idxl[k]>>32);
-                
-                
-//                ost.writeInt(mer);
-//                idx = pos;
-//                for(int n=0;n<i;n++){
-//                    ost.writeInt(data[idx+n+1]); 
-//                }
-                
-                
-                if(proc){
-                if(mer!=last){
-                    
-                    
-                    if(dup!=null){
-//                        System.out.println("Write "+(Integer.toBinaryString(mer)+" "+Integer.toBinaryString(last))+" "+(dup.size()));
-                   
-                        int s = dup.size();
-                        
-                        ArrayList<Integer> l = dup.getPos();
-                       
-                       
-                        if(i*l.size()<=10){
-                        
-//                         System.out.println("Write Dup "+(i*l.size()));
-                        DataOutputStream osd = osx.get(i*l.size());
-                        osd.writeInt(last);
-//                        int x[] = new int[i*l.size()];
-//                         System.out.println("last "+last+ " "+l.size());
-                        for(int m=0;m<s;m++){
-                            
-                            idx = l.get(m);
-//                            System.out.println("idx "+idx);
-                            for(int n=0;n<i;n++){
-//                                x[m*i+n] = data[idx+n];
-                                osd.writeInt(data[idx+n+1]);
-                                
+
+
+                for(int k=0;k<setlist.size();k++){
+                    // loop add list that catagorize with front 2 bit to array of long (00 add to al, 01 add to bl, 10 add to cl, 11 add to dl)
+                    long plist[] = (long[])setlist.get(k);
+
+                    for(int j=0;j<plist.length;j++){
+                        long l = plist[j];
+                        mer = (int)(l>>32);
+                        bid = 3&((int)((mer)>>30));
+
+
+                    if(bid==0){
+                        al[a++] = l;
+                    }else
+                    if(bid==1){
+                        bl[b++] = l;
+                    }else        
+                     if(bid==2){
+                        cl[c++] = l;
+                    }else
+                    if(bid==3){
+                        dl[d++] = l;
+                    }
+
+                    }
+
+
+                }
+
+
+                outlist.add(cl);
+                outlist.add(dl);
+                outlist.add(al);
+                outlist.add(bl);
+
+
+                File fx = new File(this.filename+"."+i+".bin16.final"); //File object
+                DataOutputStream osi = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fx))); // create object for output data stream
+    //            File fxt = new File(this.filename+"."+i+".bin16.test"); //File object
+    //            DataOutputStream ost = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fxt))); // create object for output data stream    
+
+
+                for(int k=0;k<outlist.size();k++){
+
+                    long plist[] = (long[])outlist.get(k);
+
+                    Arrays.parallelSort(plist);
+
+
+    //              DataOutputStream osi = osx.get(1);
+
+                    long mask = mask();
+                    long j = -1;
+                    int pos = 0;
+                    int last = -1;
+                    int lastpos = -1;
+                    DuplicateMer dup = null;
+                    boolean proc = false;
+
+
+
+        //            os.writeInt(list.length);
+                    for(int n=0;n<plist.length;n++){
+                        if(n%10000000==0)System.out.println("Write unique part of "+i+" : "+ n);
+        //                ost.writeLong(plist[n]);
+                        pos = (int)(plist[n]&mask);
+                        mer = (int)(plist[n]>>32);
+
+                        if(proc){
+                            if(mer!=last){
+                                if(dup!=null){
+            //                        dup.addPos(lastpos);
+                                    // write dup mer
+                                    int sum = 0;
+                                    int uni = 0;
+                                    int s = dup.size();
+                                    long luni = -1;
+                                    ArrayList<Integer> l = dup.getPos();
+
+                                    for(int m=0;m<s;m++){
+
+                                        pos = l.get(m);
+
+                                        if(pos<100)
+                                            sum+=pos;
+                                        else{
+                                            luni = ((j>>32)<<32)+pos;
+                                            sum++;
+                                            uni++;
+                                        }
+
+                                    }
+
+                                    j = ((j>>32)<<32)+sum;
+
+
+                                    osi.writeLong(j);
+
+                                    if(uni<=10){
+
+                                        if(uni>1){
+                                            DataOutputStream osd = osx.get(uni);
+                                            //&&&&&&
+                                            osd.writeInt(last);
+
+                                            // write only uniq
+                                            for(int m=0;m<s;m++){
+                                                pos = l.get(m);
+                                                if(pos>100)
+                                                osd.writeInt(pos);
+                                            }
+                                        }else{
+                                           if(luni!=-1)
+                                           osi.writeLong(luni); 
+                                        }
+                                    }
+            //                        }
+
+
+                                }else{
+                                    // unique write
+                                    osi.writeLong(j);
+                                }
+                                dup = null;
+                            }else{
+                                if(dup==null){
+                                    dup = new DuplicateMer(mer);
+                                    dup.addPos(lastpos);
+                                }
+                                if(dup!=null){
+                                    dup.addPos(pos);
+                                }
                             }
                         }
-                            
-                        
-                        }
-//                        }
-                        
-                        
-                    }else{
-                        // unique write
-//                        System.out.println("");
-//                        System.out.println("Write Uniq ");
+                        proc = true;
+        //                os.writeLong(list[i]); // write list variable to file .bin
+                        last = mer;
+                        lastpos = pos;        
+                        j = plist[n];
 
-                        osi.writeInt(last);
-                        idx = lastpos;
-                        for(int n=0;n<i;n++){
-                            osi.writeInt(data[idx+n+1]); 
-                        }
                     }
-                    dup = null;
-                }else{
-                    if(dup==null){
-                        dup = new DuplicateMer(mer);
-                        dup.addPos(lastpos);
-                    }
-                    if(dup!=null){
-                        dup.addPos(pos);
-                    }
-                }
-                }
-                proc = true;
-//                os.writeLong(list[i]); // write list variable to file .bin
-                last = mer;
-                lastpos = pos;        
-                j = idxl[k];
-            
-            }
-            
-              osi.close();
-            
+
+        //            
+                    plist=null;
+                    System.gc();
+
+
+                }     
+                osi.close();
+               
                 
-            } 
+            }else{
+                if(time==1){
+
+
+
+        //            osx.clear();
+
+        //            for(int z=0;z<=10;z++){
+        //            
+        //            File f = new File(this.filename+"."+z+".bin16.part.final2"); //File object
+        //            DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f,true))); // create object for output data stream
+        //            osx.add(z, os);
+        //        
+        //            }
+
+                    File fi2 = new File(this.filename+"."+i+".bin16.part.final"); //File object
+                    DataInputStream is2 = new DataInputStream(new BufferedInputStream(new FileInputStream(fi2)));
+
+
+                    //            DataOutputStream osi = osx.get(1);
+                    File fx = new File(this.filename+"."+i+".bin16.final"); //File object
+                    DataOutputStream osi = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fx))); // create object for output data stream    
+                    //            DataOutputStream osi = osx.get(1);
+
+        //            File fxt = new File(this.filename+"."+i+".bin16.test"); //File object
+        //            DataOutputStream ost = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fxt))); // create object for output data stream    
+        //            
+
+                    int block = (1+i);
+                    int is_size = (int)(fi.length()/4/block);       // got number of byte per mer and pos information. divide file length by number of byte that have to read for one infomation (EX level 1 index has 8 byte per info. level 2 has 12 byte per info(4 for mer, 4 for pos1 and 4 for pos2))   
+                    int is2_size = (int)(fi2.length()/4/block);
+                    int to_read = is_size*block;                    // number of round to perform for read (read integer)
+                    int to_read2 = is2_size*block;
+
+                    int idx = 0;
+
+                    size = is_size + is2_size;
+                    int data[] = new int[to_read+to_read2];
+
+        //            size = is2_size;
+        //            int data[] = new int[to_read2];
+
+
+
+                    long idxl[] = new long[(int)size];              // store mer||index of mer exist in file .part and .part.final (consider like this two file is concatenate So, position 10 on file .part.final will equal to position 10+number of index froom file .part)
+
+
+                    System.out.println("Part "+i+" size1= "+is_size+ " size2="+is2_size);
+                    int v;
+
+
+                    // read 1
+                    for(int k=0;k<to_read;k++){
+                        v = is.readInt();
+                        data[k] = v;
+                        if(k%block==0){
+
+                            long l = ((long)v<<32)+k;
+        //                     System.out.println("Mer v "+Integer.toBinaryString(v)+" Mer= "+Long.toBinaryString((long)v<<32)+ " size2="+Long.toBinaryString(l));
+
+                            idxl[idx] = l;
+                            idx++;
+                        }
+                        if(k%10000000==0)
+                        System.out.println("Read part "+i+":1 "+k);
+                    }
+
+        //            for(int z=0;z<10;z++){
+        //                System.out.println(Long.toBinaryString(idxl[z]));
+        //            }
+
+                    // read 2
+
+                    for(int k=0;k<to_read2;k++){
+                        v = is2.readInt();
+                        data[k+to_read] = v;
+                        if(k%block==0){
+                            long l = ((long)v<<32)+(k+to_read);
+                            idxl[idx] = l;
+                            idx++;
+                        }
+                        if(k%10000000==0)
+                        System.out.println("Read part "+i+":2 "+k);
+                    }
+
+                    Arrays.parallelSort(idxl);
+
+
+                    long mask = mask();
+                    long j = -1;
+                    int pos = 0;
+                    int last = -1;
+                    int lastpos = -1;
+                    DuplicateMer dup = null;
+                    boolean proc = false;
+
+                    for(int k=0;k<idxl.length;k++){
+
+                        if(k%10000000==0)System.out.println("Write unique part of "+i+" : "+ k);
+
+                        pos = (int)(idxl[k]&mask);
+                        mer = (int)(idxl[k]>>32);
+
+
+        //                ost.writeInt(mer);
+        //                idx = pos;
+        //                for(int n=0;n<i;n++){
+        //                    ost.writeInt(data[idx+n+1]); 
+        //                }
+
+
+                        if(proc){
+                        if(mer!=last){
+
+
+                            if(dup!=null){
+        //                        System.out.println("Write "+(Integer.toBinaryString(mer)+" "+Integer.toBinaryString(last))+" "+(dup.size()));
+
+                                int s = dup.size();
+
+                                ArrayList<Integer> l = dup.getPos();
+
+
+                                if(i*l.size()<=10){
+
+            //                         System.out.println("Write Dup "+(i*l.size()));
+                                    DataOutputStream osd = osx.get(i*l.size());
+                                    osd.writeInt(last);
+            //                        int x[] = new int[i*l.size()];
+            //                         System.out.println("last "+last+ " "+l.size());
+                                    for(int m=0;m<s;m++){
+
+                                        idx = l.get(m);
+            //                            System.out.println("idx "+idx);
+                                        for(int n=0;n<i;n++){
+            //                                x[m*i+n] = data[idx+n];
+                                            osd.writeInt(data[idx+n+1]);
+
+                                        }
+                                    }
+
+
+                                }
+        //                        }
+
+
+                            }else{
+                                // unique write
+        //                        System.out.println("");
+        //                        System.out.println("Write Uniq ");
+
+                                osi.writeInt(last);
+                                idx = lastpos;
+                                for(int n=0;n<i;n++){
+                                    osi.writeInt(data[idx+n+1]); 
+                                }
+                            }
+                            dup = null;
+                        }else{
+                            if(dup==null){
+                                dup = new DuplicateMer(mer);
+                                dup.addPos(lastpos);
+                            }
+                            if(dup!=null){
+                                dup.addPos(pos);
+                            }
+                        }
+                        }
+                        proc = true;
+        //                os.writeLong(list[i]); // write list variable to file .bin
+                        last = mer;
+                        lastpos = pos;        
+                        j = idxl[k];
+
+                    }
+
+                    osi.close();
+
+                } 
       
                 
+            }
+            
+   
         }
-            
-            
-            
-            
+        
+        for(int a=0;a<=10;a++){
+            DataOutputStream osd = osx.get(a);
+            osd.close();
         }
         
         
@@ -2402,7 +2454,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
     
     
     
-   public void final_unique_indexing() throws FileNotFoundException, IOException{
+    public void final_unique_indexing() throws FileNotFoundException, IOException{
            File f = new File(this.filename+".1.bin16.final"); //File object
            File fo = new File(this.filename+".u.bin16.final"); //File object
             
