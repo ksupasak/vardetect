@@ -23,7 +23,7 @@ public class runPreIndexReference {
         
         CombineReferenceSequence ref = SequenceUtil.getCombineReferenceSequence(refPath,numMer,numThread); //runFile hg19.fa
         ref.setMaximumDuplicatePattern(10);
-        ref.prepare();
+        ref.prepare();        
     }
     
 }

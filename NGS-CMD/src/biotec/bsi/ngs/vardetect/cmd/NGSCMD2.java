@@ -72,12 +72,23 @@ public class NGSCMD2 {
 /**
  * Use for generate short read sample (manual generate short read)
  */
-        String filename = "err2Read68SS3";       
-        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/err/";
+//        String filename = "err2Read68SS3";       
+//        String path = "/Volumes/PromisePegasus/worawich/Download_dataset/err/";
+//        
+//        String seq = "CGCCTGCCTCGGCCTCCCAAAGTGCTGGGATTACAGGCATGAGCCACCGCGCCCGGCCAAGAGTTCCTTTCTTAAATAAGAGGACAGAGATAATAAAATC";
+//        
+//        SequenceUtil.createShortReadFromLongSequence(seq, 100, path+filename);
+
         
-        String seq = "CGCCTGCCTCGGCCTCCCAAAGTGCTGGGATTACAGGCATGAGCCACCGCGCCCGGCCAAGAGTTCCTTTCTTAAATAAGAGGACAGAGATAATAAAATC";
+        String[] seq = {"taaccctaaccctaac","gtaccctcagccggcc","GCAAAGGCGCGCCGCG","CTCAGAGCCCAGGCCA","GGGCAGAGCCGCAGGG","TGGCAGAGCCGCAGGG","TGGCGGAGCCGCAGGG","TGGCGGAGCTGCAGGG","TGGCGGAGCTGCAGCA"};
         
-        SequenceUtil.createShortReadFromLongSequence(seq, 100, path+filename);
+        for(int i=0;i<seq.length;i++){
+            long code = SequenceUtil.encodeMer(seq[i], 16);
+            int intCode = (int)code;
+            
+            System.out.println("Seq " + seq[i] + " => (long) " + code + " ||  (int) " + intCode);
+        }
+        
         
     }
 }

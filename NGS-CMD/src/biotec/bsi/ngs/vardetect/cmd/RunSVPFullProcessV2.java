@@ -41,8 +41,9 @@ public class RunSVPFullProcessV2 {
     private static int numMer=16;
     private static int filterMode=3;
     private static int minIndelSize=30;
-    private static int minReadPerGroup=5;
+    private static int minReadPerGroup=3;
     private static int maxExtend=100;
+    private static int allowOverlapLargeIns=10;
     
     public static void main(String[] args) throws IOException, FileNotFoundException, InterruptedException{
     // create the command line parser
@@ -147,6 +148,11 @@ public class RunSVPFullProcessV2 {
                                         .hasArg()
                                         .argName("int")
                                         .build());
+        options.addOption( Option.builder("O").longOpt("allow-overlap")
+                                        .desc("maximum overlap base around breakpoint of large insertion" )
+                                        .hasArg()
+                                        .argName("int")
+                                        .build());
         options.addOption( Option.builder("h").longOpt("help")
                                         .desc("algorithm usage help" )
                                         .build());
@@ -191,6 +197,7 @@ public class RunSVPFullProcessV2 {
             if(line.hasOption("e")) maxExtend = Integer.parseInt(line.getOptionValue("e"));
             if(line.hasOption("B")) mainBamFile = line.getOptionValue("B");
             if(line.hasOption("S")) samtools = line.getOptionValue("S");
+            if(line.hasOption("O")) allowOverlapLargeIns = Integer.parseInt(line.getOptionValue("O"));
 
             if(line.hasOption("h")){
                 HelpFormatter formatter = new HelpFormatter();
@@ -291,7 +298,7 @@ public class RunSVPFullProcessV2 {
         /**
          * Precise SV protocol
          */
-        varRes.classifyPreciseSVType(minReadPerGroup);
+        varRes.classifyPreciseSVType(minReadPerGroup,allowOverlapLargeIns);
         varRes.identifyCorrectness(mainBamFile,samtools);
         varRes.sortInsertionByInsertJunctiontLowtoHigh();
         varRes.FilterIntraInsertion();  // Del Del filter
