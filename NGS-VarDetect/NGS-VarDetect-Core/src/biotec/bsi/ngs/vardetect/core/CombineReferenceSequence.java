@@ -32,6 +32,7 @@ import htsjdk.samtools.SamReaderFactory;
 import htsjdk.samtools.ValidationStringency;
 import static htsjdk.samtools.util.SequenceUtil.reverseComplement;
 import java.io.BufferedReader;
+import java.io.FileWriter;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.RandomAccessFile;
@@ -74,6 +75,10 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
 
     int numBasePerMer = 16;
 
+    Map<Integer,RepeatMer> repeatTable = new HashMap<Integer,RepeatMer>();
+    Map<Integer,Boolean> overRepeatTable = new HashMap<Integer,Boolean>();
+    HashMap<Integer,Long> numMerPerLevel = new HashMap();
+    
     public void setNumBasePerMer(int numBasePerMer) {
         this.numBasePerMer = numBasePerMer;
     }
@@ -346,7 +351,10 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
             if(z<skip-1)continue;
             try{
                 
-            String read = r.getReadString();
+            String read = r.getReadString();   
+            if(r.getReadNegativeStrandFlag()){          // check for reverse flag if it true that mean read sequence that show in sam file is not original read seqeunce (it has been reverse complement) to convert it back to original read we has to take reverse complement to it again
+                read = reverseComplement(read);
+            }
             /**
              * check read unmap or not 
              * if read is unmap => flagUnmap will be 1
@@ -372,7 +380,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
             int count =0;
             int start =0;
 
-            HashMap rx = new HashMap();
+            HashMap rx = new HashMap();     // store alnPos and count of each alnpos
             
             
             String max="";
@@ -388,129 +396,129 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
 
             for(int di = 0;di<2;di++){
             
-            if(di==1){
-                sb = reverseComplement(sb);
-                
-            }    
-                
-            
-            for(int i =0;i<n;i++){
+                if(di==1){
+                    sb = reverseComplement(sb);
 
-                long pos = i;
-                
-                
-                char chx = sb.charAt(i*sliding+kmer-1);
-                if(chx!='N'){
-                    if(cmer==-1){
-                        String s = sb.substring(i*sliding,i*sliding+kmer);
-                        cmer = encodeMer(s,kmer);
-                    }else{
+                }    
 
-                        int t =-1;
-                        switch(chx){
-                            case 'A':
-                            case 'a':
-                                t=0; // 00
-                                break;
-                            case 'T':
-                            case 't': 
-                                t=3; // 11
-                                break;
-                            case 'U':
-                            case 'u': 
-                                t=3; // 11 (in case of RNA T has change to U)
-                                break;
-                            case 'C':
-                            case 'c':
-                                t=1; // 01 
-                                break;
-                            case 'G':
-                            case 'g':
-                                t=2; // 10 
-                                break;
-                            default : 
-                                t=-1;
-                            break;
 
-                        }
-                        if(t>=0){
+                for(int i =0;i<n;i++){
 
-                            cmer *= 4;
-                            cmer &= mask;
-                            cmer += t;
+                    long pos = i;
 
+
+                    char chx = sb.charAt(i*sliding+kmer-1);
+                    if(chx!='N'){
+                        if(cmer==-1){
+                            String s = sb.substring(i*sliding,i*sliding+kmer);
+                            cmer = encodeMer(s,kmer);
                         }else{
-                            cmer = -1;
-                            i+=kmer;
-                        }  
-                    }  
-                    
-                    
-//                    if(i%10000000==0)System.out.println("Encode - "+name+" "+(i*sliding));
 
-                    if(true||cmer>=0){  
-//                        long x = (cmer<<(64- kmer*2))|pos;
-//                        long x = (cmer<<32)|pos;        // left Shift 28 bit is mean we reserve 28 bit for position (we fixed it) 
-//                        list[i] = x;
-                        int[] result = this.searchMer((int)cmer,thread_id);
-                        
-//                        res.add(result);
-                        
-                        res.add(new MappedResult(result,di));
-                        
-                        
-                        if(result!=null){
-//                            System.out.print(""+i+ " "+result.length);
-                            
-                            for(int j=0;j<result.length;j++){
-                            
-                                pos = (((long)result[j])&mask);
-                                
-                                if(debug)System.out.print(" "+di+"-"+pos);
-                                
-                                
-                                long xpos = pos - i;
-                                String key = ""+xpos+":"+di;
-                                
-                                if(rx.containsKey(key)){
-                                    int v = (int)rx.get(key)+1;
-                                    rx.put(key,v);
-                                    if(rx.get(max)==null)max=key;
-                                    if(v>(int)rx.get(max)){
-                                        max = key;
-                                    }
-                                           
-                                    
-                                }else
-                                   rx.put(key, 1);
-                                
+                            int t =-1;
+                            switch(chx){
+                                case 'A':
+                                case 'a':
+                                    t=0; // 00
+                                    break;
+                                case 'T':
+                                case 't': 
+                                    t=3; // 11
+                                    break;
+                                case 'U':
+                                case 'u': 
+                                    t=3; // 11 (in case of RNA T has change to U)
+                                    break;
+                                case 'C':
+                                case 'c':
+                                    t=1; // 01 
+                                    break;
+                                case 'G':
+                                case 'g':
+                                    t=2; // 10 
+                                    break;
+                                default : 
+                                    t=-1;
+                                break;
+
                             }
-                            
-                             if(debug)System.out.println(" "+di);
-                            
-//                            for(int j=0;j<result.length;j++)  System.out.print(" "+result[j]);
-                            
-//                            System.out.println();
-                            
-//                            System.out.print(result.length);
-                          
-                            
-                        }else{
-                             if(debug)System.out.println(" "+di+"-");
-                        }
-                        
-                        
+                            if(t>=0){
 
-                        count++;
+                                cmer *= 4;
+                                cmer &= mask;
+                                cmer += t;
+
+                            }else{
+                                cmer = -1;
+                                i+=kmer;
+                            }  
+                        }  
+
+
+    //                    if(i%10000000==0)System.out.println("Encode - "+name+" "+(i*sliding));
+
+                        if(true||cmer>=0){  
+    //                        long x = (cmer<<(64- kmer*2))|pos;
+    //                        long x = (cmer<<32)|pos;        // left Shift 28 bit is mean we reserve 28 bit for position (we fixed it) 
+    //                        list[i] = x;
+                            int[] result = this.searchMer((int)cmer,thread_id);
+
+    //                        res.add(result);
+
+                            res.add(new MappedResult(result,di));
+
+
+                            if(result!=null){
+    //                            System.out.print(""+i+ " "+result.length);
+
+                                for(int j=0;j<result.length;j++){
+
+                                    pos = (((long)result[j])&mask);
+
+                                    if(debug)System.out.print(" "+di+"-"+pos);
+
+
+                                    long xpos = pos - i;                    // xpos is alnpos or minus index position
+                                    String key = ""+xpos+":"+di;
+
+                                    if(rx.containsKey(key)){
+                                        int v = (int)rx.get(key)+1;
+                                        rx.put(key,v);
+                                        if(rx.get(max)==null)max=key;
+                                        if(v>(int)rx.get(max)){
+                                            max = key;
+                                        }
+
+
+                                    }else
+                                       rx.put(key, 1);
+
+                                }
+
+                                 if(debug)System.out.println(" "+di);
+
+    //                            for(int j=0;j<result.length;j++)  System.out.print(" "+result[j]);
+
+    //                            System.out.println();
+
+    //                            System.out.print(result.length);
+
+
+                            }else{
+                                 if(debug)System.out.println(" "+di+"-");
+                            }
+
+
+
+                            count++;
+                        }
+
+
+
                     }
-                    
-                
+
+
 
                 }
-                
-              
-                 
-            }
             
                 
             }
@@ -591,7 +599,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                     
                     if(rescseq.charAt(u)=='_'){
                         int p = u;
-                        if(dix==1)p=n-p-1;
+//                        if(dix==1)p=n-p-1;   // ลองเอาออกดู
                         sc.put(p, true);
                     }
                     
@@ -599,53 +607,60 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
  
                 HashMap rx2 = new HashMap();
                 max2 = "";
+                int check_u = 0;
                 for(int dic=0;dic<2;dic++){
                     
-                for(int u=0;u<n;u++){
-                    
-                    try{
-//                     System.out.println(""+(dic*n+j));
-                    MappedResult resx = (MappedResult)res.get(dic*n+u);
-                    
-                    if(resx.getPos()!=null&&sc.containsKey(u)==true){
+                    for(int u=0;u<n;u++){
+
+                        try{
+    //                     System.out.println(""+(dic*n+j));
+                        MappedResult resx = (MappedResult)res.get(dic*n+u);
                         
-//                          System.out.println(""+dic+" "+u+" "+" : "+resx.getPos().length);
-                            int result[] = resx.getPos();
-                            
-                            for(int j=0;j<result.length;j++){
-                            
-                                long pos = (((long)result[j])&mask);
-                                long xpos = pos - u;
-                                String key = ""+xpos+":"+dic;
-//                                 System.out.println("Key : "+key);
-                                if(rx2.containsKey(key)){
-                                    
-                                    int v = (int)rx2.get(key)+1;
-                                    
-                                    rx2.put(key,v);
-                                    if(rx2.get(max2)==null)max2=key;
-                                    if(v>(int)rx2.get(max2)){
-                                        max2 = key;
-                                    }
-                                           
-                                    
-                                }else
-                                   rx2.put(key, 1);
-                                
-                            }
-    
+                        if(dic == 1){
+                            check_u = (n-1) - u;
+                        }else{
+                            check_u = u;
+                        }
+                        
+                        if(resx.getPos()!=null&&sc.containsKey(check_u)==true){
+
+    //                          System.out.println(""+dic+" "+u+" "+" : "+resx.getPos().length);
+                                int result[] = resx.getPos();
+
+                                for(int j=0;j<result.length;j++){
+
+                                    long pos = (((long)result[j])&mask);
+                                    long xpos = pos - u;
+                                    String key = ""+xpos+":"+dic;
+    //                                 System.out.println("Key : "+key);
+                                    if(rx2.containsKey(key)){
+
+                                        int v = (int)rx2.get(key)+1;
+
+                                        rx2.put(key,v);
+                                        if(rx2.get(max2)==null)max2=key;
+                                        if(v>(int)rx2.get(max2)){
+                                            max2 = key;
+                                        }
+
+
+                                    }else
+                                       rx2.put(key, 1);
+
+                                }
+
+                        }
+                        }catch(Exception e){
+                            break;
+    //                        System.err.println("xx"+e.getMessage());
+    //                        
+    //                        StackTraceElement[] elements = e.getStackTrace();
+    //                for(int i=0; i<elements.length; i++) {
+    //                System.err.println(elements[i]);
+    //                }
+                        }
+
                     }
-                    }catch(Exception e){
-                        break;
-//                        System.err.println("xx"+e.getMessage());
-//                        
-//                        StackTraceElement[] elements = e.getStackTrace();
-//                for(int i=0; i<elements.length; i++) {
-//                System.err.println(elements[i]);
-//                }
-                    }
-                    
-                }
                 
                     
                    
@@ -756,11 +771,13 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                     }
                     String sread = resf.getEvaluateTag();
                        
-                    pout.println(""+(z+1)+"\t"+resf.getCoverage()+"\t"+resf.getSwitchCount()+"\t"+resf.getDupCount()+"\t"+maxAc+"\t"+maxBc+"\t"+maxposA+"\t"+maxposB+"\t"+chrposA+"\t"+chrposB+"\t"+r.getReadString()+"\t"+refseq+"\t"+refseq2+"\t"+sread+"\t"+flagUnmap);
-                    
+//                    pout.println(""+(z+1)+"\t"+resf.getCoverage()+"\t"+resf.getSwitchCount()+"\t"+resf.getDupCount()+"\t"+maxAc+"\t"+maxBc+"\t"+maxposA+"\t"+maxposB+"\t"+chrposA+"\t"+chrposB+"\t"+r.getReadString()+"\t"+refseq+"\t"+refseq2+"\t"+sread+"\t"+flagUnmap);
+                    pout.println(""+(z+1)+"\t"+resf.getCoverage()+"\t"+resf.getSwitchCount()+"\t"+resf.getDupCount()+"\t"+maxAc+"\t"+maxBc+"\t"+maxposA+"\t"+maxposB+"\t"+chrposA+"\t"+chrposB+"\t"+read+"\t"+refseq+"\t"+refseq2+"\t"+sread+"\t"+flagUnmap);
 //                    if(fout!=null){
                         
-                     
+//                    if(chrposA.equals("chrX:69120325")){
+//                        System.out.println();
+//                    }
                         if(resf.getCoverage()>=this.filter_mer_coverage&&Math.abs(pmax-pmax2)>this.minimumIndelSize&&resf.getSwitchCount()==2&&resf.getDupCount()<=this.filter_dup_count&&resf.getRefRepeatCount()<this.filter_ref_repeat){
                             int bp[] = resf.findBreakPoint();
                             String junction = read.substring(bp[0],bp[1]);
@@ -786,7 +803,8 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                             String junctionB = ""+tB[0]+":"+(Integer.parseInt(tB[1])+bp1);
                             
                             
-                            fout.println(""+(z+1)+"\t"+resf.getCoverage()+"\t"+resf.getSwitchCount()+"\t"+resf.getDupCount()+"\t"+maxAc+"\t"+maxBc+"\t"+maxposA+"\t"+maxposB+"\t"+chrposA+"\t"+chrposB+"\t"+r.getReadString()+"\t"+refseq+"\t"+refseq2+"\t"+sread+"\t"+resf.getResolveTag()+"\t"+bp[0]+"\t"+bp[1]+"\t"+junctionA+"\t"+junctionB+"\t"+junction+"\t"+flagUnmap);
+//                            fout.println(""+(z+1)+"\t"+resf.getCoverage()+"\t"+resf.getSwitchCount()+"\t"+resf.getDupCount()+"\t"+maxAc+"\t"+maxBc+"\t"+maxposA+"\t"+maxposB+"\t"+chrposA+"\t"+chrposB+"\t"+r.getReadString()+"\t"+refseq+"\t"+refseq2+"\t"+sread+"\t"+resf.getResolveTag()+"\t"+bp[0]+"\t"+bp[1]+"\t"+junctionA+"\t"+junctionB+"\t"+junction+"\t"+flagUnmap);
+                            fout.println(""+(z+1)+"\t"+resf.getCoverage()+"\t"+resf.getSwitchCount()+"\t"+resf.getDupCount()+"\t"+maxAc+"\t"+maxBc+"\t"+maxposA+"\t"+maxposB+"\t"+chrposA+"\t"+chrposB+"\t"+read+"\t"+refseq+"\t"+refseq2+"\t"+sread+"\t"+resf.getResolveTag()+"\t"+bp[0]+"\t"+bp[1]+"\t"+junctionA+"\t"+junctionB+"\t"+junction+"\t"+flagUnmap);
 
                             
                         }
@@ -1476,8 +1494,37 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                             
                             list[j] = is.readLong();
                             
+                            /**
+                     read       * test case 
+                            */
+//                            int checkMer = (int)(list[j]>>32);
+//                            if(checkMer==811687390){
+//                                System.out.println();
+//                            }
+//                            if(checkMer==-1050929727){
+//                                System.out.println("Not Pass case1");
+//                            }else if(checkMer==-1319295579 && i==3){
+//                                System.out.println("Pass case2");
+//                            }else if(checkMer==-1876321946 && i==2){
+//                                System.out.println("Pass case3");
+//                            }else if(checkMer==1955156628 && i==2){
+//                                System.out.println("Pass case4");
+//                            }else if(checkMer==-1457366742 && i==6){
+//                                System.out.println("Pass case5");
+//                            }else if(checkMer==-383624918 && i==3){
+//                                System.out.println("Pass case6");
+//                            }else if(checkMer==-375236310 && i==5){
+//                                System.out.println("Pass case7");
+//                            }else if(checkMer==-375228118 && i==4){
+//                                System.out.println("Pass case8");
+//                            }else if(checkMer==-375228124 && i==6){
+//                                System.out.println("Pass case9");
+//                            }
+//                            /***************/
+                            
+                            
 //                            long mask = mask();
-//                            long test = 3218168257L;
+//                            long test = 3614830557L;
 //                            long tc = (long)((list[j]>>32)&mask);
 //                            if(tc==test){
 //                                System.out.println();
@@ -1499,12 +1546,39 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                             
                             list[j] = is.readInt();
                             
-                            long test = 249476838;
-                            int tt = (int)test;
-                            if(list[j]==(int)test){
-                                System.out.println();
-                            }
-//                            
+//                            long test = 811687390;
+//                            int tt = (int)test;
+//                            if(list[j]==(int)test){
+//                                System.out.println();
+//                            }
+                            
+                            /**
+                            * test case 
+                            */
+//                            if(list[j]==-375228124){
+//                                System.out.println();
+//                            }
+//                            if(list[j]==-1050929727){
+//                                System.out.println("Not Pass case1");
+//                            }else if(list[j]==-1319295579 && i==3){
+//                                System.out.println("Pass case2");
+//                            }else if(list[j]==-1876321946 && i==2){
+//                                System.out.println("Pass case3");
+//                            }else if(list[j]==1955156628 && i==2){
+//                                System.out.println("Pass case4");
+//                            }else if(list[j]==-1457366742 && i==6){
+//                                System.out.println("Pass case5");
+//                            }else if(list[j]==-383624918 && i==3){
+//                                System.out.println("Pass case6");
+//                            }else if(list[j]==-375236310 && i==5){
+//                                System.out.println("Pass case7");
+//                            }else if(list[j]==-375228118 && i==4){
+//                                System.out.println("Pass case8");
+//                            }else if(list[j]==-375228124 && i==6){
+//                                System.out.println("Pass case9");
+//                            }
+                           /***************/
+                           
 //                            if(list[j]==-1076799039){
 //                                System.out.println();
 //                            }
@@ -1773,7 +1847,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                 }
             }
 
-            System.out.println();
+//            System.out.println();
 
         }
         
@@ -1872,59 +1946,85 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
 //                if(list[i]== -4624816656867818221L){
 //                    System.out.println();
 //                }
-//                if(pos==1474942){
+//                if(mer==-2132876150){
 //                    System.out.println();
 //                }
                 
                 if(proc){
               
                 
-                if(mer!=last){
-                    if(dup!=null){
-//                        dup.addPos(lastpos);
-                        // write dup mer
-                        j = ((j>>32)<<32)+dup.size();
-                        int s = dup.size();
-                        if(s<=10){
+                    if(mer!=last){
+                        if(dup!=null){
+    //                        if(last==-1050929727){
+    //                            System.out.println("Not Pass case1");
+    //                        }
+    //                        dup.addPos(lastpos);
+                            // write dup mer
+                            j = ((j>>32)<<32)+dup.size();
+                            int s = dup.size();
                             
-                        // write duplicate to file
-                        
-                        // write 0000 to 1 
-                        osi.writeLong(j);
-                        
-                        DataOutputStream osd = osx.get(s);
-                        
-//                        osd.writeInt(mer);
-                        osd.writeInt(last);
-                        
-                        ArrayList<Integer> l = dup.getPos();
-                        for(int k=0;k<s;k++){
-                             osd.writeInt(l.get(k));
+                            if(last == -675317918){
+                                System.out.println("Found TCCTGTTTCTCTCGAG has repeat in chr "+chr.chrNum);
+                                System.out.println("(single)Mer : "+last+" Number of repeat : " + s);
+                            }
+                            
+                            if(s<=10){
+                                if(!this.overRepeatTable.containsKey(last)){ // over repeat filter (this check case did not gurantee that all mer that over repeat will be eliminate. ther still has some case that can pass this check case eg. mer A in first consider chromosome has repeat but not over repeat while on second chromosome this mer A has over repeat so it can pass this check case at first but not pass on second chemosome)
+                                /**
+                                 * this case check will eliminate mer that already have repeat count that exceed the limit on chr before this chr  
+                                 */
+                                    // write duplicate to file
+
+                                    // write 0000 to 1 
+                                    osi.writeLong(j);
+
+                                    DataOutputStream osd = osx.get(s);
+
+            //                        osd.writeInt(mer);
+                                    osd.writeInt(last);
+//                                    if(last==-375228124){
+//                                        System.out.println();
+//                                    }
+                                    ArrayList<Integer> l = dup.getPos();
+                                    for(int k=0;k<s;k++){
+                                         osd.writeInt(l.get(k));
+                                    }
+                                }
+
+                            }else{
+                                // record mer that has repeat count exceed the limit
+                                this.overRepeatTable.put(last, false);
+                            }
+
+
+                        }else{
+                            // unique write
+                            osi.writeLong(j);
+                            if(last == -675317918){
+                                System.out.println("Found TCCTGTTTCTCTCGAG has repeat in chr "+chr.chrNum);
+                                System.out.println("(single)Mer : "+last+" Fond one at position : " + lastpos + " Code j is : " + j);
+                            }
                         }
-                        
-                        }
-                        
-                        
+                        dup = null;
                     }else{
-                        // unique write
-                        osi.writeLong(j);
+                        if(dup==null){
+                            dup = new DuplicateMer(mer);
+                            dup.addPos(lastpos);
+                        }
+                        if(dup!=null){
+                            dup.addPos(pos);
+                        }
                     }
-                    dup = null;
-                }else{
-                    if(dup==null){
-                        dup = new DuplicateMer(mer);
-                        dup.addPos(lastpos);
-                    }
-                    if(dup!=null){
-                        dup.addPos(pos);
-                    }
-                }
                 }
                 proc = true;
 //                os.writeLong(list[i]); // write list variable to file .bin
                 last = mer;
                 lastpos = pos;        
                 j = list[i];
+                
+//                if(j==-9160633310625651146L){
+//                    System.out.println();
+//                }
             
             }
 //            os.close();
@@ -1966,7 +2066,7 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
             
          
 //        final_indexing();
-            final_indexing();
+            final_indexingV2();
             final_unique_indexing();
        
         
@@ -2132,10 +2232,10 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
                 }
 
 
-                outlist.add(cl);
-                outlist.add(dl);
                 outlist.add(al);
                 outlist.add(bl);
+                outlist.add(cl);
+                outlist.add(dl);
 
 
                 File fx = new File(this.filename+"."+i+".bin16.final"); //File object
@@ -2451,7 +2551,823 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
     //=======================================================================================================================
     //=======================================================================================================================
    
-    
+    public void final_indexingV2() throws FileNotFoundException, IOException {
+        
+        System.out.println("Run finnal Index version 2");
+        
+//        File overFile = new File(this.filename+".overmer.final"); //File object
+        FileWriter writerOV = new FileWriter(this.filename+".overmer.final",true);
+        
+        ArrayList<String> dup_files=new ArrayList<String>();
+        ArrayList<DataOutputStream> osx=new ArrayList<DataOutputStream>();
+       
+        for(int i=0;i<=10;i++){
+            
+            File f = new File(this.filename+"."+i+".bin16.part.final"); //File object
+            DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f))); // create object for output data stream
+            osx.add(i, os);
+            
+        }
+        
+//        osx.get(0).close();
+//        osx.get(1).close();
+        
+        
+        // work on 1.bin
+        
+        
+        
+        
+        
+        
+        
+        // work on other bin
+        
+        
+        
+        
+        
+        for(int i=1;i<=10;i++){
+            DataOutputStream osc = osx.get(i);
+            osc.close();
+            
+            
+            File fi = new File(this.filename+"."+i+".bin16.part"); //File object
+            DataInputStream is = new DataInputStream(new BufferedInputStream(new FileInputStream(fi)));
+           
+            long size = fi.length()/((1+i)*4);  // overall number of information (information is include mer and all position relate to this mer)
+            boolean filter = false;
+            boolean discard = false;
+            int max_array = Integer.MAX_VALUE-8;
+            int mer;
+            int bid;
+            
+          
+            
+            ArrayList setlist = new ArrayList();
+            
+            
+            int time = (int)(size/(Integer.MAX_VALUE-8))+1;
+            
+            System.out.println("Part "+i+" "+size+ " left "+time);
+            
+            if(time>1){ // large element
+            /**
+             * Due to the actual size of DNA that we want to process is exceed the possible maximun size of array (which is just one Integer long)
+             * So we decide to divide our DNA in to 4 portion. To be able to store all information and sort it by array sort.
+             */ 
+             
+                int binc[] = new int[4];    
+                for(int k=0;k<binc.length;k++)
+                binc[k] = 0;
+//                binc[i] = 0; 
+                int binmask = 3<<28;
+
+                for(int t=0;t<time;t++){
+
+                    int lsize = max_array;
+                    if(size-max_array<0)lsize = (int)(size%max_array);      //If size is lower than max_array ==> lsize = size
+
+                    long list[] = new long[lsize];
+                    System.out.println("Part "+i+" "+size+ " left "+t+ " "+lsize+" "+max_array);
+
+                    for(int j=0;j<lsize;j++){
+                        long l = is.readLong();
+                        mer = (int)(l>>32);
+
+                        bid = 3&((int)((mer)>>30));
+                        if(j%1000000==0)
+                        System.out.println("Part "+i+" read "+j+" "+Integer.toBinaryString(bid));//+" "+Integer.toBinaryString(mer)+" l "+Long.toBinaryString(l));
+                        binc[bid]++;
+
+                        list[j] = l;
+
+
+
+                    }
+
+                    setlist.add(list);
+                    size -= lsize;
+
+                }
+
+                ArrayList outlist = new ArrayList();
+
+                int a=0;
+                int b=0;
+                int c=0;
+                int d=0;
+                long al[]=null;
+                long bl[]=null;
+                long cl[]=null;
+                long dl[]=null;
+
+
+                    
+                for(int k=0;k<binc.length;k++){
+                    // loop for preallocate size of al bl cl dl array
+                    System.out.println("Binc "+k+" read "+binc[k]);
+                    if(k==0){
+                        a = 0;
+                        al=new long[binc[k]];
+                    }else
+                    if(k==1){
+                        b = 0;
+                        bl=new long[binc[k]];
+                    }else        
+                     if(k==2){
+                        c = 0;
+                        cl=new long[binc[k]];
+                    }else
+                    if(k==3){
+                        d = 0;
+                        dl=new long[binc[k]];
+                    }
+                }
+
+
+                for(int k=0;k<setlist.size();k++){
+                    // loop add list that catagorize with front 2 bit to array of long (00 add to al, 01 add to bl, 10 add to cl, 11 add to dl)
+                    long plist[] = (long[])setlist.get(k);
+
+                    for(int j=0;j<plist.length;j++){
+                        long l = plist[j];
+                        mer = (int)(l>>32);
+                        bid = 3&((int)((mer)>>30));
+
+
+                    if(bid==0){
+                        al[a++] = l;
+                    }else
+                    if(bid==1){
+                        bl[b++] = l;
+                    }else        
+                     if(bid==2){
+                        cl[c++] = l;
+                    }else
+                    if(bid==3){
+                        dl[d++] = l;
+                    }
+
+                    }
+
+
+                }
+
+
+                outlist.add(dl);
+                outlist.add(cl);
+                outlist.add(bl);
+                outlist.add(al);
+                
+//                outlist.add(al);
+//                outlist.add(bl);
+//                outlist.add(cl);
+//                outlist.add(dl);
+
+
+                File fx = new File(this.filename+"."+i+".bin16.final"); //File object
+                DataOutputStream osi = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fx))); // create object for output data stream
+    //            File fxt = new File(this.filename+"."+i+".bin16.test"); //File object
+    //            DataOutputStream ost = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fxt))); // create object for output data stream    
+
+                if(i==1){
+                /**
+                 * It is unique file. Create repeat table and write unique mer|Pos
+                 */
+                    for(int k=0;k<outlist.size();k++){
+
+                        long plist[] = (long[])outlist.get(k);
+
+                        Arrays.parallelSort(plist);
+
+
+        //              DataOutputStream osi = osx.get(1);
+
+                        long mask = mask();
+                        long j = -1;
+                        int pos = 0;
+                        int last = -1;
+                        int lastpos = -1;
+                        DuplicateMer dup = null;
+                        boolean proc = false;
+                        
+                        for(int n=0;n<plist.length;n++){
+                            if(n%10000000==0)System.out.println("(Main Unique) Process file level "+i+" : "+ n);
+            //                ost.writeLong(plist[n]);
+                            pos = (int)(plist[n]&mask);
+                            mer = (int)(plist[n]>>32);
+                            
+                            if(last == -675317918){
+                                System.out.println("Found TCCTGTTTCTCTCGAG");
+                            }
+                            
+                            if(this.overRepeatTable.containsKey(mer)){
+                                continue;
+                            }
+                            
+                            if(proc){
+                                if(mer!=last){
+                                    if(dup!=null){
+                //                        dup.addPos(lastpos);
+                                        // write dup mer
+                                        int sum = 0;
+                                        int uni = 0;
+                                        int s = dup.size();
+                                        long luni = -1;
+                                        ArrayList<Integer> l = dup.getPos();
+                                        
+                                        if(s<=10){     
+                                            
+                                            RepeatMer repMer = new RepeatMer(last);
+                                            for(int m=0;m<s;m++){
+
+                                                pos = l.get(m);
+
+                                                if(pos<=10 && pos>0)
+                                                    sum+=pos;
+                                                else{
+                                                    repMer.addPosR(pos);
+                                                    sum++;
+                                                    uni++;
+                                                }
+                                                if(last == -675317918){
+                                                    System.out.println("Found TCCTGTTTCTCTCGAG has repeat in more than 10 pos but not more than 10 chromosome");
+                                                    System.out.println("(l)Mer : "+last+" round " + m + " pos "+pos+" sum "+sum);
+                                                }
+
+                                            }
+                                            repMer.setMaxNumR(sum);
+                                            
+                                            if(sum<=10){                  
+                                                j = ((j>>32)<<32)+sum;
+
+
+                                                osi.writeLong(j);
+//                                                RepeatMer repMer = new RepeatMer(last);
+                                                
+                                                
+//                                                if(uni<=10){
+//
+//                                                    if(uni>=1){
+//
+//                                                        DataOutputStream osd = osx.get(uni);
+//                                                        //&&&&&&
+//                                                        osd.writeInt(last);
+//
+//                                                        // write only uniq
+//                                                        for(int m=0;m<s;m++){
+//                                                            pos = l.get(m);
+//                                                            if(pos>10){
+//                                                                repMer.addPosR(pos);
+//                                                                osd.writeInt(pos);
+//                                                            }
+//                                                            
+//                                                        }
+//                                                    }
+//                                                }
+
+                                                if(repMer.getMaxNumRepeat() == repMer.getCrrentNumRepeat()){
+                                                    DataOutputStream osd = osx.get(repMer.getMaxNumRepeat());
+                                                    osd.writeInt(last);
+                                                    ArrayList<Integer> posList = repMer.getPosR();
+                                                    // write only uniq
+                                                    for(int iter=0;iter<repMer.getMaxNumRepeat();iter++){
+                                                        int addPos = posList.get(iter);
+                                                        osd.writeInt(addPos);
+                                                    }
+                                                }else{
+                                                    this.repeatTable.put(last, repMer);
+                                                }
+                                            
+                                            }else{
+                                                if(last == -675317918){
+                                                    System.out.println("Found TCCTGTTTCTCTCGAG has repeat in more than 10 pos but not more than 10 chromosome");
+                                                    System.out.println("(l)Mer : "+last+" Number of repeat : " + sum);
+                                                }
+                                                
+                                                this.overRepeatTable.put(last, false);
+                                                writerOV.write(last+","+sum);
+                                                writerOV.write("\n");
+                                            }
+                                        }else{
+                                            if(last == -675317918){
+                                                System.out.println("Found TCCTGTTTCTCTCGAG has repeat in more than 10 chromosome");
+                                            }
+                                            
+                                            this.overRepeatTable.put(last, false); // mer that fall into this case has characteristic like this => if our limit is 10. So, mer that repeat in more than 10 different chromosome will be eliminate.
+                                            writerOV.write(last+",null");
+                                            writerOV.write("\n");
+                                        }
+                                    }else{
+                                        // unique write
+                                        osi.writeLong(j);
+                                    }
+                                    dup = null;
+                                }else{
+                                    if(dup==null){
+                                        dup = new DuplicateMer(mer);
+                                        dup.addPos(lastpos);
+                                    }
+                                    if(dup!=null){
+                                        dup.addPos(pos);
+                                    }
+                                }
+                            }
+                            proc = true;
+            //                os.writeLong(list[i]); // write list variable to file .bin
+                            last = mer;
+                            lastpos = pos;        
+                            j = plist[n];
+                        }                        
+                    }
+                }else{
+                    
+                    /**
+                     * exit program
+                     */
+                    System.out.println("////////************** Program has been Terminate ******************////////////////");
+                    System.out.println("Error : Your input DNA has number of base exceed the limit (number of bases limit at 4,294,967,295 bp)");
+                    System.exit(0);
+                    /**************/
+                    
+                    for(int k=0;k<outlist.size();k++){
+
+                        long plist[] = (long[])outlist.get(k);
+
+                        Arrays.parallelSort(plist);
+
+
+        //              DataOutputStream osi = osx.get(1);
+
+                        long mask = mask();
+                        long j = -1;
+                        int pos = 0;
+                        int last = -1;
+                        int lastpos = -1;
+                        DuplicateMer dup = null;
+                        boolean proc = false;
+
+
+
+            //            os.writeInt(list.length);
+                        for(int n=0;n<plist.length;n++){
+                            if(n%10000000==0)System.out.println("(Sub level) Process file level "+i+" : "+ n);
+            //                ost.writeLong(plist[n]);
+                            pos = (int)(plist[n]&mask);
+                            mer = (int)(plist[n]>>32);
+                            
+                            if(this.overRepeatTable.containsKey(mer)){
+                                /**
+                                 * this case check will be use to eliminate mer that has accumulate repeat exceed the limit but has been write to file before we notice this fact.
+                                 * eg. mer A has repeat in chr1 6 mer and chr2 5 mer if we consider separately it not exceed the limit. So,it will be add info to each level6 and level5 repeat file
+                                 * But if we sum both repeat count it equal to 11 which exceed the limit. So,we have this case check to get rid of this mer form level5 and level6 file.
+                                 */
+                                continue;
+                            }
+
+                            if(proc){
+                                if(mer!=last){
+                                    if(dup!=null){
+                //                        dup.addPos(lastpos);
+                                        // write dup mer
+                                        int sum = 0;
+                                        int uni = 0;
+                                        int s = dup.size();
+                                        long luni = -1;
+                                        ArrayList<Integer> l = dup.getPos();
+
+                                        for(int m=0;m<s;m++){
+
+                                            pos = l.get(m);
+
+                                            if(pos<100)
+                                                sum+=pos;
+                                            else{
+                                                luni = ((j>>32)<<32)+pos;
+                                                sum++;
+                                                uni++;
+                                            }
+
+                                        }
+
+                                        j = ((j>>32)<<32)+sum;
+
+
+                                        osi.writeLong(j);
+
+                                        if(uni<=10){
+
+                                            if(uni>1){
+                                                DataOutputStream osd = osx.get(uni);
+                                                //&&&&&&
+                                                osd.writeInt(last);
+
+                                                // write only uniq
+                                                for(int m=0;m<s;m++){
+                                                    pos = l.get(m);
+                                                    if(pos>100)
+                                                    osd.writeInt(pos);
+                                                }
+                                            }else{
+                                               if(luni!=-1)
+                                               osi.writeLong(luni); 
+                                            }
+                                        }
+                //                        }
+
+
+                                    }else{
+                                        // unique write
+                                        osi.writeLong(j);
+                                    }
+                                    dup = null;
+                                }else{
+                                    if(dup==null){
+                                        dup = new DuplicateMer(mer);
+                                        dup.addPos(lastpos);
+                                    }
+                                    if(dup!=null){
+                                        dup.addPos(pos);
+                                    }
+                                }
+                            }
+                            proc = true;
+            //                os.writeLong(list[i]); // write list variable to file .bin
+                            last = mer;
+                            lastpos = pos;        
+                            j = plist[n];
+
+                        }
+
+            //            
+                        plist=null;
+                        System.gc();
+
+
+                    }
+                }
+                osi.close();
+               
+                
+            }else{
+                if(time==1){
+
+
+
+        //            osx.clear();
+
+        //            for(int z=0;z<=10;z++){
+        //            
+        //            File f = new File(this.filename+"."+z+".bin16.part.final2"); //File object
+        //            DataOutputStream os = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(f,true))); // create object for output data stream
+        //            osx.add(z, os);
+        //        
+        //            }
+
+                    File fi2 = new File(this.filename+"."+i+".bin16.part.final"); //File object
+                    DataInputStream is2 = new DataInputStream(new BufferedInputStream(new FileInputStream(fi2)));
+
+
+                    //            DataOutputStream osi = osx.get(1);
+                    File fx = new File(this.filename+"."+i+".bin16.final"); //File object
+                    DataOutputStream osi = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fx))); // create object for output data stream    
+                    //            DataOutputStream osi = osx.get(1);
+
+        //            File fxt = new File(this.filename+"."+i+".bin16.test"); //File object
+        //            DataOutputStream ost = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(fxt))); // create object for output data stream    
+        //            
+
+                    int block = (1+i);
+                    int is_size = (int)(fi.length()/4/block);       // got number of byte per mer and pos information. divide file length by number of byte that have to read for one infomation (EX level 1 index has 8 byte per info. level 2 has 12 byte per info(4 for mer, 4 for pos1 and 4 for pos2))   
+                    int is2_size = (int)(fi2.length()/4/block);
+                    int to_read = is_size*block;                    // number of round to perform for read (read integer)
+                    int to_read2 = is2_size*block;
+
+                    int idx = 0;
+
+                    size = is_size + is2_size;
+                    int data[] = new int[to_read+to_read2];
+
+        //            size = is2_size;
+        //            int data[] = new int[to_read2];
+
+
+
+                    long idxl[] = new long[(int)size];              // store mer||index of mer exist in file .part and .part.final (consider like this two file is concatenate So, position 10 on file .part.final will equal to position 10+number of index froom file .part)
+
+
+                    System.out.println("Part "+i+" size1= "+is_size+ " size2="+is2_size);
+                    int v;
+
+
+                    // read 1
+                    for(int k=0;k<to_read;k++){
+                        v = is.readInt();
+                        data[k] = v;
+                        if(k%block==0){
+//                            if(v==-2132876150){
+//                                System.out.println();
+//                            }
+                            long l = ((long)v<<32)+k;
+        //                     System.out.println("Mer v "+Integer.toBinaryString(v)+" Mer= "+Long.toBinaryString((long)v<<32)+ " size2="+Long.toBinaryString(l));
+
+                            idxl[idx] = l;
+                            idx++;
+                        }
+                        if(k%10000000==0)
+                        System.out.println("Read part "+i+":1 "+k);
+                    }
+
+        //            for(int z=0;z<10;z++){
+        //                System.out.println(Long.toBinaryString(idxl[z]));
+        //            }
+
+                    // read 2
+
+                    for(int k=0;k<to_read2;k++){
+                        v = is2.readInt();
+                        data[k+to_read] = v;
+                        if(k%block==0){
+                            long l = ((long)v<<32)+(k+to_read);
+                            idxl[idx] = l;
+                            idx++;
+                        }
+                        if(k%10000000==0)
+                        System.out.println("Read part "+i+":2 "+k);
+                    }
+
+                    Arrays.parallelSort(idxl);
+
+
+                    long mask = mask();
+                    long j = -1;
+                    int pos = 0;
+                    int last = -1;
+                    int lastpos = -1;
+                    DuplicateMer dup = null;
+                    boolean proc = false;
+                    
+                    if(i>1){
+                        for(int k=0;k<idxl.length;k++){
+
+                            if(k%10000000==0)System.out.println("(Sub level) Process file level "+i+" : "+ k);
+
+                            pos = (int)(idxl[k]&mask);
+                            mer = (int)(idxl[k]>>32);
+//                            if(mer==-375228124){
+//                                System.out.println();
+//                            }
+                            if(this.overRepeatTable.containsKey(mer)){
+                                /**
+                                 * this case check will be use to eliminate mer that has accumulate repeat exceed the limit but has been write to file before we notice this fact.
+                                 * eg. mer A has repeat in chr1 6 mer and chr2 5 mer if we consider separately it not exceed the limit. So,it will be add info to each level6 and level5 repeat file
+                                 * But if we sum both repeat count it equal to 11 which exceed the limit. So,we have this case check to get rid of this mer form level5 and level6 file.
+                                 */
+                                continue;
+                            }
+                            
+                            if(this.repeatTable.containsKey(mer)){
+                                RepeatMer repM = this.repeatTable.get(mer);
+                                for(int n=0;n<i;n++){
+                                    int position = data[pos+n+1];
+                                    repM.addPosR(position);
+                                }
+                                
+                                // after add position, check size of array pos if it equal to max size write pos and related mer to final file of that i level
+                                if(repM.getCrrentNumRepeat() == repM.getMaxNumRepeat()){
+                                    
+                                    if(repM.getCrrentNumRepeat() == i){
+                                        
+                                        /**
+                                        * test case 
+                                        */
+                                        if(mer==-1050929727){
+                                            System.out.println("Not Pass case1");
+                                        }else if(mer==-1319295579 && i==3){
+                                            System.out.println("Pass case2");
+                                        }else if(mer==-1876321946 && i==2){
+                                            System.out.println("Pass case3");
+                                        }else if(mer==1955156628 && i==2){
+                                            System.out.println("Pass case4");
+                                        }else if(mer==-1457366742 && i==6){
+                                            System.out.println("Pass case5");
+                                        }else if(mer==-383624918 && i==3){
+                                            System.out.println("Pass case6");
+                                        }else if(mer==-375236310 && i==5){
+                                            System.out.println("Pass case7");
+                                        }else if(mer==-375228118 && i==4){
+                                            System.out.println("Pass case8");
+                                        }else if(mer==-375228124 && i==6){
+                                            System.out.println("Pass case9");
+                                        }
+                                       /***************/
+                                        
+                                        
+                                        osi.writeInt(mer);
+                                        ArrayList<Integer> posR = repM.getPosR();
+                                        for(int n=0;n<i;n++){
+                                           osi.writeInt(posR.get(n)); 
+                                        }
+                                        this.repeatTable.remove(mer);
+                                        
+                                    }else{
+                                        DataOutputStream osd = osx.get(repM.getMaxNumRepeat());
+                                        int dummy = repM.getMerR();
+                                        osd.writeInt(dummy);
+                                        for(int iter=0;iter<repM.getMaxNumRepeat();iter++){
+                                            int addPos = repM.getPosR().get(iter);
+                                            osd.writeInt(addPos);
+                                        }
+                                        this.repeatTable.remove(mer);
+                                    }
+                                }
+//                                else{
+////                                    for(int n=0;n<i;n++){
+////                                        int position = data[pos+n+1];
+////                                        repM.addPosR(position);
+////                                    }
+//                                    
+//                                    if(repM.getMaxNumRepeat() == repM.getCrrentNumRepeat()){
+//                                        DataOutputStream osd = osx.get(repM.getMaxNumRepeat());
+//                                        osd.writeInt(repM.getMerR());
+//                                        for(int iter=0;iter<repM.getMaxNumRepeat();iter++){
+//                                            int addPos = repM.getPosR().get(iter);
+//                                            osd.writeInt(addPos);
+//                                        }
+//                                        this.repeatTable.remove(mer);
+//                                    }
+//                                }                           
+                            }else{
+                                /**
+                                * test case 
+                                */
+                                if(mer==-1050929727){
+                                    System.out.println("Not Pass case1");
+                                }else if(mer==-1319295579 && i==3){
+                                    System.out.println("Pass case2");
+                                }else if(mer==-1876321946 && i==2){
+                                    System.out.println("Pass case3");
+                                }else if(mer==1955156628 && i==2){
+                                    System.out.println("Pass case4");
+                                }else if(mer==-1457366742 && i==6){
+                                    System.out.println("Pass case5");
+                                }else if(mer==-383624918 && i==3){
+                                    System.out.println("Pass case6");
+                                }else if(mer==-375236310 && i==5){
+                                    System.out.println("Pass case7");
+                                }else if(mer==-375228118 && i==4){
+                                    System.out.println("Pass case8");
+                                }else if(mer==-375228124 && i==6){
+                                    System.out.println("Pass case9");
+                                }
+                               /***************/
+                               
+                                osi.writeInt(mer);
+                                for(int n=0;n<i;n++){
+                                    int position = data[pos+n+1];
+                                    osi.writeInt(position);
+                                }
+                            }
+                        }    
+                    }else{
+                        for(int k=0;k<idxl.length;k++){
+
+                            if(k%10000000==0)System.out.println("(Main Unique) Process file level "+i+" : "+ k);
+
+                            pos = (int)(idxl[k]&mask);
+                            mer = (int)(idxl[k]>>32);
+//                            if(mer==-375228124){
+//                                System.out.println();
+//                            }
+//                            if(last == -675317918){
+//                                System.out.println("Found TCCTGTTTCTCTCGAG");
+//                            }
+                            
+                            if(this.overRepeatTable.containsKey(mer)){
+                                // mer that fall into this case has characteristic like this => this mer has been notice that it unique or it repeat but not exceed the limit before we found that it repeat exceed the limit on other chromosome
+                                // eg. at first chr this mer is not exceed the limit so it has been add to file but after that we found that this mer on chr second has repeat exceed the limit. So, in fact this mer should be ignore on both first and second chromosome
+                                // So this case check will be use to eliminate this mer from first chr file.
+                                continue;                                   
+                            }
+//                            if(mer == -2132876150){
+//                                System.out.println();
+//                            }
+                            
+                            if(proc){
+                                if(mer!=last){
+
+                                    if(dup!=null){
+                //                        System.out.println("Write "+(Integer.toBinaryString(mer)+" "+Integer.toBinaryString(last))+" "+(dup.size()));
+
+                                        int s = dup.size();
+                                        int sum = 0;
+                                        int uni = 0;
+                                        ArrayList<Integer> l = dup.getPos();
+                                        
+//                                        if(last==-375228124){
+//                                            System.out.println();
+//                                        }
+                                        if(i*l.size()<=10){
+
+                    //                         System.out.println("Write Dup "+(i*l.size()));
+//                                            DataOutputStream osd = osx.get(i*l.size());
+//                                            osd.writeInt(last);
+                    //                        int x[] = new int[i*l.size()];
+                    //                         System.out.println("last "+last+ " "+l.size());
+                                            RepeatMer repM = new RepeatMer(last);
+                                            
+                                            for(int m=0;m<s;m++){
+
+                                                idx = l.get(m);
+                    //                            System.out.println("idx "+idx);
+                                                for(int n=0;n<i;n++){
+                                                    int prePos = data[idx+n+1];
+                                                    if(prePos<=10 && prePos>0){
+                                                        sum += prePos;
+                                                    }else{
+                                                        repM.addPosR(prePos);
+                                                        sum++;
+                                                        uni++;
+                                                    }
+                                                }   
+                                            }
+                                            repM.setMaxNumR(sum);                                            
+                                            if(repM.getMaxNumRepeat() == repM.getCrrentNumRepeat()){
+                                                DataOutputStream osd = osx.get(repM.getMaxNumRepeat());
+                                                osd.writeInt(repM.getMerR());
+                                                for(int iter=0;iter<repM.getMaxNumRepeat();iter++){
+                                                    int addPos = repM.getPosR().get(iter);
+                                                    osd.writeInt(addPos);
+                                                }
+                                            }else{
+                                                if(sum<=10){
+                                                    this.repeatTable.put(last, repM);
+                                                }else{
+                                                    if(last == -675317918){
+                                                        System.out.println("Found TCCTGTTTCTCTCGAG has repeat in more than 10 pos but not more than 10 chromosome");
+                                                        System.out.println("(s)Mer : "+last+" Number of repeat : " + sum);
+                                                    }
+                                                    
+                                                    this.overRepeatTable.put(last, false);   // mer that fall into this case has characteristic like this => mer has repeat in several chromosome but not exceed the limit in each chromosome but when acumulate all repeat. it has been found that it exceed the limit
+                                                    writerOV.write(last+","+sum);
+                                                    writerOV.write("\n");
+                                                }
+                                            }
+                                        }else{
+                                            if(last == -675317918){
+                                                System.out.println("Found TCCTGTTTCTCTCGAG has repeat in more than 10 chromosome");
+                                            }
+                                            
+                                            this.overRepeatTable.put(last, false); // mer that fall into this case has characteristic like this => if our limit is 10. So, mer that repeat in more than 10 different chromosome will be eliminate.
+                                            writerOV.write(last+",null");
+                                            writerOV.write("\n");
+                                        }
+
+                                    }else{
+                                        // unique write
+                //                        System.out.println("");
+                //                        System.out.println("Write Uniq ");
+                                        
+                                        osi.writeInt(last);
+                                        idx = lastpos;
+                                        for(int n=0;n<i;n++){
+                                            osi.writeInt(data[idx+n+1]); 
+                                        }
+                                    }
+                                    dup = null;
+                                }else{
+                                    if(dup==null){
+                                        dup = new DuplicateMer(mer);
+                                        dup.addPos(lastpos);
+                                    }
+                                    if(dup!=null){
+                                        dup.addPos(pos);
+                                    }
+                                }
+                            }
+                            proc = true;
+            //                os.writeLong(list[i]); // write list variable to file .bin
+                            last = mer;
+                            lastpos = pos;        
+                            j = idxl[k];
+                        }
+                    }
+                    osi.close();
+                }    
+            }
+        }
+        
+        for(int a=0;a<=10;a++){
+            DataOutputStream osd = osx.get(a);
+            osd.flush();
+            osd.close();
+        }
+        
+        writerOV.flush();
+        writerOV.close();
+  
+    }
     
     
     public void final_unique_indexing() throws FileNotFoundException, IOException{
@@ -2592,8 +3508,45 @@ public class CombineReferenceSequence extends ReferenceSequence  implements Thre
        return null;
    }
    
-    
-   
+    class RepeatMer{
+        int merR;
+        int maxNumR;
+        ArrayList<Integer> posR = new ArrayList<Integer>();
+        
+        RepeatMer(int in_mer){
+            this.merR = in_mer;
+        }
+
+        public int getMerR() {
+            return merR;
+        }
+
+        public void setMerR(int merR) {
+            this.merR = merR;
+        }
+
+        public void addPosR(int pos){
+            this.posR.add(pos);
+        }
+        
+        public int getMaxNumRepeat(){
+            return this.maxNumR;
+        }
+        
+        public int getCrrentNumRepeat(){
+            return this.posR.size();
+        }
+
+        public ArrayList<Integer> getPosR() {
+            return posR;
+        }
+
+        public void setMaxNumR(int maxNumR) {
+            this.maxNumR = maxNumR;
+        }
+        
+    } 
+
 
     
 }

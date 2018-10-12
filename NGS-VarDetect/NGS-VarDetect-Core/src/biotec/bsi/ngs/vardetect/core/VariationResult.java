@@ -5477,7 +5477,7 @@ public class VariationResult {
         Collections.sort(this.interTransList,SVGroup.CoverageComparator);        
     }
     
-    public void classifyPreciseSVType(int coverageThreshold){
+    public void classifyPreciseSVType(int coverageThreshold, int allowOverlapLargeInsertion){
         /**
          * classify sv type of each sv candidate group
          * We hasve 5 precise type of SV (but this function will classify those SV type in more precisely)
@@ -5628,8 +5628,8 @@ public class VariationResult {
                 /**
                  * classify SV type
                  */
-
-                String svType = identifySameChrPreciseSVType(svGroupMain,svGroupSub);  // this function will idetify SV type and put the SVGroup in to the correct SVtype list
+                
+                String svType = identifySameChrPreciseSVType(svGroupMain,svGroupSub,allowOverlapLargeInsertion);  // this function will idetify SV type and put the SVGroup in to the correct SVtype list
                 
                 if(svType != null){
                     
@@ -5646,7 +5646,12 @@ public class VariationResult {
 //                     */
 //                    skipIndex.put(realMinIndex, true);
 //                }
-                dummyEuList.remove(minIndex);
+                if(dummyEuList.size()==1){
+                    // if size is equal to one is mean there is 
+                    break;
+                }else{
+                    dummyEuList.remove(minIndex);
+                }
             }
         }
         
@@ -5687,7 +5692,7 @@ public class VariationResult {
                  * classify SV type
                  */
 
-                String svType = identifyDiffChrPreciseSVType(svGroupMain,svGroupSub);  // this function will idetify SV type and put the SVGroup in to the correct SVtype list
+                String svType = identifyDiffChrPreciseSVType(svGroupMain,svGroupSub,allowOverlapLargeInsertion);  // this function will idetify SV type and put the SVGroup in to the correct SVtype list
                 
                 if(svType != null){
                     
@@ -8571,7 +8576,8 @@ public class VariationResult {
         rbRefIdx.close();
     }
     
-    public String identifySameChrPreciseSVType(SVGroup main,SVGroup sub){
+    public String identifySameChrPreciseSVType(SVGroup main,SVGroup sub, int inAllowOverlapLargeInsertion){
+        int allowOverlap = inAllowOverlapLargeInsertion;
         if(main.getStrandF()==0 && main.getStrandB()==0){
             // main has ++ strand
             if(sub.getStrandF()==0 && sub.getStrandB()==0){
@@ -8581,7 +8587,11 @@ public class VariationResult {
 //                    System.out.println();
 //                }
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
-                    if(main.getRPF()<=sub.getRPB() && main.getRPB()<sub.getRPF()){
+                    /**
+                     * Add another case check to solve overlap base around breakpoint forming by two read (only in case large insertion)
+                     * Additional case is on the right side of OR (||)
+                     */
+                    if((main.getRPF()<=sub.getRPB() && main.getRPB()<sub.getRPF()) || (main.getRPB()<sub.getRPF() && (main.getRPF()-sub.getRPB())<=allowOverlap)){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(main);
 //                        dummyList.add(sub);
@@ -8629,7 +8639,7 @@ public class VariationResult {
 //                        sub.setSvType("intraTrans");
 //                        sub.setSvTypeCode((byte)2);
                         return "intraIns";
-                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()>=sub.getRPF()){
+                    }else if((main.getRPF()>sub.getRPB() && main.getRPB()>=sub.getRPF()) || (main.getRPF()>sub.getRPB() && (sub.getRPF()-main.getRPB())<=allowOverlap)){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(sub);
 //                        dummyList.add(main);
@@ -8739,7 +8749,11 @@ public class VariationResult {
             // main has -- strand
             if(sub.getStrandF()==1 && sub.getStrandB()==1){
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
-                    if(main.getRPF()<sub.getRPB() && main.getRPB()<=sub.getRPF()){
+                    /**
+                     * Add another case check to solve overlap base around breakpoint forming by two read (only in case large insertion)
+                     * Additional case is on the right side of OR (||)
+                     */
+                    if((main.getRPF()<sub.getRPB() && main.getRPB()<=sub.getRPF()) || (main.getRPF()<sub.getRPB() && (main.getRPB() - sub.getRPF()) <= allowOverlap)){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(sub);
 //                        dummyList.add(main);
@@ -8787,7 +8801,7 @@ public class VariationResult {
 //                        sub.setSvType("intraTrans");
 //                        sub.setSvTypeCode((byte)2);
                         return "intraIns";
-                    }else if(main.getRPF()>=sub.getRPB() && main.getRPB()>sub.getRPF()){
+                    }else if((main.getRPF()>=sub.getRPB() && main.getRPB()>sub.getRPF()) || (main.getRPB()>sub.getRPF() && (sub.getRPB()-main.getRPF()) <= allowOverlap)){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(main);
 //                        dummyList.add(sub);
@@ -8894,7 +8908,11 @@ public class VariationResult {
         }else if(main.getStrandF()==0 && main.getStrandB()==1){
             if(sub.getStrandF()==1 && sub.getStrandB()==0){
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
-                    if(main.getRPF()<=sub.getRPB() && main.getRPB()>sub.getRPF()){
+                    /**
+                     * Add another case check to solve overlap base around breakpoint forming by two read (only in case large insertion)
+                     * Additional case is on the right side of OR (||)
+                     */
+                    if((main.getRPF()<=sub.getRPB() && main.getRPB()>sub.getRPF()) || (main.getRPB()>sub.getRPF() && (main.getRPF()-sub.getRPB()) <= allowOverlap)){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(main);
 //                        dummyList.add(sub);
@@ -8915,7 +8933,7 @@ public class VariationResult {
 //                        sub.setSvType("intraTrans");
 //                        sub.setSvTypeCode((byte)2);
                         return "intraIns";
-                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()<=sub.getRPF()){
+                    }else if((main.getRPF()>sub.getRPB() && main.getRPB()<=sub.getRPF()) || (main.getRPF()>sub.getRPB() && (main.getRPB()-sub.getRPF()) <= allowOverlap)){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(sub);
 //                        dummyList.add(main);
@@ -8955,7 +8973,11 @@ public class VariationResult {
         }else if(main.getStrandF()==1 && main.getStrandB()==0){
             if(sub.getStrandF()==0 && sub.getStrandB()==1){
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
-                    if(main.getRPF()<=sub.getRPB() && main.getRPB()>sub.getRPF()){
+                    /**
+                     * Add another case check to solve overlap base around breakpoint forming by two read (only in case large insertion)
+                     * Additional case is on the right side of OR (||)
+                     */
+                    if((main.getRPF()<sub.getRPB() && main.getRPB()>=sub.getRPF()) || (main.getRPF()<sub.getRPB() && (sub.getRPF()-main.getRPB()) <= allowOverlap)){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(sub);
 //                        dummyList.add(main);
@@ -8976,7 +8998,7 @@ public class VariationResult {
 //                        sub.setSvType("intraTrans");
 //                        sub.setSvTypeCode((byte)2);
                         return "intraIns";
-                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()<=sub.getRPF()){
+                    }else if((main.getRPF()>=sub.getRPB() && main.getRPB()<sub.getRPF()) || (main.getRPB()<sub.getRPF() && (sub.getRPB()-main.getRPF()) <= allowOverlap)){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(main);
 //                        dummyList.add(sub);
@@ -9017,12 +9039,17 @@ public class VariationResult {
         return null;
     }
     
-    public String identifyDiffChrPreciseSVType(SVGroup main,SVGroup sub){       
+    public String identifyDiffChrPreciseSVType(SVGroup main,SVGroup sub, int inAllowOverlapLargeInsertion){
+        int allowOverlap = inAllowOverlapLargeInsertion;
         if(main.getStrandF()==0 && main.getStrandB()==0){
             // main has ++ strand
             if(sub.getStrandF()==0 && sub.getStrandB()==0){
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
-                    if(main.getRPF()<sub.getRPB() && main.getRPB()<sub.getRPF()){
+                    /**
+                     * Add another case check to solve overlap base around breakpoint forming by two read (only in case large insertion)
+                     * Additional case is on the right side of OR (||)
+                     */
+                    if((main.getRPF()<=sub.getRPB() && main.getRPB()<sub.getRPF()) || (main.getRPB()<sub.getRPF() && (main.getRPF()-sub.getRPB()) <= allowOverlap)){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(main);
 //                        dummyList.add(sub);
@@ -9042,7 +9069,7 @@ public class VariationResult {
 //                        sub.setSvType("interTrans");
 //                        sub.setSvTypeCode((byte)3);
                         return "interIns";
-                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()>sub.getRPF()){
+                    }else if((main.getRPF()>sub.getRPB() && main.getRPB()>=sub.getRPF()) || (main.getRPF()>sub.getRPB() && (sub.getRPF()-main.getRPB()) <= allowOverlap)){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(sub);
 //                        dummyList.add(main);
@@ -9083,7 +9110,11 @@ public class VariationResult {
             // main has -- strand
             if(sub.getStrandF()==1 && sub.getStrandB()==1){
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
-                    if(main.getRPF()<sub.getRPB() && main.getRPB()<sub.getRPF()){
+                    /**
+                     * Add another case check to solve overlap base around breakpoint forming by two read (only in case large insertion)
+                     * Additional case is on the right side of OR (||)
+                     */
+                    if((main.getRPF()<sub.getRPB() && main.getRPB()<=sub.getRPF()) || (main.getRPF()<sub.getRPB() && (main.getRPB() - sub.getRPF()) <= allowOverlap)){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(sub);
 //                        dummyList.add(main);
@@ -9105,7 +9136,7 @@ public class VariationResult {
 //                        sub.setSvType("interTrans");
 //                        sub.setSvTypeCode((byte)3);
                         return "interIns";
-                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()>sub.getRPF()){
+                    }else if((main.getRPF()>=sub.getRPB() && main.getRPB()>sub.getRPF()) || (main.getRPB()>sub.getRPF() && (sub.getRPB()-main.getRPF()) <= allowOverlap)){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(main);
 //                        dummyList.add(sub);
@@ -9147,7 +9178,11 @@ public class VariationResult {
         }else if(main.getStrandF()==0 && main.getStrandB()==1){
             if(sub.getStrandF()==1 && sub.getStrandB()==0){
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
-                    if(main.getRPF()<sub.getRPB() && main.getRPB()>sub.getRPF()){
+                    /**
+                     * Add another case check to solve overlap base around breakpoint forming by two read (only in case large insertion)
+                     * Additional case is on the right side of OR (||)
+                     */
+                    if((main.getRPF()<=sub.getRPB() && main.getRPB()>sub.getRPF()) || (main.getRPB()>sub.getRPF() && (main.getRPF()-sub.getRPB()) <= allowOverlap)){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(main);
 //                        dummyList.add(sub);
@@ -9168,7 +9203,7 @@ public class VariationResult {
 //                        sub.setSvType("interTrans");
 //                        sub.setSvTypeCode((byte)3);
                         return "interIns";
-                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()<sub.getRPF()){
+                    }else if((main.getRPF()>sub.getRPB() && main.getRPB()<=sub.getRPF()) || (main.getRPF()>sub.getRPB() && (main.getRPB()-sub.getRPF()) <= allowOverlap)){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(sub);
 //                        dummyList.add(main);
@@ -9210,7 +9245,11 @@ public class VariationResult {
         }else if(main.getStrandF()==1 && main.getStrandB()==0){
             if(sub.getStrandF()==0 && sub.getStrandB()==1){
                 if(main.getChrF().equals(sub.getChrB()) && main.getChrB().equals(sub.getChrF())){
-                    if(main.getRPF()<sub.getRPB() && main.getRPB()>sub.getRPF()){
+                    /**
+                     * Add another case check to solve overlap base around breakpoint forming by two read (only in case large insertion)
+                     * Additional case is on the right side of OR (||)
+                     */
+                    if((main.getRPF()<sub.getRPB() && main.getRPB()>=sub.getRPF()) || (main.getRPF()<sub.getRPB() && (sub.getRPF()-main.getRPB()) <= allowOverlap)){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(sub);
 //                        dummyList.add(main);
@@ -9231,7 +9270,7 @@ public class VariationResult {
 //                        sub.setSvType("interTrans");
 //                        sub.setSvTypeCode((byte)3);
                         return "interIns";
-                    }else if(main.getRPF()>sub.getRPB() && main.getRPB()<sub.getRPF()){
+                    }else if((main.getRPF()>=sub.getRPB() && main.getRPB()<sub.getRPF()) || (main.getRPB()<sub.getRPF() && (sub.getRPB()-main.getRPF()) <= allowOverlap)){
 //                        ArrayList<SVGroup> dummyList = new ArrayList();
 //                        dummyList.add(main);
 //                        dummyList.add(sub);
