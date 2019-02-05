@@ -52,7 +52,7 @@ public class SumFileResult {
         /**
          * start loop through dir
          */
-        String myDirectoryPath = "/Volumes/4TB_WD/TB/Martin_new_list/TB_remove_dup_bam/TB_res";
+        String myDirectoryPath = "/Volumes/4TB_WD/TB/Martin_new_list/TB_result_BWA_Ver/SVP/sum";
         
         FileWriter writer;
 
@@ -106,19 +106,46 @@ public class SumFileResult {
 //                                        System.out.println("reading csv File : "+csvFile.getName());
                                         while ((line = reader.readLine()) != null) {
                                             
+                                            
+                                            /**
+                                             * In case that we want to add new column to sum result file
+                                             * please use this comment code 
+                                             * and config header of colum on first if
+                                             * and config data column on else if
+                                            */
+                                            
+//                                            if(firstFlag == true && count == 0){
+//                                                
+//                                                String modifLine = "SampleName,"+line;
+//                                                writer.write(modifLine);
+//                                                writer.write("\n");
+//                                                
+//                                            }else if(count > 0){
+//                                                String modifLine = sampleName+","+line;
+//                                                writer.write(modifLine);
+//                                                writer.write("\n");
+//                                            }
+//                                            
+//                                            count++;
+                                            
+                                            /*************************/
+                                            
+                                            
+                                            /**
+                                             * in case that you don't want to add any column
+                                             * just concatinate file use this code below
+                                             */
                                             if(firstFlag == true && count == 0){
-                                                
-                                                String modifLine = "SampleName,"+line;
-                                                writer.write(modifLine);
+                                                writer.write(line);
                                                 writer.write("\n");
-                                                
                                             }else if(count > 0){
-                                                String modifLine = sampleName+","+line;
-                                                writer.write(modifLine);
+                                                writer.write(line);
                                                 writer.write("\n");
                                             }
+                                            count++;
                                             
-                                            count++;  
+                                            /***************************/
+                                            
                                         }
                                     }
                                     writer.flush();

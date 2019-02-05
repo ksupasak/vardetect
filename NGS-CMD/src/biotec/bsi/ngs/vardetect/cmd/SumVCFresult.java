@@ -32,31 +32,32 @@ public class SumVCFresult {
          */
         Charset charset = Charset.forName("US-ASCII");
         Boolean firstFlag = true;
+        //String vcfType = "somaticSV";
         String vcfType = "diploidSV";
         /************/
         
         /**
          * Modified map to new file name
          */
-        Map<String,String> nameMap = new HashMap();
-        String name_file = "/Volumes/4TB_WD/TB/Martin_new_list/TB_remove_dup_bam/Sample_fullName.txt";
-        File nameFile = new File(name_file);
-        Path pathF = Paths.get(nameFile.getPath());
-        try (BufferedReader reader = Files.newBufferedReader(pathF, charset)) {
-            String line = null;    
-            while ((line = reader.readLine()) != null) {
-                String[] portion = line.split("_");
-                nameMap.put(portion[0], line);
-            }
-        }
+//        Map<String,String> nameMap = new HashMap();
+//        String name_file = "/Volumes/4TB_WD/TB/Martin_new_list/TB_remove_dup_bam/Sample_fullName.txt";
+//        File nameFile = new File(name_file);
+//        Path pathF = Paths.get(nameFile.getPath());
+//        try (BufferedReader reader = Files.newBufferedReader(pathF, charset)) {
+//            String line = null;    
+//            while ((line = reader.readLine()) != null) {
+//                String[] portion = line.split("_");
+//                nameMap.put(portion[0], line);
+//            }
+//        }
         
         /**************/
         
         /**
          * start loop through dir
          */
-        String myDirectoryPath = "/Volumes/4TB_WD/TB/Martin_new_list/TB_remove_dup_bam/manta_result/vcf";
-        
+//        String myDirectoryPath = "/Users/worawich/Download_dataset/Ratina_cancer/Manta_Normal_Tumor_Result/sumResult";
+        String myDirectoryPath = "/Volumes/Mango/TB_131_BGI_NGS_analysis/manta_vcf";
         FileWriter writer;
 
         File dir = new File(myDirectoryPath);
@@ -72,7 +73,7 @@ public class SumVCFresult {
                     /**
                     * Modified map to new file name
                     */
-                    sampleName = nameMap.get("ERR"+sampleName);
+//                    sampleName = nameMap.get(sampleName);
                     /**************/
                     File sumFile = new File(myDirectoryPath + File.separator + "sumResult_vcf.txt"); //File object        
                     if(sumFile.exists()){
